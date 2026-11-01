@@ -41,3 +41,11 @@ Not a manuscript gate; a review checklist before WP 1.1.1.
 | 4 | Every Fake result carries ENGINE_KIND_FAKE; call log, delay and raise controls work in-process | PASS | same |
 | 5 | Placeholders contain no invented physics; the only synthetic numbers (M2 INFEASIBLE) are marked SYNTHETIC | PASS (review) | adapters/fake_engine/payloads.py |
 | 6 | Defective profile implemented (one defect per contract behaviour C1–C9) | PASS (used in WP 1.1.3) | adapters/fake_engine/defective.py |
+
+## WP 1.1.3 — contract test suite (2026-11-01)
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | One suite, nine behaviours C1–C9, adapter-parametrised (`ADAPTERS`; REAL added at WP 1.4.2) | PASS | tests/contract/suite.py |
+| 2 | Fake Engine passes: default profile and all 32 allowed (type, outcome) scripts | PASS | tests/contract/test_contract_suite.py |
+| 3 | M1 INFEASIBLE rejected by the suite (C2) | PASS | same |
+| 4 | Suite fails on each of the nine defects, naming the broken behaviour | PASS | same |
