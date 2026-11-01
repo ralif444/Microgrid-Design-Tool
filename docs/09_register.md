@@ -258,14 +258,16 @@ The rows above are kept as written on 2026-10-21. This section overrides their s
 |---|---|---|---|
 | A-50 | Sixteen-component list of Doc 4 §4 reconstructed from text; verify against Gambar 4.4b. | [ASSUMPTION] | author, before 1.2 |
 | A-51 | DoD ten conditions reconstructed (manuscript gives count and two examples only). | [ASSUMPTION] | author, exit 1.1 |
-| A-52 | Gate rules G3–G6 not listed in manuscript text (Doc 10 §5). | [PERLU VERIFIKASI] | author, exit 1.1 |
+| A-52 | Gate rules G3–G6 not listed in manuscript text (Doc 10 §5). | CONFIRMED (user 2026-11-01: match Gambar C.8a–C.8d) | — |
 | A-53 | Caps SCENARIO_CAP, M3A_PARAMETER_CAP, M4B_DURATION_CAP_S have no value; `/api/meta` returns null. | [ASSUMPTION] | WP 1.7.1 |
 | A-54 | Node.js 26.7.0 (manuscript Tabel 3.5) installed in the build sandbox from the npm package `node-linux-x64@26.7.0`; TypeScript pinned to 5.9.3 (latest 5.x) because openapi-typescript requires `^5.x`. | DECIDED | 1.1.1 |
 | A-55 | HTTP port 8000 (uvicorn default), overridable by `MGAPP_PORT`; the docs fix no port. | [ASSUMPTION] | author, exit 1.1 |
 | A-56 | Canonical snapshot omits fields whose value is null, so an absent and a null optional field hash equal; entity arrays sorted by `id` are buses, lines, loads, inverters only. | [ASSUMPTION] | author, exit 1.1 |
 | A-57 | First Project file `schema_version` of this implementation = 1; RunRecord `schema_version` = 1. No migration chain from prototype files. | [ASSUMPTION] | author, WP 1.2.3 |
 | A-58 | Stage-1 wire models are lenient on presence (null/missing allowed) so stage 1 reports EMPTY_REQUIRED etc.; wrong JSON types or unknown fields become MALFORMED_REQUEST. | DECIDED (implementation) | Doc 3 §4 |
-| Q-23 | Doc 3 §3.3 requires `r_ohm_per_km > 0`, but the manuscript hand calculation (Tabel 4.8) uses a purely reactive line (R = 0). The oracle case cannot be entered as a Project as specified. Options: allow R = 0, or run the oracle only at engine level (stage 1.3). | DECISION NEEDED | before WP 1.3.1 |
+| Q-23 | Doc 3 §3.3 requires `r_ohm_per_km > 0`, but the manuscript hand calculation (Tabel 4.8) uses a purely reactive line (R = 0). The oracle case cannot be entered as a Project as specified. DECIDED (user 2026-11-01): keep R > 0 in the app contract; the Tabel 4.8 oracle runs at engine level only (WP 1.3.1). | DECIDED | — |
 | Q-20 | Doc 13 #1: do layer-1 numerical aids for constant-PQ loads change the fidelity class? | DECISION NEEDED | before WP 1.6.3 |
 | Q-21 | Doc 13 #2–#6: layer-2 parameter source, current-limit value, PSIM constant-power element, PSIM scripting, resolution floor. | [NEEDS SOURCE] / VERIFY | WP 1.6.2–1.6.3 |
 | Q-22 | Doc 12 #2, #4, #5: author-derived Eq. 12.3–12.13 need hand-check; B3 needs supervisor approval; fictitious catalogue names. | [ASSUMPTION] / FUTURE | before stage 1.5 |
+| D-43 | Doc 03 entity contract frozen for stage 1.2 (entry gate 1.2); changes only via ADR or register entry (G6). Doc 12 extensions stay for stage 1.5. | 2026-11-01 | user | 3, 6, 10 |
+| D-44 | Fake scenarios for stage 1.2: profiles default, m1-solver-failed, m1-inadmissible, m2-infeasible; additions allowed when an E2E flow needs them, each recorded in the gate log. | 2026-11-01 | user | 8, 10 |

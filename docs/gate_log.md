@@ -95,3 +95,12 @@ Tabel 4.15: "Satu perintah mulai; kontrak enam status; RunRecord tiap status". C
 Test totals in the sandbox: static + contract + api + reproducibility 255 passed; client 1 passed; e2e 4 passed. Versions: Python 3.13.18, FastAPI 0.162.0, Pydantic 2.14.2, uvicorn 0.54.0, Node 26.7.0, Next.js 16.4.3, React 19.3.1, TypeScript 5.9.3.
 
 **Decision: exit gate 1.1 PASS (conditional).** Conditions carried into entry 1.2: (a) run the four E2E flows on the Windows 11 laptop with Google Chrome stable and log its version; (b) confirm or replace gate rules G3–G6 (Doc 9 A-52); (c) decide Doc 9 Q-23 before WP 1.3.1. Open entry-1.2 items from Tabel 4.15: "kontrak entitas beku; skenario Fake ditetapkan".
+
+## Entry gate 1.2 — Fitur utama aplikasi (2026-11-01)
+| # | Criterion (Tabel 4.15) | Result | Evidence |
+|---|---|---|---|
+| 1 | Exit 1.1 | PASS (conditional; Chrome-on-target run carried as a condition of exit 1.2) | Exit gate 1.1 above |
+| 2 | Entity contract frozen | PASS | user decision 2026-11-01 (Doc 9 D-43) |
+| 3 | Fake scenarios fixed | PASS | user decision 2026-11-01 (Doc 9 D-44) |
+
+Carried conditions resolved: gate rules G3–G6 confirmed (A-52); Q-23 decided (oracle with R = 0 at engine level only). **Decision: enter stage 1.2** on branch `tahap-1.2`.
