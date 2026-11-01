@@ -129,12 +129,12 @@ The manuscript states six gate rules bind the order of Gambar 4.6 and C.8a–C.8
 |---|---|---|
 | G1 | No parallel work passes a failed gate, except offline M5. | Manuscript 4.5.6 |
 | G2 | Fake Engine results are never reported as engine results. | Manuscript 4.5.6 |
-| G3 | No stage starts until its entry gate is met; the check is recorded per criterion in `docs/gate_log.md`. | [PERLU VERIFIKASI] derived from earlier R1 and manuscript "hasil setiap gerbang dicatat pada log gerbang" |
-| G4 | Scope moves between stages only through a recorded decision (ADR or Doc 9 entry) naming FR IDs, reason and gate effect. | [PERLU VERIFIKASI] earlier R3 |
-| G5 | From stage 1.4 the contract suite must stay green on the Fake Engine at every gate. | [PERLU VERIFIKASI] earlier R4 |
-| G6 | A change to the Engine Port, Doc 3 contracts or Doc 6 shapes after exit 1.2 needs an ADR or register entry and updates Docs 3, 4, 6 before code. | [PERLU VERIFIKASI] earlier R5 |
+| G3 | No stage starts until its entry gate is met; the check is recorded per criterion in `docs/gate_log.md`. | Confirmed by the user 2026-11-01; derived from earlier R1 and manuscript "hasil setiap gerbang dicatat pada log gerbang" |
+| G4 | Scope moves between stages only through a recorded decision (ADR or Doc 9 entry) naming FR IDs, reason and gate effect. | Confirmed by the user 2026-11-01; earlier R3 |
+| G5 | From stage 1.4 the contract suite must stay green on the Fake Engine at every gate. | Confirmed by the user 2026-11-01; earlier R4 |
+| G6 | A change to the Engine Port, Doc 3 contracts or Doc 6 shapes after exit 1.2 needs an ADR or register entry and updates Docs 3, 4, 6 before code. | Confirmed by the user 2026-11-01; earlier R5 |
 
-G3–G6 are the author's earlier rules (Doc 10, 2026-10-21) that best fit the remaining four; the manuscript text does not list them. Confirm or replace them against the source of Gambar C.8a–C.8d. Earlier R6 (self-administered review) is a stated limitation (manuscript 4.6.2), and R8 (no equations) is cancelled (Doc 14 A20).
+G3–G6 are the author's earlier rules (Doc 10, 2026-10-21); the user confirmed on 2026-11-01 that they match Gambar C.8a–C.8d. Earlier R6 (self-administered review) is a stated limitation (manuscript 4.6.2), and R8 (no equations) is cancelled (Doc 14 A20).
 
 ## 6. Mapping to thesis
 | Stage | Evidence produced | Thesis chapter |
@@ -150,7 +150,7 @@ Final chapter mapping is Doc 14 D8 (PENDING-1.7).
 ## 7. Open points
 | # | Item | Tag | → doc |
 |---|---|---|---|
-| 1 | Gate rules G3–G6 not listed in the manuscript text. | [PERLU VERIFIKASI] | 9 |
+| 1 | Gate rules G3–G6 not listed in the manuscript text. | CONFIRMED (user 2026-11-01) | 9 |
 | 2 | Durations of 1.3 and 1.6 not estimated. | [ASSUMPTION] | 9 |
 | 3 | Stage 1.1 registers all nine analysis routes on the Fake (canned FEASIBLE by default); validate/import/verify/rerun are added in 1.2. | DECIDED (user 2026-11-01) | 6 |
 | 4 | Fake-only path into 1.5 needs a recorded decision (Tabel 4.15). | DECIDED (manuscript) | 9 |
@@ -161,4 +161,4 @@ Final chapter mapping is Doc 14 D8 (PENDING-1.7).
 | Date | Change |
 |---|---|
 | 2026-10-17 – 10-21 | Drafted with phases P0–P4; C5.2, C5.13, C5.18, C5.20, UP-08, UP-13. |
-| 2026-11-01 | Aligned with the manuscript (Doc 14 D7): stages 1.1–1.8 replace P0–P4; Tabel 4.15 gates with operational criteria; 39 work packages of Tabel B.1; durations of 4.5.6; six gate rules (two from manuscript text, four [PERLU VERIFIKASI]); 1.1 endpoint scope decided; no-equations guardrail removed. |
+| 2026-11-01 | Aligned with the manuscript (Doc 14 D7): stages 1.1–1.8 replace P0–P4; Tabel 4.15 gates with operational criteria; 39 work packages of Tabel B.1; durations of 4.5.6; six gate rules (two from manuscript text, four confirmed by the user); 1.1 endpoint scope decided; no-equations guardrail removed. |

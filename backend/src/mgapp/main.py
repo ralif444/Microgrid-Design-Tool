@@ -22,7 +22,7 @@ from mgapp.adapters.fake_engine import FakeEngine
 from mgapp.adapters.fake_engine.profiles import PROFILES
 from mgapp.api import error_mapper
 from mgapp.api.error_mapper import TransportFailureError
-from mgapp.api.routers import analyses, health_meta
+from mgapp.api.routers import analyses, health_meta, projects, run_records
 from mgapp.config import BIND_HOST, EngineChoice, Settings
 from mgapp.domain.contract import ValidationIssue
 from mgapp.domain.payloads import PAYLOAD_MODEL
@@ -30,7 +30,9 @@ from mgapp.engine_port import EnginePort
 from mgapp.services.guard import ExecutionGuard
 from mgapp.services.limits import Limits
 from mgapp.services.pipeline import AnalysisRequestBody, Pipeline
+from mgapp.services.project_file import ProjectFile
 from mgapp.services.run_record import RunRecordService
+from mgapp.services.validation import ValidateRequest
 
 STATIC_DIR = Path(__file__).parent / "static"
 API_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"]
@@ -72,10 +74,12 @@ def create_app(
     error_mapper.install(app)
     app.include_router(health_meta.router)
     app.include_router(analyses.router)
+    app.include_router(projects.router)
+    app.include_router(run_records.router)
 
     known = [
         r
-        for router in (health_meta.router, analyses.router)
+        for router in (health_meta.router, analyses.router, projects.router, run_records.router)
         for r in router.routes
         if isinstance(r, APIRoute)
     ]
@@ -104,13 +108,19 @@ def build_openapi(app: FastAPI) -> dict[str, Any]:
     """OpenAPI generated from the Pydantic schemas (Doc 6 §1, NFR-15).
 
     Analysis routes read their body themselves (to turn request-model failures into
-    INPUT_INVALID), so the body schema is added to the components here.
+    INPUT_INVALID or a report), so the body schemas are added to the components here.
     """
     spec = get_openapi(title=app.title, version=app.version, routes=app.routes)
     schemas = spec.setdefault("components", {}).setdefault("schemas", {})
     # Payload shapes (Doc 3 §6) and stage-1 issues are carried as free objects in
     # AnalysisResult; they are published here so the frontend gets typed payloads.
-    extra: list[type[BaseModel]] = [AnalysisRequestBody, ValidationIssue, *PAYLOAD_MODEL.values()]
+    extra: list[type[BaseModel]] = [
+        AnalysisRequestBody,
+        ValidateRequest,
+        ProjectFile,
+        ValidationIssue,
+        *PAYLOAD_MODEL.values(),
+    ]
     for model in extra:
         sch = model.model_json_schema(ref_template="#/components/schemas/{model}")
         for name, sub in sch.pop("$defs", {}).items():

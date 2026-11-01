@@ -12,9 +12,13 @@ import pytest
 
 SPEC: dict[str, Any] = json.loads(gen.OPENAPI.read_text(encoding="utf-8"))
 
-STAGE_1_1_PATHS = {
+API_PATHS = {
     "/api/health",
     "/api/meta",
+    "/api/projects/validate",  # WP 1.2.1
+    "/api/projects/import",
+    "/api/run-records/verify",
+    "/api/run-records/rerun",
     *(f"/api/analyses/{t}" for t in ("PS", "M1", "M2", "M3a", "M3b", "M3c", "M3d", "M4a", "M4b")),
 }
 
@@ -36,6 +40,7 @@ UNITLESS = {
     "eigenvalue_index",
     "schema_version",
     "record_schema_version",
+    "migrated_from_version",  # a schema version number
     "max_iterations",
     "sweep_cap",
     "scenario_cap",
@@ -92,8 +97,8 @@ def test_types_file_carries_generated_header() -> None:
     assert gen.TYPES.read_text(encoding="utf-8").startswith(gen.HEADER)
 
 
-def test_stage_1_1_endpoints_only() -> None:
-    assert set(SPEC["paths"]) == STAGE_1_1_PATHS
+def test_implemented_endpoints_only() -> None:
+    assert set(SPEC["paths"]) == API_PATHS
 
 
 def test_no_422_documented() -> None:

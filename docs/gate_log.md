@@ -95,3 +95,89 @@ Tabel 4.15: "Satu perintah mulai; kontrak enam status; RunRecord tiap status". C
 Test totals in the sandbox: static + contract + api + reproducibility 255 passed; client 1 passed; e2e 4 passed. Versions: Python 3.13.18, FastAPI 0.162.0, Pydantic 2.14.2, uvicorn 0.54.0, Node 26.7.0, Next.js 16.4.3, React 19.3.1, TypeScript 5.9.3.
 
 **Decision: exit gate 1.1 PASS (conditional).** Conditions carried into entry 1.2: (a) run the four E2E flows on the Windows 11 laptop with Google Chrome stable and log its version; (b) confirm or replace gate rules G3–G6 (Doc 9 A-52); (c) decide Doc 9 Q-23 before WP 1.3.1. Open entry-1.2 items from Tabel 4.15: "kontrak entitas beku; skenario Fake ditetapkan".
+
+## Entry gate 1.2 — Fitur utama aplikasi (2026-11-01)
+| # | Criterion (Tabel 4.15) | Result | Evidence |
+|---|---|---|---|
+| 1 | Exit 1.1 | PASS (conditional; Chrome-on-target run carried as a condition of exit 1.2) | Exit gate 1.1 above |
+| 2 | Entity contract frozen | PASS | user decision 2026-11-01 (Doc 9 D-43) |
+| 3 | Fake scenarios fixed | PASS | user decision 2026-11-01 (Doc 9 D-44) |
+
+Carried conditions resolved: gate rules G3–G6 confirmed (A-52); Q-23 decided (oracle with R = 0 at engine level only). **Decision: enter stage 1.2** on branch `tahap-1.2`.
+
+## Stage 1.2 — Windows 11 target laptop (2026-11-01)
+First run on Windows 11 Home 10.0.26200. Python 3.13.15 (uv; `python` on PATH is ETAP's 3.8.4, not used), Node 26.7.0, FastAPI 0.162.0, Pydantic 2.14.2, uvicorn 0.54.0, Playwright 1.63.0.
+
+| # | Step | Result | Note |
+|---|---|---|---|
+| 1 | `tools/check.py` | PASS | no Windows changes needed (`.cmd` shims resolved) |
+| 2 | `tools/test.py` | PASS | 254 passed, 1 skipped (offline-assets test waits for the frontend build); client 1 passed |
+| 3 | `tools/build_frontend.py` | PASS | |
+| 4 | `tools/test.py e2e`, Playwright Chromium 153.0.8010.12 | PASS | 4 passed; first attempt failed only because `playwright install chromium` had not been run (documented one-time step) |
+| 5 | E2E on Google Chrome stable 156.0.8078.48 (`MGAPP_E2E_CHANNEL=chrome`) | PASS | 4 passed. Exit-1.1 condition (a) met; rerun at exit 1.2. The e2e fixture now reads the Playwright channel from `MGAPP_E2E_CHANNEL` (unset = bundled Chromium) |
+
+## WP 1.2.1 — load data entry and PS (2026-11-01)
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | `POST /api/projects/validate` (Doc 6 §3.4): all stage-1 issues, rules per target (null = M1), request checks only with parameters, `snapshot_hash` equal to the M1 RunRecord hash, off-schema body reported (no 422), zero engine calls | PASS | tests/api/test_validate_and_ps.py |
+| 2 | Load rows with Q or PF accepted; negative P, empty P, PF > 1, Q and PF both missing, PF without direction each name the field (FR-03, FR-17, FR-18) | PASS | same file |
+| 3 | PS advice with basis, assumptions and RunRecord; `r = 1, n = 1` → PS_PARAMETER_INVALID with zero calls (FR-06, FR-07; storage staging on the engine, D-45 K6) | PASS | same file |
+| 4 | Store: new Project empty; Load add/edit/delete with generated ids; Accept/Skip leave the design unchanged; Load or PS-setting change makes the advice stale (FR-01, FR-03, FR-08) | PASS | frontend/store/reducer.test.ts |
+| 5 | Browser canonicaliser for SizingAdvice `input_hash` equals the server canonicaliser on shared vectors (D-45 K4) | PASS | tests/fixtures/canonical_vectors.json; Python and Vitest tests |
+| 6 | S-01 → S-02 → S-03 → S-04 flow: gating message, inline row error, unit on every numeric input, PS run, Accept, no Inverter added, stale notice (FR-01, FR-05 UI, FR-06, FR-08) | PASS | tests/e2e/test_loads_ps.py; Chromium 153.0.8010.12 and Chrome 156.0.8078.48 |
+
+Totals: Python seams 271 passed; client 6 passed; e2e 5 passed. No Fake profile added. Decisions: Doc 9 D-45 (K1–K6). Gating shows the "Create or open a Project first" message with a link to Start rather than an automatic redirect. Shared E2E browser fixtures moved to tests/e2e/conftest.py.
+
+## WP 1.2.2 — network, constraints, M1 and M2 (2026-11-01)
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | Constraint change changes the snapshot hash; inverted band → INPUT_INVALID / BAND_INVERTED (FR-15) | PASS | tests/api/test_constraints_and_m2.py |
+| 2 | M2 FEASIBLE with verdict, loadability, separate SizingCheck; empty limits listed in `not_evaluated` with warning CONSTRAINT_NOT_EVALUATED, none when every limit is set; missing margins → SIZING_MARGIN_INVALID (FR-16, FR-24, FR-27) | PASS | same file |
+| 3 | M2 INFEASIBLE lists two typed limiting constraints (FR-25) | PASS | same file |
+| 4 | Store: add/edit/delete Bus, Line, Inverter with generated ids; constraints stored, empty = null; M1 reference from the latest FEASIBLE M1 (FR-10, FR-12, FR-13, FR-15) | PASS | frontend/store/reducer.test.ts |
+| 5 | S-05 → S-06 → S-07 → S-08 flow: units on every numeric input, derived Line totals, isolated-Bus issue, inverted band message, M2 blocked without M1, M2 FEASIBLE with not-evaluated list, warning, SizingCheck, λ_s wording; edit → stale and M2 disabled; revert → current (FR-05, FR-10, FR-15, FR-16, FR-19, FR-24, FR-27, FR-40) | PASS | tests/e2e/test_network_m1_m2.py |
+| 6 | M2 INFEASIBLE on profile `m2-infeasible` shows the limiting-constraint table (FR-25) | PASS | same file |
+| 7 | Stage-1.1 E2E flows now enter the design through the screens (D-46 K7) | PASS | tests/e2e/test_m1_slice.py, tests/e2e/flows.py |
+
+Totals: Python seams 277 passed; client 9 passed; e2e 7 passed on Chromium 153.0.8010.12 and Chrome 156.0.8078.48. Fake Engine change (D-44 rule): default M2 behaviour adds warning CONSTRAINT_NOT_EVALUATED when `not_evaluated` is non-empty (Doc 6 §3.3); no new profile; Fake version fake-2. Decisions: Doc 9 D-46 (K7–K13).
+
+## WP 1.2.3 — Project file, Run history, report (2026-11-01)
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | RunRecord verify: intact accepted with engine comparison; tampered snapshot and result → HASH_MISMATCH on both paths with zero engine calls; unknown version / not a record refused (FR-49, FR-50, FR-57) | PASS | tests/reproducibility/test_verify_rerun.py |
+| 2 | Re-run: M1, PS, empty-snapshot M1 and dependent M2 REPRODUCED with `replay_of_record_id`, imported record unchanged; scripted SOLVER_FAILED → DIFFERS with STATUS and STATUS_CODE; other engine version → ENGINE_VERSION_MISMATCH warning, still runs (NFR-01, FR-51, FR-52, FR-53) | PASS | same file |
+| 3 | Project import: current file returned unchanged with validation; versions 2 / null / "1" → UNKNOWN_SCHEMA_VERSION, 0 → UNMIGRATABLE, nothing loaded; not a Project → MALFORMED_FILE; stage-1 issues reported not fixed; bad embedded RunRecord listed and skipped (FR-54, FR-55, FR-57, NFR-12, NFR-16, D-47 K15, K16) | PASS | tests/project_file/test_import.py |
+| 4 | Store: saved file carries `schema_version` and nominal values in `project`; load then save gives the same document; Save clears unsaved (FR-54, FR-55) | PASS | frontend/store/projectFile.test.ts |
+| 5 | S-16 Report on profile `m2-infeasible`: verdict, limiting constraints, SVG bus-voltage chart, tables, 64-hex hash in traceability, A1–A6, Fake note (FR-58, FR-59) | PASS | tests/e2e/test_report_runs.py |
+| 6 | S-15: one-file export, tampered import refused and not added, Re-run adds a record and shows Reproduced; header Save → create other Project (confirm) → Open restores name and runs (FR-49, FR-50, FR-53, FR-55, K17) | PASS | same file |
+
+Totals: Python seams 307 passed; client 12 passed; e2e 9 passed on Chromium 153.0.8010.12 and Chrome 156.0.8078.48. No Fake profile added. Decisions: Doc 9 D-47 (K14–K19). A2 in the report is quoted from Tabel 1.1 as extracted; the manuscript sentence appears to miss a word (user to confirm). Print layout (FR-60) has CSS only, not checked in a browser print.
+
+## WP 1.2.4 — key-flow tests, FAKE marking (2026-11-01)
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | F1 on profile `m2-infeasible`: engine badge "Engine: FAKE" on every screen; PS Accept → M1 (System, Bus, Inverter, Line tables with ε_X, FR-23) → M2 INFEASIBLE → limiting-element link opens S-05 Inverters with the row marked (D-48 K22) → edit → M1 stale, report "outdated" → M1 and M2 again → report current | PASS | tests/e2e/test_key_flows.py |
+| 2 | F1 on profile `m1-inadmissible`: PHYSICALLY_INADMISSIBLE banner; M2 blocked | PASS | same file |
+| 3 | Every Status banner shows the ENGINE_KIND_FAKE message (D-48 K20) | PASS | same file (PS, M1, M2 banners) |
+| 4 | F2: newer file refused, open Project unchanged (NFR-16); unreadable RunRecord listed (`run_records[0]`) and skipped; stage-1 issue shown on S-02, not fixed | PASS | same file |
+| 5 | F3 / FR-49: one exported file holds the 17-field RunRecord; imported into another Project, verified, engine comparison shown; Re-run Reproduced, original record unchanged | PASS | same file |
+
+Totals: Python seams 307 passed; client 12 passed; e2e 13 passed on Chromium 153.0.8010.12 and Chrome 156.0.8078.48. No Fake profile added (D-48 K21). Decisions: Doc 9 D-48 (K20–K24).
+
+## Exit gate 1.2 — Fitur utama aplikasi (2026-11-01)
+Tabel 4.15: "semua Must lulus; REPRODUCED pada Fake; laporan lengkap". Criteria per Doc 10 §3.1.
+
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| 1 | Every Must FR (38 in Doc 2) passes at its seam | PASS | list below |
+| 2 | Export → import → re-run gives REPRODUCED on the Fake (NFR-01) | PASS | WP 1.2.3 rows 1–2, 6; WP 1.2.4 row 5 |
+| 3 | Report shows verdict, limiting constraints, margins, assumptions, RunRecord hash, a table and a chart (FR-58, FR-59) | PASS | WP 1.2.3 row 5; WP 1.2.4 row 1 |
+| 4 | Offline key flow | PASS with note | every e2e flow runs with all non-loopback requests aborted and asserted absent (NFR-03 guard in tests/e2e/conftest.py); a run with the network adapter switched off was not done |
+| 5 | Chrome version logged (condition carried from exit 1.1) | PASS | Chrome 156.0.8078.48 on Windows 11, WP 1.2.1–1.2.4 rows |
+
+Must FR → test files (paths under `tests/`, store tests under `frontend/`):
+FR-01 e2e/test_loads_ps, store/reducer.test · FR-03 api/test_validate_and_ps, e2e/test_loads_ps · FR-05 e2e/test_loads_ps, e2e/test_network_m1_m2, static/test_openapi · FR-06, FR-07 api/test_validate_and_ps, e2e/test_loads_ps · FR-08 e2e/test_loads_ps, store/reducer.test · FR-10, FR-12, FR-13 e2e/test_network_m1_m2, store/reducer.test · FR-15 api/test_constraints_and_m2, e2e/test_network_m1_m2 · FR-17 api/test_validate_and_ps, e2e/test_m1_slice · FR-18 api/test_validate_and_ps, e2e/test_loads_ps · FR-19 e2e/test_network_m1_m2 · FR-21 api/test_status_and_runrecord · FR-22 contract/test_contract_suite · FR-23 e2e/test_key_flows · FR-24, FR-25, FR-27 api/test_constraints_and_m2, e2e/test_network_m1_m2 · FR-35 api/test_status_and_runrecord, contract/test_contract_suite, e2e/test_m1_slice · FR-36, FR-42, FR-43, FR-46, FR-47 api/test_status_and_runrecord · FR-37, FR-38 api/test_dependency · FR-40 api/test_dependency, e2e/test_network_m1_m2 · FR-48 api/test_status_and_runrecord, reproducibility/test_canonical_hash · FR-49, FR-50, FR-52, FR-53 reproducibility/test_verify_rerun, e2e/test_report_runs, e2e/test_key_flows · FR-54, FR-55 project_file/test_import, store/projectFile.test, e2e/test_report_runs · FR-57 project_file/test_import · FR-58, FR-59 e2e/test_report_runs.
+
+Open notes (not exit criteria): Doc 8 §8 DoD item 7 (keyboard reachability) still has no E2E check; print layout (FR-60, Should) not checked in a browser print; report A2 wording to be confirmed against the manuscript.
+
+**Decision: exit gate 1.2 PASS (conditional)**, confirmed by the user 2026-11-01. Conditions carried into stage 1.3/1.4: (a) E2E check of keyboard reachability (Doc 8 §8 item 7); (b) one key flow with the network adapter switched off; (c) print layout checked in Chrome (FR-60, Should); (d) user confirms the A2 wording of Tabel 1.1 used in the report.

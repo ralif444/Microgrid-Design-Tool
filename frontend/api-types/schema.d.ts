@@ -192,6 +192,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check a Project file: version, shape, run records, stage-1 validation */
+        post: operations["import_project"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stage-1 validation for live feedback; no RunRecord, no engine call */
+        post: operations["validate_project"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/run-records/rerun": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify, then re-run the stored input and compare (REPRODUCED or DIFFERS) */
+        post: operations["rerun_run_record"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/run-records/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check an imported RunRecord: schema, both hashes, engine identity */
+        post: operations["verify_run_record"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -359,6 +427,21 @@ export interface components {
              */
             voltage_min_pu?: number | null;
         };
+        /**
+         * DiffKind
+         * @enum {string}
+         */
+        DiffKind: "STATUS" | "STATUS_CODE" | "VALUE" | "MISSING_FIELD" | "EXTRA_FIELD";
+        /** Difference */
+        Difference: {
+            /** Current */
+            current?: unknown;
+            kind: components["schemas"]["DiffKind"];
+            /** Path */
+            path: string;
+            /** Stored */
+            stored?: unknown;
+        };
         /** DominantMode */
         DominantMode: {
             /** Associated Element Ids */
@@ -377,6 +460,13 @@ export interface components {
             /** Real Per S */
             real_per_s: number;
         };
+        /** EngineComparison */
+        EngineComparison: {
+            current: components["schemas"]["EngineSide"];
+            /** Differs */
+            differs: boolean | null;
+            stored: components["schemas"]["EngineSide"];
+        };
         /** EngineIdentity */
         EngineIdentity: {
             /** Engine Git Commit */
@@ -390,6 +480,40 @@ export interface components {
          * @enum {string}
          */
         EngineKind: "FAKE" | "REAL";
+        /** EngineSide */
+        EngineSide: {
+            /** Engine Git Commit */
+            engine_git_commit: string | null;
+            engine_kind: components["schemas"]["EngineKind"] | null;
+            /** Engine Version */
+            engine_version: string | null;
+        };
+        /**
+         * FileCheckCode
+         * @enum {string}
+         */
+        FileCheckCode: "OK" | "MIGRATED" | "UNKNOWN_SCHEMA_VERSION" | "UNMIGRATABLE" | "HASH_MISMATCH" | "MALFORMED_FILE";
+        /** FileCheckDetail */
+        FileCheckDetail: {
+            code: components["schemas"]["FileCheckCode"];
+            /** Message */
+            message: string;
+            /** Path */
+            path: string;
+        };
+        /** FileCheckResult */
+        FileCheckResult: {
+            /** Accepted */
+            accepted: boolean;
+            code: components["schemas"]["FileCheckCode"];
+            /**
+             * Details
+             * @default []
+             */
+            details?: components["schemas"]["FileCheckDetail"][];
+            /** Message */
+            message: string;
+        };
         /** HealthInfo */
         HealthInfo: {
             /** Status */
@@ -407,6 +531,17 @@ export interface components {
              * @default null
              */
             p_kw?: number | null;
+        };
+        /** ImportResponse */
+        ImportResponse: {
+            file_check: components["schemas"]["FileCheckResult"];
+            /** Migrated From Version */
+            migrated_from_version: number | null;
+            /** Project */
+            project: {
+                [key: string]: unknown;
+            } | null;
+            validation: components["schemas"]["ValidationReport"] | null;
         };
         /** Indicator */
         Indicator: {
@@ -876,6 +1011,11 @@ export interface components {
             kind: components["schemas"]["ConstraintKind"];
         };
         /**
+         * Outcome
+         * @enum {string}
+         */
+        Outcome: "REPRODUCED" | "DIFFERS";
+        /**
          * OutputMetric
          * @enum {string}
          */
@@ -892,6 +1032,62 @@ export interface components {
          * @enum {string}
          */
         PfDirection: "LAGGING" | "LEADING";
+        /**
+         * ProjectFile
+         * @description Doc 3 §8 top-level layout.
+         */
+        ProjectFile: {
+            /** App Version */
+            app_version: string;
+            /** Buses */
+            buses: components["schemas"]["Bus"][];
+            design_constraints: components["schemas"]["DesignConstraints"];
+            /** Inverters */
+            inverters: components["schemas"]["Inverter"][];
+            /** Lines */
+            lines: components["schemas"]["Line"][];
+            load_profile: components["schemas"]["LoadProfile"] | null;
+            /** Loads */
+            loads: components["schemas"]["Load"][];
+            project: components["schemas"]["ProjectMeta"];
+            /** Run Records */
+            run_records: unknown[];
+            /** Scenarios */
+            scenarios: unknown[];
+            /** Schema Version */
+            schema_version: number;
+            /** Sizing Advice */
+            sizing_advice: components["schemas"]["SizingAdviceItem"][];
+        };
+        /**
+         * ProjectMeta
+         * @description Doc 3 §3.1 (nominal values live here in the file, D-47 K14).
+         */
+        ProjectMeta: {
+            /** Created At */
+            created_at: string;
+            /**
+             * Description
+             * @default null
+             */
+            description?: string | null;
+            /** Id */
+            id: string;
+            /** Modified At */
+            modified_at: string;
+            /** Name */
+            name: string;
+            /**
+             * Nominal Frequency Hz
+             * @default null
+             */
+            nominal_frequency_hz?: number | null;
+            /**
+             * Nominal Voltage Kv
+             * @default null
+             */
+            nominal_voltage_kv?: number | null;
+        };
         /**
          * ProjectSnapshot
          * @description Design data sent with every analysis request (Doc 3 §7 canonical snapshot content).
@@ -960,6 +1156,15 @@ export interface components {
             /** Rank */
             rank: number;
         };
+        /** ReproductionReport */
+        ReproductionReport: {
+            /** Differences */
+            differences: components["schemas"]["Difference"][];
+            outcome: components["schemas"]["Outcome"];
+            /** Solver Tolerance */
+            solver_tolerance?: unknown;
+            version_mismatch: components["schemas"]["EngineComparison"] | null;
+        };
         /** RequiredInverter */
         RequiredInverter: {
             /** Assumptions */
@@ -968,6 +1173,12 @@ export interface components {
             basis: string;
             /** Value Kva */
             value_kva: number;
+        };
+        /** RerunResponse */
+        RerunResponse: {
+            analysis: components["schemas"]["AnalysisResponse"] | null;
+            file_check: components["schemas"]["FileCheckResult"];
+            reproduction: components["schemas"]["ReproductionReport"] | null;
         };
         /** RunRecord */
         RunRecord: {
@@ -1062,6 +1273,38 @@ export interface components {
             unit: string;
             /** Value */
             value: number;
+        };
+        /**
+         * SizingAdviceItem
+         * @description Doc 3 §3.8.
+         */
+        SizingAdviceItem: {
+            /** Created At */
+            created_at: string;
+            /**
+             * Edited Values
+             * @default null
+             */
+            edited_values?: {
+                [key: string]: unknown;
+            } | null;
+            /** Id */
+            id: string;
+            /** Input Hash */
+            input_hash: string;
+            /** Ps Parameters */
+            ps_parameters: {
+                [key: string]: unknown;
+            };
+            /** Result */
+            result: {
+                [key: string]: unknown;
+            };
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "PROPOSED" | "ACCEPTED" | "EDITED" | "SKIPPED";
         };
         /** SizingCheck */
         SizingCheck: {
@@ -1165,6 +1408,22 @@ export interface components {
          */
         TransientClass: "RECOVERED_STABLE" | "CRITERIA_VIOLATED" | "UNSTABLE";
         /**
+         * ValidateRequest
+         * @description Body of POST /api/projects/validate (Doc 6 §3.4).
+         */
+        ValidateRequest: {
+            /**
+             * Parameters
+             * @default null
+             */
+            parameters?: {
+                [key: string]: unknown;
+            } | null;
+            project_snapshot: components["schemas"]["ProjectSnapshot"];
+            /** @default null */
+            target_analysis_type?: components["schemas"]["AnalysisType"] | null;
+        };
+        /**
          * ValidationIssue
          * @description One stage-1 issue (Doc 3 §4, Doc 6 §3.4).
          */
@@ -1190,10 +1449,27 @@ export interface components {
             message: string;
         };
         /**
+         * ValidationReport
+         * @description Stage-1 result for live feedback; no RunRecord, no Status (Doc 6 §3.4).
+         */
+        ValidationReport: {
+            /** Issues */
+            issues: components["schemas"]["ValidationIssue"][];
+            /** Snapshot Hash */
+            snapshot_hash: string;
+            /** Valid */
+            valid: boolean;
+        };
+        /**
          * Verdict
          * @enum {string}
          */
         Verdict: "FEASIBLE" | "INFEASIBLE";
+        /** VerifyResponse */
+        VerifyResponse: {
+            engine_comparison: components["schemas"]["EngineComparison"] | null;
+            file_check: components["schemas"]["FileCheckResult"];
+        };
         /** Warning */
         Warning: {
             code: components["schemas"]["WarningCode"];
@@ -1468,6 +1744,106 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MetaInfo"];
+                };
+            };
+        };
+    };
+    import_project: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectFile"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportResponse"];
+                };
+            };
+        };
+    };
+    validate_project: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ValidateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationReport"];
+                };
+            };
+        };
+    };
+    rerun_run_record: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    run_record: components["schemas"]["RunRecord"];
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RerunResponse"];
+                };
+            };
+        };
+    };
+    verify_run_record: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    run_record: components["schemas"]["RunRecord"];
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerifyResponse"];
                 };
             };
         };

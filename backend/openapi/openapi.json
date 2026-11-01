@@ -386,6 +386,41 @@
         "title": "DesignConstraints",
         "type": "object"
       },
+      "DiffKind": {
+        "enum": [
+          "STATUS",
+          "STATUS_CODE",
+          "VALUE",
+          "MISSING_FIELD",
+          "EXTRA_FIELD"
+        ],
+        "title": "DiffKind",
+        "type": "string"
+      },
+      "Difference": {
+        "additionalProperties": false,
+        "properties": {
+          "current": {
+            "title": "Current"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DiffKind"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "stored": {
+            "title": "Stored"
+          }
+        },
+        "required": [
+          "path",
+          "kind"
+        ],
+        "title": "Difference",
+        "type": "object"
+      },
       "DominantMode": {
         "additionalProperties": false,
         "properties": {
@@ -437,6 +472,35 @@
         "title": "Eigenvalue",
         "type": "object"
       },
+      "EngineComparison": {
+        "additionalProperties": false,
+        "properties": {
+          "current": {
+            "$ref": "#/components/schemas/EngineSide"
+          },
+          "differs": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Differs"
+          },
+          "stored": {
+            "$ref": "#/components/schemas/EngineSide"
+          }
+        },
+        "required": [
+          "stored",
+          "current",
+          "differs"
+        ],
+        "title": "EngineComparison",
+        "type": "object"
+      },
       "EngineIdentity": {
         "additionalProperties": false,
         "properties": {
@@ -467,6 +531,116 @@
         ],
         "title": "EngineKind",
         "type": "string"
+      },
+      "EngineSide": {
+        "additionalProperties": false,
+        "properties": {
+          "engine_git_commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Engine Git Commit"
+          },
+          "engine_kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EngineKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "engine_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Engine Version"
+          }
+        },
+        "required": [
+          "engine_kind",
+          "engine_version",
+          "engine_git_commit"
+        ],
+        "title": "EngineSide",
+        "type": "object"
+      },
+      "FileCheckCode": {
+        "enum": [
+          "OK",
+          "MIGRATED",
+          "UNKNOWN_SCHEMA_VERSION",
+          "UNMIGRATABLE",
+          "HASH_MISMATCH",
+          "MALFORMED_FILE"
+        ],
+        "title": "FileCheckCode",
+        "type": "string"
+      },
+      "FileCheckDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/FileCheckCode"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "code",
+          "message"
+        ],
+        "title": "FileCheckDetail",
+        "type": "object"
+      },
+      "FileCheckResult": {
+        "additionalProperties": false,
+        "properties": {
+          "accepted": {
+            "title": "Accepted",
+            "type": "boolean"
+          },
+          "code": {
+            "$ref": "#/components/schemas/FileCheckCode"
+          },
+          "details": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/FileCheckDetail"
+            },
+            "title": "Details",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "accepted",
+          "code",
+          "message"
+        ],
+        "title": "FileCheckResult",
+        "type": "object"
       },
       "HealthInfo": {
         "additionalProperties": false,
@@ -511,6 +685,55 @@
           }
         },
         "title": "HourValue",
+        "type": "object"
+      },
+      "ImportResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "file_check": {
+            "$ref": "#/components/schemas/FileCheckResult"
+          },
+          "migrated_from_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Migrated From Version"
+          },
+          "project": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project"
+          },
+          "validation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ValidationReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "file_check",
+          "project",
+          "migrated_from_version",
+          "validation"
+        ],
+        "title": "ImportResponse",
         "type": "object"
       },
       "Indicator": {
@@ -1920,6 +2143,14 @@
         "title": "NotEvaluated",
         "type": "object"
       },
+      "Outcome": {
+        "enum": [
+          "REPRODUCED",
+          "DIFFERS"
+        ],
+        "title": "Outcome",
+        "type": "string"
+      },
       "OutputMetric": {
         "enum": [
           "SYSTEM_FREQUENCY",
@@ -1967,6 +2198,163 @@
         ],
         "title": "PfDirection",
         "type": "string"
+      },
+      "ProjectFile": {
+        "additionalProperties": false,
+        "description": "Doc 3 §8 top-level layout.",
+        "properties": {
+          "app_version": {
+            "title": "App Version",
+            "type": "string"
+          },
+          "buses": {
+            "items": {
+              "$ref": "#/components/schemas/Bus"
+            },
+            "title": "Buses",
+            "type": "array"
+          },
+          "design_constraints": {
+            "$ref": "#/components/schemas/DesignConstraints"
+          },
+          "inverters": {
+            "items": {
+              "$ref": "#/components/schemas/Inverter"
+            },
+            "title": "Inverters",
+            "type": "array"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/Line"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "load_profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LoadProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "loads": {
+            "items": {
+              "$ref": "#/components/schemas/Load"
+            },
+            "title": "Loads",
+            "type": "array"
+          },
+          "project": {
+            "$ref": "#/components/schemas/ProjectMeta"
+          },
+          "run_records": {
+            "items": {},
+            "title": "Run Records",
+            "type": "array"
+          },
+          "scenarios": {
+            "items": {},
+            "title": "Scenarios",
+            "type": "array"
+          },
+          "schema_version": {
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "sizing_advice": {
+            "items": {
+              "$ref": "#/components/schemas/SizingAdviceItem"
+            },
+            "title": "Sizing Advice",
+            "type": "array"
+          }
+        },
+        "required": [
+          "schema_version",
+          "app_version",
+          "project",
+          "buses",
+          "lines",
+          "loads",
+          "inverters",
+          "load_profile",
+          "design_constraints",
+          "sizing_advice",
+          "scenarios",
+          "run_records"
+        ],
+        "title": "ProjectFile",
+        "type": "object"
+      },
+      "ProjectMeta": {
+        "additionalProperties": false,
+        "description": "Doc 3 §3.1 (nominal values live here in the file, D-47 K14).",
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "modified_at": {
+            "title": "Modified At",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "nominal_frequency_hz": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Nominal Frequency Hz"
+          },
+          "nominal_voltage_kv": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Nominal Voltage Kv"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "modified_at"
+        ],
+        "title": "ProjectMeta",
+        "type": "object"
       },
       "ProjectSnapshot": {
         "additionalProperties": false,
@@ -2123,6 +2511,41 @@
         "title": "Ranking",
         "type": "object"
       },
+      "ReproductionReport": {
+        "additionalProperties": false,
+        "properties": {
+          "differences": {
+            "items": {
+              "$ref": "#/components/schemas/Difference"
+            },
+            "title": "Differences",
+            "type": "array"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/Outcome"
+          },
+          "solver_tolerance": {
+            "title": "Solver Tolerance"
+          },
+          "version_mismatch": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EngineComparison"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "outcome",
+          "differences",
+          "version_mismatch"
+        ],
+        "title": "ReproductionReport",
+        "type": "object"
+      },
       "RequiredInverter": {
         "additionalProperties": false,
         "properties": {
@@ -2148,6 +2571,41 @@
           "value_kva"
         ],
         "title": "RequiredInverter",
+        "type": "object"
+      },
+      "RerunResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "analysis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnalysisResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "file_check": {
+            "$ref": "#/components/schemas/FileCheckResult"
+          },
+          "reproduction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReproductionReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "file_check",
+          "analysis",
+          "reproduction"
+        ],
+        "title": "RerunResponse",
         "type": "object"
       },
       "RunRecord": {
@@ -2423,6 +2881,67 @@
           "status_change"
         ],
         "title": "Sensitivity",
+        "type": "object"
+      },
+      "SizingAdviceItem": {
+        "additionalProperties": false,
+        "description": "Doc 3 §3.8.",
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "edited_values": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Edited Values"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "input_hash": {
+            "title": "Input Hash",
+            "type": "string"
+          },
+          "ps_parameters": {
+            "additionalProperties": true,
+            "title": "Ps Parameters",
+            "type": "object"
+          },
+          "result": {
+            "additionalProperties": true,
+            "title": "Result",
+            "type": "object"
+          },
+          "state": {
+            "enum": [
+              "PROPOSED",
+              "ACCEPTED",
+              "EDITED",
+              "SKIPPED"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "input_hash",
+          "ps_parameters",
+          "state",
+          "result"
+        ],
+        "title": "SizingAdviceItem",
         "type": "object"
       },
       "SizingCheck": {
@@ -2722,6 +3241,44 @@
         "title": "TransientClass",
         "type": "string"
       },
+      "ValidateRequest": {
+        "additionalProperties": false,
+        "description": "Body of POST /api/projects/validate (Doc 6 §3.4).",
+        "properties": {
+          "parameters": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Parameters"
+          },
+          "project_snapshot": {
+            "$ref": "#/components/schemas/ProjectSnapshot"
+          },
+          "target_analysis_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnalysisType"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "project_snapshot"
+        ],
+        "title": "ValidateRequest",
+        "type": "object"
+      },
       "ValidationIssue": {
         "additionalProperties": false,
         "description": "One stage-1 issue (Doc 3 §4, Doc 6 §3.4).",
@@ -2781,6 +3338,34 @@
         "title": "ValidationIssue",
         "type": "object"
       },
+      "ValidationReport": {
+        "additionalProperties": false,
+        "description": "Stage-1 result for live feedback; no RunRecord, no Status (Doc 6 §3.4).",
+        "properties": {
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationIssue"
+            },
+            "title": "Issues",
+            "type": "array"
+          },
+          "snapshot_hash": {
+            "title": "Snapshot Hash",
+            "type": "string"
+          },
+          "valid": {
+            "title": "Valid",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "valid",
+          "issues",
+          "snapshot_hash"
+        ],
+        "title": "ValidationReport",
+        "type": "object"
+      },
       "Verdict": {
         "enum": [
           "FEASIBLE",
@@ -2788,6 +3373,30 @@
         ],
         "title": "Verdict",
         "type": "string"
+      },
+      "VerifyResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "engine_comparison": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EngineComparison"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "file_check": {
+            "$ref": "#/components/schemas/FileCheckResult"
+          }
+        },
+        "required": [
+          "file_check",
+          "engine_comparison"
+        ],
+        "title": "VerifyResponse",
+        "type": "object"
       },
       "Warning": {
         "additionalProperties": false,
@@ -3157,6 +3766,146 @@
         "summary": "Meta",
         "tags": [
           "meta"
+        ]
+      }
+    },
+    "/api/projects/import": {
+      "post": {
+        "operationId": "import_project",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectFile"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Check a Project file: version, shape, run records, stage-1 validation",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/projects/validate": {
+      "post": {
+        "operationId": "validate_project",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Stage-1 validation for live feedback; no RunRecord, no engine call",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/run-records/rerun": {
+      "post": {
+        "operationId": "rerun_run_record",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "run_record": {
+                    "$ref": "#/components/schemas/RunRecord"
+                  }
+                },
+                "required": [
+                  "run_record"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RerunResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Verify, then re-run the stored input and compare (REPRODUCED or DIFFERS)",
+        "tags": [
+          "run-records"
+        ]
+      }
+    },
+    "/api/run-records/verify": {
+      "post": {
+        "operationId": "verify_run_record",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "run_record": {
+                    "$ref": "#/components/schemas/RunRecord"
+                  }
+                },
+                "required": [
+                  "run_record"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Check an imported RunRecord: schema, both hashes, engine identity",
+        "tags": [
+          "run-records"
         ]
       }
     }

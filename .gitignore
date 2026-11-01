@@ -13,3 +13,4 @@ test-results/
 playwright-report/
 frontend/next-env.d.ts
 frontend/tsconfig.tsbuildinfo
+docs/ref/

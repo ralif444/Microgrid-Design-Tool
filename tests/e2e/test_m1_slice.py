@@ -2,49 +2,18 @@
 
 NFR-02 (one start command serves UI and API), NFR-03 (no external requests), FR-35 banner,
 FR-17 issue list, engine badge (Doc 7 P2). Browser: Playwright Chromium; gate runs use
-latest stable Chrome (version logged in docs/gate_log.md).
+latest stable Chrome (see conftest).
 """
 
 from __future__ import annotations
 
-import json
 import re
-from collections.abc import Callable, Iterator
-from urllib.parse import urlparse
+from collections.abc import Callable
 
-import pytest
-from fixtures.designs import two_bus_snapshot
-from playwright.sync_api import Browser, Page, expect, sync_playwright
+from flows import create_project, enter_design, gui_snapshot
+from playwright.sync_api import Page, expect
 
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
-
-
-@pytest.fixture(scope="module")
-def browser() -> Iterator[Browser]:
-    with sync_playwright() as p:
-        b = p.chromium.launch()
-        yield b
-        b.close()
-
-
-@pytest.fixture
-def page(browser: Browser) -> Iterator[Page]:
-    ctx = browser.new_context()
-    external: list[str] = []
-
-    def guard(route, request) -> None:  # type: ignore[no-untyped-def]
-        host = urlparse(request.url).hostname
-        if host not in ("127.0.0.1", "localhost"):
-            external.append(request.url)
-            route.abort()
-        else:
-            route.continue_()
-
-    ctx.route("**/*", guard)
-    pg = ctx.new_page()
-    yield pg
-    ctx.close()
-    assert external == [], f"external requests attempted: {external}"  # NFR-03
 
 
 def test_nfr_02_one_process_serves_ui_and_api(server: Callable[[str], str], page: Page) -> None:
@@ -57,7 +26,8 @@ def test_nfr_02_one_process_serves_ui_and_api(server: Callable[[str], str], page
 def test_fr_17_m1_with_empty_template_lists_issues(
     server: Callable[[str], str], page: Page
 ) -> None:
-    page.goto(server("default") + "/power-flow/")
+    create_project(page, server("default"), {"nominal_voltage_kv": None})
+    page.get_by_role("link", name="5 Power flow (M1)").click()
     page.get_by_role("button", name="Run M1").click()
     banner = page.get_by_role("status", name="Status")
     expect(banner).to_have_attribute("data-status", "INPUT_INVALID")
@@ -66,8 +36,9 @@ def test_fr_17_m1_with_empty_template_lists_issues(
 
 
 def test_fr_35_m1_feasible_on_fake(server: Callable[[str], str], page: Page) -> None:
-    page.goto(server("default") + "/power-flow/")
-    page.get_by_label("Design (project snapshot, JSON)").fill(json.dumps(two_bus_snapshot()))
+    enter_design(page, server("default"), gui_snapshot())
+    page.get_by_role("link", name="5 Power flow (M1)").click()
+    expect(page.get_by_text("No problems found.")).to_be_visible()
     page.get_by_role("button", name="Run M1").click()
     banner = page.get_by_role("status", name="Status")
     expect(banner).to_have_attribute("data-status", "FEASIBLE")
@@ -78,8 +49,8 @@ def test_fr_35_m1_feasible_on_fake(server: Callable[[str], str], page: Page) -> 
 
 
 def test_solver_failed_banner_with_profile(server: Callable[[str], str], page: Page) -> None:
-    page.goto(server("m1-solver-failed") + "/power-flow/")
-    page.get_by_label("Design (project snapshot, JSON)").fill(json.dumps(two_bus_snapshot()))
+    enter_design(page, server("m1-solver-failed"), gui_snapshot())
+    page.get_by_role("link", name="5 Power flow (M1)").click()
     page.get_by_role("button", name="Run M1").click()
     banner = page.get_by_role("status", name="Status")
     expect(banner).to_have_attribute("data-status", "SOLVER_FAILED")

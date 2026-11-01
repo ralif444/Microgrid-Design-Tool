@@ -1,0 +1,50 @@
+[
+  {
+    "value": {
+      "loads": [
+        {
+          "id": "L2",
+          "bus_id": "B1",
+          "p_kw": 5.0,
+          "q_kvar": null,
+          "power_factor": 0.9,
+          "pf_direction": "LAGGING"
+        },
+        {
+          "id": "L1",
+          "bus_id": "B2",
+          "p_kw": 0.1,
+          "q_kvar": 2,
+          "power_factor": null,
+          "pf_direction": null
+        }
+      ],
+      "load_profile": null,
+      "ps_parameters": {
+        "inverter_margin_ratio": 0.2,
+        "unit_count": 2,
+        "redundancy": 0,
+        "autonomy_h": null
+      }
+    },
+    "canonical": "{\"loads\":[{\"bus_id\":\"B2\",\"id\":\"L1\",\"p_kw\":0.1,\"q_kvar\":2},{\"bus_id\":\"B1\",\"id\":\"L2\",\"p_kw\":5,\"pf_direction\":\"LAGGING\",\"power_factor\":0.9}],\"ps_parameters\":{\"inverter_margin_ratio\":0.2,\"redundancy\":0,\"unit_count\":2}}",
+    "sha256": "ed017d97914894145b97a3063e59f2efdcb9df4c215e0d86f61cdac825d502a9"
+  },
+  {
+    "value": {
+      "numbers": [
+        1e+21,
+        1e-07,
+        123456789.125,
+        -0.0,
+        1.0,
+        0.3,
+        5e-324,
+        1.7976931348623157e+308
+      ],
+      "text": "é \"q\" \\ \n \u001f"
+    },
+    "canonical": "{\"numbers\":[1e+21,1e-7,123456789.125,0,1,0.3,5e-324,1.7976931348623157e+308],\"text\":\"é \\\"q\\\" \\\\ \\n \\u001f\"}",
+    "sha256": "bc4391e1ea679ea55567bd58d04cb369c3a4cb0e44d8ee312bcd20183cae184e"
+  }
+]

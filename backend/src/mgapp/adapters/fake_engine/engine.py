@@ -19,7 +19,7 @@ from mgapp.domain.enums import AnalysisType, EngineKind, Status, StatusCode, War
 from mgapp.domain.payloads import Verdict
 
 # Version of the canned behaviour; bump when canned outputs change (RunRecord engine_version).
-FAKE_ENGINE_VERSION = "fake-1"
+FAKE_ENGINE_VERSION = "fake-2"  # fake-2: CONSTRAINT_NOT_EVALUATED on M2
 FAKE_ENGINE_COMMIT = "none"
 
 
@@ -127,6 +127,16 @@ def build_result(request: AnalysisRequest, outcome: Outcome) -> AnalysisResult:
         else:  # disallowed for other types; used to test the guard (ENGINE_ERROR)
             payload = payloads.feasible_payload(request)
         limiting = payloads.synthetic_violations(request.project_snapshot)
+    warnings = [FAKE_WARNING]
+    if request.analysis_type is AnalysisType.M2 and payload and payload["not_evaluated"]:
+        warnings.append(
+            Warning(
+                code=WarningCode.CONSTRAINT_NOT_EVALUATED,
+                message=f"{len(payload['not_evaluated'])} check(s) not evaluated: their limit is "
+                "empty. They are not counted as satisfied.",
+                path="payload.not_evaluated",
+            )
+        )
     diagnostics: dict[str, object] = {"engine": "FAKE"}
     if outcome is Outcome.INPUT_INVALID:
         diagnostics["issues"] = []
@@ -136,6 +146,6 @@ def build_result(request: AnalysisRequest, outcome: Outcome) -> AnalysisResult:
         message=message,
         payload=payload,
         limiting_constraints=limiting,
-        warnings=[FAKE_WARNING],
+        warnings=warnings,
         diagnostics=diagnostics,
     )
