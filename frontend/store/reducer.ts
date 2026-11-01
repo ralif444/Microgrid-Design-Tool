@@ -1,5 +1,12 @@
 // Project store reducer (ADR-005: Context + reducer). The open Project lives here (Doc 7 §7).
-import type { DesignConstraints, ProjectSnapshot, PsPayload, RunRecord, RunRecordRef } from "../api-types";
+import type {
+  DesignConstraints,
+  ProjectFile,
+  ProjectSnapshot,
+  PsPayload,
+  RunRecord,
+  RunRecordRef,
+} from "../api-types";
 import { sha256Hex } from "./canonical";
 
 export interface ProjectMeta {
@@ -7,7 +14,7 @@ export interface ProjectMeta {
   name: string;
   description: string | null;
   created_at: string;
-  modified_at: string; // shortcut: set at creation only; the save in WP 1.2.3 updates it
+  modified_at: string; // set on Save (D-47 K14)
 }
 
 // PS parameters of Doc 3 §6.1; null = not entered (no defaults).
@@ -59,7 +66,11 @@ export type ProjectAction =
   | { type: "constraintSet"; field: keyof DesignConstraints; value: number | null }
   | { type: "adviceAdded"; advice: SizingAdvice }
   | { type: "adviceDecided"; id: string; state: "ACCEPTED" | "SKIPPED" }
-  | { type: "runRecordAdded"; record: RunRecord };
+  | { type: "runRecordAdded"; record: RunRecord }
+  // Project file (D-47): load replaces the open Project; save clears the unsaved flag.
+  | { type: "projectLoaded"; file: ProjectFile }
+  | { type: "projectSaved"; modified_at: string }
+  | { type: "runRecordImported"; record: RunRecord };
 
 const emptyDesign = (): ProjectSnapshot => ({
   nominal_voltage_kv: null,
@@ -146,6 +157,14 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
       };
     case "runRecordAdded":
       return { ...state, runRecords: [...state.runRecords, action.record] };
+    case "projectLoaded":
+      return { ...fromProjectFile(action.file), unsaved: false };
+    case "projectSaved":
+      return state.project
+        ? { ...state, project: { ...state.project, modified_at: action.modified_at }, unsaved: false }
+        : state;
+    case "runRecordImported":
+      return { ...state, runRecords: [...state.runRecords, action.record], unsaved: true };
   }
 }
 
@@ -165,5 +184,25 @@ export function m1Ref(runRecords: RunRecord[]): RunRecordRef | null {
     status: rec.result.status,
     result_hash: rec.result_hash,
     result_payload: rec.result.payload ?? null,
+  };
+}
+
+// The inverse of toProjectFile (projectFile.ts) for a file the server accepted (Doc 6 §3.6).
+export function fromProjectFile(f: ProjectFile): Omit<ProjectState, "unsaved"> {
+  const { nominal_voltage_kv, nominal_frequency_hz, ...meta } = f.project;
+  return {
+    project: { ...meta, description: meta.description ?? null },
+    design: {
+      nominal_voltage_kv: nominal_voltage_kv ?? null,
+      nominal_frequency_hz: nominal_frequency_hz ?? null,
+      buses: f.buses,
+      lines: f.lines,
+      loads: f.loads,
+      load_profile: f.load_profile,
+      inverters: f.inverters,
+      design_constraints: f.design_constraints,
+    },
+    sizingAdvice: f.sizing_advice as unknown as SizingAdvice[],
+    runRecords: f.run_records as RunRecord[],
   };
 }

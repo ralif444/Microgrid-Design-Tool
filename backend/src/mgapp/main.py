@@ -22,7 +22,7 @@ from mgapp.adapters.fake_engine import FakeEngine
 from mgapp.adapters.fake_engine.profiles import PROFILES
 from mgapp.api import error_mapper
 from mgapp.api.error_mapper import TransportFailureError
-from mgapp.api.routers import analyses, health_meta, projects
+from mgapp.api.routers import analyses, health_meta, projects, run_records
 from mgapp.config import BIND_HOST, EngineChoice, Settings
 from mgapp.domain.contract import ValidationIssue
 from mgapp.domain.payloads import PAYLOAD_MODEL
@@ -30,6 +30,7 @@ from mgapp.engine_port import EnginePort
 from mgapp.services.guard import ExecutionGuard
 from mgapp.services.limits import Limits
 from mgapp.services.pipeline import AnalysisRequestBody, Pipeline
+from mgapp.services.project_file import ProjectFile
 from mgapp.services.run_record import RunRecordService
 from mgapp.services.validation import ValidateRequest
 
@@ -74,10 +75,11 @@ def create_app(
     app.include_router(health_meta.router)
     app.include_router(analyses.router)
     app.include_router(projects.router)
+    app.include_router(run_records.router)
 
     known = [
         r
-        for router in (health_meta.router, analyses.router, projects.router)
+        for router in (health_meta.router, analyses.router, projects.router, run_records.router)
         for r in router.routes
         if isinstance(r, APIRoute)
     ]
@@ -115,6 +117,7 @@ def build_openapi(app: FastAPI) -> dict[str, Any]:
     extra: list[type[BaseModel]] = [
         AnalysisRequestBody,
         ValidateRequest,
+        ProjectFile,
         ValidationIssue,
         *PAYLOAD_MODEL.values(),
     ]

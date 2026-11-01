@@ -140,3 +140,15 @@ Totals: Python seams 271 passed; client 6 passed; e2e 5 passed. No Fake profile 
 | 7 | Stage-1.1 E2E flows now enter the design through the screens (D-46 K7) | PASS | tests/e2e/test_m1_slice.py, tests/e2e/flows.py |
 
 Totals: Python seams 277 passed; client 9 passed; e2e 7 passed on Chromium 153.0.8010.12 and Chrome 156.0.8078.48. Fake Engine change (D-44 rule): default M2 behaviour adds warning CONSTRAINT_NOT_EVALUATED when `not_evaluated` is non-empty (Doc 6 §3.3); no new profile; Fake version fake-2. Decisions: Doc 9 D-46 (K7–K13).
+
+## WP 1.2.3 — Project file, Run history, report (2026-11-01)
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | RunRecord verify: intact accepted with engine comparison; tampered snapshot and result → HASH_MISMATCH on both paths with zero engine calls; unknown version / not a record refused (FR-49, FR-50, FR-57) | PASS | tests/reproducibility/test_verify_rerun.py |
+| 2 | Re-run: M1, PS, empty-snapshot M1 and dependent M2 REPRODUCED with `replay_of_record_id`, imported record unchanged; scripted SOLVER_FAILED → DIFFERS with STATUS and STATUS_CODE; other engine version → ENGINE_VERSION_MISMATCH warning, still runs (NFR-01, FR-51, FR-52, FR-53) | PASS | same file |
+| 3 | Project import: current file returned unchanged with validation; versions 2 / null / "1" → UNKNOWN_SCHEMA_VERSION, 0 → UNMIGRATABLE, nothing loaded; not a Project → MALFORMED_FILE; stage-1 issues reported not fixed; bad embedded RunRecord listed and skipped (FR-54, FR-55, FR-57, NFR-12, NFR-16, D-47 K15, K16) | PASS | tests/project_file/test_import.py |
+| 4 | Store: saved file carries `schema_version` and nominal values in `project`; load then save gives the same document; Save clears unsaved (FR-54, FR-55) | PASS | frontend/store/projectFile.test.ts |
+| 5 | S-16 Report on profile `m2-infeasible`: verdict, limiting constraints, SVG bus-voltage chart, tables, 64-hex hash in traceability, A1–A6, Fake note (FR-58, FR-59) | PASS | tests/e2e/test_report_runs.py |
+| 6 | S-15: one-file export, tampered import refused and not added, Re-run adds a record and shows Reproduced; header Save → create other Project (confirm) → Open restores name and runs (FR-49, FR-50, FR-53, FR-55, K17) | PASS | same file |
+
+Totals: Python seams 307 passed; client 12 passed; e2e 9 passed on Chromium 153.0.8010.12 and Chrome 156.0.8078.48. No Fake profile added. Decisions: Doc 9 D-47 (K14–K19). A2 in the report is quoted from Tabel 1.1 as extracted; the manuscript sentence appears to miss a word (user to confirm). Print layout (FR-60) has CSS only, not checked in a browser print.

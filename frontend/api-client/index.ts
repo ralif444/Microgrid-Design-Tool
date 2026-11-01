@@ -3,9 +3,12 @@ import type {
   AnalysisRequestBody,
   AnalysisResponse,
   AnalysisType,
+  ImportResponse,
   MetaInfo,
+  RerunResponse,
   ValidateRequest,
   ValidationReport,
+  VerifyResponse,
 } from "../api-types";
 
 export type ApiOutcome<T> = { ok: true; data: T } | { ok: false; message: string };
@@ -46,4 +49,23 @@ export function validateProject(body: ValidateRequest): Promise<ApiOutcome<Valid
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body),
   });
+}
+
+const post = (body: unknown): RequestInit => ({
+  method: "POST",
+  headers: { "content-type": "application/json" },
+  body: JSON.stringify(body),
+});
+
+// The server stores nothing; it checks the file and returns it (Doc 6 §3.6).
+export function importProject(file: unknown): Promise<ApiOutcome<ImportResponse>> {
+  return call<ImportResponse>("/api/projects/import", post(file));
+}
+
+export function verifyRunRecord(record: unknown): Promise<ApiOutcome<VerifyResponse>> {
+  return call<VerifyResponse>("/api/run-records/verify", post({ run_record: record }));
+}
+
+export function rerunRunRecord(record: unknown): Promise<ApiOutcome<RerunResponse>> {
+  return call<RerunResponse>("/api/run-records/rerun", post({ run_record: record }));
 }

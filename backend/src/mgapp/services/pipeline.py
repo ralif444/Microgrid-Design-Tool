@@ -78,15 +78,19 @@ class Pipeline:
     def engine_identity(self) -> EngineIdentity:
         return self._guard.identity()
 
-    def run_raw(self, analysis_type: AnalysisType, raw: Any) -> AnalysisResponse:
-        """Entry from HTTP: a request-model failure becomes INPUT_INVALID/MALFORMED_REQUEST."""
+    def run_raw(
+        self, analysis_type: AnalysisType, raw: Any, replay_of: str | None = None
+    ) -> AnalysisResponse:
+        """Entry from HTTP and re-run: a request-model failure becomes MALFORMED_REQUEST."""
         try:
             body = AnalysisRequestBody.model_validate(raw)
         except ValidationError as exc:
-            return self._malformed(analysis_type, raw, exc)
-        return self.run(analysis_type, body)
+            return self._malformed(analysis_type, raw, exc, replay_of)
+        return self.run(analysis_type, body, replay_of)
 
-    def _malformed(self, t: AnalysisType, raw: Any, exc: ValidationError) -> AnalysisResponse:
+    def _malformed(
+        self, t: AnalysisType, raw: Any, exc: ValidationError, replay_of: str | None
+    ) -> AnalysisResponse:
         r = raw if isinstance(raw, dict) else {}
         snapshot = normalise_raw(r.get("project_snapshot"))
         issue = ValidationIssue(
@@ -110,6 +114,7 @@ class Pipeline:
             solver_config=r.get("solver_config"),
             identity=None,
             result=result,
+            replay_of_record_id=replay_of,
         )
         return AnalysisResponse(result=result, run_record=rec)
 

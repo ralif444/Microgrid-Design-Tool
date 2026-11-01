@@ -16,6 +16,9 @@ API_PATHS = {
     "/api/health",
     "/api/meta",
     "/api/projects/validate",  # WP 1.2.1
+    "/api/projects/import",
+    "/api/run-records/verify",
+    "/api/run-records/rerun",
     *(f"/api/analyses/{t}" for t in ("PS", "M1", "M2", "M3a", "M3b", "M3c", "M3d", "M4a", "M4b")),
 }
 
@@ -37,6 +40,7 @@ UNITLESS = {
     "eigenvalue_index",
     "schema_version",
     "record_schema_version",
+    "migrated_from_version",  # a schema version number
     "max_iterations",
     "sweep_cap",
     "scenario_cap",

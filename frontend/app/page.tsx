@@ -1,13 +1,14 @@
 "use client";
-// S-01 Start (Doc 7 §2): create a new Project (FR-01). Opening a Project file arrives in WP 1.2.3.
+// S-01 Start (Doc 7 §2): create a new Project (FR-01) or open a Project file (header, D-47 K17).
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { NumberField } from "../components/NumberField";
+import { UNSAVED_CONFIRM } from "../components/ProjectFileMenu";
 import { useProject, useProjectDispatch } from "../store";
 
 export default function Home() {
-  const { project } = useProject();
+  const { project, unsaved } = useProject();
   const dispatch = useProjectDispatch();
   const router = useRouter();
   const [name, setName] = useState("");
@@ -16,6 +17,7 @@ export default function Home() {
 
   function create(e: React.FormEvent) {
     e.preventDefault();
+    if (unsaved && !window.confirm(UNSAVED_CONFIRM)) return;
     dispatch({
       type: "projectCreated",
       meta: {
@@ -33,6 +35,7 @@ export default function Home() {
     <>
       <h1>Microgrid design tool</h1>
       <p>Stage 1.2: the calculation engine is the Fake Engine; results are placeholders.</p>
+      <p>To continue earlier work, use “Open project file” in the header.</p>
       {project && (
         <p>
           Open Project: <Link href="/project/">{project.name}</Link>

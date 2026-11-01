@@ -17,3 +17,9 @@ textarea { font-family: monospace; width: 100%; max-width: 60rem; }
 fieldset { border: 0; padding: 0; margin: 0; display: inline; }
 .advice { border: 2px dashed #546e7a; padding: 0.5rem 1rem; margin: 1rem 0; }
 .advice-tag { font-weight: bold; text-transform: uppercase; }
+.outdated { font-weight: bold; color: #c62828; }
+/* Print layout (FR-60): hide controls, keep tables and charts whole. */
+@media print {
+  header, .no-print { display: none; }
+  table, figure, section { break-inside: avoid; }
+}
