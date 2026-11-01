@@ -39,6 +39,7 @@ class Inverter:
     n_q_v_per_var: float
     omega_set_rad_s: float
     v_set_v: float
+    rated_va: float  # three-phase apparent power rating (D-50 K35)
     p_set_w: float = 0.0
     q_set_var: float = 0.0
 

@@ -12,6 +12,7 @@ from mgengine.types import Code, Inverter, Line, Load, Network, SolverConfig, St
 OMEGA_SET = 2 * math.pi * 50.0
 M_P = 2 * math.pi * 0.5 / 1e4
 N_Q = 5e-4  # V/VAR; manuscript lets n_q → 0, a finite value is used here (D-49 K31)
+RATED_VA = 10e3  # Tabel 4.8: 10 kVA per inverter
 
 
 def two_bus(
@@ -22,8 +23,8 @@ def two_bus(
         lines=(Line("L1", "B1", "B2", r_ohm, 0.1),),
         loads=loads,
         inverters=(
-            Inverter("G1", "B1", m_p, N_Q, OMEGA_SET, v_set),
-            Inverter("G2", "B2", m_p, N_Q, OMEGA_SET, v_set),
+            Inverter("G1", "B1", m_p, N_Q, OMEGA_SET, v_set, RATED_VA),
+            Inverter("G2", "B2", m_p, N_Q, OMEGA_SET, v_set, RATED_VA),
         ),
     )
 
