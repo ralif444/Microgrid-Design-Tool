@@ -1,6 +1,6 @@
 # 07 — UI Information Architecture
 
-> Doc 7 of 11. Inputs: PROMPT_v2 (user stories, pipeline order), Docs 1–4, ADR-002/005/010, decisions G, I, J, K (2026-10-17). Names and FR IDs follow Docs 2–3. The HTTP API is specified in Doc 6 and is referred to here only as "the HTTP API (Doc 6)". Guardrail: no equations or numerical content; wireframes use placeholders only.
+> Doc 7 of 11. Inputs: PROMPT_v2 (user stories, pipeline order), Docs 1–4, ADR-002/005/010, decisions G, I, J, K (2026-10-17). Names and FR IDs follow Docs 2–3. The HTTP API is specified in Doc 6 and is referred to here only as "the HTTP API (Doc 6)". Wireframes use placeholders only. **Aligned with the final manuscript (`Seminar.pdf` 4.3.7, 4.2) on 2026-11-01 (Doc 14 D4)**: 17 routes (10 Must, 6 Should, 1 Could) confirmed; no-equations guardrail removed (Doc 14 A20). Phases P0–P4 read as stages 1.1, 1.2, 1.4, 1.5, 1.7.
 
 ## Ringkasan
 Dokumen ini menjelaskan susunan layar aplikasi: layar apa saja yang ada, bagaimana pengguna berpindah antar layar, dan apa yang ditampilkan pada setiap kondisi. Aplikasi dirancang mengikuti alur kerja satu arah, yaitu data beban, saran kapasitas, desain jaringan, aliran daya (M1), pemeriksaan batasan (M2), analisis lanjutan, lalu laporan. Setiap hasil analisis selalu ditampilkan bersama status dan pesan yang mudah dipahami, tidak pernah hanya berupa kode. Saran kapasitas dari tahap PS dibedakan secara visual dari data desain, dan hanya menjadi data desain setelah pengguna menerimanya. Dokumen ini juga memuat aturan kapan suatu langkah boleh dijalankan, misalnya M2 hanya aktif bila ada hasil M1 yang masih berlaku. Sketsa layar bersifat kasar dan tidak memuat angka sebenarnya. Pilihan bahasa antarmuka belum diputuskan dan dicatat sebagai poin terbuka beserta rekomendasinya.
@@ -27,15 +27,15 @@ Routes are Next.js static-export paths (file-based routing, ADR-002), no dynamic
 | S-03 | Loads (+ LoadProfile) | `/loads/` | Load table (Bus, P, Q or power factor with direction); optional 24-point LoadProfile editor; inline validation. | FR-03, FR-04, FR-05, FR-17, FR-18 | Must (LoadProfile: Should) |
 | S-04 | Sizing advice (PS) | `/sizing/` | Run PS; show SizingAdvice with basis and assumptions; Accept / Edit / Skip; stale-advice notice. | FR-06, FR-07, FR-08, FR-09, FR-27 | Must (pre-fill: Should) |
 | S-05 | Network editor | `/network/` | Tabs Buses, Lines, Inverters (tables); delete guard for Buses; derived Line totals; diagram panel (Should). | FR-10, FR-11, FR-12, FR-13, FR-14, FR-05, FR-19 | Must (guard, diagram: Should) |
-| S-06 | Design constraints | `/constraints/` | Voltage band (p.u.), frequency band (Hz), Inverter loading limit, Line current limit; defaults marked as defaults. | FR-15, FR-16, FR-05 | Must (defaults: Should) |
+| S-06 | Design constraints | `/constraints/` | Voltage band (p.u.), frequency band (Hz), Inverter loading limit, Line current limit; **no numeric defaults**: every field starts empty and an empty limit is shown as "not evaluated" (manuscript 4.2.4). | FR-15, FR-16, FR-05 | Must ("not evaluated" display: Should) |
 | S-07 | Power flow (M1) | `/power-flow/` | Run M1; Status banner (an `INPUT_INVALID` result lists all violations, §5); bus voltages, system frequency, Inverter outputs, Line flows; freshness badge (current or stale). | FR-22, FR-23, FR-17, FR-19, FR-20, FR-21, FR-35, FR-36, FR-37, FR-42, FR-43, FR-45 | Must (all-violations list, progress: Should) |
-| S-08 | Constraint check (M2) | `/constraint-check/` | Run M2; verdict; limiting constraints list; margins; SizingCheck panel (separate from SizingAdvice). | FR-24, FR-25, FR-27, FR-26, FR-35, FR-36, FR-37, FR-38, FR-40 | Must (margins: Should) |
+| S-08 | Constraint check (M2) | `/constraint-check/` | Run M2 with design margins m_inv, m_line (required, no default) and optional storage settings; verdict; limiting constraints list; margins; separate "Not evaluated" list (empty limits, never counted as satisfied); loadability λ_c, λ_s with resolution (λ_s labelled "solution existence, not a stability limit"); SizingCheck panel (separate from SizingAdvice). | FR-24, FR-25, FR-27, FR-26, FR-35, FR-36, FR-37, FR-38, FR-40 | Must (margins: Should) |
 | S-09 | Sensitivity (M3a) | `/sensitivity/` | Choose parameters and output metrics; run; ranked sensitivities. | FR-28, FR-39, FR-41 | Should |
-| S-10 | Sweep (M3b) | `/sweep/` | Choose one parameter, range, step count; size indicator vs `SWEEP_CAP`; per-point Status plot and table; first infeasible value. | FR-29, FR-44, FR-39, FR-41 | Should |
+| S-10 | Sweep (M3b) | `/sweep/` | Choose an axis (one parameter, a shared scale factor over a set of elements, or load scale λ), range, step count; size indicator vs `SWEEP_CAP` (initial 1 000); per-point Status plot and table; first infeasible value. | FR-29, FR-44, FR-39, FR-41 | Should |
 | S-11 | Scenarios and comparison (M3c) | `/scenarios/` | Save current design as Scenario; edit overrides; select 2 or more; compare with explicit deltas. | FR-30, FR-31, FR-39, FR-41 | Should |
 | S-12 | Envelope (M3d) | `/envelope/` | Two parameters and ranges; grid of per-point Status; feasible fraction. | FR-32, FR-44 | Could |
-| S-13 | Small-signal (M4a) | `/small-signal/` | Run; eigenvalues, damping, dominant modes tables; stable or not indicator. | FR-33, FR-39, FR-41 | Should |
-| S-14 | Transient (M4b) | `/transient/` | Define disturbance; run; voltage and frequency time responses. | FR-34, FR-39, FR-41 | Should |
+| S-13 | Small-signal (M4a) | `/small-signal/` | Run; eigenvalues, damping, dominant modes, participation (when available) tables; stability class STABLE / MARGINAL / UNSTABLE in words; indicators r_τ, κ, r_in, ε_X with "evaluated" flag and reason, labelled "validity not calibrated" until stage 1.6; optional τ_in and damping threshold inputs. | FR-33, FR-39, FR-41 | Should |
+| S-14 | Transient (M4b) | `/transient/` | Define disturbance from the four-kind catalogue (load step, load scaling on one or all buses, reference step on P*, Q*, V* or ω*, inverter outage; permanent or finite duration); run; frequency, voltage, P and Q time responses; transient class RECOVERED_STABLE / CRITERIA_VIOLATED / UNSTABLE in words; max RoCoF (descriptive). | FR-34, FR-39, FR-41 | Should |
 | S-15 | Run history | `/runs/` | RunRecord list (INPUT_INVALID hidden by default); detail; export; import; verify; re-run; reproduction outcome; version comparison. | FR-46..FR-53, FR-57 | Must (version warning: Should) |
 | S-16 | Report | `/report/` | HTML report: verdict, limiting constraints, margins, assumptions, tables, charts, RunRecord hashes; print layout. | FR-48, FR-58, FR-59, FR-60 | Must (print: Should) |
 | S-17 | About and limits | `/about/` | App, schema and engine versions (FAKE or REAL); active limits (`TIME_BUDGET`, `SWEEP_CAP`, `SCENARIO_CAP`); glossary; offline note. | FR-51, NFR-02, NFR-03 | Should [ASSUMPTION] |
@@ -227,14 +227,16 @@ Notation: `[ ]` button/field, `( )` option, `<..>` placeholder. Header and stepp
 | Sizing advice (PS)                       [Run advice] [Re-run]|
 | [Status banner: <FEASIBLE: advice produced> / next step]     |
 | +- - - - - - - - - - ADVICE (not design data) - - - - - - -+ |
+| Settings: margin m_inv <->  units n <->  redundancy r <0|1>  |
+|   autonomy <h> (opt.)  η_dc <-> (opt.)  DoD <-> (opt.)      |
 | : Total inverter rating <kVA>   Basis <text> Assumptions   : |
 | : Inverters             <n> x <kVA>   Basis, Assumptions   : |
-| : Storage energy          <kWh>   (only with LoadProfile)  : |
+| : Storage energy <kWh> stage <AC|DC|NOMINAL> (LoadProfile + autonomy) : |
 | +- - - - - - - - - - - - - - - - - - - - - - - - - - - - -+ |
 | State: <PROPOSED>   [Accept] [Edit values] [Skip]            |
 | Stale notice if loads changed since advice was made.         |
 ```
-- Regions: Status banner; dashed advice panel (P4); state line and decision buttons.
+- Regions: PS settings form with the six parameters of Doc 3 §6.1 (m_inv, n, r required, no defaults; autonomy, η_dc, DoD optional), Status banner; dashed advice panel (P4); state line and decision buttons. A PROFILE_PEAK_ABOVE_LOADS warning is shown above the panel when present.
 - Actions: Run, Accept (marks ACCEPTED; offers pre-filled Inverter drafts in S-05, FR-09), Edit (edit values; original stays visible), Skip (moves on, no design change).
 - States: Empty: "No advice yet." If no Load exists, the Run button is disabled with the reason. Without a LoadProfile the storage row is replaced by "Storage advice needs a LoadProfile" (no empty value). Loading: button label "Running...", rest of the app stays usable (FR-45). Error: Status banner per §5; no advice panel for non-FEASIBLE results; Skip remains available.
 
@@ -293,11 +295,12 @@ Notation: `[ ]` button/field, `( )` option, `<..>` placeholder. Header and stepp
 ```
 +--------------------------------------------------------------+
 | Small-signal (M4a)          M1: <current>        [Run M4a]   |
-| [Status banner]  Overall: <stable | not stable | n/a>        |
+| [Status banner]  Class: <STABLE | MARGINAL | UNSTABLE>       |
+| Indicators r_τ κ r_in ε_X  (validity not calibrated)         |
 | Eigenvalues, damping, dominant modes tables (<1/s>, <Hz>)    |
 | Transient (M4b)     Disturbance [<kind> v] element [<id> v]  |
 |   magnitude <kW> (load step only)  start <s>  duration <s>   |
-| [Run M4b]   [Status banner]   Settled: <yes | no>           |
+| [Run M4b]   [Status banner]   Class: <RECOVERED_STABLE | CRITERIA_VIOLATED | UNSTABLE>  Settled: <yes | no> |
 | Plot: system frequency <Hz> vs <s>   Plot: bus voltage <kV>  |
 ```
 - Regions: M4a and M4b are two screens (S-13, S-14) shown together here; each has Status banner, run control, results; M4b adds the disturbance form.
@@ -386,3 +389,12 @@ DOC 7 COMPLETE
 ## Change log 2026-10-21 (user-approved change proposals from the proposal design checks)
 - C5.1 F3 outcome edge: Status equal and result_hash equal.
 - C5.4 first phase per key flow stated in §4.
+
+## Change log 2026-11-01 (alignment with the final manuscript, Doc 14 D4)
+- Header: manuscript alignment, guardrail removed, phases read as stages.
+- S-06: no numeric defaults; empty limit shown as "not evaluated".
+- S-08: design margins, not-evaluated list, λ_c / λ_s with resolution.
+- S-10: axis kinds (parameter, shared scale factor, load scale) and initial SWEEP_CAP.
+- S-13: stability class in words; indicators labelled "validity not calibrated".
+- S-14: four-kind disturbance catalogue; transient class in words.
+- S-04 wireframe: six-field PS settings form; staged storage energy.
