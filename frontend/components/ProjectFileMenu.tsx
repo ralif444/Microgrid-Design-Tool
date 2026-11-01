@@ -8,7 +8,8 @@ import type { FileCheckResult, ProjectFile } from "../api-types";
 import { toProjectFile, useProject, useProjectDispatch } from "../store";
 import { downloadJson, NOT_JSON, readJson } from "./files";
 
-export const UNSAVED_CONFIRM = "The open Project has unsaved changes. Discard them?";
+export const UNSAVED_CONFIRM = 
+  "The open Project has unsaved changes. OK to discard them; Cancel to keep them (then Save first)."; // D-48 K23
 
 export function FileCheckText({ fc }: { fc: FileCheckResult }) {
   return (

@@ -152,3 +152,32 @@ Totals: Python seams 277 passed; client 9 passed; e2e 7 passed on Chromium 153.0
 | 6 | S-15: one-file export, tampered import refused and not added, Re-run adds a record and shows Reproduced; header Save → create other Project (confirm) → Open restores name and runs (FR-49, FR-50, FR-53, FR-55, K17) | PASS | same file |
 
 Totals: Python seams 307 passed; client 12 passed; e2e 9 passed on Chromium 153.0.8010.12 and Chrome 156.0.8078.48. No Fake profile added. Decisions: Doc 9 D-47 (K14–K19). A2 in the report is quoted from Tabel 1.1 as extracted; the manuscript sentence appears to miss a word (user to confirm). Print layout (FR-60) has CSS only, not checked in a browser print.
+
+## WP 1.2.4 — key-flow tests, FAKE marking (2026-11-01)
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | F1 on profile `m2-infeasible`: engine badge "Engine: FAKE" on every screen; PS Accept → M1 (System, Bus, Inverter, Line tables with ε_X, FR-23) → M2 INFEASIBLE → limiting-element link opens S-05 Inverters with the row marked (D-48 K22) → edit → M1 stale, report "outdated" → M1 and M2 again → report current | PASS | tests/e2e/test_key_flows.py |
+| 2 | F1 on profile `m1-inadmissible`: PHYSICALLY_INADMISSIBLE banner; M2 blocked | PASS | same file |
+| 3 | Every Status banner shows the ENGINE_KIND_FAKE message (D-48 K20) | PASS | same file (PS, M1, M2 banners) |
+| 4 | F2: newer file refused, open Project unchanged (NFR-16); unreadable RunRecord listed (`run_records[0]`) and skipped; stage-1 issue shown on S-02, not fixed | PASS | same file |
+| 5 | F3 / FR-49: one exported file holds the 17-field RunRecord; imported into another Project, verified, engine comparison shown; Re-run Reproduced, original record unchanged | PASS | same file |
+
+Totals: Python seams 307 passed; client 12 passed; e2e 13 passed on Chromium 153.0.8010.12 and Chrome 156.0.8078.48. No Fake profile added (D-48 K21). Decisions: Doc 9 D-48 (K20–K24).
+
+## Exit gate 1.2 — Fitur utama aplikasi (2026-11-01)
+Tabel 4.15: "semua Must lulus; REPRODUCED pada Fake; laporan lengkap". Criteria per Doc 10 §3.1.
+
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| 1 | Every Must FR (38 in Doc 2) passes at its seam | PASS | list below |
+| 2 | Export → import → re-run gives REPRODUCED on the Fake (NFR-01) | PASS | WP 1.2.3 rows 1–2, 6; WP 1.2.4 row 5 |
+| 3 | Report shows verdict, limiting constraints, margins, assumptions, RunRecord hash, a table and a chart (FR-58, FR-59) | PASS | WP 1.2.3 row 5; WP 1.2.4 row 1 |
+| 4 | Offline key flow | PASS with note | every e2e flow runs with all non-loopback requests aborted and asserted absent (NFR-03 guard in tests/e2e/conftest.py); a run with the network adapter switched off was not done |
+| 5 | Chrome version logged (condition carried from exit 1.1) | PASS | Chrome 156.0.8078.48 on Windows 11, WP 1.2.1–1.2.4 rows |
+
+Must FR → test files (paths under `tests/`, store tests under `frontend/`):
+FR-01 e2e/test_loads_ps, store/reducer.test · FR-03 api/test_validate_and_ps, e2e/test_loads_ps · FR-05 e2e/test_loads_ps, e2e/test_network_m1_m2, static/test_openapi · FR-06, FR-07 api/test_validate_and_ps, e2e/test_loads_ps · FR-08 e2e/test_loads_ps, store/reducer.test · FR-10, FR-12, FR-13 e2e/test_network_m1_m2, store/reducer.test · FR-15 api/test_constraints_and_m2, e2e/test_network_m1_m2 · FR-17 api/test_validate_and_ps, e2e/test_m1_slice · FR-18 api/test_validate_and_ps, e2e/test_loads_ps · FR-19 e2e/test_network_m1_m2 · FR-21 api/test_status_and_runrecord · FR-22 contract/test_contract_suite · FR-23 e2e/test_key_flows · FR-24, FR-25, FR-27 api/test_constraints_and_m2, e2e/test_network_m1_m2 · FR-35 api/test_status_and_runrecord, contract/test_contract_suite, e2e/test_m1_slice · FR-36, FR-42, FR-43, FR-46, FR-47 api/test_status_and_runrecord · FR-37, FR-38 api/test_dependency · FR-40 api/test_dependency, e2e/test_network_m1_m2 · FR-48 api/test_status_and_runrecord, reproducibility/test_canonical_hash · FR-49, FR-50, FR-52, FR-53 reproducibility/test_verify_rerun, e2e/test_report_runs, e2e/test_key_flows · FR-54, FR-55 project_file/test_import, store/projectFile.test, e2e/test_report_runs · FR-57 project_file/test_import · FR-58, FR-59 e2e/test_report_runs.
+
+Open notes (not exit criteria): Doc 8 §8 DoD item 7 (keyboard reachability) still has no E2E check; print layout (FR-60, Should) not checked in a browser print; report A2 wording to be confirmed against the manuscript.
+
+**Proposed decision: exit gate 1.2 PASS (conditional on the open notes), awaiting the user's confirmation.**

@@ -18,12 +18,14 @@ export function EntityTable({
   label,
   columns,
   issues,
+  focus = null,
 }: {
   collection: Collection;
   entity: string;
   label: string;
   columns: Column[];
   issues: ValidationIssue[];
+  focus?: string | null;
 }) {
   const { design } = useProject();
   const dispatch = useProjectDispatch();
@@ -49,7 +51,12 @@ export function EntityTable({
           const set = (patch: Row) => dispatch({ type: "rowUpdated", collection, id, patch });
           return (
             // index key keeps focus while a Bus id is being retyped
-            <tr key={k} data-testid={`${collection}-${k}`}>
+            <tr
+              key={k}
+              data-testid={`${collection}-${k}`}
+              aria-current={focus !== null && id === focus ? "true" : undefined}
+              className={focus !== null && id === focus ? "focus" : undefined}
+            >
               {collection !== "buses" && <th scope="row">{id}</th>}
               {columns.map((c) => {
                 const name = `${head(c)} of ${id || `row ${k + 1}`}`;

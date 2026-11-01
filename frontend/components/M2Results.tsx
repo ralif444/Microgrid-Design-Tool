@@ -1,5 +1,6 @@
 // M2 result parts (Doc 7 §5.1, §6.4): limiting constraints / margins, "not evaluated" list,
 // loadability, SizingCheck in an advisory panel separate from SizingAdvice (FR-25, FR-16, FR-24, FR-27).
+import Link from "next/link";
 import type { LimitingConstraint, M2Payload } from "../api-types";
 
 export const KIND_WORDS: Record<string, string> = {
@@ -31,7 +32,14 @@ export function ConstraintTable({ label, rows }: { label: string; rows: Limiting
         {rows.map((c, k) => (
           <tr key={k}>
             <td>{KIND_WORDS[c.kind] ?? c.kind}</td>
-            <td>{c.element_id}</td>
+            <td>
+              {c.element_id === "SYSTEM" ? (
+                c.element_id
+              ) : (
+                // D-48 K22: open the element's row in S-05
+                <Link href={`/network/?focus=${encodeURIComponent(c.element_id)}`}>{c.element_id}</Link>
+              )}
+            </td>
             <td>
               {c.value} {c.unit}
             </td>

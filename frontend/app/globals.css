@@ -23,3 +23,5 @@ fieldset { border: 0; padding: 0; margin: 0; display: inline; }
   header, .no-print { display: none; }
   table, figure, section { break-inside: avoid; }
 }
+.fake-note { background: #fff4ce; padding: 0.2rem 0.5rem; }
+tr.focus { outline: 3px solid #ef6c00; }

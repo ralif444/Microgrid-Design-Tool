@@ -2,7 +2,7 @@
 // S-05 Network editor (Doc 7 §6.3): Buses, Lines, Inverters as tables (FR-10, FR-12, FR-13),
 // derived Line totals (display only, D-46 K9), live topology issues (FR-19). Diagram (FR-14)
 // and the Bus delete guard (FR-11) are Should, stage 1.5.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { EntityTable, type Column } from "../../components/EntityTable";
 import { RequireProject } from "../../components/RequireProject";
 import { useValidation } from "../../components/useValidation";
@@ -42,6 +42,16 @@ function Network() {
   const dispatch = useProjectDispatch();
   const [tab, setTab] = useState<Tab>("Buses");
   const [busId, setBusId] = useState("");
+  const [focus, setFocus] = useState<string | null>(null);
+  // D-48 K22: ?focus=<id> from a limiting constraint opens the tab holding that element.
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("focus");
+    if (!id) return;
+    setFocus(id);
+    if (design.lines?.some((r) => r.id === id)) setTab("Lines");
+    else if (design.inverters?.some((r) => r.id === id)) setTab("Inverters");
+    // runs once on arrival; later edits keep the chosen tab
+  }, []);
   const issues = useValidation(design)?.issues ?? [];
   const busCount = design.buses?.length ?? 0;
   const enabled: Record<Tab, boolean> = { Buses: true, Lines: busCount >= 2, Inverters: busCount >= 1 };
@@ -83,6 +93,7 @@ function Network() {
                 label="Buses"
                 columns={[{ field: "id", label: "Bus id", kind: "text" }]}
                 issues={issues}
+                focus={focus}
               />
             )}
           </>
@@ -95,7 +106,7 @@ function Network() {
             >
               + Add line
             </button>
-            <EntityTable collection="lines" entity="Line" label="Lines" columns={LINE_COLUMNS} issues={issues} />
+            <EntityTable collection="lines" entity="Line" label="Lines" columns={LINE_COLUMNS} issues={issues} focus={focus} />
           </>
         )}
         {tab === "Inverters" && (
@@ -103,7 +114,7 @@ function Network() {
             <button type="button" onClick={() => dispatch({ type: "rowAdded", collection: "inverters", row: { bus_id: firstBus } })}>
               + Add inverter
             </button>
-            <EntityTable collection="inverters" entity="Inverter" label="Inverters" columns={INVERTER_COLUMNS} issues={issues} />
+            <EntityTable collection="inverters" entity="Inverter" label="Inverters" columns={INVERTER_COLUMNS} issues={issues} focus={focus} />
           </>
         )}
       </section>
