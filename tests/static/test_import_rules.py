@@ -6,12 +6,13 @@ NFR-10, NFR-11 (manuscript 4.3.1: import-linter and dependency-cruiser fail the 
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
 
 import pytest
-from _common import BACKEND, FRONTEND, node_bin, node_env, uv
+from _common import BACKEND, ENGINE, FRONTEND, node_bin, node_env, uv
 
 SRC = BACKEND / "src"
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -94,3 +95,19 @@ def test_nfr_10_11_dependency_cruiser_detects_violation(tmp_path: Path) -> None:
     out = r.stdout + r.stderr
     assert r.returncode != 0, out
     assert "store-isolated" in out and "api-client-isolated" in out, out
+
+
+_IMPORT = re.compile(r"^\s*(?:import|from)\s+(\w+)", re.MULTILINE)
+
+
+def _imported_roots(root: Path) -> dict[Path, set[str]]:
+    return {p: set(_IMPORT.findall(p.read_text(encoding="utf-8"))) for p in root.rglob("*.py")}
+
+
+def test_d49_engine_reached_only_through_real_engine_adapter() -> None:
+    """D-49 K26: only adapters/real_engine imports mgengine; the engine never imports mgapp."""
+    adapter = SRC / "mgapp" / "adapters" / "real_engine"
+    app = [p for p, mods in _imported_roots(SRC / "mgapp").items() if "mgengine" in mods]
+    assert [p for p in app if adapter not in p.parents] == []
+    eng = _imported_roots(ENGINE / "src")
+    assert eng and [p for p, mods in eng.items() if "mgapp" in mods] == []

@@ -195,3 +195,12 @@ Windows fix (stage 1.2 instruction: Windows differences are fixed at the cause a
 Totals: Python seams 307 passed; client 12 passed; e2e 15 passed on Chromium 153.0.8010.12 and Chrome 156.0.8078.48.
 
 Note: Playwright's bundled Chromium installed from the agent shell was not visible in the user's own terminal ("Executable doesn't exist"), so the offline run used installed Chrome. In a user terminal, run `cd backend; uv run playwright install chromium` once before using the bundled Chromium.
+
+## Entry gate 1.3 — Mesin perhitungan (2026-11-02)
+Tabel 4.15 sets no entry criterion for stage 1.3 ("Tidak ditetapkan"). Recorded basis: exit gate 1.2 PASS (conditional, one open condition: A2 wording). **Decision (user 2026-11-02, Doc 9 D-49 K25): enter stage 1.3** on branch `tahap-1.3`. The app keeps the Fake Engine until stage 1.4.
+
+| WP | Date | Result | Evidence |
+|---|---|---|---|
+| 1.3.1 M1 Newton–Raphson + unit audit | 2026-11-02 | PASS: `mgengine` 0.1.0 (numpy) solves (4.5)–(4.9) with analytic Jacobian and the 4.2.3 status rules; level-1 tests: Tabel 4.8 oracle f = 49.75 Hz, Δω = 1.5708 rad/s (symmetric and lossless one-sided load), Jacobian = finite differences, losses ≥ 0 and ω matches (4.9) with losses, MAX_ITERATIONS_REACHED, NON_FINITE, ILL_CONDITIONED_JACOBIAN, V ≤ 0 → PHYSICALLY_INADMISSIBLE, determinism. Engine wired into `tools/check.py` (ruff, mypy) and `tools/test.py` (seam `engine`); static test: only `adapters/real_engine` may import `mgengine`, the engine never imports `mgapp`. Open for WP 1.4.1: unit of `voltage_droop_kv_per_kvar` (line-to-line or phase), see engine/docs/m1.md | check passed; engine 9 passed; Python seams 308 passed; client 12 passed; e2e not rerun (no app change) |
+
+Windows note: `uv sync` run while `engine/src/mgengine` was still empty left an editable install without its `.pth` path entry (`ModuleNotFoundError: mgengine`); fixed with `uv sync --reinstall-package mgengine`. Not a Windows-only cause, logged for repeatability.

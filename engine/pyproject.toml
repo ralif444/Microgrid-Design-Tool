@@ -1,0 +1,33 @@
+[project]
+name = "mgengine"
+version = "0.1.0"
+description = "Calculation engine for islanded droop-controlled AC microgrids (manuscript 4.2). SI units per phase."
+requires-python = ">=3.13,<3.14"
+dependencies = ["numpy"]
+
+[dependency-groups]
+dev = ["pytest", "ruff", "mypy"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mgengine"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "SIM"]
+# Engineering symbols keep the manuscript's letters (V, P, Q, J, Y).
+ignore = ["N802", "N803", "N806", "N815", "N816"]
+
+[tool.mypy]
+strict = true
+files = ["src"]
