@@ -181,3 +181,15 @@ FR-01 e2e/test_loads_ps, store/reducer.test · FR-03 api/test_validate_and_ps, e
 Open notes (not exit criteria): Doc 8 §8 DoD item 7 (keyboard reachability) still has no E2E check; print layout (FR-60, Should) not checked in a browser print; report A2 wording to be confirmed against the manuscript.
 
 **Decision: exit gate 1.2 PASS (conditional)**, confirmed by the user 2026-11-01. Conditions carried into stage 1.3/1.4: (a) E2E check of keyboard reachability (Doc 8 §8 item 7); (b) one key flow with the network adapter switched off; (c) print layout checked in Chrome (FR-60, Should); (d) user confirms the A2 wording of Tabel 1.1 used in the report.
+
+## Exit 1.2 carried conditions (2026-11-01)
+| # | Condition | Result | Evidence |
+|---|---|---|---|
+| a | Keyboard reachability (Doc 8 §8 item 7): Start → Network (buses, line with both bus selects, inverter) → Loads → M1 → Report → Run history, every control reached by Tab and operated by Enter, typing or arrow keys | PASS | tests/e2e/test_keyboard_print.py |
+| b | One key flow with the network adapter switched off | OPEN | needs the user: switch Wi-Fi off, run `uv run --python 3.13 python tools\test.py e2e`, log the result here |
+| c | Print layout (FR-60): in print media the header and Print button are hidden and the report fits the A4 printable width (718 px); Chromium A4 PDF checked by eye: 3 pages, no clipped table or chart | PASS | same file; fixed by breaking long hashes (`overflow-wrap`), allowing sections to split across pages, keeping headings with their content, assumption text left-aligned |
+| d | A2 wording of Tabel 1.1 used in the report | OPEN | user to confirm against the manuscript |
+
+Windows fix (stage 1.2 instruction: Windows differences are fixed at the cause and logged): the e2e server fixture stopped only `uv.exe` with `terminate()`; on Windows the `mgapp` child kept running, and 135 leftover server processes had piled up from earlier runs. `tests/e2e/conftest.py` now ends the process tree with `taskkill /F /T` on Windows; after a full run no `mgapp` process is left.
+
+Totals: Python seams 307 passed; client 12 passed; e2e 15 passed on Chromium 153.0.8010.12 and Chrome 156.0.8078.48.

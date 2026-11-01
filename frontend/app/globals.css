@@ -17,11 +17,14 @@ textarea { font-family: monospace; width: 100%; max-width: 60rem; }
 fieldset { border: 0; padding: 0; margin: 0; display: inline; }
 .advice { border: 2px dashed #546e7a; padding: 0.5rem 1rem; margin: 1rem 0; }
 .advice-tag { font-weight: bold; text-transform: uppercase; }
+td:lang(id) { text-align: left; }
 .outdated { font-weight: bold; color: #c62828; }
 /* Print layout (FR-60): hide controls, keep tables and charts whole. */
 @media print {
   header, .no-print { display: none; }
-  table, figure, section { break-inside: avoid; }
+  table, figure { break-inside: avoid; }
+  h2 { break-after: avoid; }
+  td, code { overflow-wrap: anywhere; } /* 64-hex hashes would widen the page */
 }
 .fake-note { background: #fff4ce; padding: 0.2rem 0.5rem; }
 tr.focus { outline: 3px solid #ef6c00; }
