@@ -260,7 +260,8 @@ The rows above are kept as written on 2026-10-21. This section overrides their s
 | A-51 | DoD ten conditions reconstructed (manuscript gives count and two examples only). | [ASSUMPTION] | author, exit 1.1 |
 | A-52 | Gate rules G3–G6 not listed in manuscript text (Doc 10 §5). | [PERLU VERIFIKASI] | author, exit 1.1 |
 | A-53 | Caps SCENARIO_CAP, M3A_PARAMETER_CAP, M4B_DURATION_CAP_S have no value; `/api/meta` returns null. | [ASSUMPTION] | WP 1.7.1 |
-| A-54 | Node.js 26.7.0 is the manuscript runtime (Tabel 3.5); the build sandbox may differ; the version used is logged in `docs/gate_log.md`. | [ASSUMPTION] | 1.1.1 |
+| A-54 | Node.js 26.7.0 (manuscript Tabel 3.5) installed in the build sandbox from the npm package `node-linux-x64@26.7.0`; TypeScript pinned to 5.9.3 (latest 5.x) because openapi-typescript requires `^5.x`. | DECIDED | 1.1.1 |
+| A-55 | HTTP port 8000 (uvicorn default), overridable by `MGAPP_PORT`; the docs fix no port. | [ASSUMPTION] | author, exit 1.1 |
 | Q-20 | Doc 13 #1: do layer-1 numerical aids for constant-PQ loads change the fidelity class? | DECISION NEEDED | before WP 1.6.3 |
 | Q-21 | Doc 13 #2–#6: layer-2 parameter source, current-limit value, PSIM constant-power element, PSIM scripting, resolution floor. | [NEEDS SOURCE] / VERIFY | WP 1.6.2–1.6.3 |
 | Q-22 | Doc 12 #2, #4, #5: author-derived Eq. 12.3–12.13 need hand-check; B3 needs supervisor approval; fictitious catalogue names. | [ASSUMPTION] / FUTURE | before stage 1.5 |

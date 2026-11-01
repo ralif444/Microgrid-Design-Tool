@@ -13,10 +13,21 @@ Not a manuscript gate; a review checklist before WP 1.1.1.
 
 | # | Check | Result | Evidence |
 |---|---|---|---|
-| 1 | Doc set copied verbatim (01–03, 05_adr, 06, 07, 09, 11–14, agents, CLAUDE.md) | PASS | commit b76cfbc |
+| 1 | Doc set copied verbatim (01–03, 05_adr, 06, 07, 09, 11–14, agents, CLAUDE.md) | PASS | commit a6bced9 |
 | 2 | Doc 04 aligned (D2): 16 components, guard-only Engine Port import, allowed Status sets, Tabel 4.11 | PASS | docs/04_architecture.md |
 | 3 | Doc 08 aligned (D5, B7): 7 seams, 9 behaviours, defective profile, 4-level V&V, DoD 10 | PASS | docs/08_structure_verification.md |
 | 4 | Doc 10 aligned (D7): stages 1.1–1.8, Tabel 4.15, 39 WPs, gate rules | PASS with open item | G3–G6 [PERLU VERIFIKASI] (Doc 9 A-52) |
 | 5 | ADR "Revisit when" carry Tabel 4.11 triggers (D3) | PASS | docs/05_adr/ |
 | 6 | Doc 09 alignment appended (D6); Doc 14 statuses updated | PASS | Doc 09 §10, Doc 14 |
 | 7 | No invented values: every number traces to the manuscript or a user decision | PASS (self-review) | Doc 09 §10.1 basis column |
+
+## WP 1.1.1 — repository structure and import-rule checks (2026-11-01)
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | Folder tree per Doc 8 §1 (backend/src/mgapp, frontend, tests seams, validation, tools) | PASS | tree in commit |
+| 2 | Lock files committed: `backend/uv.lock` (Python 3.13.18), `frontend/package-lock.json` (Node 26.7.0, npm 10.9.9) | PASS | lock files |
+| 3 | import-linter: 7 contracts kept | PASS | `python tools/check.py` |
+| 4 | import-linter catches deliberate violations (5 negative cases) | PASS | tests/static/test_import_rules.py |
+| 5 | dependency-cruiser passes on frontend and catches a fixture violation | PASS | same file |
+| 6 | Static export config; no API routes/server actions; `fetch` only in api-client (with negative test); validation/ does not import mgapp; loopback bind | PASS | tests/static/ (17 passed) |
+| 7 | ruff format/lint, mypy strict, tsc strict | PASS | `python tools/check.py` |

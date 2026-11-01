@@ -11,3 +11,5 @@ backend/src/mgapp/static/*
 !backend/src/mgapp/static/.gitkeep
 test-results/
 playwright-report/
+frontend/next-env.d.ts
+frontend/tsconfig.tsbuildinfo
