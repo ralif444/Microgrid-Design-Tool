@@ -104,3 +104,14 @@ Test totals in the sandbox: static + contract + api + reproducibility 255 passed
 | 3 | Fake scenarios fixed | PASS | user decision 2026-11-01 (Doc 9 D-44) |
 
 Carried conditions resolved: gate rules G3–G6 confirmed (A-52); Q-23 decided (oracle with R = 0 at engine level only). **Decision: enter stage 1.2** on branch `tahap-1.2`.
+
+## Stage 1.2 — Windows 11 target laptop (2026-11-01)
+First run on Windows 11 Home 10.0.26200. Python 3.13.15 (uv; `python` on PATH is ETAP's 3.8.4, not used), Node 26.7.0, FastAPI 0.162.0, Pydantic 2.14.2, uvicorn 0.54.0, Playwright 1.63.0.
+
+| # | Step | Result | Note |
+|---|---|---|---|
+| 1 | `tools/check.py` | PASS | no Windows changes needed (`.cmd` shims resolved) |
+| 2 | `tools/test.py` | PASS | 254 passed, 1 skipped (offline-assets test waits for the frontend build); client 1 passed |
+| 3 | `tools/build_frontend.py` | PASS | |
+| 4 | `tools/test.py e2e`, Playwright Chromium 153.0.8010.12 | PASS | 4 passed; first attempt failed only because `playwright install chromium` had not been run (documented one-time step) |
+| 5 | E2E on Google Chrome stable 156.0.8078.48 (`MGAPP_E2E_CHANNEL=chrome`) | PASS | 4 passed. Exit-1.1 condition (a) met; rerun at exit 1.2. The e2e fixture now reads the Playwright channel from `MGAPP_E2E_CHANNEL` (unset = bundled Chromium) |

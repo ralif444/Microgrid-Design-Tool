@@ -2,12 +2,13 @@
 
 NFR-02 (one start command serves UI and API), NFR-03 (no external requests), FR-35 banner,
 FR-17 issue list, engine badge (Doc 7 P2). Browser: Playwright Chromium; gate runs use
-latest stable Chrome (version logged in docs/gate_log.md).
+latest stable Chrome via MGAPP_E2E_CHANNEL=chrome (version logged in docs/gate_log.md).
 """
 
 from __future__ import annotations
 
 import json
+import os
 import re
 from collections.abc import Callable, Iterator
 from urllib.parse import urlparse
@@ -22,7 +23,7 @@ HEX64 = re.compile(r"^[0-9a-f]{64}$")
 @pytest.fixture(scope="module")
 def browser() -> Iterator[Browser]:
     with sync_playwright() as p:
-        b = p.chromium.launch()
+        b = p.chromium.launch(channel=os.environ.get("MGAPP_E2E_CHANNEL"))
         yield b
         b.close()
 
