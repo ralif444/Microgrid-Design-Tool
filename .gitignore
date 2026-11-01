@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+node_modules/
+frontend/.next/
+frontend/out/
+backend/src/mgapp/static/*
+!backend/src/mgapp/static/.gitkeep
+test-results/
+playwright-report/
