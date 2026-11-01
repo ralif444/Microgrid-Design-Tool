@@ -19,6 +19,7 @@ dev = [
     "ruff",
     "mypy",
     "import-linter",
+    "playwright==1.63.0",
 ]
 
 [build-system]

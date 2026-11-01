@@ -90,7 +90,8 @@ How checked (decided, manuscript 4.3.1; any violation fails the build):
 | Test names | Include requirement IDs: `test_fr_38_m2_unavailable_when_m1_stale`. A test covering several IDs lists all. The seam-6 coverage script reports FR/NFR IDs with no test (NFR-09). |
 | Generated code | `frontend/api-types/` and `openapi/openapi.json` carry a "generated, do not edit" header. |
 | Python tooling | uv + `uv.lock`; ruff (format + lint), mypy (strict on `src`), pytest, import-linter (user decision 2026-11-01). |
-| TypeScript tooling | npm + `package-lock.json`; ESLint, `tsc --strict`, Vitest, Playwright, dependency-cruiser. |
+| TypeScript tooling | npm + `package-lock.json`; `tsc --strict`, Vitest, dependency-cruiser, openapi-typescript. ESLint deferred to stage 1.2 [ASSUMPTION]. |
+| E2E tooling | Playwright for Python (pytest, same uv environment, version pinned in `uv.lock`); browser Chromium in CI-like runs, latest stable Chrome at gates. |
 | Task runner | `tools/*.py` stdlib scripts: `check`, `test`, `gen`, `build_frontend`; app start `uv run mgapp` (NFR-02). |
 | Comments and docs | Public functions state units in docstrings. |
 | Git (solo) | Branch per stage (`tahap-1.1`); one commit per work package or coherent change, imperative subject, WP/FR IDs in body; PR to `main` at the stage exit gate. |

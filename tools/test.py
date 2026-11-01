@@ -2,7 +2,7 @@
 
 Usage: python tools/test.py [seam ...]
 Seams: api contract reproducibility project_file static client e2e.
-Without arguments runs every seam except e2e.
+Without arguments runs every seam except e2e (needs `python tools/build_frontend.py`).
 """
 
 from __future__ import annotations
@@ -11,11 +11,11 @@ import sys
 
 from _common import BACKEND, FRONTEND, ROOT, node_env, npm, run, uv
 
-PY_SEAMS = ["static", "contract", "api", "reproducibility", "project_file"]
+PY_SEAMS = ["static", "contract", "api", "reproducibility", "project_file", "e2e"]
 
 
 def main(argv: list[str]) -> int:
-    seams = argv or [*PY_SEAMS, "client"]
+    seams = argv or [*(s for s in PY_SEAMS if s != "e2e"), "client"]
     rc = 0
     py = [s for s in seams if s in PY_SEAMS]
     if py:
@@ -37,8 +37,6 @@ def main(argv: list[str]) -> int:
         )
     if "client" in seams:
         rc |= run([npm(), "test", "--", "--passWithNoTests"], FRONTEND, node_env())
-    if "e2e" in seams:
-        rc |= run([npm(), "run", "e2e"], FRONTEND, node_env())
     return rc
 
 

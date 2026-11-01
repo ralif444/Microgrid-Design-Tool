@@ -39,7 +39,14 @@ def types_text(openapi_path: Path) -> str:
     with tempfile.TemporaryDirectory() as tmp:
         out = Path(tmp) / "schema.d.ts"
         subprocess.run(
-            [node_bin("openapi-typescript"), str(openapi_path), "-o", str(out)],
+            [
+                node_bin("openapi-typescript"),
+                str(openapi_path),
+                "--default-non-nullable",
+                "false",
+                "-o",
+                str(out),
+            ],
             cwd=FRONTEND,
             env=node_env(),
             check=True,

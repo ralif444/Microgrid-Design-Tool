@@ -70,3 +70,28 @@ Not a manuscript gate; a review checklist before WP 1.1.1.
 | 4 | Stage 1.1 exposes exactly 11 endpoints (health, meta, nine analyses); no 422 documented | PASS | same |
 | 5 | Every numeric field in every schema has a Doc 3 unit suffix or is a documented unitless field (FR-05) | PASS | same |
 | 6 | `npm audit`: 3 moderate advisories in openapi-typescript's dependency (minimatch ReDoS); build-time dev tool only, not shipped | NOTED | — |
+
+## WP 1.1.6 — thin M1 slice and start procedure (2026-11-01)
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | One start command `uv run --project backend mgapp` serves UI and API from one process on 127.0.0.1 | PASS | tests/e2e (real subprocess), tests/static/test_offline_assets.py |
+| 2 | Minimal M1 screen: JSON design input, Status banner (Doc 7 §5 texts), issue list, bus/inverter tables with units, RunRecord id and hash, engine badge FAKE | PASS | tests/e2e/test_m1_slice.py (4 passed) |
+| 3 | Fake profiles selectable at startup only (`MGAPP_FAKE_PROFILE`) | PASS | E2E SOLVER_FAILED profile |
+| 4 | No external request during the E2E flows; no external asset in the build (NFR-03) | PASS | route guard in tests/e2e/conftest; static scan |
+| 5 | Browser: Playwright Chromium 153.0.8010.12 (sandbox). Google Chrome stable on the Windows target not yet run | PARTIAL | re-run on the target laptop before exit 1.2 |
+
+## Exit gate 1.1 — Rangka aplikasi dan mesin tiruan (2026-11-01)
+Tabel 4.15: "Satu perintah mulai; kontrak enam status; RunRecord tiap status". Criteria per Doc 10 §3.1.
+
+| # | Criterion | Result | Evidence |
+|---|---|---|---|
+| 1 | One start command serves UI and API from one process, loopback only (NFR-02, NFR-17) | PASS | WP 1.1.6 rows 1, 4 |
+| 2 | Contract suite (nine behaviours) passes on the Fake Engine and fails on every defect of the defective profile; every allowed Status on demand (NFR-07, NFR-08, FR-22) | PASS | WP 1.1.3 |
+| 3 | Every Status and reason returns HTTP 200 with a 17-field RunRecord (FR-35, FR-43, FR-46–FR-48) | PASS | WP 1.1.4 row 2 |
+| 4 | Import rules pass and catch violations; OpenAPI and TS types current; lock files committed | PASS | WP 1.1.1, 1.1.5 |
+| 5 | Canonicalisation rule tests pass | PASS | WP 1.1.4 row 5 |
+| 6 | Definition of Done (Doc 8 §8) for the 1.1 scope | PASS with notes | items 7 (E2E keyboard reachability not yet tested) and 10 (offline on target laptop) to confirm on the Windows target |
+
+Test totals in the sandbox: static + contract + api + reproducibility 255 passed; client 1 passed; e2e 4 passed. Versions: Python 3.13.18, FastAPI 0.162.0, Pydantic 2.14.2, uvicorn 0.54.0, Node 26.7.0, Next.js 16.4.3, React 19.3.1, TypeScript 5.9.3.
+
+**Decision: exit gate 1.1 PASS (conditional).** Conditions carried into entry 1.2: (a) run the four E2E flows on the Windows 11 laptop with Google Chrome stable and log its version; (b) confirm or replace gate rules G3–G6 (Doc 9 A-52); (c) decide Doc 9 Q-23 before WP 1.3.1. Open entry-1.2 items from Tabel 4.15: "kontrak entitas beku; skenario Fake ditetapkan".

@@ -19,13 +19,13 @@ python tools/build_frontend.py
 uv run --project backend mgapp
 ```
 Serves the UI and the API from one process on http://127.0.0.1:8000 (loopback only, no authentication). Works offline.
-Startup options (environment): `MGAPP_ENGINE=FAKE|REAL` (default FAKE), `MGAPP_PORT` (default 8000).
+Startup options (environment): `MGAPP_ENGINE=FAKE|REAL` (default FAKE; REAL from stage 1.4), `MGAPP_PORT` (default 8000), `MGAPP_FAKE_PROFILE` (test profiles: `default`, `m1-solver-failed`, `m1-inadmissible`, `m2-infeasible`).
 
 ## Development tasks
 | Task | Command |
 |---|---|
 | Static checks (lint, types, import rules) | `python tools/check.py` |
-| Tests per seam | `python tools/test.py [static contract api reproducibility project_file client e2e]` |
-| Generate OpenAPI and TS types | `python tools/gen.py` (WP 1.1.5) |
+| Tests per seam | `python tools/test.py [static contract api reproducibility project_file client e2e]` (e2e needs the frontend build and `playwright install chromium` once) |
+| Generate OpenAPI and TS types | `python tools/gen.py` (`--check` to verify) |
 
 If Node.js is not on `PATH`, set `MGAPP_NODE_DIR` to its `bin` directory.

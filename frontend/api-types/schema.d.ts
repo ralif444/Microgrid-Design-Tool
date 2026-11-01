@@ -202,7 +202,7 @@ export interface components {
          */
         AnalysisRequestBody: {
             /** @default null */
-            depends_on: components["schemas"]["RunRecordRef"] | null;
+            depends_on?: components["schemas"]["RunRecordRef"] | null;
             /** Parameters */
             parameters: {
                 [key: string]: unknown;
@@ -212,7 +212,7 @@ export interface components {
              * Scenarios
              * @default null
              */
-            scenarios: components["schemas"]["ScenarioSnapshot"][] | null;
+            scenarios?: components["schemas"]["ScenarioSnapshot"][] | null;
             solver_config: components["schemas"]["SolverConfig"];
         };
         /**
@@ -232,14 +232,14 @@ export interface components {
              * Diagnostics
              * @default {}
              */
-            diagnostics: {
+            diagnostics?: {
                 [key: string]: unknown;
             };
             /**
              * Limiting Constraints
              * @default []
              */
-            limiting_constraints: components["schemas"]["LimitingConstraint"][];
+            limiting_constraints?: components["schemas"]["LimitingConstraint"][];
             /** Message */
             message: string;
             /** Payload */
@@ -253,7 +253,7 @@ export interface components {
              * Warnings
              * @default []
              */
-            warnings: components["schemas"]["Warning"][];
+            warnings?: components["schemas"]["Warning"][];
         };
         /**
          * AnalysisType
@@ -266,22 +266,22 @@ export interface components {
              * Diagram X
              * @default null
              */
-            diagram_x: number | null;
+            diagram_x?: number | null;
             /**
              * Diagram Y
              * @default null
              */
-            diagram_y: number | null;
+            diagram_y?: number | null;
             /**
              * Id
              * @default null
              */
-            id: string | null;
+            id?: string | null;
             /**
              * Name
              * @default null
              */
-            name: string | null;
+            name?: string | null;
         };
         /** BusResult */
         BusResult: {
@@ -327,37 +327,37 @@ export interface components {
              * Balance Tolerance Kw
              * @default null
              */
-            balance_tolerance_kw: number | null;
+            balance_tolerance_kw?: number | null;
             /**
              * Frequency Max Hz
              * @default null
              */
-            frequency_max_hz: number | null;
+            frequency_max_hz?: number | null;
             /**
              * Frequency Min Hz
              * @default null
              */
-            frequency_min_hz: number | null;
+            frequency_min_hz?: number | null;
             /**
              * Inverter Loading Limit Ratio
              * @default null
              */
-            inverter_loading_limit_ratio: number | null;
+            inverter_loading_limit_ratio?: number | null;
             /**
              * Line Current Limit A
              * @default null
              */
-            line_current_limit_a: number | null;
+            line_current_limit_a?: number | null;
             /**
              * Voltage Max Pu
              * @default null
              */
-            voltage_max_pu: number | null;
+            voltage_max_pu?: number | null;
             /**
              * Voltage Min Pu
              * @default null
              */
-            voltage_min_pu: number | null;
+            voltage_min_pu?: number | null;
         };
         /** DominantMode */
         DominantMode: {
@@ -401,12 +401,12 @@ export interface components {
              * Hour
              * @default null
              */
-            hour: number | null;
+            hour?: number | null;
             /**
              * P Kw
              * @default null
              */
-            p_kw: number | null;
+            p_kw?: number | null;
         };
         /** Indicator */
         Indicator: {
@@ -435,57 +435,57 @@ export interface components {
              * Bus Id
              * @default null
              */
-            bus_id: string | null;
+            bus_id?: string | null;
             /**
              * Frequency Droop Hz Per Kw
              * @default null
              */
-            frequency_droop_hz_per_kw: number | null;
+            frequency_droop_hz_per_kw?: number | null;
             /**
              * Frequency Setpoint Hz
              * @default null
              */
-            frequency_setpoint_hz: number | null;
+            frequency_setpoint_hz?: number | null;
             /**
              * Id
              * @default null
              */
-            id: string | null;
+            id?: string | null;
             /**
              * P Setpoint Kw
              * @default null
              */
-            p_setpoint_kw: number | null;
+            p_setpoint_kw?: number | null;
             /**
              * Q Setpoint Kvar
              * @default null
              */
-            q_setpoint_kvar: number | null;
+            q_setpoint_kvar?: number | null;
             /**
              * Rated Kva
              * @default null
              */
-            rated_kva: number | null;
+            rated_kva?: number | null;
             /**
              * Tau P S
              * @default null
              */
-            tau_p_s: number | null;
+            tau_p_s?: number | null;
             /**
              * Tau Q S
              * @default null
              */
-            tau_q_s: number | null;
+            tau_q_s?: number | null;
             /**
              * Voltage Droop Kv Per Kvar
              * @default null
              */
-            voltage_droop_kv_per_kvar: number | null;
+            voltage_droop_kv_per_kvar?: number | null;
             /**
              * Voltage Setpoint Kv
              * @default null
              */
-            voltage_setpoint_kv: number | null;
+            voltage_setpoint_kv?: number | null;
         };
         /** InverterPlan */
         InverterPlan: {
@@ -554,12 +554,12 @@ export interface components {
              * Kappa
              * @default null
              */
-            kappa: number | null;
+            kappa?: number | null;
             /**
              * Lambda C
              * @default null
              */
-            lambda_c: number | null;
+            lambda_c?: number | null;
             /** Max Loading Ratio */
             max_loading_ratio: number | null;
             /** Min Voltage Pu */
@@ -568,12 +568,12 @@ export interface components {
              * R Tau
              * @default null
              */
-            r_tau: number | null;
+            r_tau?: number | null;
             /**
              * Re Lambda Dom Per S
              * @default null
              */
-            re_lambda_dom_per_s: number | null;
+            re_lambda_dom_per_s?: number | null;
             /** System Frequency Hz */
             system_frequency_hz: number | null;
             /** Total Losses Kw */
@@ -582,7 +582,7 @@ export interface components {
              * Zeta Min
              * @default null
              */
-            zeta_min: number | null;
+            zeta_min?: number | null;
         };
         /**
          * LimitingConstraint
@@ -626,47 +626,47 @@ export interface components {
              * Current Limit A
              * @default null
              */
-            current_limit_a: number | null;
+            current_limit_a?: number | null;
             /**
              * From Bus Id
              * @default null
              */
-            from_bus_id: string | null;
+            from_bus_id?: string | null;
             /**
              * Id
              * @default null
              */
-            id: string | null;
+            id?: string | null;
             /**
              * Length Km
              * @default null
              */
-            length_km: number | null;
+            length_km?: number | null;
             /**
              * R Ohm
              * @default null
              */
-            r_ohm: number | null;
+            r_ohm?: number | null;
             /**
              * R Ohm Per Km
              * @default null
              */
-            r_ohm_per_km: number | null;
+            r_ohm_per_km?: number | null;
             /**
              * To Bus Id
              * @default null
              */
-            to_bus_id: string | null;
+            to_bus_id?: string | null;
             /**
              * X Ohm
              * @default null
              */
-            x_ohm: number | null;
+            x_ohm?: number | null;
             /**
              * X Ohm Per Km
              * @default null
              */
-            x_ohm_per_km: number | null;
+            x_ohm_per_km?: number | null;
         };
         /** LineResult */
         LineResult: {
@@ -700,29 +700,29 @@ export interface components {
              * Bus Id
              * @default null
              */
-            bus_id: string | null;
+            bus_id?: string | null;
             /**
              * Id
              * @default null
              */
-            id: string | null;
+            id?: string | null;
             /**
              * P Kw
              * @default null
              */
-            p_kw: number | null;
+            p_kw?: number | null;
             /** @default null */
-            pf_direction: components["schemas"]["PfDirection"] | null;
+            pf_direction?: components["schemas"]["PfDirection"] | null;
             /**
              * Power Factor
              * @default null
              */
-            power_factor: number | null;
+            power_factor?: number | null;
             /**
              * Q Kvar
              * @default null
              */
-            q_kvar: number | null;
+            q_kvar?: number | null;
         };
         /** LoadProfile */
         LoadProfile: {
@@ -730,12 +730,12 @@ export interface components {
              * Id
              * @default null
              */
-            id: string | null;
+            id?: string | null;
             /**
              * Values
              * @default null
              */
-            values: components["schemas"]["HourValue"][] | null;
+            values?: components["schemas"]["HourValue"][] | null;
         };
         /** Loadability */
         Loadability: {
@@ -901,7 +901,7 @@ export interface components {
              * Buses
              * @default []
              */
-            buses: components["schemas"]["Bus"][];
+            buses?: components["schemas"]["Bus"][];
             /**
              * @default {
              *       "balance_tolerance_kw": null,
@@ -913,34 +913,34 @@ export interface components {
              *       "voltage_min_pu": null
              *     }
              */
-            design_constraints: components["schemas"]["DesignConstraints"];
+            design_constraints?: components["schemas"]["DesignConstraints"];
             /**
              * Inverters
              * @default []
              */
-            inverters: components["schemas"]["Inverter"][];
+            inverters?: components["schemas"]["Inverter"][];
             /**
              * Lines
              * @default []
              */
-            lines: components["schemas"]["Line"][];
+            lines?: components["schemas"]["Line"][];
             /** @default null */
-            load_profile: components["schemas"]["LoadProfile"] | null;
+            load_profile?: components["schemas"]["LoadProfile"] | null;
             /**
              * Loads
              * @default []
              */
-            loads: components["schemas"]["Load"][];
+            loads?: components["schemas"]["Load"][];
             /**
              * Nominal Frequency Hz
              * @default null
              */
-            nominal_frequency_hz: number | null;
+            nominal_frequency_hz?: number | null;
             /**
              * Nominal Voltage Kv
              * @default null
              */
-            nominal_voltage_kv: number | null;
+            nominal_voltage_kv?: number | null;
         };
         /** PsPayload */
         PsPayload: {
@@ -1017,7 +1017,7 @@ export interface components {
              * Result Payload
              * @default null
              */
-            result_payload: {
+            result_payload?: {
                 [key: string]: unknown;
             } | null;
             /** Snapshot Hash */
@@ -1090,17 +1090,17 @@ export interface components {
         /** SolverConfig */
         SolverConfig: {
             /** @default DEFAULT */
-            initial_guess: components["schemas"]["InitialGuess"];
+            initial_guess?: components["schemas"]["InitialGuess"];
             /**
              * Max Iterations
              * @default 50
              */
-            max_iterations: number;
+            max_iterations?: number;
             /**
              * Mismatch Tolerance W
              * @default 0.001
              */
-            mismatch_tolerance_w: number;
+            mismatch_tolerance_w?: number;
         };
         /**
          * StabilityClass
@@ -1137,7 +1137,7 @@ export interface components {
              * Eigenvalues
              * @default null
              */
-            eigenvalues: components["schemas"]["Eigenvalue"][] | null;
+            eigenvalues?: components["schemas"]["Eigenvalue"][] | null;
             key_metrics: components["schemas"]["KeyMetrics"];
             limiting_constraint: components["schemas"]["LimitingConstraint"] | null;
             status: components["schemas"]["Status"];
@@ -1147,17 +1147,17 @@ export interface components {
              * Value
              * @default null
              */
-            value: number | null;
+            value?: number | null;
             /**
              * X Value
              * @default null
              */
-            x_value: number | null;
+            x_value?: number | null;
             /**
              * Y Value
              * @default null
              */
-            y_value: number | null;
+            y_value?: number | null;
         };
         /**
          * TransientClass
@@ -1174,17 +1174,17 @@ export interface components {
              * Entity
              * @default null
              */
-            entity: string | null;
+            entity?: string | null;
             /**
              * Field
              * @default null
              */
-            field: string | null;
+            field?: string | null;
             /**
              * Id
              * @default null
              */
-            id: string | null;
+            id?: string | null;
             level: components["schemas"]["IssueLevel"];
             /** Message */
             message: string;

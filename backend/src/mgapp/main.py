@@ -19,6 +19,7 @@ from pydantic import BaseModel
 
 from mgapp import __version__
 from mgapp.adapters.fake_engine import FakeEngine
+from mgapp.adapters.fake_engine.profiles import PROFILES
 from mgapp.api import error_mapper
 from mgapp.api.error_mapper import TransportFailureError
 from mgapp.api.routers import analyses, health_meta
@@ -38,7 +39,10 @@ API_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"]
 def build_engine(settings: Settings) -> EnginePort:
     if settings.engine is EngineChoice.REAL:
         raise SystemExit("MGAPP_ENGINE=REAL: the Real Engine adapter arrives at stage 1.4.")
-    return FakeEngine()
+    name = settings.fake_profile or "default"
+    if name not in PROFILES:
+        raise SystemExit(f"Unknown MGAPP_FAKE_PROFILE '{name}'. Known: {', '.join(PROFILES)}.")
+    return FakeEngine(script=dict(PROFILES[name]))
 
 
 def create_app(
