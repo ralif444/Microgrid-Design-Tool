@@ -108,10 +108,17 @@ def _result(
     return M1Result(status, code, k, tuple(V.tolist()), tuple(theta.tolist()), omega, worst)
 
 
-def solve_m1(net: Network, cfg: SolverConfig | None = None) -> M1Result:
+def state(res: M1Result) -> Vector:
+    """State vector (4.6) of a solved point, for a warm start (D-51 K44)."""
+    if res.v_v is None or res.theta_rad is None or res.omega_rad_s is None:
+        raise ValueError(f"no operating point for status {res.status}")
+    return np.array([*res.v_v, *res.theta_rad[1:], res.omega_rad_s])
+
+
+def solve_m1(net: Network, cfg: SolverConfig | None = None, x0: Vector | None = None) -> M1Result:
     cfg = cfg or SolverConfig()
     model = _Model(net)
-    x = initial_guess(net)
+    x = initial_guess(net) if x0 is None else x0
     for k in range(cfg.max_iterations + 1):
         f = model.mismatch(x)
         if not (np.all(np.isfinite(x)) and np.all(np.isfinite(f))):
