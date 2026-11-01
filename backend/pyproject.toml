@@ -33,6 +33,7 @@ packages = ["src/mgapp"]
 # Tests live at the repository root (Doc 8 §1); run via `python tools/test.py`.
 testpaths = ["../tests"]
 addopts = "-q"
+filterwarnings = ["ignore:Using `httpx` with `starlette.testclient` is deprecated"]
 
 # ---------------------------------------------------------------- lint
 [tool.ruff]

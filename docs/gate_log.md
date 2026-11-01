@@ -49,3 +49,14 @@ Not a manuscript gate; a review checklist before WP 1.1.1.
 | 2 | Fake Engine passes: default profile and all 32 allowed (type, outcome) scripts | PASS | tests/contract/test_contract_suite.py |
 | 3 | M1 INFEASIBLE rejected by the suite (C2) | PASS | same |
 | 4 | Suite fails on each of the nine defects, naming the broken behaviour | PASS | same |
+
+## WP 1.1.4 — application service spine (2026-11-01)
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | Pipeline order: request model → stage 1 (all issues) → size limits → canonical hash → dependency (3 parts) → guarded call → RunRecord | PASS | services/pipeline.py |
+| 2 | Every Status and reason (FEASIBLE, INFEASIBLE, SOLVER_FAILED, PHYSICALLY_INADMISSIBLE, INPUT_INVALID incl. MALFORMED_REQUEST, UNAVAILABLE: TIMEOUT, DEPENDENCY_NOT_MET, NOT_APPLICABLE, ENGINE_ERROR) → HTTP 200 + 17-field RunRecord; engine fields null iff engine not called | PASS | tests/api/test_status_and_runrecord.py |
+| 3 | Zero engine calls on INPUT_INVALID, size-limit and dependency failures; stale worded as stale | PASS | tests/api/test_dependency.py, test_limits_and_transport.py |
+| 4 | Time budget enforced by the guard (thread + abandon); exception and disallowed Status → ENGINE_ERROR, never SOLVER_FAILED | PASS | same |
+| 5 | Six canonicalisation rules tested through HTTP against an independent reference and hand-written known answers | PASS | tests/reproducibility/test_canonical_hash.py |
+| 6 | Transport errors 400/404/405/413/415 as TransportError; no 422 | PASS | tests/api/test_limits_and_transport.py |
+| 7 | Only the execution guard imports the Engine Port (import-linter, ignore rule now matched) | PASS | `python tools/check.py` |

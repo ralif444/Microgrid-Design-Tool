@@ -1,38 +1,93 @@
 """Composition root: wires the app once at startup (Doc 4 §4, Doc 8 §2).
 
-`create_app` is also the factory the in-process tests use to inject a Fake Engine.
+`create_app` is also the factory the in-process tests use to inject a Fake Engine
+instance with a script (Doc 8 §5). Engine choice is fixed here, never per request.
 """
 
 from __future__ import annotations
 
+import dataclasses
+import logging
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
 
 from mgapp import __version__
-from mgapp.config import BIND_HOST, Settings
+from mgapp.adapters.fake_engine import FakeEngine
+from mgapp.api import error_mapper
+from mgapp.api.error_mapper import TransportFailureError
+from mgapp.api.routers import analyses, health_meta
+from mgapp.config import BIND_HOST, EngineChoice, Settings
+from mgapp.engine_port import EnginePort
+from mgapp.services.guard import ExecutionGuard
+from mgapp.services.limits import Limits
+from mgapp.services.pipeline import Pipeline
+from mgapp.services.run_record import RunRecordService
 
 STATIC_DIR = Path(__file__).parent / "static"
+API_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"]
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def build_engine(settings: Settings) -> EnginePort:
+    if settings.engine is EngineChoice.REAL:
+        raise SystemExit("MGAPP_ENGINE=REAL: the Real Engine adapter arrives at stage 1.4.")
+    return FakeEngine()
+
+
+def create_app(
+    settings: Settings | None = None,
+    *,
+    engine: EnginePort | None = None,
+    limits: Limits | None = None,
+    records: RunRecordService | None = None,
+    serve_static: bool = True,
+) -> FastAPI:
     settings = settings or Settings()
-    app = FastAPI(title="mgapp", version=__version__)
+    limits = limits or Limits()
+    if settings.time_budget_s_override is not None:
+        limits = dataclasses.replace(limits, time_budget_s=settings.time_budget_s_override)
+    engine = engine or build_engine(settings)
 
-    @app.get("/api/health")
-    def health() -> dict[str, str]:
-        return {"status": "OK"}
+    app = FastAPI(
+        title="mgapp",
+        version=__version__,
+        openapi_url="/api/openapi.json",
+        docs_url=None,
+        redoc_url=None,
+    )
+    app.state.pipeline = Pipeline(
+        ExecutionGuard(engine, limits.time_budget_s), records or RunRecordService(), limits
+    )
+    error_mapper.install(app)
+    app.include_router(health_meta.router)
+    app.include_router(analyses.router)
 
-    # Static frontend build (component 1). Mounted last so /api routes win.
-    if (STATIC_DIR / "index.html").exists():
+    known = [
+        r
+        for router in (health_meta.router, analyses.router)
+        for r in router.routes
+        if isinstance(r, APIRoute)
+    ]
+
+    @app.api_route("/api/{path:path}", methods=API_METHODS, include_in_schema=False)
+    async def api_fallback(path: str, request: Request) -> None:
+        full = f"/api/{path}"
+        if any(r.path_regex.match(full) for r in known):
+            raise TransportFailureError(405)
+        raise TransportFailureError(404)
+
+    # Static frontend build (component 1), mounted last so /api routes win.
+    if serve_static and (STATIC_DIR / "index.html").exists():
         app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
     return app
 
 
 def run() -> None:
-    """Single start command `uv run mgapp` (NFR-02)."""
+    """Single start command `uv run --project backend mgapp` (NFR-02)."""
     import uvicorn
 
+    logging.basicConfig(level=logging.INFO)
     settings = Settings.from_env()
     uvicorn.run(create_app(settings), host=BIND_HOST, port=settings.port)

@@ -1,0 +1,193 @@
+"""Analysis pipeline (component 4; manuscript 4.3.3, Gambar C.5a-C.5b).
+
+Fixed order: request model → stage-1 validation → size limits → canonicalise + hash →
+dependency check → guarded engine call → RunRecord. Every path ends in a RunRecord.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from pydantic import ValidationError
+
+from mgapp.domain.base import Model
+from mgapp.domain.contract import (
+    AnalysisRequest,
+    AnalysisResult,
+    EngineIdentity,
+    RunRecordRef,
+    ScenarioSnapshot,
+    SolverConfig,
+    ValidationIssue,
+)
+from mgapp.domain.entities import ProjectSnapshot
+from mgapp.domain.enums import (
+    DEPENDENT_TYPES,
+    AnalysisType,
+    IssueCode,
+    IssueLevel,
+    Status,
+    StatusCode,
+)
+from mgapp.domain.run_record import AnalysisResponse
+from mgapp.services.canonical import normalise_raw, normalise_snapshot, sha256_hex
+from mgapp.services.dependency import check_dependency
+from mgapp.services.guard import ExecutionGuard
+from mgapp.services.limits import Limits, check_size_limits
+from mgapp.services.run_record import RunRecordService
+from mgapp.services.validation import MESSAGES, validate_request
+
+
+class AnalysisRequestBody(Model):
+    """HTTP body of POST /api/analyses/{type} (Doc 6 §3.1). analysis_type comes from the route."""
+
+    project_snapshot: ProjectSnapshot
+    parameters: dict[str, Any]
+    solver_config: SolverConfig
+    depends_on: RunRecordRef | None = None
+    scenarios: list[ScenarioSnapshot] | None = None
+
+
+def _invalid(issues: list[ValidationIssue]) -> AnalysisResult:
+    if len(issues) == 1:
+        code, detail = issues[0].code.value, issues[0].message
+    else:
+        code, detail = StatusCode.MULTIPLE_ISSUES.value, f"{len(issues)} problems were found."
+    return AnalysisResult(
+        status=Status.INPUT_INVALID,
+        status_code=code,
+        message=f"Input is not valid: {detail} Correct the marked input and run again.",
+        payload=None,
+        diagnostics={"issues": [i.model_dump(mode="json") for i in issues]},
+    )
+
+
+def _unavailable(code: StatusCode, message: str, reason: str | None = None) -> AnalysisResult:
+    diag: dict[str, Any] = {"dependency_reason": reason} if reason else {}
+    return AnalysisResult(
+        status=Status.UNAVAILABLE, status_code=code, message=message, payload=None, diagnostics=diag
+    )
+
+
+class Pipeline:
+    def __init__(self, guard: ExecutionGuard, records: RunRecordService, limits: Limits) -> None:
+        self._guard = guard
+        self._records = records
+        self.limits = limits
+
+    def engine_identity(self) -> EngineIdentity:
+        return self._guard.identity()
+
+    def run_raw(self, analysis_type: AnalysisType, raw: Any) -> AnalysisResponse:
+        """Entry from HTTP: a request-model failure becomes INPUT_INVALID/MALFORMED_REQUEST."""
+        try:
+            body = AnalysisRequestBody.model_validate(raw)
+        except ValidationError as exc:
+            return self._malformed(analysis_type, raw, exc)
+        return self.run(analysis_type, body)
+
+    def _malformed(self, t: AnalysisType, raw: Any, exc: ValidationError) -> AnalysisResponse:
+        r = raw if isinstance(raw, dict) else {}
+        snapshot = normalise_raw(r.get("project_snapshot"))
+        issue = ValidationIssue(
+            code=IssueCode.MALFORMED_REQUEST,
+            level=IssueLevel.REQUEST,
+            message=MESSAGES[IssueCode.MALFORMED_REQUEST],
+        )
+        result = _invalid([issue])
+        result.diagnostics["schema_errors"] = [
+            {"loc": [str(x) for x in e["loc"]], "msg": e["msg"]} for e in exc.errors()
+        ]
+        scen = r.get("scenarios") if isinstance(r.get("scenarios"), list) else None
+        snap_hash = self._safe_hash({"snapshot": snapshot, "scenarios": scen} if scen else snapshot)
+        rec = self._records.build(
+            analysis_type=t,
+            parameters=r.get("parameters") if isinstance(r.get("parameters"), dict) else {},
+            snapshot=snapshot,
+            snapshot_hash=snap_hash,
+            scenarios=scen,
+            depends_on=r.get("depends_on"),
+            solver_config=r.get("solver_config"),
+            identity=None,
+            result=result,
+        )
+        return AnalysisResponse(result=result, run_record=rec)
+
+    @staticmethod
+    def _safe_hash(value: Any) -> str:
+        try:
+            return sha256_hex(value)
+        except ValueError:
+            return sha256_hex(None)
+
+    def run(
+        self, t: AnalysisType, body: AnalysisRequestBody, replay_of: str | None = None
+    ) -> AnalysisResponse:
+        # Canonical forms are computed first so every RunRecord carries the submitted input.
+        snapshot = normalise_snapshot(body.project_snapshot)
+        base_hash = sha256_hex(snapshot)
+        scenarios = (
+            [
+                {
+                    "scenario_id": s.scenario_id,
+                    "label": s.label,
+                    "project_snapshot": normalise_snapshot(s.project_snapshot),
+                }
+                for s in body.scenarios
+            ]
+            if body.scenarios is not None
+            else None
+        )
+        snap_hash = (
+            sha256_hex({"snapshot": snapshot, "scenarios": scenarios}) if scenarios else base_hash
+        )
+        depends = body.depends_on.model_dump(mode="json") if body.depends_on else None
+        solver = body.solver_config.model_dump(mode="json")
+
+        def record(result: AnalysisResult, ident: EngineIdentity | None) -> AnalysisResponse:
+            rec = self._records.build(
+                analysis_type=t,
+                parameters=body.parameters,
+                snapshot=snapshot,
+                snapshot_hash=snap_hash,
+                scenarios=scenarios,
+                depends_on=depends,
+                solver_config=solver,
+                identity=ident,
+                result=result,
+                replay_of_record_id=replay_of,
+            )
+            return AnalysisResponse(result=result, run_record=rec)
+
+        # 1. stage-1 validation, all issues
+        issues = validate_request(
+            t, body.project_snapshot, body.parameters, body.depends_on is not None, body.scenarios
+        )
+        if issues:
+            return record(_invalid(issues), None)
+        # 2. size limits
+        issues = check_size_limits(t, body.parameters, len(body.scenarios or []), self.limits)
+        if issues:
+            return record(_invalid(issues), None)
+        # 3. (hashes computed above) 4. dependency check
+        if t in DEPENDENT_TYPES:
+            failure = check_dependency(body.depends_on, base_hash)
+            if failure is not None:
+                return record(
+                    _unavailable(StatusCode.DEPENDENCY_NOT_MET, failure.message, failure.reason),
+                    None,
+                )
+        # 5. guarded engine call
+        request = AnalysisRequest(
+            analysis_type=t,
+            project_snapshot=ProjectSnapshot.model_validate(snapshot),
+            parameters=body.parameters,
+            solver_config=body.solver_config,
+            depends_on=body.depends_on,
+            scenarios=[ScenarioSnapshot.model_validate(s) for s in scenarios]
+            if scenarios
+            else None,
+        )
+        outcome = self._guard.run(request)
+        # 6. RunRecord
+        return record(outcome.result, outcome.identity)
