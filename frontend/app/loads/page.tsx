@@ -1,64 +1,22 @@
 "use client";
 // S-03 Loads (Doc 7 §6.1): Load table with Q or power factor per row (FR-03), inline stage-1
-// messages from /api/projects/validate (FR-17, FR-18). A minimal Bus list sits here until S-05
-// takes it over in WP 1.2.2 (Doc 9 D-45 K1). LoadProfile (FR-04) is Should, stage 1.5.
+// messages from /api/projects/validate (FR-17, FR-18). Buses are edited on S-05 (D-46 K8).
+// LoadProfile (FR-04) is Should, stage 1.5.
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { validateProject } from "../../api-client";
+import { useState } from "react";
 import type { Load, ValidationIssue } from "../../api-types";
 import { RequireProject } from "../../components/RequireProject";
+import { useValidation } from "../../components/useValidation";
 import { useProject, useProjectDispatch } from "../../store";
 
 const where = (i: ValidationIssue) => [i.entity, i.id, i.field].filter(Boolean).join(" / ");
-
-function Buses({ issues }: { issues: ValidationIssue[] }) {
-  const { design } = useProject();
-  const dispatch = useProjectDispatch();
-  const [id, setId] = useState("");
-  const buses = design.buses ?? [];
-  return (
-    <section aria-label="Buses">
-      <h2>Buses</h2>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          dispatch({ type: "busAdded", id: id.trim() });
-          setId("");
-        }}
-      >
-        <label htmlFor="bus-id">Bus id</label>{" "}
-        <input id="bus-id" required value={id} onChange={(e) => setId(e.target.value)} />{" "}
-        <button type="submit">Add bus</button>
-      </form>
-      {buses.length === 0 ? (
-        <p>No buses yet. Add a bus so loads can be placed on it.</p>
-      ) : (
-        <ul>
-          {buses.map((b, k) => (
-            <li key={k}>
-              {b.id}{" "}
-              <button type="button" onClick={() => dispatch({ type: "busRemoved", id: b.id ?? "" })}>
-                Delete bus {b.id}
-              </button>
-              {issues
-                .filter((i) => i.entity === "Bus" && i.id === b.id)
-                .map((i, n) => (
-                  <span key={n} role="alert"> {i.message}</span>
-                ))}
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-}
 
 function LoadRow({ load, issues }: { load: Load; issues: ValidationIssue[] }) {
   const { design } = useProject();
   const dispatch = useProjectDispatch();
   const [mode, setMode] = useState<"Q" | "PF">(load.power_factor != null || load.pf_direction != null ? "PF" : "Q");
   const id = load.id ?? "";
-  const set = (patch: Partial<Load>) => dispatch({ type: "loadUpdated", id, patch });
+  const set = (patch: Partial<Load>) => dispatch({ type: "rowUpdated", collection: "loads", id, patch });
   const num = (v: string) => (v === "" ? null : Number(v));
   const choose = (m: "Q" | "PF") => {
     setMode(m);
@@ -114,7 +72,7 @@ function LoadRow({ load, issues }: { load: Load; issues: ValidationIssue[] }) {
         )}
       </td>
       <td>
-        <button type="button" onClick={() => dispatch({ type: "loadRemoved", id })}>
+        <button type="button" onClick={() => dispatch({ type: "rowRemoved", collection: "loads", id })}>
           Delete {id}
         </button>
       </td>
@@ -133,26 +91,20 @@ function LoadRow({ load, issues }: { load: Load; issues: ValidationIssue[] }) {
 function Loads() {
   const { design } = useProject();
   const dispatch = useProjectDispatch();
-  const [issues, setIssues] = useState<ValidationIssue[]>([]);
+  const issues = useValidation(design, "PS")?.issues ?? [];
   const loads = design.loads ?? [];
 
-  useEffect(() => {
-    // Debounced live feedback; the server holds the only rule set (Doc 6 §3.4).
-    const t = setTimeout(() => {
-      void validateProject({ project_snapshot: design, target_analysis_type: "PS" }).then((r) => {
-        if (r.ok) setIssues(r.data.issues);
-      });
-    }, 300);
-    return () => clearTimeout(t);
-  }, [design]);
-
-  const other = issues.filter((i) => i.entity !== "Load" && i.entity !== "Bus");
+  const other = issues.filter((i) => i.entity !== "Load");
   return (
     <>
       <h1>Loads</h1>
-      <Buses issues={issues} />
+      {(design.buses?.length ?? 0) === 0 && (
+        <p>
+          No buses yet. <Link href="/network/">Add buses in the network editor</Link> so loads can be placed on them.
+        </p>
+      )}
       <h2>Load table</h2>
-      <button type="button" onClick={() => dispatch({ type: "loadAdded", busId: design.buses?.[0]?.id ?? null })}>
+      <button type="button" onClick={() => dispatch({ type: "rowAdded", collection: "loads", row: { bus_id: design.buses?.[0]?.id ?? null, p_kw: null, q_kvar: null } })}>
         + Add load
       </button>
       {loads.length === 0 ? (

@@ -1,4 +1,4 @@
-"""Seam 5 (WP 1.2.1): S-01 → S-02 → S-03 → S-04 on the Fake Engine.
+"""Seam 5 (WP 1.2.1): S-01 → S-02 → S-05 (bus) → S-03 → S-04 on the Fake Engine.
 
 FR-01 (new Project), FR-03, FR-18 (load rows with inline messages), FR-05 (unit on every
 numeric input), FR-06 (PS run), FR-08 (advice is not design data; stale after a load edit).
@@ -15,6 +15,7 @@ UNIT = re.compile(r"\(.+\)")
 
 
 def _numeric_inputs_have_units(page: Page) -> None:
+    expect(page.locator("input[type=number]").first).to_be_visible()  # wait for the screen
     names = page.locator("input[type=number]").evaluate_all(
         "els => els.map(e => e.getAttribute('aria-label')"
         " || (e.labels[0] && e.labels[0].textContent) || '')"
@@ -40,9 +41,10 @@ def test_fr_01_fr_03_fr_05_fr_06_fr_08_loads_to_sizing_advice(
     expect(page.get_by_role("table", name="Counts")).to_contain_text("Loads0")
     _numeric_inputs_have_units(page)
 
-    page.get_by_role("link", name="1 Loads").click()
-    page.get_by_label("Bus id").fill("B1")
+    page.get_by_role("link", name="3 Network").click()
+    page.get_by_label("Bus id", exact=True).fill("B1")
     page.get_by_role("button", name="Add bus").click()
+    page.get_by_role("link", name="1 Loads").click()
     page.get_by_role("button", name="+ Add load").click()
     row = page.get_by_test_id("load-L1")
     expect(row.get_by_label("Bus of L1")).to_have_value("B1")

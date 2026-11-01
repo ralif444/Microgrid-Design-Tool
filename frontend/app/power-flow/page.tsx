@@ -1,49 +1,32 @@
 "use client";
-// S-07 Power flow (M1), thin slice for WP 1.1.6. The design is entered as JSON until the
-// editing screens arrive in stage 1.2. Only nominal frequency is prefilled (Doc 3 §3.1 default).
+// S-07 Power flow (M1) on the Project store design (D-46 K7). Readiness is shown before a run
+// but never blocks it (Doc 7 P6): a run with problems returns INPUT_INVALID listing all issues.
+import Link from "next/link";
 import { useState } from "react";
 import { runAnalysis } from "../../api-client";
-import type { AnalysisResponse, M1Payload, ProjectSnapshot } from "../../api-types";
+import type { AnalysisResponse, M1Payload } from "../../api-types";
+import { M1FreshnessBadge } from "../../components/M1Freshness";
 import { M1Results } from "../../components/M1Results";
+import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
-import { useProject, useProjectDispatch } from "../../store";
-
-const TEMPLATE = JSON.stringify(
-  {
-    nominal_voltage_kv: null,
-    nominal_frequency_hz: 50,
-    buses: [],
-    lines: [],
-    loads: [],
-    load_profile: null,
-    inverters: [],
-    design_constraints: {},
-  },
-  null,
-  2,
-);
+import { m1Freshness, useValidation } from "../../components/useValidation";
+import { m1Ref, useProject, useProjectDispatch } from "../../store";
 
 const SOLVER = { mismatch_tolerance_w: 0.001, max_iterations: 50, initial_guess: "DEFAULT" as const };
 
-export default function PowerFlowPage() {
-  const [text, setText] = useState(TEMPLATE);
+function PowerFlow() {
+  const { design, runRecords } = useProject();
+  const dispatch = useProjectDispatch();
   const [busy, setBusy] = useState(false);
   const [resp, setResp] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const dispatch = useProjectDispatch();
-  const { runRecords } = useProject();
+  const report = useValidation(design);
+  const fresh = m1Freshness(m1Ref(runRecords)?.snapshot_hash ?? null, report);
 
   async function run() {
     setError(null);
-    let snapshot: ProjectSnapshot;
-    try {
-      snapshot = JSON.parse(text) as ProjectSnapshot;
-    } catch {
-      setError("The design text is not valid JSON.");
-      return;
-    }
     setBusy(true);
-    const out = await runAnalysis("M1", { project_snapshot: snapshot, parameters: {}, solver_config: SOLVER });
+    const out = await runAnalysis("M1", { project_snapshot: design, parameters: {}, solver_config: SOLVER });
     setBusy(false);
     if (!out.ok) {
       setError(out.message);
@@ -57,8 +40,21 @@ export default function PowerFlowPage() {
   return (
     <>
       <h1>Power flow (M1)</h1>
-      <label htmlFor="design">Design (project snapshot, JSON)</label>
-      <textarea id="design" rows={18} cols={80} value={text} onChange={(e) => setText(e.target.value)} />
+      <M1FreshnessBadge f={fresh} />
+      <h2>Readiness</h2>
+      {report === null ? (
+        <p>Checking the design…</p>
+      ) : report.valid ? (
+        <p>No problems found.</p>
+      ) : (
+        <ul aria-label="Readiness warnings">
+          {report.issues.map((i, k) => (
+            <li key={k}>
+              {[i.entity, i.id, i.field].filter(Boolean).join(" / ") || "Design"}: {i.message}
+            </li>
+          ))}
+        </ul>
+      )}
       <p>
         <button type="button" onClick={() => void run()} disabled={busy}>
           {busy ? "Running..." : "Run M1"}
@@ -74,6 +70,19 @@ export default function PowerFlowPage() {
           {resp.run_record.engine_kind ?? "not called"}. Runs this session: {runRecords.length}.
         </p>
       )}
+      {payload && (
+        <p>
+          <Link href="/constraint-check/">Continue to the constraint check (M2)</Link>
+        </p>
+      )}
     </>
+  );
+}
+
+export default function PowerFlowPage() {
+  return (
+    <RequireProject>
+      <PowerFlow />
+    </RequireProject>
   );
 }

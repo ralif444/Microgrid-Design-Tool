@@ -127,3 +127,16 @@ First run on Windows 11 Home 10.0.26200. Python 3.13.15 (uv; `python` on PATH is
 | 6 | S-01 → S-02 → S-03 → S-04 flow: gating message, inline row error, unit on every numeric input, PS run, Accept, no Inverter added, stale notice (FR-01, FR-05 UI, FR-06, FR-08) | PASS | tests/e2e/test_loads_ps.py; Chromium 153.0.8010.12 and Chrome 156.0.8078.48 |
 
 Totals: Python seams 271 passed; client 6 passed; e2e 5 passed. No Fake profile added. Decisions: Doc 9 D-45 (K1–K6). Gating shows the "Create or open a Project first" message with a link to Start rather than an automatic redirect. Shared E2E browser fixtures moved to tests/e2e/conftest.py.
+
+## WP 1.2.2 — network, constraints, M1 and M2 (2026-11-01)
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | Constraint change changes the snapshot hash; inverted band → INPUT_INVALID / BAND_INVERTED (FR-15) | PASS | tests/api/test_constraints_and_m2.py |
+| 2 | M2 FEASIBLE with verdict, loadability, separate SizingCheck; empty limits listed in `not_evaluated` with warning CONSTRAINT_NOT_EVALUATED, none when every limit is set; missing margins → SIZING_MARGIN_INVALID (FR-16, FR-24, FR-27) | PASS | same file |
+| 3 | M2 INFEASIBLE lists two typed limiting constraints (FR-25) | PASS | same file |
+| 4 | Store: add/edit/delete Bus, Line, Inverter with generated ids; constraints stored, empty = null; M1 reference from the latest FEASIBLE M1 (FR-10, FR-12, FR-13, FR-15) | PASS | frontend/store/reducer.test.ts |
+| 5 | S-05 → S-06 → S-07 → S-08 flow: units on every numeric input, derived Line totals, isolated-Bus issue, inverted band message, M2 blocked without M1, M2 FEASIBLE with not-evaluated list, warning, SizingCheck, λ_s wording; edit → stale and M2 disabled; revert → current (FR-05, FR-10, FR-15, FR-16, FR-19, FR-24, FR-27, FR-40) | PASS | tests/e2e/test_network_m1_m2.py |
+| 6 | M2 INFEASIBLE on profile `m2-infeasible` shows the limiting-constraint table (FR-25) | PASS | same file |
+| 7 | Stage-1.1 E2E flows now enter the design through the screens (D-46 K7) | PASS | tests/e2e/test_m1_slice.py, tests/e2e/flows.py |
+
+Totals: Python seams 277 passed; client 9 passed; e2e 7 passed on Chromium 153.0.8010.12 and Chrome 156.0.8078.48. Fake Engine change (D-44 rule): default M2 behaviour adds warning CONSTRAINT_NOT_EVALUATED when `not_evaluated` is non-empty (Doc 6 §3.3); no new profile; Fake version fake-2. Decisions: Doc 9 D-46 (K7–K13).

@@ -1,5 +1,5 @@
 // Project store reducer (ADR-005: Context + reducer). The open Project lives here (Doc 7 §7).
-import type { Load, ProjectSnapshot, PsPayload, RunRecord } from "../api-types";
+import type { DesignConstraints, ProjectSnapshot, PsPayload, RunRecord, RunRecordRef } from "../api-types";
 import { sha256Hex } from "./canonical";
 
 export interface ProjectMeta {
@@ -52,11 +52,11 @@ export type ProjectAction =
       nominal_voltage_kv?: number | null;
       nominal_frequency_hz?: number | null;
     }
-  | { type: "busAdded"; id: string }
-  | { type: "busRemoved"; id: string }
-  | { type: "loadAdded"; busId: string | null }
-  | { type: "loadUpdated"; id: string; patch: Partial<Load> }
-  | { type: "loadRemoved"; id: string }
+  // Bus rows carry their user-entered id (D-45 K1); other rows get a generated id.
+  | { type: "rowAdded"; collection: Collection; row: Row }
+  | { type: "rowUpdated"; collection: Collection; id: string; patch: Row }
+  | { type: "rowRemoved"; collection: Collection; id: string }
+  | { type: "constraintSet"; field: keyof DesignConstraints; value: number | null }
   | { type: "adviceAdded"; advice: SizingAdvice }
   | { type: "adviceDecided"; id: string; state: "ACCEPTED" | "SKIPPED" }
   | { type: "runRecordAdded"; record: RunRecord };
@@ -80,10 +80,16 @@ export const initialState: ProjectState = {
   unsaved: false,
 };
 
-// Generated Load ids L1, L2, … (Doc 9 D-45 K3); never reuses a number still present.
-export function nextLoadId(loads: Load[]): string {
-  const used = loads.map((l) => /^L(\d+)$/.exec(l.id ?? "")?.[1]).filter(Boolean).map(Number);
-  return `L${Math.max(0, ...used) + 1}`;
+export type Collection = "buses" | "lines" | "loads" | "inverters";
+type Row = { id?: string | null; [field: string]: unknown };
+
+// Generated ids (Doc 9 D-45 K3, D-46 K8); never reuses a number still present.
+export const ID_PREFIX: Record<Exclude<Collection, "buses">, string> = { loads: "L", lines: "LN", inverters: "INV" };
+
+export function nextId(prefix: string, rows: Row[]): string {
+  const re = new RegExp(`^${prefix}(\\d+)$`);
+  const used = rows.map((r) => re.exec(r.id ?? "")?.[1]).filter(Boolean).map(Number);
+  return `${prefix}${Math.max(0, ...used) + 1}`;
 }
 
 function edit(state: ProjectState, design: Partial<ProjectSnapshot>): ProjectState {
@@ -110,21 +116,23 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
       const next = edit(state, nominal);
       return name === undefined ? next : { ...next, project: { ...state.project, name } };
     }
-    case "busAdded":
-      return edit(state, { buses: [...(d.buses ?? []), { id: action.id }] });
-    case "busRemoved":
-      return edit(state, { buses: (d.buses ?? []).filter((b) => b.id !== action.id) });
-    case "loadAdded": {
-      const loads = d.loads ?? [];
-      const row = { id: nextLoadId(loads), bus_id: action.busId, p_kw: null, q_kvar: null };
-      return edit(state, { loads: [...loads, row] });
+    case "rowAdded": {
+      const rows: Row[] = d[action.collection] ?? [];
+      const id = action.collection === "buses" ? action.row.id : nextId(ID_PREFIX[action.collection], rows);
+      return edit(state, { [action.collection]: [...rows, { ...action.row, id }] });
     }
-    case "loadUpdated":
+    case "rowUpdated": {
+      const rows: Row[] = d[action.collection] ?? [];
       return edit(state, {
-        loads: (d.loads ?? []).map((l) => (l.id === action.id ? { ...l, ...action.patch } : l)),
+        [action.collection]: rows.map((x) => (x.id === action.id ? { ...x, ...action.patch } : x)),
       });
-    case "loadRemoved":
-      return edit(state, { loads: (d.loads ?? []).filter((l) => l.id !== action.id) });
+    }
+    case "rowRemoved": {
+      const rows: Row[] = d[action.collection] ?? [];
+      return edit(state, { [action.collection]: rows.filter((x) => x.id !== action.id) });
+    }
+    case "constraintSet":
+      return edit(state, { design_constraints: { ...d.design_constraints, [action.field]: action.value } });
     case "adviceAdded":
       return { ...state, sizingAdvice: [...state.sizingAdvice, action.advice], unsaved: true };
     case "adviceDecided":
@@ -144,4 +152,18 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
 // Doc 3 §3.8: SHA-256 of canonical {loads, load_profile, ps_parameters}.
 export function adviceInputHash(design: ProjectSnapshot, ps: PsParameters): Promise<string> {
   return sha256Hex({ loads: design.loads ?? [], load_profile: design.load_profile ?? null, ps_parameters: ps });
+}
+
+// Latest FEASIBLE M1 as the dependency reference for M2 (Doc 3 §5.1 RunRecordRef), or null.
+export function m1Ref(runRecords: RunRecord[]): RunRecordRef | null {
+  const rec = runRecords.findLast((r) => r.analysis_type === "M1" && r.result.status === "FEASIBLE");
+  if (!rec) return null;
+  return {
+    record_id: rec.record_id,
+    analysis_type: "M1",
+    snapshot_hash: rec.snapshot_hash,
+    status: rec.result.status,
+    result_hash: rec.result_hash,
+    result_payload: rec.result.payload ?? null,
+  };
 }

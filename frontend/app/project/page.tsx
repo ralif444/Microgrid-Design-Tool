@@ -1,21 +1,15 @@
 "use client";
 // S-02 Project overview (Doc 7 §2): name and nominal values (Doc 9 D-45 K2), counts, readiness.
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { validateProject } from "../../api-client";
-import type { ValidationIssue } from "../../api-types";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
+import { useValidation } from "../../components/useValidation";
 import { useProject, useProjectDispatch } from "../../store";
 
 function Overview() {
   const { project, design, runRecords } = useProject();
   const dispatch = useProjectDispatch();
-  const [issues, setIssues] = useState<ValidationIssue[] | null>(null);
-
-  useEffect(() => {
-    void validateProject({ project_snapshot: design }).then((r) => setIssues(r.ok ? r.data.issues : null));
-  }, [design]);
+  const issues = useValidation(design)?.issues ?? null;
 
   const counts: [string, number][] = [
     ["Buses", design.buses?.length ?? 0],
@@ -67,7 +61,7 @@ function Overview() {
       </table>
       <h2>Design readiness for power flow (M1)</h2>
       {issues === null ? (
-        <p>Readiness could not be checked.</p>
+        <p>Checking the design…</p>
       ) : issues.length === 0 ? (
         <p>No problems found.</p>
       ) : (
