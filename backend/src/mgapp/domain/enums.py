@@ -1,0 +1,170 @@
+"""Enumerations and code vocabularies (Doc 3 §4, §5; Doc 6 §3.3, §5)."""
+
+from __future__ import annotations
+
+from enum import StrEnum
+
+
+class AnalysisType(StrEnum):
+    PS = "PS"
+    M1 = "M1"
+    M2 = "M2"
+    M3A = "M3a"
+    M3B = "M3b"
+    M3C = "M3c"
+    M3D = "M3d"
+    M4A = "M4a"
+    M4B = "M4b"
+
+
+DEPENDENT_TYPES = frozenset(
+    {
+        AnalysisType.M2,
+        AnalysisType.M3A,
+        AnalysisType.M3B,
+        AnalysisType.M3C,
+        AnalysisType.M3D,
+        AnalysisType.M4A,
+        AnalysisType.M4B,
+    }
+)
+"""Types that need a valid M1 RunRecordRef in `depends_on` (Doc 3 §5.4)."""
+
+
+class Status(StrEnum):
+    INPUT_INVALID = "INPUT_INVALID"
+    SOLVER_FAILED = "SOLVER_FAILED"
+    PHYSICALLY_INADMISSIBLE = "PHYSICALLY_INADMISSIBLE"
+    INFEASIBLE = "INFEASIBLE"
+    FEASIBLE = "FEASIBLE"
+    UNAVAILABLE = "UNAVAILABLE"
+
+
+_ALWAYS = frozenset({Status.INPUT_INVALID, Status.UNAVAILABLE})
+_M3 = frozenset({Status.FEASIBLE})
+_M4 = frozenset({Status.FEASIBLE, Status.SOLVER_FAILED})
+
+ALLOWED_STATUS: dict[AnalysisType, frozenset[Status]] = {
+    AnalysisType.PS: _ALWAYS | {Status.FEASIBLE},
+    AnalysisType.M1: _ALWAYS
+    | {Status.FEASIBLE, Status.SOLVER_FAILED, Status.PHYSICALLY_INADMISSIBLE},
+    AnalysisType.M2: _ALWAYS | {Status.FEASIBLE, Status.INFEASIBLE},
+    AnalysisType.M3A: _ALWAYS | _M3,
+    AnalysisType.M3B: _ALWAYS | _M3,
+    AnalysisType.M3C: _ALWAYS | _M3,
+    AnalysisType.M3D: _ALWAYS | _M3,
+    AnalysisType.M4A: _ALWAYS | _M4,
+    AnalysisType.M4B: _ALWAYS | _M4,
+}
+"""Allowed Status per analysis type (manuscript 4.3.2, Doc 3 §5.4)."""
+
+PAYLOAD_REQUIRED = frozenset({Status.FEASIBLE, Status.INFEASIBLE})
+PAYLOAD_NULL = frozenset({Status.INPUT_INVALID, Status.SOLVER_FAILED, Status.UNAVAILABLE})
+"""PHYSICALLY_INADMISSIBLE: payload optional, diagnostic only (Doc 3 §5.4)."""
+
+
+class EngineKind(StrEnum):
+    FAKE = "FAKE"
+    REAL = "REAL"
+
+
+class PfDirection(StrEnum):
+    LAGGING = "LAGGING"
+    LEADING = "LEADING"
+
+
+class ConstraintKind(StrEnum):
+    BUS_VOLTAGE_MIN = "BUS_VOLTAGE_MIN"
+    BUS_VOLTAGE_MAX = "BUS_VOLTAGE_MAX"
+    FREQUENCY_MIN = "FREQUENCY_MIN"
+    FREQUENCY_MAX = "FREQUENCY_MAX"
+    INVERTER_LOADING = "INVERTER_LOADING"
+    LINE_CURRENT = "LINE_CURRENT"
+    POWER_BALANCE = "POWER_BALANCE"
+
+
+CONSTRAINT_UNIT: dict[ConstraintKind, str] = {
+    ConstraintKind.BUS_VOLTAGE_MIN: "pu",
+    ConstraintKind.BUS_VOLTAGE_MAX: "pu",
+    ConstraintKind.FREQUENCY_MIN: "Hz",
+    ConstraintKind.FREQUENCY_MAX: "Hz",
+    ConstraintKind.INVERTER_LOADING: "ratio",
+    ConstraintKind.LINE_CURRENT: "A",
+    ConstraintKind.POWER_BALANCE: "kW",
+}
+
+
+class StatusCode(StrEnum):
+    """Result-level codes (Doc 3 §5.4, Doc 6 §5.1). Stage-1 issue codes are in IssueCode."""
+
+    OK = "OK"
+    MULTIPLE_ISSUES = "MULTIPLE_ISSUES"
+    CONSTRAINT_VIOLATED = "CONSTRAINT_VIOLATED"
+    NO_CONVERGENCE = "NO_CONVERGENCE"
+    MAX_ITERATIONS_REACHED = "MAX_ITERATIONS_REACHED"
+    ILL_CONDITIONED_JACOBIAN = "ILL_CONDITIONED_JACOBIAN"
+    NON_FINITE = "NON_FINITE"
+    EIGEN_SOLVER_FAILED = "EIGEN_SOLVER_FAILED"
+    SIMULATION_FAILED = "SIMULATION_FAILED"
+    OPERATING_POINT_NOT_PHYSICAL = "OPERATING_POINT_NOT_PHYSICAL"
+    TIMEOUT = "TIMEOUT"
+    DEPENDENCY_NOT_MET = "DEPENDENCY_NOT_MET"
+    NOT_APPLICABLE = "NOT_APPLICABLE"
+    ENGINE_ERROR = "ENGINE_ERROR"
+
+
+class IssueCode(StrEnum):
+    """Stage-1 validation codes (Doc 3 §4)."""
+
+    NEGATIVE_POWER = "NEGATIVE_POWER"
+    EMPTY_REQUIRED = "EMPTY_REQUIRED"
+    NOT_POSITIVE = "NOT_POSITIVE"
+    PF_OUT_OF_RANGE = "PF_OUT_OF_RANGE"
+    PF_DIRECTION_MISSING = "PF_DIRECTION_MISSING"
+    LOAD_Q_AMBIGUOUS = "LOAD_Q_AMBIGUOUS"
+    BAND_INVERTED = "BAND_INVERTED"
+    LOADING_LIMIT_RANGE = "LOADING_LIMIT_RANGE"
+    DUPLICATE_ID = "DUPLICATE_ID"
+    ID_FORMAT = "ID_FORMAT"
+    DANGLING_BUS_REF = "DANGLING_BUS_REF"
+    SELF_LOOP_LINE = "SELF_LOOP_LINE"
+    DUPLICATE_LINE = "DUPLICATE_LINE"
+    ISOLATED_BUS = "ISOLATED_BUS"
+    DISCONNECTED_NETWORK = "DISCONNECTED_NETWORK"
+    NO_INVERTER = "NO_INVERTER"
+    NO_LOAD = "NO_LOAD"
+    PROFILE_LENGTH = "PROFILE_LENGTH"
+    PROFILE_HOUR = "PROFILE_HOUR"
+    PS_PARAMETER_INVALID = "PS_PARAMETER_INVALID"
+    SIZING_MARGIN_INVALID = "SIZING_MARGIN_INVALID"
+    TAU_MISSING_FOR_M4 = "TAU_MISSING_FOR_M4"
+    SENSITIVITY_STEP_INVALID = "SENSITIVITY_STEP_INVALID"
+    DISTURBANCE_INVALID = "DISTURBANCE_INVALID"
+    SWEEP_RANGE_INVALID = "SWEEP_RANGE_INVALID"
+    SCENARIO_PATH_INVALID = "SCENARIO_PATH_INVALID"
+    SWEEP_CAP_EXCEEDED = "SWEEP_CAP_EXCEEDED"
+    PARAMETER_CAP_EXCEEDED = "PARAMETER_CAP_EXCEEDED"
+    DURATION_CAP_EXCEEDED = "DURATION_CAP_EXCEEDED"
+    SCENARIO_COUNT_INVALID = "SCENARIO_COUNT_INVALID"
+    DEPENDS_ON_NOT_ALLOWED = "DEPENDS_ON_NOT_ALLOWED"
+    MALFORMED_REQUEST = "MALFORMED_REQUEST"
+
+
+class IssueLevel(StrEnum):
+    FIELD = "field"
+    ENTITY = "entity"
+    TOPOLOGY = "topology"
+    REQUEST = "request"
+
+
+class WarningCode(StrEnum):
+    ENGINE_KIND_FAKE = "ENGINE_KIND_FAKE"
+    ENGINE_VERSION_MISMATCH = "ENGINE_VERSION_MISMATCH"
+    PROFILE_PEAK_ABOVE_LOADS = "PROFILE_PEAK_ABOVE_LOADS"
+    RATING_MARGIN_SHORT = "RATING_MARGIN_SHORT"
+    VALIDITY_NOT_CALIBRATED = "VALIDITY_NOT_CALIBRATED"
+    CONSTRAINT_NOT_EVALUATED = "CONSTRAINT_NOT_EVALUATED"
+
+
+class InitialGuess(StrEnum):
+    DEFAULT = "DEFAULT"

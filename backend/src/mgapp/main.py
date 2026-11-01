@@ -22,7 +22,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/api/health")
     def health() -> dict[str, str]:
-        return {"status": "ok"}
+        return {"status": "OK"}
 
     # Static frontend build (component 1). Mounted last so /api routes win.
     if (STATIC_DIR / "index.html").exists():

@@ -31,3 +31,13 @@ Not a manuscript gate; a review checklist before WP 1.1.1.
 | 5 | dependency-cruiser passes on frontend and catches a fixture violation | PASS | same file |
 | 6 | Static export config; no API routes/server actions; `fetch` only in api-client (with negative test); validation/ does not import mgapp; loopback bind | PASS | tests/static/ (17 passed) |
 | 7 | ruff format/lint, mypy strict, tsc strict | PASS | `python tools/check.py` |
+
+## WP 1.1.2 — Engine Port and Fake Engine (2026-11-01)
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | Engine Port has exactly two operations (`run`, `identity`) and the seven rules in its docstring | PASS | backend/src/mgapp/engine_port |
+| 2 | Domain schemas for Doc 3 §5 (request, result, limiting constraint, warning, issue) and §6 payloads of all nine types | PASS | backend/src/mgapp/domain |
+| 3 | Fake returns every Status on demand; default profile FEASIBLE with a schema-valid payload for all nine types (NFR-07) | PASS | tests/contract/test_fake_engine_controls.py |
+| 4 | Every Fake result carries ENGINE_KIND_FAKE; call log, delay and raise controls work in-process | PASS | same |
+| 5 | Placeholders contain no invented physics; the only synthetic numbers (M2 INFEASIBLE) are marked SYNTHETIC | PASS (review) | adapters/fake_engine/payloads.py |
+| 6 | Defective profile implemented (one defect per contract behaviour C1–C9) | PASS (used in WP 1.1.3) | adapters/fake_engine/defective.py |
