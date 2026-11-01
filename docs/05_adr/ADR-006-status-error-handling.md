@@ -22,5 +22,6 @@ Values: INPUT_INVALID, SOLVER_FAILED, PHYSICALLY_INADMISSIBLE, INFEASIBLE, FEASI
 - Follow-up: contract test asserts all six Statuses with non-empty code and message (NFR-07, FR-35).
 
 ## Revisit when
+- **Manuscript trigger (Tabel 4.11):** A client needs HTTP-level failure signals. Margin: not thin. Threshold values are the author's initial values, re-checked at WP 1.7.1 (aligned 2026-11-01, Doc 14 D3).
 - A non-UI client needs HTTP-level failure signals.
 - A seventh Status is proposed (requires a Doc 3 change).

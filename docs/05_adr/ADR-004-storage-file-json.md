@@ -23,5 +23,6 @@ A Project is one JSON document with `schema_version`, holding the network, Loads
 - Follow-up: keep migration fixtures per version (FR-56 tests).
 
 ## Revisit when
+- **Manuscript trigger (Tabel 4.11):** Multi-user use, or a Project file larger than 10 MiB. Margin: not thin. Threshold values are the author's initial values, re-checked at WP 1.7.1 (aligned 2026-11-01, Doc 14 D3).
 - Multi-user, hosted deployment, or Project files become too large to handle in the browser.
 - Cross-project queries over RunRecords become a requirement.

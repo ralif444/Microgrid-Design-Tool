@@ -25,5 +25,6 @@ Next.js with static export only. No server-side rendering, no Next.js API routes
 - Follow-up: CI check that the build uses export mode and contains no API routes (Doc 8).
 
 ## Revisit when
+- **Manuscript trigger (Tabel 4.11):** Static export blocks a required feature, or a shared server is needed. Margin: thin against Vite. Threshold values are the author's initial values, re-checked at WP 1.7.1 (aligned 2026-11-01, Doc 14 D3).
 - Static-export constraints block a required feature, or the Vite margin becomes decisive (e.g. prototype conventions turn out not to be reused).
 - A hosted or multi-user deployment is ever requested.

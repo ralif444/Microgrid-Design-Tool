@@ -232,3 +232,35 @@ DOC 9 COMPLETE
 - D-42 added: change proposals applied.
 - K-06 and Q-16 added (KONFLIK N24 option (a)+(b)); Q-17 added (contract gaps C6.2–C6.4, pending decision).
 - Q-10, A-44, R-07 aligned with C5.5 and C5.18.
+
+## 10. Alignment with the final manuscript (2026-11-01, Doc 14 D6)
+The rows above are kept as written on 2026-10-21. This section overrides their status where listed; the manuscript (`Seminar.pdf`) wins on conflict. Phases P0–P4 in the rows above map to stages 1.1, 1.2, 1.4, 1.5, 1.7 (Doc 10).
+
+### 10.1 Items closed or changed by the manuscript
+| ID | New status | Basis |
+|---|---|---|
+| A-01 | TIME_BUDGET initial value 30 s, replaced by measurement at WP 1.4.3. DECIDED (initial). | Manuscript 4.1.3, 4.3.3 |
+| A-02 | SWEEP_CAP initial value 1 000 points (largest planned 2-D sweep 891 points); re-set at WP 1.7.1. DECIDED (initial). | 4.1.3, 4.2.9 |
+| A-06, S-04, Q-06 | No numeric defaults for DesignConstraints; empty limit reported "not evaluated". Default nominal frequency 50 Hz stays (Tabel 4.9). CLOSED. | 4.2.4, Tabel 4.9, A.1 #16 |
+| A-07, Q-11 | MARGIN_WARN 0.05 on the normalised margin of Eq. (4.18). DECIDED (initial; re-set at WP 1.7.1). | 4.1.3 |
+| A-08, Q-10 | M4b catalogue: four kinds (load step, load scaling on one or all buses, reference step on P*, Q*, V* or ω*, inverter outage); steps permanent or finite duration. Duration cap value still null. CLOSED except cap. | 4.2.6 |
+| A-10, Q-07 | Browser: latest stable Google Chrome; version written in the test log. CLOSED. | 4.1.1, 4.3.9, A.2 #7 |
+| A-15 | Timeout mechanism for stage 1.1: worker thread, wait at most TIME_BUDGET, discard a late result; engine fields filled because the engine was called. Revisit at WP 1.4.3 (option: subprocess per call). DECIDED (user 2026-11-01). | Doc 4 §7(c) |
+| A-19 | Number format for canonical JSON: ECMAScript Number-to-String (shortest round trip, as in RFC 8785 [PERLU VERIFIKASI against RFC text]); integers written without fraction; `-0` → `0`; NaN/Infinity refused; keys ordered by Unicode code point; entity arrays sorted by `id`. DECIDED (user 2026-11-01). | 4.3.5 |
+| A-39 | Library versions pinned in `backend/uv.lock` and `frontend/package-lock.json` at stage 1.1; recorded via `app_version`. DECIDED. | 4.3.9 |
+| Tools (Doc 8 §9 #5) | uv, npm, ruff, mypy, pytest, import-linter, Vitest, Playwright, dependency-cruiser; tasks as stdlib Python scripts in `tools/`. DECIDED (user 2026-11-01). | Doc 8 §3 |
+| Fake payloads | Placeholders derived from the snapshot (nominal V and f, zero losses, element ids from the request); no invented physics. DECIDED (user 2026-11-01). | Doc 8 §5 |
+| Stage 1.1 endpoints | health, meta, nine analysis routes; validate/import/verify/rerun in 1.2. DECIDED (user 2026-11-01). | Doc 10 §7 #3 |
+| DR-08 | Cancelled (equations allowed). KONFLIK user-decided. | Doc 14 A20 |
+
+### 10.2 New open points
+| ID | Item | Tag | Owner / when |
+|---|---|---|---|
+| A-50 | Sixteen-component list of Doc 4 §4 reconstructed from text; verify against Gambar 4.4b. | [ASSUMPTION] | author, before 1.2 |
+| A-51 | DoD ten conditions reconstructed (manuscript gives count and two examples only). | [ASSUMPTION] | author, exit 1.1 |
+| A-52 | Gate rules G3–G6 not listed in manuscript text (Doc 10 §5). | [PERLU VERIFIKASI] | author, exit 1.1 |
+| A-53 | Caps SCENARIO_CAP, M3A_PARAMETER_CAP, M4B_DURATION_CAP_S have no value; `/api/meta` returns null. | [ASSUMPTION] | WP 1.7.1 |
+| A-54 | Node.js 26.7.0 is the manuscript runtime (Tabel 3.5); the build sandbox may differ; the version used is logged in `docs/gate_log.md`. | [ASSUMPTION] | 1.1.1 |
+| Q-20 | Doc 13 #1: do layer-1 numerical aids for constant-PQ loads change the fidelity class? | DECISION NEEDED | before WP 1.6.3 |
+| Q-21 | Doc 13 #2–#6: layer-2 parameter source, current-limit value, PSIM constant-power element, PSIM scripting, resolution floor. | [NEEDS SOURCE] / VERIFY | WP 1.6.2–1.6.3 |
+| Q-22 | Doc 12 #2, #4, #5: author-derived Eq. 12.3–12.13 need hand-check; B3 needs supervisor approval; fictitious catalogue names. | [ASSUMPTION] / FUTURE | before stage 1.5 |

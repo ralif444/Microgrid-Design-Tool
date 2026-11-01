@@ -22,5 +22,6 @@ Each analysis is one synchronous call. `TIME_BUDGET` (~30 s [ASSUMPTION], to be 
 - Upgrade path (future, not designed): (1) add submit/status/result endpoints returning a job id; (2) run the Engine Port call in a worker, keeping the same AnalysisRequest/AnalysisResult shape; (3) have the UI poll or stream progress, using FastAPI async features (ADR-001).
 
 ## Revisit when
+- **Manuscript trigger (Tabel 4.11):** Engine time measured at WP 1.4.3 exceeds 30 s. Margin: not thin. Threshold values are the author's initial values, re-checked at WP 1.7.1 (aligned 2026-11-01, Doc 14 D3).
 - Measured real-engine runtimes regularly exceed `TIME_BUDGET`.
 - The cap blocks sweeps the user legitimately needs.

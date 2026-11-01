@@ -22,5 +22,6 @@ One client-side Project store is the single source of truth for the open Project
 - Follow-up: keep store access behind a small interface so a library can be swapped in without touching screens [ASSUMPTION].
 
 ## Revisit when
+- **Manuscript trigger (Tabel 4.11):** One edit on the largest test Project takes more than 100 ms. Margin: thin. Threshold values are the author's initial values, re-checked at WP 1.7.1 (aligned 2026-11-01, Doc 14 D3).
 - Network-editor interaction shows performance problems or reducer code becomes hard to maintain.
 - Undo/redo or multi-tab editing becomes a requirement.

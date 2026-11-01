@@ -14,14 +14,15 @@ The calculation engine is a black box built after the proposal. The app must be 
 | Mocking at function level in tests | Quick | Tests tied to internals, not external behaviour; no shared contract | Rejected |
 
 ## Decision
-Services depend on an Engine Port interface; adapters (Fake Engine, later Real Engine adapter) depend on the port, never the reverse. The Fake Engine is deterministic and can return every one of the six Statuses on demand. Both adapters must pass one Engine Port contract suite. Unit conversion for the engine is the Real Engine adapter's job. Engine selection is by startup configuration (FAKE | REAL), not per request; the Real Engine adapter is absent in v1 builds until P2.
+Services depend on an Engine Port interface; adapters (Fake Engine, later Real Engine adapter) depend on the port, never the reverse. The Fake Engine is deterministic and can return every one of the six Statuses on demand. Both adapters must pass one Engine Port contract suite. Unit conversion for the engine is the Real Engine adapter's job. Engine selection is by startup configuration (FAKE | REAL), not per request; the Real Engine adapter is absent until stage 1.4.
 
 ## Trade-offs and consequences
 - Positive: UI and API are developed against stable canned behaviour; engine maths is out of the web app's test scope.
 - Negative: the Fake Engine proves the contract, not engine correctness (validated separately, offline M5).
 - Negative: RunRecords made with the Fake Engine must not be mistaken for real results (`engine_kind` field in Doc 3).
-- Follow-up: contract suite is written at P0 and becomes the P2 entry gate.
+- Follow-up: contract suite is written in WP 1.1.3 and must pass on both adapters at exit 1.4.
 
 ## Revisit when
+- **Manuscript trigger (Tabel 4.11):** Stage 1.4 reveals gaps in the canned (Fake) results. Margin: not thin. Threshold values are the author's initial values, re-checked at WP 1.7.1 (aligned 2026-11-01, Doc 14 D3).
 - The real engine cannot be expressed through the single AnalysisRequest/AnalysisResult shape.
-- Contract suite passes but integration at P2 reveals gaps in canned coverage.
+- Contract suite passes but integration at stage 1.4 reveals gaps in canned coverage.

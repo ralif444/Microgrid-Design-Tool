@@ -23,5 +23,6 @@ The open Project (with its RunRecords) lives in the browser. Every analysis requ
 - Follow-up: none; Doc 3 §5.1 and §7 define `depends_on` and `result_hash`.
 
 ## Revisit when
+- **Manuscript trigger (Tabel 4.11):** A request body exceeds the 10 MiB limit. Margin: not thin. Threshold values are the author's initial values, re-checked at WP 1.7.1 (aligned 2026-11-01, Doc 14 D3).
 - Request payloads become too large or slow.
 - Multi-user or hosted use is introduced.

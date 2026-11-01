@@ -24,5 +24,6 @@ Endpoints are grouped as: `POST /api/analyses/{analysis_type}`; `POST /api/proje
 - Follow-up: HTTP vs domain Status mapping is in ADR-006.
 
 ## Revisit when
+- **Manuscript trigger (Tabel 4.11):** Asynchronous execution is adopted. Margin: not thin. Threshold values are the author's initial values, re-checked at WP 1.7.1 (aligned 2026-11-01, Doc 14 D3).
 - Async execution or progress streaming is adopted (ADR-007).
 - Another client (not the bundled UI) needs a different API shape.

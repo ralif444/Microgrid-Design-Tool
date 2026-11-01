@@ -21,8 +21,9 @@ Use FastAPI as the only backend framework. Request and response models are Pydan
 - Positive: engine called in-process with no language bridge; contract and validation come from one schema source; API description feeds Doc 6 and frontend types.
 - Negative: async-first features of FastAPI are unused in v1 because execution is synchronous (ADR-007). Accepted, because they are the upgrade path to a job queue.
 - Negative: Pydantic validation errors must be converted to INPUT_INVALID results (ADR-006).
-- Follow-up: pin framework and Pydantic versions at P0 [ASSUMPTION].
+- Follow-up: pin framework and Pydantic versions in `uv.lock` at stage 1.1 (manuscript 4.3.9; decided).
 
 ## Revisit when
+- **Manuscript trigger (Tabel 4.11):** The engine adapter cannot run in one process with the web server. Margin: thin (Flask still viable). Threshold values are the author's initial values, re-checked at WP 1.7.1 (aligned 2026-11-01, Doc 14 D3).
 - The Real Engine adapter cannot run in-process with the web server (e.g. incompatible runtime or blocking behaviour).
 - Async execution is adopted (see ADR-007 upgrade path).

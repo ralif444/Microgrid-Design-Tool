@@ -52,7 +52,7 @@ Dokumen ini mendaftar semua perbedaan yang diketahui antara dokumen teknis (Doc 
 | B4 | §4 per-analysis table: PS and M2 parameters, M4a `tau_in_s`, M3 status set {FEASIBLE}. | A1, A7, A12, A13 | APPLIED |
 | B5 | `ENGINE_KIND_FAKE` warning on every Fake result (was [ASSUMPTION]). | 4.3.2 | APPLIED |
 | B6 | Unsupported analysis type in a phase → UNAVAILABLE / NOT_APPLICABLE (not 404) when the route exists. | 4.5.1 | APPLIED |
-| B7 | Contract suite: nine behaviours on both adapters, plus a defective Fake profile. | 4.3.2, 4.5.1 | PENDING-1.1 (Doc 08) |
+| B7 | Contract suite: nine behaviours on both adapters, plus a defective Fake profile. | 4.3.2, 4.5.1 | APPLIED (Doc 08 §4.2, 2026-11-01) |
 
 ## 4. Requirements (Doc 02)
 
@@ -72,12 +72,12 @@ Dokumen ini mendaftar semua perbedaan yang diketahui antara dokumen teknis (Doc 
 | # | Doc | Item | Manuscript | Status |
 |---|---|---|---|---|
 | D1 | 01 brief | Project objectives and RM/T: final RM (5 + main) and Bloom levels replace RM-P/T-P wording. | 1.2–1.3 | PENDING-1.7 (thesis writing) |
-| D2 | 04 architecture | 16 components of the local process incl. re-run orchestrator (added to break the RunRecord-service ↔ pipeline cycle); only the execution guard imports the Engine Port; import-linter + dependency-cruiser. | 4.3.1–4.3.2, Gbr 4.4b | PENDING-1.1 |
-| D3 | 04 / ADRs | Ten decisions with margins and revisit triggers (Tabel 4.11): 10 MiB triggers for storage and stateless backend; 100 ms edit trigger for client state; 30 s trigger for execution model. | 4.4.2 | PENDING-1.1 (ADR "Revisit when" lines) |
+| D2 | 04 architecture | 16 components of the local process incl. re-run orchestrator (added to break the RunRecord-service ↔ pipeline cycle); only the execution guard imports the Engine Port; import-linter + dependency-cruiser. | 4.3.1–4.3.2, Gbr 4.4b | APPLIED (2026-11-01) |
+| D3 | 04 / ADRs | Ten decisions with margins and revisit triggers (Tabel 4.11): 10 MiB triggers for storage and stateless backend; 100 ms edit trigger for client state; 30 s trigger for execution model. | 4.4.2 | APPLIED (Doc 04 §10, ADR "Revisit when" lines, 2026-11-01) |
 | D4 | 07 UI | 17 routes (10 Must, 6 Should, 1 Could); stability/transient class wording; indicator label "validity not calibrated"; constraints "not evaluated" display; PS parameter form (6 fields). | 4.3.7, 4.2 | PENDING-1.2 |
-| D5 | 08 verification | Seven test seams (Tabel 4.12); nine contract behaviours; defective Fake profile; DoD ten conditions; canonicalisation tests in WP 1.1.4; four-level engine V&V hierarchy; M5 procedure now in Doc 13. | 4.5.1–4.5.3 | PENDING-1.1 (seams, contract suite) |
-| D6 | 09 register | Close items resolved by the manuscript (time budget, sweep cap, margin warn, browser, defaults policy, disturbance catalogue); add Doc 12/13 open points. | 4.1.3 | PENDING-1.1 |
-| D7 | 10 roadmap | Phases P0–P4 → stages 1.1–1.7 with gates of Tabel 4.15, durations (1.1: 1–2 weeks; 1.2: 4–6; 1.5: 3–5; 1.7: 2–3), 39 work packages (Tabel B.1), six gate rules. | 4.5.5–4.5.6, Lampiran B | PENDING-1.1 |
+| D5 | 08 verification | Seven test seams (Tabel 4.12); nine contract behaviours; defective Fake profile; DoD ten conditions; canonicalisation tests in WP 1.1.4; four-level engine V&V hierarchy; M5 procedure now in Doc 13. | 4.5.1–4.5.3 | APPLIED (2026-11-01) |
+| D6 | 09 register | Close items resolved by the manuscript (time budget, sweep cap, margin warn, browser, defaults policy, disturbance catalogue); add Doc 12/13 open points. | 4.1.3 | APPLIED (Doc 09 §10, appended, 2026-11-01) |
+| D7 | 10 roadmap | Phases P0–P4 → stages 1.1–1.7 with gates of Tabel 4.15, durations (1.1: 1–2 weeks; 1.2: 4–6; 1.5: 3–5; 1.7: 2–3), 39 work packages (Tabel B.1), six gate rules. | 4.5.5–4.5.6, Lampiran B | APPLIED (2026-11-01; gate rules G3–G6 [PERLU VERIFIKASI]) |
 | D8 | 11 traceability | Map docs to final manuscript chapters (Bab 1–5) instead of proposal Bab I–III. | — | PENDING-1.7 |
 | D9 | CLAUDE.md | Entry point names Doc 12–14 and Seminar.pdf; no-maths guardrail removed. | — | APPLIED |
 | D10 | _agent_rules_docset.md | Addendum C (no equations) cancelled; Addendum A sources updated. | — | APPLIED |
@@ -89,3 +89,4 @@ Dokumen ini mendaftar semua perbedaan yang diketahui antara dokumen teknis (Doc 
 | Date | Change |
 |---|---|
 | 2026-11-01 | Created; Doc 02, 03, 06, CLAUDE.md and agent rules aligned in the same session. |
+| 2026-11-01 | Paket 0 of stage 1.1 (repo): D2, D3, D5, D6, D7 and B7 applied in the repository copies of Doc 04, 05_adr, 08, 09, 10. |
