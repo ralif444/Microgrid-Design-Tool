@@ -180,4 +180,4 @@ FR-01 e2e/test_loads_ps, store/reducer.test · FR-03 api/test_validate_and_ps, e
 
 Open notes (not exit criteria): Doc 8 §8 DoD item 7 (keyboard reachability) still has no E2E check; print layout (FR-60, Should) not checked in a browser print; report A2 wording to be confirmed against the manuscript.
 
-**Proposed decision: exit gate 1.2 PASS (conditional on the open notes), awaiting the user's confirmation.**
+**Decision: exit gate 1.2 PASS (conditional)**, confirmed by the user 2026-11-01. Conditions carried into stage 1.3/1.4: (a) E2E check of keyboard reachability (Doc 8 §8 item 7); (b) one key flow with the network adapter switched off; (c) print layout checked in Chrome (FR-60, Should); (d) user confirms the A2 wording of Tabel 1.1 used in the report.
