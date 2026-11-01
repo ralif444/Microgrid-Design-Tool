@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
-import { EngineBadge } from "../components/EngineBadge";
+import { AppHeader } from "../components/AppHeader";
 import { ProjectProvider } from "../store";
 import "./globals.css";
 
@@ -11,13 +10,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="id">
       <body>
         <ProjectProvider>
-          <header>
-            <Link href="/">Microgrid design tool</Link>
-            <nav aria-label="Pipeline">
-              <Link href="/power-flow/">Power flow (M1)</Link>
-            </nav>
-            <EngineBadge />
-          </header>
+          <AppHeader />
           <main>{children}</main>
         </ProjectProvider>
       </body>

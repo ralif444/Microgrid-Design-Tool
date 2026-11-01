@@ -10,9 +10,13 @@ import re
 from collections.abc import Iterable
 from typing import Any, TypeGuard
 
+from pydantic import ValidationError
+
+from mgapp.domain.base import Model
 from mgapp.domain.contract import ScenarioSnapshot, ValidationIssue
 from mgapp.domain.entities import ProjectSnapshot
 from mgapp.domain.enums import AnalysisType, IssueCode, IssueLevel
+from mgapp.services.canonical import normalise_raw, normalise_snapshot, sha256_hex
 
 ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,32}$")
 
@@ -410,3 +414,46 @@ def validate_request(
                 issue.model_copy(update={"entity": f"Scenario {sc.scenario_id}: {issue.entity}"})
             )
     return c.issues
+
+
+class ValidateRequest(Model):
+    """Body of POST /api/projects/validate (Doc 6 §3.4)."""
+
+    project_snapshot: ProjectSnapshot
+    target_analysis_type: AnalysisType | None = None  # null = M1 rules
+    parameters: dict[str, Any] | None = None  # null = no request-level checks
+
+
+class ValidationReport(Model):
+    """Stage-1 result for live feedback; no RunRecord, no Status (Doc 6 §3.4)."""
+
+    valid: bool
+    issues: list[ValidationIssue]
+    snapshot_hash: str  # same canonical hash as RunRecord.snapshot_hash, for the stale-M1 flag
+
+
+def validate_raw(raw: Any) -> ValidationReport:
+    """Stage-1 validation without an engine call; a body off the schema is reported, not raised."""
+    try:
+        req = ValidateRequest.model_validate(raw)
+    except ValidationError:
+        snap = normalise_raw(raw.get("project_snapshot") if isinstance(raw, dict) else None)
+        try:
+            h = sha256_hex(snap)
+        except ValueError:
+            h = sha256_hex(None)
+        issue = ValidationIssue(
+            code=IssueCode.MALFORMED_REQUEST,
+            level=IssueLevel.REQUEST,
+            message=MESSAGES[IssueCode.MALFORMED_REQUEST],
+        )
+        return ValidationReport(valid=False, issues=[issue], snapshot_hash=h)
+    t = req.target_analysis_type or AnalysisType.M1
+    issues = validate_request(t, req.project_snapshot, req.parameters or {}, False, None)
+    if req.parameters is None:
+        issues = [i for i in issues if i.level is not IssueLevel.REQUEST]
+    return ValidationReport(
+        valid=not issues,
+        issues=issues,
+        snapshot_hash=sha256_hex(normalise_snapshot(req.project_snapshot)),
+    )

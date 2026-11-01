@@ -1,5 +1,12 @@
 // Thin HTTP wrapper over the local API (Doc 6). The only module that calls fetch().
-import type { AnalysisRequestBody, AnalysisResponse, AnalysisType, MetaInfo } from "../api-types";
+import type {
+  AnalysisRequestBody,
+  AnalysisResponse,
+  AnalysisType,
+  MetaInfo,
+  ValidateRequest,
+  ValidationReport,
+} from "../api-types";
 
 export type ApiOutcome<T> = { ok: true; data: T } | { ok: false; message: string };
 
@@ -27,6 +34,14 @@ export function runAnalysis(
   body: AnalysisRequestBody,
 ): Promise<ApiOutcome<AnalysisResponse>> {
   return call<AnalysisResponse>(`/api/analyses/${type}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+export function validateProject(body: ValidateRequest): Promise<ApiOutcome<ValidationReport>> {
+  return call<ValidationReport>("/api/projects/validate", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body),

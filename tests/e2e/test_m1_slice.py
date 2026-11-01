@@ -2,50 +2,19 @@
 
 NFR-02 (one start command serves UI and API), NFR-03 (no external requests), FR-35 banner,
 FR-17 issue list, engine badge (Doc 7 P2). Browser: Playwright Chromium; gate runs use
-latest stable Chrome via MGAPP_E2E_CHANNEL=chrome (version logged in docs/gate_log.md).
+latest stable Chrome (see conftest).
 """
 
 from __future__ import annotations
 
 import json
-import os
 import re
-from collections.abc import Callable, Iterator
-from urllib.parse import urlparse
+from collections.abc import Callable
 
-import pytest
 from fixtures.designs import two_bus_snapshot
-from playwright.sync_api import Browser, Page, expect, sync_playwright
+from playwright.sync_api import Page, expect
 
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
-
-
-@pytest.fixture(scope="module")
-def browser() -> Iterator[Browser]:
-    with sync_playwright() as p:
-        b = p.chromium.launch(channel=os.environ.get("MGAPP_E2E_CHANNEL"))
-        yield b
-        b.close()
-
-
-@pytest.fixture
-def page(browser: Browser) -> Iterator[Page]:
-    ctx = browser.new_context()
-    external: list[str] = []
-
-    def guard(route, request) -> None:  # type: ignore[no-untyped-def]
-        host = urlparse(request.url).hostname
-        if host not in ("127.0.0.1", "localhost"):
-            external.append(request.url)
-            route.abort()
-        else:
-            route.continue_()
-
-    ctx.route("**/*", guard)
-    pg = ctx.new_page()
-    yield pg
-    ctx.close()
-    assert external == [], f"external requests attempted: {external}"  # NFR-03
 
 
 def test_nfr_02_one_process_serves_ui_and_api(server: Callable[[str], str], page: Page) -> None:

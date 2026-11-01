@@ -115,3 +115,15 @@ First run on Windows 11 Home 10.0.26200. Python 3.13.15 (uv; `python` on PATH is
 | 3 | `tools/build_frontend.py` | PASS | |
 | 4 | `tools/test.py e2e`, Playwright Chromium 153.0.8010.12 | PASS | 4 passed; first attempt failed only because `playwright install chromium` had not been run (documented one-time step) |
 | 5 | E2E on Google Chrome stable 156.0.8078.48 (`MGAPP_E2E_CHANNEL=chrome`) | PASS | 4 passed. Exit-1.1 condition (a) met; rerun at exit 1.2. The e2e fixture now reads the Playwright channel from `MGAPP_E2E_CHANNEL` (unset = bundled Chromium) |
+
+## WP 1.2.1 — load data entry and PS (2026-11-01)
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1 | `POST /api/projects/validate` (Doc 6 §3.4): all stage-1 issues, rules per target (null = M1), request checks only with parameters, `snapshot_hash` equal to the M1 RunRecord hash, off-schema body reported (no 422), zero engine calls | PASS | tests/api/test_validate_and_ps.py |
+| 2 | Load rows with Q or PF accepted; negative P, empty P, PF > 1, Q and PF both missing, PF without direction each name the field (FR-03, FR-17, FR-18) | PASS | same file |
+| 3 | PS advice with basis, assumptions and RunRecord; `r = 1, n = 1` → PS_PARAMETER_INVALID with zero calls (FR-06, FR-07; storage staging on the engine, D-45 K6) | PASS | same file |
+| 4 | Store: new Project empty; Load add/edit/delete with generated ids; Accept/Skip leave the design unchanged; Load or PS-setting change makes the advice stale (FR-01, FR-03, FR-08) | PASS | frontend/store/reducer.test.ts |
+| 5 | Browser canonicaliser for SizingAdvice `input_hash` equals the server canonicaliser on shared vectors (D-45 K4) | PASS | tests/fixtures/canonical_vectors.json; Python and Vitest tests |
+| 6 | S-01 → S-02 → S-03 → S-04 flow: gating message, inline row error, unit on every numeric input, PS run, Accept, no Inverter added, stale notice (FR-01, FR-05 UI, FR-06, FR-08) | PASS | tests/e2e/test_loads_ps.py; Chromium 153.0.8010.12 and Chrome 156.0.8078.48 |
+
+Totals: Python seams 271 passed; client 6 passed; e2e 5 passed. No Fake profile added. Decisions: Doc 9 D-45 (K1–K6). Gating shows the "Create or open a Project first" message with a link to Start rather than an automatic redirect. Shared E2E browser fixtures moved to tests/e2e/conftest.py.

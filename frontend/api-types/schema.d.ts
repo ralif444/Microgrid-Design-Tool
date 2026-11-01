@@ -192,6 +192,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stage-1 validation for live feedback; no RunRecord, no engine call */
+        post: operations["validate_project"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1165,6 +1182,22 @@ export interface components {
          */
         TransientClass: "RECOVERED_STABLE" | "CRITERIA_VIOLATED" | "UNSTABLE";
         /**
+         * ValidateRequest
+         * @description Body of POST /api/projects/validate (Doc 6 §3.4).
+         */
+        ValidateRequest: {
+            /**
+             * Parameters
+             * @default null
+             */
+            parameters?: {
+                [key: string]: unknown;
+            } | null;
+            project_snapshot: components["schemas"]["ProjectSnapshot"];
+            /** @default null */
+            target_analysis_type?: components["schemas"]["AnalysisType"] | null;
+        };
+        /**
          * ValidationIssue
          * @description One stage-1 issue (Doc 3 §4, Doc 6 §3.4).
          */
@@ -1188,6 +1221,18 @@ export interface components {
             level: components["schemas"]["IssueLevel"];
             /** Message */
             message: string;
+        };
+        /**
+         * ValidationReport
+         * @description Stage-1 result for live feedback; no RunRecord, no Status (Doc 6 §3.4).
+         */
+        ValidationReport: {
+            /** Issues */
+            issues: components["schemas"]["ValidationIssue"][];
+            /** Snapshot Hash */
+            snapshot_hash: string;
+            /** Valid */
+            valid: boolean;
         };
         /**
          * Verdict
@@ -1468,6 +1513,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MetaInfo"];
+                };
+            };
+        };
+    };
+    validate_project: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ValidateRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationReport"];
                 };
             };
         };

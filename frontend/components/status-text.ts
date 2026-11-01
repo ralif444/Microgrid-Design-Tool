@@ -20,7 +20,7 @@ export function bannerText(type: AnalysisType, r: AnalysisResult): BannerText {
         };
       if (type === "M2")
         return { role: "success", headline: "The design meets all constraints.", hint: "Explore further analyses or open the report." };
-      if (type === "PS") return { role: "success", headline: "Advice produced.", hint: "Accept, edit or skip." };
+      if (type === "PS") return { role: "success", headline: "Advice produced.", hint: "Accept or skip." }; // Edit deferred (Doc 9 D-45 K5)
       return { role: "success", headline: "Analysis completed.", hint: "Explore further analyses or open the report." };
     case "INFEASIBLE":
       return {

@@ -17,5 +17,5 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
 export const useProject = () => useContext(StateCtx);
 export const useProjectDispatch = () => useContext(DispatchCtx);
-export { projectReducer, initialState } from "./reducer";
-export type { ProjectState, ProjectAction } from "./reducer";
+export { projectReducer, initialState, adviceInputHash } from "./reducer";
+export type { ProjectState, ProjectAction, PsParameters, SizingAdvice } from "./reducer";

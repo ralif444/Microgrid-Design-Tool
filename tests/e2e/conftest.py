@@ -1,4 +1,6 @@
-"""Seam 5 fixtures: the real start command in a subprocess, one server per Fake profile."""
+"""Seam 5 fixtures: the real start command in a subprocess, one server per Fake profile, and a
+browser page that refuses external requests (NFR-03). MGAPP_E2E_CHANNEL=chrome runs the flows on
+installed stable Chrome (NFR-13); unset uses the bundled Playwright Chromium."""
 
 from __future__ import annotations
 
@@ -8,9 +10,11 @@ import subprocess
 import time
 import urllib.request
 from collections.abc import Callable, Iterator
+from urllib.parse import urlparse
 
 import pytest
 from _common import BACKEND, uv
+from playwright.sync_api import Browser, Page, sync_playwright
 
 STATIC_INDEX = BACKEND / "src" / "mgapp" / "static" / "index.html"
 
@@ -50,3 +54,31 @@ def server() -> Iterator[Callable[[str], str]]:
     for proc, _ in procs.values():
         proc.terminate()
         proc.wait(timeout=10)
+
+
+@pytest.fixture(scope="module")
+def browser() -> Iterator[Browser]:
+    with sync_playwright() as p:
+        b = p.chromium.launch(channel=os.environ.get("MGAPP_E2E_CHANNEL"))
+        yield b
+        b.close()
+
+
+@pytest.fixture
+def page(browser: Browser) -> Iterator[Page]:
+    ctx = browser.new_context()
+    external: list[str] = []
+
+    def guard(route, request) -> None:  # type: ignore[no-untyped-def]
+        host = urlparse(request.url).hostname
+        if host not in ("127.0.0.1", "localhost"):
+            external.append(request.url)
+            route.abort()
+        else:
+            route.continue_()
+
+    ctx.route("**/*", guard)
+    pg = ctx.new_page()
+    yield pg
+    ctx.close()
+    assert external == [], f"external requests attempted: {external}"  # NFR-03

@@ -2722,6 +2722,44 @@
         "title": "TransientClass",
         "type": "string"
       },
+      "ValidateRequest": {
+        "additionalProperties": false,
+        "description": "Body of POST /api/projects/validate (Doc 6 §3.4).",
+        "properties": {
+          "parameters": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Parameters"
+          },
+          "project_snapshot": {
+            "$ref": "#/components/schemas/ProjectSnapshot"
+          },
+          "target_analysis_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnalysisType"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "project_snapshot"
+        ],
+        "title": "ValidateRequest",
+        "type": "object"
+      },
       "ValidationIssue": {
         "additionalProperties": false,
         "description": "One stage-1 issue (Doc 3 §4, Doc 6 §3.4).",
@@ -2779,6 +2817,34 @@
           "message"
         ],
         "title": "ValidationIssue",
+        "type": "object"
+      },
+      "ValidationReport": {
+        "additionalProperties": false,
+        "description": "Stage-1 result for live feedback; no RunRecord, no Status (Doc 6 §3.4).",
+        "properties": {
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationIssue"
+            },
+            "title": "Issues",
+            "type": "array"
+          },
+          "snapshot_hash": {
+            "title": "Snapshot Hash",
+            "type": "string"
+          },
+          "valid": {
+            "title": "Valid",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "valid",
+          "issues",
+          "snapshot_hash"
+        ],
+        "title": "ValidationReport",
         "type": "object"
       },
       "Verdict": {
@@ -3157,6 +3223,37 @@
         "summary": "Meta",
         "tags": [
           "meta"
+        ]
+      }
+    },
+    "/api/projects/validate": {
+      "post": {
+        "operationId": "validate_project",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Stage-1 validation for live feedback; no RunRecord, no engine call",
+        "tags": [
+          "projects"
         ]
       }
     }
