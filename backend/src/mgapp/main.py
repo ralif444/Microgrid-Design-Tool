@@ -9,10 +9,13 @@ from __future__ import annotations
 import dataclasses
 import logging
 from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI, Request
+from fastapi.openapi.utils import get_openapi
 from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
 from mgapp import __version__
 from mgapp.adapters.fake_engine import FakeEngine
@@ -20,10 +23,12 @@ from mgapp.api import error_mapper
 from mgapp.api.error_mapper import TransportFailureError
 from mgapp.api.routers import analyses, health_meta
 from mgapp.config import BIND_HOST, EngineChoice, Settings
+from mgapp.domain.contract import ValidationIssue
+from mgapp.domain.payloads import PAYLOAD_MODEL
 from mgapp.engine_port import EnginePort
 from mgapp.services.guard import ExecutionGuard
 from mgapp.services.limits import Limits
-from mgapp.services.pipeline import Pipeline
+from mgapp.services.pipeline import AnalysisRequestBody, Pipeline
 from mgapp.services.run_record import RunRecordService
 
 STATIC_DIR = Path(__file__).parent / "static"
@@ -78,10 +83,37 @@ def create_app(
             raise TransportFailureError(405)
         raise TransportFailureError(404)
 
+    def openapi() -> dict[str, Any]:
+        if app.openapi_schema is None:
+            app.openapi_schema = build_openapi(app)
+        return app.openapi_schema
+
+    app.openapi = openapi  # type: ignore[method-assign]
+
     # Static frontend build (component 1), mounted last so /api routes win.
     if serve_static and (STATIC_DIR / "index.html").exists():
         app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
     return app
+
+
+def build_openapi(app: FastAPI) -> dict[str, Any]:
+    """OpenAPI generated from the Pydantic schemas (Doc 6 §1, NFR-15).
+
+    Analysis routes read their body themselves (to turn request-model failures into
+    INPUT_INVALID), so the body schema is added to the components here.
+    """
+    spec = get_openapi(title=app.title, version=app.version, routes=app.routes)
+    schemas = spec.setdefault("components", {}).setdefault("schemas", {})
+    # Payload shapes (Doc 3 §6) and stage-1 issues are carried as free objects in
+    # AnalysisResult; they are published here so the frontend gets typed payloads.
+    extra: list[type[BaseModel]] = [AnalysisRequestBody, ValidationIssue, *PAYLOAD_MODEL.values()]
+    for model in extra:
+        sch = model.model_json_schema(ref_template="#/components/schemas/{model}")
+        for name, sub in sch.pop("$defs", {}).items():
+            schemas.setdefault(name, sub)
+        schemas[model.__name__] = sch
+    spec["info"]["x-generated"] = "Generated from backend/src/mgapp; do not edit (tools/gen.py)."
+    return spec
 
 
 def run() -> None:

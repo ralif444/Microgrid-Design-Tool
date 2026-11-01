@@ -1,0 +1,3164 @@
+{
+  "components": {
+    "schemas": {
+      "AnalysisRequestBody": {
+        "additionalProperties": false,
+        "description": "HTTP body of POST /api/analyses/{type} (Doc 6 §3.1). analysis_type comes from the route.",
+        "properties": {
+          "depends_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RunRecordRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "parameters": {
+            "additionalProperties": true,
+            "title": "Parameters",
+            "type": "object"
+          },
+          "project_snapshot": {
+            "$ref": "#/components/schemas/ProjectSnapshot"
+          },
+          "scenarios": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ScenarioSnapshot"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Scenarios"
+          },
+          "solver_config": {
+            "$ref": "#/components/schemas/SolverConfig"
+          }
+        },
+        "required": [
+          "project_snapshot",
+          "parameters",
+          "solver_config"
+        ],
+        "title": "AnalysisRequestBody",
+        "type": "object"
+      },
+      "AnalysisResponse": {
+        "additionalProperties": false,
+        "description": "HTTP 200 body of every /api/analyses/{type} call (Doc 6 §3.2).",
+        "properties": {
+          "result": {
+            "$ref": "#/components/schemas/AnalysisResult"
+          },
+          "run_record": {
+            "$ref": "#/components/schemas/RunRecord"
+          }
+        },
+        "required": [
+          "result",
+          "run_record"
+        ],
+        "title": "AnalysisResponse",
+        "type": "object"
+      },
+      "AnalysisResult": {
+        "additionalProperties": false,
+        "description": "Single output shape through the Engine Port (Doc 3 §5.2).",
+        "properties": {
+          "diagnostics": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Diagnostics",
+            "type": "object"
+          },
+          "limiting_constraints": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/LimitingConstraint"
+            },
+            "title": "Limiting Constraints",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payload"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "status_code": {
+            "title": "Status Code",
+            "type": "string"
+          },
+          "warnings": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Warning"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "status",
+          "status_code",
+          "message"
+        ],
+        "title": "AnalysisResult",
+        "type": "object"
+      },
+      "AnalysisType": {
+        "enum": [
+          "PS",
+          "M1",
+          "M2",
+          "M3a",
+          "M3b",
+          "M3c",
+          "M3d",
+          "M4a",
+          "M4b"
+        ],
+        "title": "AnalysisType",
+        "type": "string"
+      },
+      "Bus": {
+        "additionalProperties": false,
+        "properties": {
+          "diagram_x": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Diagram X"
+          },
+          "diagram_y": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Diagram Y"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Name"
+          }
+        },
+        "title": "Bus",
+        "type": "object"
+      },
+      "BusResult": {
+        "additionalProperties": false,
+        "properties": {
+          "angle_deg": {
+            "title": "Angle Deg",
+            "type": "number"
+          },
+          "bus_id": {
+            "title": "Bus Id",
+            "type": "string"
+          },
+          "voltage_kv": {
+            "title": "Voltage Kv",
+            "type": "number"
+          },
+          "voltage_pu": {
+            "title": "Voltage Pu",
+            "type": "number"
+          }
+        },
+        "required": [
+          "bus_id",
+          "voltage_kv",
+          "voltage_pu",
+          "angle_deg"
+        ],
+        "title": "BusResult",
+        "type": "object"
+      },
+      "BusSeries": {
+        "additionalProperties": false,
+        "properties": {
+          "bus_id": {
+            "title": "Bus Id",
+            "type": "string"
+          },
+          "values": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Values",
+            "type": "array"
+          }
+        },
+        "required": [
+          "values",
+          "bus_id"
+        ],
+        "title": "BusSeries",
+        "type": "object"
+      },
+      "ConstraintKind": {
+        "enum": [
+          "BUS_VOLTAGE_MIN",
+          "BUS_VOLTAGE_MAX",
+          "FREQUENCY_MIN",
+          "FREQUENCY_MAX",
+          "INVERTER_LOADING",
+          "LINE_CURRENT",
+          "POWER_BALANCE"
+        ],
+        "title": "ConstraintKind",
+        "type": "string"
+      },
+      "Delta": {
+        "additionalProperties": false,
+        "properties": {
+          "delta": {
+            "title": "Delta",
+            "type": "number"
+          },
+          "metric": {
+            "$ref": "#/components/schemas/OutputMetric"
+          },
+          "reference_scenario_id": {
+            "title": "Reference Scenario Id",
+            "type": "string"
+          },
+          "scenario_id": {
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "metric",
+          "scenario_id",
+          "reference_scenario_id",
+          "delta",
+          "unit"
+        ],
+        "title": "Delta",
+        "type": "object"
+      },
+      "DesignConstraints": {
+        "additionalProperties": false,
+        "description": "No numeric defaults; an empty limit makes its check \"not evaluated\" (Doc 3 §3.7).",
+        "properties": {
+          "balance_tolerance_kw": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Balance Tolerance Kw"
+          },
+          "frequency_max_hz": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Frequency Max Hz"
+          },
+          "frequency_min_hz": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Frequency Min Hz"
+          },
+          "inverter_loading_limit_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Inverter Loading Limit Ratio"
+          },
+          "line_current_limit_a": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Line Current Limit A"
+          },
+          "voltage_max_pu": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Voltage Max Pu"
+          },
+          "voltage_min_pu": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Voltage Min Pu"
+          }
+        },
+        "title": "DesignConstraints",
+        "type": "object"
+      },
+      "DominantMode": {
+        "additionalProperties": false,
+        "properties": {
+          "associated_element_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Associated Element Ids",
+            "type": "array"
+          },
+          "damping_ratio": {
+            "title": "Damping Ratio",
+            "type": "number"
+          },
+          "eigenvalue_index": {
+            "title": "Eigenvalue Index",
+            "type": "integer"
+          },
+          "frequency_hz": {
+            "title": "Frequency Hz",
+            "type": "number"
+          }
+        },
+        "required": [
+          "eigenvalue_index",
+          "damping_ratio",
+          "frequency_hz",
+          "associated_element_ids"
+        ],
+        "title": "DominantMode",
+        "type": "object"
+      },
+      "Eigenvalue": {
+        "additionalProperties": false,
+        "properties": {
+          "imag_per_s": {
+            "title": "Imag Per S",
+            "type": "number"
+          },
+          "real_per_s": {
+            "title": "Real Per S",
+            "type": "number"
+          }
+        },
+        "required": [
+          "real_per_s",
+          "imag_per_s"
+        ],
+        "title": "Eigenvalue",
+        "type": "object"
+      },
+      "EngineIdentity": {
+        "additionalProperties": false,
+        "properties": {
+          "engine_git_commit": {
+            "title": "Engine Git Commit",
+            "type": "string"
+          },
+          "engine_kind": {
+            "$ref": "#/components/schemas/EngineKind"
+          },
+          "engine_version": {
+            "title": "Engine Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "engine_kind",
+          "engine_version",
+          "engine_git_commit"
+        ],
+        "title": "EngineIdentity",
+        "type": "object"
+      },
+      "EngineKind": {
+        "enum": [
+          "FAKE",
+          "REAL"
+        ],
+        "title": "EngineKind",
+        "type": "string"
+      },
+      "HealthInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "HealthInfo",
+        "type": "object"
+      },
+      "HourValue": {
+        "additionalProperties": false,
+        "properties": {
+          "hour": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Hour"
+          },
+          "p_kw": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "P Kw"
+          }
+        },
+        "title": "HourValue",
+        "type": "object"
+      },
+      "Indicator": {
+        "additionalProperties": false,
+        "properties": {
+          "evaluated": {
+            "title": "Evaluated",
+            "type": "boolean"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "value",
+          "evaluated",
+          "reason"
+        ],
+        "title": "Indicator",
+        "type": "object"
+      },
+      "Indicators": {
+        "additionalProperties": false,
+        "properties": {
+          "epsilon_x": {
+            "$ref": "#/components/schemas/Indicator"
+          },
+          "kappa": {
+            "$ref": "#/components/schemas/Indicator"
+          },
+          "r_in": {
+            "$ref": "#/components/schemas/Indicator"
+          },
+          "r_tau": {
+            "$ref": "#/components/schemas/Indicator"
+          }
+        },
+        "required": [
+          "r_tau",
+          "kappa",
+          "r_in",
+          "epsilon_x"
+        ],
+        "title": "Indicators",
+        "type": "object"
+      },
+      "InitialGuess": {
+        "enum": [
+          "DEFAULT"
+        ],
+        "title": "InitialGuess",
+        "type": "string"
+      },
+      "Inverter": {
+        "additionalProperties": false,
+        "properties": {
+          "bus_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Bus Id"
+          },
+          "frequency_droop_hz_per_kw": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Frequency Droop Hz Per Kw"
+          },
+          "frequency_setpoint_hz": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Frequency Setpoint Hz"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Id"
+          },
+          "p_setpoint_kw": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "P Setpoint Kw"
+          },
+          "q_setpoint_kvar": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Q Setpoint Kvar"
+          },
+          "rated_kva": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Rated Kva"
+          },
+          "tau_p_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tau P S"
+          },
+          "tau_q_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tau Q S"
+          },
+          "voltage_droop_kv_per_kvar": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Voltage Droop Kv Per Kvar"
+          },
+          "voltage_setpoint_kv": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Voltage Setpoint Kv"
+          }
+        },
+        "title": "Inverter",
+        "type": "object"
+      },
+      "InverterPlan": {
+        "additionalProperties": false,
+        "properties": {
+          "assumptions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "basis": {
+            "title": "Basis",
+            "type": "string"
+          },
+          "installed_kva": {
+            "title": "Installed Kva",
+            "type": "number"
+          },
+          "redundancy": {
+            "title": "Redundancy",
+            "type": "integer"
+          },
+          "unit_count": {
+            "title": "Unit Count",
+            "type": "integer"
+          },
+          "unit_rating_kva": {
+            "title": "Unit Rating Kva",
+            "type": "number"
+          }
+        },
+        "required": [
+          "basis",
+          "assumptions",
+          "unit_count",
+          "redundancy",
+          "unit_rating_kva",
+          "installed_kva"
+        ],
+        "title": "InverterPlan",
+        "type": "object"
+      },
+      "InverterResult": {
+        "additionalProperties": false,
+        "properties": {
+          "inverter_id": {
+            "title": "Inverter Id",
+            "type": "string"
+          },
+          "loading_ratio": {
+            "title": "Loading Ratio",
+            "type": "number"
+          },
+          "p_kw": {
+            "title": "P Kw",
+            "type": "number"
+          },
+          "q_kvar": {
+            "title": "Q Kvar",
+            "type": "number"
+          },
+          "s_kva": {
+            "title": "S Kva",
+            "type": "number"
+          }
+        },
+        "required": [
+          "inverter_id",
+          "p_kw",
+          "q_kvar",
+          "s_kva",
+          "loading_ratio"
+        ],
+        "title": "InverterResult",
+        "type": "object"
+      },
+      "InverterSeries": {
+        "additionalProperties": false,
+        "properties": {
+          "inverter_id": {
+            "title": "Inverter Id",
+            "type": "string"
+          },
+          "values": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Values",
+            "type": "array"
+          }
+        },
+        "required": [
+          "values",
+          "inverter_id"
+        ],
+        "title": "InverterSeries",
+        "type": "object"
+      },
+      "InverterSizing": {
+        "additionalProperties": false,
+        "properties": {
+          "headroom_kva": {
+            "title": "Headroom Kva",
+            "type": "number"
+          },
+          "inverter_id": {
+            "title": "Inverter Id",
+            "type": "string"
+          },
+          "rating_margin_short": {
+            "title": "Rating Margin Short",
+            "type": "boolean"
+          },
+          "required_rating_kva": {
+            "title": "Required Rating Kva",
+            "type": "number"
+          },
+          "s_kva": {
+            "title": "S Kva",
+            "type": "number"
+          }
+        },
+        "required": [
+          "inverter_id",
+          "s_kva",
+          "required_rating_kva",
+          "headroom_kva",
+          "rating_margin_short"
+        ],
+        "title": "InverterSizing",
+        "type": "object"
+      },
+      "IssueCode": {
+        "description": "Stage-1 validation codes (Doc 3 §4).",
+        "enum": [
+          "NEGATIVE_POWER",
+          "EMPTY_REQUIRED",
+          "NOT_POSITIVE",
+          "PF_OUT_OF_RANGE",
+          "PF_DIRECTION_MISSING",
+          "LOAD_Q_AMBIGUOUS",
+          "BAND_INVERTED",
+          "LOADING_LIMIT_RANGE",
+          "DUPLICATE_ID",
+          "ID_FORMAT",
+          "DANGLING_BUS_REF",
+          "SELF_LOOP_LINE",
+          "DUPLICATE_LINE",
+          "ISOLATED_BUS",
+          "DISCONNECTED_NETWORK",
+          "NO_INVERTER",
+          "NO_LOAD",
+          "PROFILE_LENGTH",
+          "PROFILE_HOUR",
+          "PS_PARAMETER_INVALID",
+          "SIZING_MARGIN_INVALID",
+          "TAU_MISSING_FOR_M4",
+          "SENSITIVITY_STEP_INVALID",
+          "DISTURBANCE_INVALID",
+          "SWEEP_RANGE_INVALID",
+          "SCENARIO_PATH_INVALID",
+          "SWEEP_CAP_EXCEEDED",
+          "PARAMETER_CAP_EXCEEDED",
+          "DURATION_CAP_EXCEEDED",
+          "SCENARIO_COUNT_INVALID",
+          "DEPENDS_ON_NOT_ALLOWED",
+          "MALFORMED_REQUEST"
+        ],
+        "title": "IssueCode",
+        "type": "string"
+      },
+      "IssueLevel": {
+        "enum": [
+          "field",
+          "entity",
+          "topology",
+          "request"
+        ],
+        "title": "IssueLevel",
+        "type": "string"
+      },
+      "KeyMetrics": {
+        "additionalProperties": false,
+        "properties": {
+          "epsilon_x_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Epsilon X Ratio"
+          },
+          "kappa": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Kappa"
+          },
+          "lambda_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Lambda C"
+          },
+          "max_loading_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Loading Ratio"
+          },
+          "min_voltage_pu": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Voltage Pu"
+          },
+          "r_tau": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "R Tau"
+          },
+          "re_lambda_dom_per_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Re Lambda Dom Per S"
+          },
+          "system_frequency_hz": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "System Frequency Hz"
+          },
+          "total_losses_kw": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Losses Kw"
+          },
+          "zeta_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Zeta Min"
+          }
+        },
+        "required": [
+          "system_frequency_hz",
+          "min_voltage_pu",
+          "max_loading_ratio",
+          "total_losses_kw",
+          "epsilon_x_ratio"
+        ],
+        "title": "KeyMetrics",
+        "type": "object"
+      },
+      "LimitingConstraint": {
+        "additionalProperties": false,
+        "description": "Doc 3 §5.3. `margin` is in `unit`; negative = violated.",
+        "properties": {
+          "element_id": {
+            "title": "Element Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ConstraintKind"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "number"
+          },
+          "margin": {
+            "title": "Margin",
+            "type": "number"
+          },
+          "normalised_margin": {
+            "title": "Normalised Margin",
+            "type": "number"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "kind",
+          "element_id",
+          "value",
+          "limit",
+          "unit",
+          "margin",
+          "normalised_margin"
+        ],
+        "title": "LimitingConstraint",
+        "type": "object"
+      },
+      "LimitsInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "body_limit_mib": {
+            "title": "Body Limit Mib",
+            "type": "integer"
+          },
+          "m3a_parameter_cap": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "M3A Parameter Cap"
+          },
+          "m4b_duration_cap_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "M4B Duration Cap S"
+          },
+          "margin_warn": {
+            "title": "Margin Warn",
+            "type": "number"
+          },
+          "scenario_cap": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenario Cap"
+          },
+          "sweep_cap": {
+            "title": "Sweep Cap",
+            "type": "integer"
+          },
+          "time_budget_s": {
+            "title": "Time Budget S",
+            "type": "number"
+          }
+        },
+        "required": [
+          "time_budget_s",
+          "sweep_cap",
+          "margin_warn",
+          "body_limit_mib",
+          "scenario_cap",
+          "m3a_parameter_cap",
+          "m4b_duration_cap_s"
+        ],
+        "title": "LimitsInfo",
+        "type": "object"
+      },
+      "Line": {
+        "additionalProperties": false,
+        "properties": {
+          "current_limit_a": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Current Limit A"
+          },
+          "from_bus_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "From Bus Id"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Id"
+          },
+          "length_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Length Km"
+          },
+          "r_ohm": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "R Ohm"
+          },
+          "r_ohm_per_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "R Ohm Per Km"
+          },
+          "to_bus_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "To Bus Id"
+          },
+          "x_ohm": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "X Ohm"
+          },
+          "x_ohm_per_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "X Ohm Per Km"
+          }
+        },
+        "title": "Line",
+        "type": "object"
+      },
+      "LineResult": {
+        "additionalProperties": false,
+        "properties": {
+          "current_a": {
+            "title": "Current A",
+            "type": "number"
+          },
+          "line_id": {
+            "title": "Line Id",
+            "type": "string"
+          },
+          "losses_kw": {
+            "title": "Losses Kw",
+            "type": "number"
+          },
+          "p_from_kw": {
+            "title": "P From Kw",
+            "type": "number"
+          },
+          "p_to_kw": {
+            "title": "P To Kw",
+            "type": "number"
+          },
+          "q_from_kvar": {
+            "title": "Q From Kvar",
+            "type": "number"
+          },
+          "q_to_kvar": {
+            "title": "Q To Kvar",
+            "type": "number"
+          }
+        },
+        "required": [
+          "line_id",
+          "p_from_kw",
+          "q_from_kvar",
+          "p_to_kw",
+          "q_to_kvar",
+          "current_a",
+          "losses_kw"
+        ],
+        "title": "LineResult",
+        "type": "object"
+      },
+      "LineSizing": {
+        "additionalProperties": false,
+        "properties": {
+          "current_a": {
+            "title": "Current A",
+            "type": "number"
+          },
+          "line_id": {
+            "title": "Line Id",
+            "type": "string"
+          },
+          "required_current_a": {
+            "title": "Required Current A",
+            "type": "number"
+          }
+        },
+        "required": [
+          "line_id",
+          "current_a",
+          "required_current_a"
+        ],
+        "title": "LineSizing",
+        "type": "object"
+      },
+      "Load": {
+        "additionalProperties": false,
+        "properties": {
+          "bus_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Bus Id"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Id"
+          },
+          "p_kw": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "P Kw"
+          },
+          "pf_direction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PfDirection"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "power_factor": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Power Factor"
+          },
+          "q_kvar": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Q Kvar"
+          }
+        },
+        "title": "Load",
+        "type": "object"
+      },
+      "LoadProfile": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Id"
+          },
+          "values": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/HourValue"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Values"
+          }
+        },
+        "title": "LoadProfile",
+        "type": "object"
+      },
+      "Loadability": {
+        "additionalProperties": false,
+        "properties": {
+          "grid_step": {
+            "title": "Grid Step",
+            "type": "number"
+          },
+          "lambda_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lambda C"
+          },
+          "lambda_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lambda S"
+          },
+          "lambda_ub": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lambda Ub"
+          },
+          "resolution": {
+            "title": "Resolution",
+            "type": "number"
+          },
+          "stop_reason": {
+            "title": "Stop Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lambda_c",
+          "lambda_s",
+          "lambda_ub",
+          "resolution",
+          "grid_step",
+          "stop_reason"
+        ],
+        "title": "Loadability",
+        "type": "object"
+      },
+      "M1Payload": {
+        "additionalProperties": false,
+        "properties": {
+          "bus_results": {
+            "items": {
+              "$ref": "#/components/schemas/BusResult"
+            },
+            "title": "Bus Results",
+            "type": "array"
+          },
+          "epsilon_x_ratio": {
+            "title": "Epsilon X Ratio",
+            "type": "number"
+          },
+          "inverter_results": {
+            "items": {
+              "$ref": "#/components/schemas/InverterResult"
+            },
+            "title": "Inverter Results",
+            "type": "array"
+          },
+          "iterations": {
+            "title": "Iterations",
+            "type": "integer"
+          },
+          "line_results": {
+            "items": {
+              "$ref": "#/components/schemas/LineResult"
+            },
+            "title": "Line Results",
+            "type": "array"
+          },
+          "system_frequency_hz": {
+            "title": "System Frequency Hz",
+            "type": "number"
+          },
+          "total_load_kvar": {
+            "title": "Total Load Kvar",
+            "type": "number"
+          },
+          "total_load_kw": {
+            "title": "Total Load Kw",
+            "type": "number"
+          },
+          "total_losses_kw": {
+            "title": "Total Losses Kw",
+            "type": "number"
+          }
+        },
+        "required": [
+          "system_frequency_hz",
+          "bus_results",
+          "inverter_results",
+          "line_results",
+          "total_load_kw",
+          "total_load_kvar",
+          "total_losses_kw",
+          "iterations",
+          "epsilon_x_ratio"
+        ],
+        "title": "M1Payload",
+        "type": "object"
+      },
+      "M2Payload": {
+        "additionalProperties": false,
+        "properties": {
+          "constraint_margins": {
+            "items": {
+              "$ref": "#/components/schemas/LimitingConstraint"
+            },
+            "title": "Constraint Margins",
+            "type": "array"
+          },
+          "loadability": {
+            "$ref": "#/components/schemas/Loadability"
+          },
+          "not_evaluated": {
+            "items": {
+              "$ref": "#/components/schemas/NotEvaluated"
+            },
+            "title": "Not Evaluated",
+            "type": "array"
+          },
+          "sizing_check": {
+            "$ref": "#/components/schemas/SizingCheck"
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/Verdict"
+          }
+        },
+        "required": [
+          "verdict",
+          "constraint_margins",
+          "not_evaluated",
+          "sizing_check",
+          "loadability"
+        ],
+        "title": "M2Payload",
+        "type": "object"
+      },
+      "M3aPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "ranking": {
+            "items": {
+              "$ref": "#/components/schemas/Ranking"
+            },
+            "title": "Ranking",
+            "type": "array"
+          },
+          "sensitivities": {
+            "items": {
+              "$ref": "#/components/schemas/Sensitivity"
+            },
+            "title": "Sensitivities",
+            "type": "array"
+          }
+        },
+        "required": [
+          "sensitivities",
+          "ranking"
+        ],
+        "title": "M3aPayload",
+        "type": "object"
+      },
+      "M3bPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "first_infeasible_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Infeasible Value"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/SweepPoint"
+            },
+            "title": "Points",
+            "type": "array"
+          }
+        },
+        "required": [
+          "points",
+          "first_infeasible_value"
+        ],
+        "title": "M3bPayload",
+        "type": "object"
+      },
+      "M3cPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "deltas": {
+            "items": {
+              "$ref": "#/components/schemas/Delta"
+            },
+            "title": "Deltas",
+            "type": "array"
+          },
+          "scenario_results": {
+            "items": {
+              "$ref": "#/components/schemas/ScenarioResult"
+            },
+            "title": "Scenario Results",
+            "type": "array"
+          }
+        },
+        "required": [
+          "scenario_results",
+          "deltas"
+        ],
+        "title": "M3cPayload",
+        "type": "object"
+      },
+      "M3dPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "feasible_fraction": {
+            "title": "Feasible Fraction",
+            "type": "number"
+          },
+          "grid": {
+            "items": {
+              "$ref": "#/components/schemas/SweepPoint"
+            },
+            "title": "Grid",
+            "type": "array"
+          }
+        },
+        "required": [
+          "grid",
+          "feasible_fraction"
+        ],
+        "title": "M3dPayload",
+        "type": "object"
+      },
+      "M4aPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "dominant_modes": {
+            "items": {
+              "$ref": "#/components/schemas/DominantMode"
+            },
+            "title": "Dominant Modes",
+            "type": "array"
+          },
+          "eigenvalues": {
+            "items": {
+              "$ref": "#/components/schemas/Eigenvalue"
+            },
+            "title": "Eigenvalues",
+            "type": "array"
+          },
+          "indicators": {
+            "$ref": "#/components/schemas/Indicators"
+          },
+          "modes": {
+            "items": {
+              "$ref": "#/components/schemas/Mode"
+            },
+            "title": "Modes",
+            "type": "array"
+          },
+          "outside_definition": {
+            "title": "Outside Definition",
+            "type": "boolean"
+          },
+          "participation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Participation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stability_class": {
+            "$ref": "#/components/schemas/StabilityClass"
+          },
+          "zeta_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zeta Min"
+          }
+        },
+        "required": [
+          "eigenvalues",
+          "modes",
+          "zeta_min",
+          "dominant_modes",
+          "participation",
+          "stability_class",
+          "indicators",
+          "outside_definition"
+        ],
+        "title": "M4aPayload",
+        "type": "object"
+      },
+      "M4bPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "bus_voltage_kv": {
+            "items": {
+              "$ref": "#/components/schemas/BusSeries"
+            },
+            "title": "Bus Voltage Kv",
+            "type": "array"
+          },
+          "inverter_p_kw": {
+            "items": {
+              "$ref": "#/components/schemas/InverterSeries"
+            },
+            "title": "Inverter P Kw",
+            "type": "array"
+          },
+          "inverter_q_kvar": {
+            "items": {
+              "$ref": "#/components/schemas/InverterSeries"
+            },
+            "title": "Inverter Q Kvar",
+            "type": "array"
+          },
+          "max_rocof_hz_per_s": {
+            "title": "Max Rocof Hz Per S",
+            "type": "number"
+          },
+          "settled": {
+            "title": "Settled",
+            "type": "boolean"
+          },
+          "system_frequency_hz": {
+            "items": {
+              "type": "number"
+            },
+            "title": "System Frequency Hz",
+            "type": "array"
+          },
+          "time_s": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Time S",
+            "type": "array"
+          },
+          "transient_class": {
+            "$ref": "#/components/schemas/TransientClass"
+          }
+        },
+        "required": [
+          "time_s",
+          "system_frequency_hz",
+          "bus_voltage_kv",
+          "inverter_p_kw",
+          "inverter_q_kvar",
+          "max_rocof_hz_per_s",
+          "transient_class",
+          "settled"
+        ],
+        "title": "M4bPayload",
+        "type": "object"
+      },
+      "MetaInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "api_description_version": {
+            "title": "Api Description Version",
+            "type": "string"
+          },
+          "app_version": {
+            "title": "App Version",
+            "type": "string"
+          },
+          "engine": {
+            "$ref": "#/components/schemas/EngineIdentity"
+          },
+          "indicator_threshold_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Indicator Threshold Version"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/LimitsInfo"
+          },
+          "record_schema_version": {
+            "title": "Record Schema Version",
+            "type": "integer"
+          },
+          "schema_version": {
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "app_version",
+          "schema_version",
+          "record_schema_version",
+          "api_description_version",
+          "engine",
+          "limits",
+          "indicator_threshold_version"
+        ],
+        "title": "MetaInfo",
+        "type": "object"
+      },
+      "Mode": {
+        "additionalProperties": false,
+        "properties": {
+          "damping_ratio": {
+            "title": "Damping Ratio",
+            "type": "number"
+          },
+          "eigenvalue_index": {
+            "title": "Eigenvalue Index",
+            "type": "integer"
+          },
+          "frequency_hz": {
+            "title": "Frequency Hz",
+            "type": "number"
+          }
+        },
+        "required": [
+          "eigenvalue_index",
+          "damping_ratio",
+          "frequency_hz"
+        ],
+        "title": "Mode",
+        "type": "object"
+      },
+      "NotEvaluated": {
+        "additionalProperties": false,
+        "properties": {
+          "element_id": {
+            "title": "Element Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ConstraintKind"
+          }
+        },
+        "required": [
+          "kind",
+          "element_id"
+        ],
+        "title": "NotEvaluated",
+        "type": "object"
+      },
+      "OutputMetric": {
+        "enum": [
+          "SYSTEM_FREQUENCY",
+          "MIN_BUS_VOLTAGE",
+          "MAX_BUS_VOLTAGE",
+          "MAX_INVERTER_LOADING",
+          "MAX_LINE_CURRENT",
+          "TOTAL_LOSSES"
+        ],
+        "title": "OutputMetric",
+        "type": "string"
+      },
+      "Participation": {
+        "additionalProperties": false,
+        "properties": {
+          "factors": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "title": "Factors",
+            "type": "array"
+          },
+          "state_names": {
+            "items": {
+              "type": "string"
+            },
+            "title": "State Names",
+            "type": "array"
+          }
+        },
+        "required": [
+          "state_names",
+          "factors"
+        ],
+        "title": "Participation",
+        "type": "object"
+      },
+      "PfDirection": {
+        "enum": [
+          "LAGGING",
+          "LEADING"
+        ],
+        "title": "PfDirection",
+        "type": "string"
+      },
+      "ProjectSnapshot": {
+        "additionalProperties": false,
+        "description": "Design data sent with every analysis request (Doc 3 §7 canonical snapshot content).",
+        "properties": {
+          "buses": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Bus"
+            },
+            "title": "Buses",
+            "type": "array"
+          },
+          "design_constraints": {
+            "$ref": "#/components/schemas/DesignConstraints",
+            "default": {
+              "balance_tolerance_kw": null,
+              "frequency_max_hz": null,
+              "frequency_min_hz": null,
+              "inverter_loading_limit_ratio": null,
+              "line_current_limit_a": null,
+              "voltage_max_pu": null,
+              "voltage_min_pu": null
+            }
+          },
+          "inverters": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Inverter"
+            },
+            "title": "Inverters",
+            "type": "array"
+          },
+          "lines": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Line"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "load_profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LoadProfile"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "loads": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Load"
+            },
+            "title": "Loads",
+            "type": "array"
+          },
+          "nominal_frequency_hz": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Nominal Frequency Hz"
+          },
+          "nominal_voltage_kv": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Nominal Voltage Kv"
+          }
+        },
+        "title": "ProjectSnapshot",
+        "type": "object"
+      },
+      "PsPayload": {
+        "additionalProperties": false,
+        "properties": {
+          "inverter_plan": {
+            "$ref": "#/components/schemas/InverterPlan"
+          },
+          "load_apparent_kva": {
+            "title": "Load Apparent Kva",
+            "type": "number"
+          },
+          "profile_peak_kw": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile Peak Kw"
+          },
+          "required_inverter_kva": {
+            "$ref": "#/components/schemas/RequiredInverter"
+          },
+          "storage_energy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StorageEnergy"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "load_apparent_kva",
+          "required_inverter_kva",
+          "inverter_plan",
+          "storage_energy",
+          "profile_peak_kw"
+        ],
+        "title": "PsPayload",
+        "type": "object"
+      },
+      "Ranking": {
+        "additionalProperties": false,
+        "properties": {
+          "metric": {
+            "$ref": "#/components/schemas/OutputMetric"
+          },
+          "parameter_path": {
+            "title": "Parameter Path",
+            "type": "string"
+          },
+          "rank": {
+            "title": "Rank",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "metric",
+          "parameter_path",
+          "rank"
+        ],
+        "title": "Ranking",
+        "type": "object"
+      },
+      "RequiredInverter": {
+        "additionalProperties": false,
+        "properties": {
+          "assumptions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "basis": {
+            "title": "Basis",
+            "type": "string"
+          },
+          "value_kva": {
+            "title": "Value Kva",
+            "type": "number"
+          }
+        },
+        "required": [
+          "basis",
+          "assumptions",
+          "value_kva"
+        ],
+        "title": "RequiredInverter",
+        "type": "object"
+      },
+      "RunRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "analysis_type": {
+            "$ref": "#/components/schemas/AnalysisType"
+          },
+          "app_version": {
+            "title": "App Version",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "depends_on": {
+            "title": "Depends On"
+          },
+          "engine_git_commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Engine Git Commit"
+          },
+          "engine_kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EngineKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "engine_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Engine Version"
+          },
+          "parameters": {
+            "title": "Parameters"
+          },
+          "record_id": {
+            "title": "Record Id",
+            "type": "string"
+          },
+          "replay_of_record_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replay Of Record Id"
+          },
+          "result": {
+            "$ref": "#/components/schemas/AnalysisResult"
+          },
+          "result_hash": {
+            "title": "Result Hash",
+            "type": "string"
+          },
+          "scenarios": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenarios"
+          },
+          "schema_version": {
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "snapshot": {
+            "title": "Snapshot"
+          },
+          "snapshot_hash": {
+            "title": "Snapshot Hash",
+            "type": "string"
+          },
+          "solver_config": {
+            "title": "Solver Config"
+          }
+        },
+        "required": [
+          "record_id",
+          "schema_version",
+          "app_version",
+          "created_at",
+          "analysis_type",
+          "parameters",
+          "snapshot",
+          "snapshot_hash",
+          "solver_config",
+          "engine_version",
+          "engine_git_commit",
+          "engine_kind",
+          "result",
+          "result_hash"
+        ],
+        "title": "RunRecord",
+        "type": "object"
+      },
+      "RunRecordRef": {
+        "additionalProperties": false,
+        "description": "The M1 record parts a dependent analysis carries as `depends_on` (Doc 3 §5.1).",
+        "properties": {
+          "analysis_type": {
+            "$ref": "#/components/schemas/AnalysisType"
+          },
+          "record_id": {
+            "title": "Record Id",
+            "type": "string"
+          },
+          "result_hash": {
+            "title": "Result Hash",
+            "type": "string"
+          },
+          "result_payload": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Result Payload"
+          },
+          "snapshot_hash": {
+            "title": "Snapshot Hash",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          }
+        },
+        "required": [
+          "record_id",
+          "analysis_type",
+          "snapshot_hash",
+          "status",
+          "result_hash"
+        ],
+        "title": "RunRecordRef",
+        "type": "object"
+      },
+      "ScenarioResult": {
+        "additionalProperties": false,
+        "properties": {
+          "key_metrics": {
+            "$ref": "#/components/schemas/KeyMetrics"
+          },
+          "limiting_constraints": {
+            "items": {
+              "$ref": "#/components/schemas/LimitingConstraint"
+            },
+            "title": "Limiting Constraints",
+            "type": "array"
+          },
+          "scenario_id": {
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "status_code": {
+            "title": "Status Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scenario_id",
+          "status",
+          "status_code",
+          "key_metrics",
+          "limiting_constraints"
+        ],
+        "title": "ScenarioResult",
+        "type": "object"
+      },
+      "ScenarioSnapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "project_snapshot": {
+            "$ref": "#/components/schemas/ProjectSnapshot"
+          },
+          "scenario_id": {
+            "title": "Scenario Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scenario_id",
+          "label",
+          "project_snapshot"
+        ],
+        "title": "ScenarioSnapshot",
+        "type": "object"
+      },
+      "Scheme": {
+        "enum": [
+          "CENTRAL",
+          "FORWARD",
+          "BACKWARD"
+        ],
+        "title": "Scheme",
+        "type": "string"
+      },
+      "Sensitivity": {
+        "additionalProperties": false,
+        "properties": {
+          "metric": {
+            "$ref": "#/components/schemas/OutputMetric"
+          },
+          "normalised_value": {
+            "title": "Normalised Value",
+            "type": "number"
+          },
+          "parameter_path": {
+            "title": "Parameter Path",
+            "type": "string"
+          },
+          "scheme": {
+            "$ref": "#/components/schemas/Scheme"
+          },
+          "status_change": {
+            "title": "Status Change",
+            "type": "boolean"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "parameter_path",
+          "metric",
+          "value",
+          "normalised_value",
+          "unit",
+          "scheme",
+          "status_change"
+        ],
+        "title": "Sensitivity",
+        "type": "object"
+      },
+      "SizingCheck": {
+        "additionalProperties": false,
+        "properties": {
+          "assumptions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "basis": {
+            "title": "Basis",
+            "type": "string"
+          },
+          "per_inverter": {
+            "items": {
+              "$ref": "#/components/schemas/InverterSizing"
+            },
+            "title": "Per Inverter",
+            "type": "array"
+          },
+          "per_line": {
+            "items": {
+              "$ref": "#/components/schemas/LineSizing"
+            },
+            "title": "Per Line",
+            "type": "array"
+          },
+          "storage": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SizingStorage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "per_inverter",
+          "per_line",
+          "storage",
+          "basis",
+          "assumptions"
+        ],
+        "title": "SizingCheck",
+        "type": "object"
+      },
+      "SizingStorage": {
+        "additionalProperties": false,
+        "properties": {
+          "basis": {
+            "title": "Basis",
+            "type": "string"
+          },
+          "e_ac_kwh": {
+            "title": "E Ac Kwh",
+            "type": "number"
+          },
+          "e_dc_kwh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "E Dc Kwh"
+          },
+          "e_nom_kwh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "E Nom Kwh"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/StorageStage"
+          }
+        },
+        "required": [
+          "e_ac_kwh",
+          "e_dc_kwh",
+          "e_nom_kwh",
+          "stage",
+          "basis"
+        ],
+        "title": "SizingStorage",
+        "type": "object"
+      },
+      "SolverConfig": {
+        "additionalProperties": false,
+        "properties": {
+          "initial_guess": {
+            "$ref": "#/components/schemas/InitialGuess",
+            "default": "DEFAULT"
+          },
+          "max_iterations": {
+            "default": 50,
+            "minimum": 1,
+            "title": "Max Iterations",
+            "type": "integer"
+          },
+          "mismatch_tolerance_w": {
+            "default": 0.001,
+            "exclusiveMinimum": 0,
+            "title": "Mismatch Tolerance W",
+            "type": "number"
+          }
+        },
+        "title": "SolverConfig",
+        "type": "object"
+      },
+      "StabilityClass": {
+        "enum": [
+          "STABLE",
+          "MARGINAL",
+          "UNSTABLE"
+        ],
+        "title": "StabilityClass",
+        "type": "string"
+      },
+      "Status": {
+        "enum": [
+          "INPUT_INVALID",
+          "SOLVER_FAILED",
+          "PHYSICALLY_INADMISSIBLE",
+          "INFEASIBLE",
+          "FEASIBLE",
+          "UNAVAILABLE"
+        ],
+        "title": "Status",
+        "type": "string"
+      },
+      "StorageEnergy": {
+        "additionalProperties": false,
+        "properties": {
+          "assumptions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Assumptions",
+            "type": "array"
+          },
+          "basis": {
+            "title": "Basis",
+            "type": "string"
+          },
+          "e_ac_kwh": {
+            "title": "E Ac Kwh",
+            "type": "number"
+          },
+          "e_dc_kwh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "E Dc Kwh"
+          },
+          "e_nom_kwh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "E Nom Kwh"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/StorageStage"
+          }
+        },
+        "required": [
+          "basis",
+          "assumptions",
+          "e_ac_kwh",
+          "e_dc_kwh",
+          "e_nom_kwh",
+          "stage"
+        ],
+        "title": "StorageEnergy",
+        "type": "object"
+      },
+      "StorageStage": {
+        "enum": [
+          "AC",
+          "DC",
+          "NOMINAL"
+        ],
+        "title": "StorageStage",
+        "type": "string"
+      },
+      "SweepPoint": {
+        "additionalProperties": false,
+        "properties": {
+          "eigenvalues": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Eigenvalue"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Eigenvalues"
+          },
+          "key_metrics": {
+            "$ref": "#/components/schemas/KeyMetrics"
+          },
+          "limiting_constraint": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LimitingConstraint"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status"
+          },
+          "status_code": {
+            "title": "Status Code",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Value"
+          },
+          "x_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "X Value"
+          },
+          "y_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Y Value"
+          }
+        },
+        "required": [
+          "status",
+          "status_code",
+          "limiting_constraint",
+          "key_metrics"
+        ],
+        "title": "SweepPoint",
+        "type": "object"
+      },
+      "TransientClass": {
+        "enum": [
+          "RECOVERED_STABLE",
+          "CRITERIA_VIOLATED",
+          "UNSTABLE"
+        ],
+        "title": "TransientClass",
+        "type": "string"
+      },
+      "ValidationIssue": {
+        "additionalProperties": false,
+        "description": "One stage-1 issue (Doc 3 §4, Doc 6 §3.4).",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/IssueCode"
+          },
+          "entity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Entity"
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Field"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Id"
+          },
+          "level": {
+            "$ref": "#/components/schemas/IssueLevel"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "level",
+          "message"
+        ],
+        "title": "ValidationIssue",
+        "type": "object"
+      },
+      "Verdict": {
+        "enum": [
+          "FEASIBLE",
+          "INFEASIBLE"
+        ],
+        "title": "Verdict",
+        "type": "string"
+      },
+      "Warning": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/WarningCode"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "Warning",
+        "type": "object"
+      },
+      "WarningCode": {
+        "enum": [
+          "ENGINE_KIND_FAKE",
+          "ENGINE_VERSION_MISMATCH",
+          "PROFILE_PEAK_ABOVE_LOADS",
+          "RATING_MARGIN_SHORT",
+          "VALIDITY_NOT_CALIBRATED",
+          "CONSTRAINT_NOT_EVALUATED"
+        ],
+        "title": "WarningCode",
+        "type": "string"
+      }
+    }
+  },
+  "info": {
+    "title": "mgapp",
+    "version": "0.1.0",
+    "x-generated": "Generated from backend/src/mgapp; do not edit (tools/gen.py)."
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/analyses/M1": {
+      "post": {
+        "operationId": "analyse_M1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Run analysis M1",
+        "tags": [
+          "analyses"
+        ]
+      }
+    },
+    "/api/analyses/M2": {
+      "post": {
+        "operationId": "analyse_M2",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Run analysis M2",
+        "tags": [
+          "analyses"
+        ]
+      }
+    },
+    "/api/analyses/M3a": {
+      "post": {
+        "operationId": "analyse_M3a",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Run analysis M3a",
+        "tags": [
+          "analyses"
+        ]
+      }
+    },
+    "/api/analyses/M3b": {
+      "post": {
+        "operationId": "analyse_M3b",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Run analysis M3b",
+        "tags": [
+          "analyses"
+        ]
+      }
+    },
+    "/api/analyses/M3c": {
+      "post": {
+        "operationId": "analyse_M3c",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Run analysis M3c",
+        "tags": [
+          "analyses"
+        ]
+      }
+    },
+    "/api/analyses/M3d": {
+      "post": {
+        "operationId": "analyse_M3d",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Run analysis M3d",
+        "tags": [
+          "analyses"
+        ]
+      }
+    },
+    "/api/analyses/M4a": {
+      "post": {
+        "operationId": "analyse_M4a",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Run analysis M4a",
+        "tags": [
+          "analyses"
+        ]
+      }
+    },
+    "/api/analyses/M4b": {
+      "post": {
+        "operationId": "analyse_M4b",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Run analysis M4b",
+        "tags": [
+          "analyses"
+        ]
+      }
+    },
+    "/api/analyses/PS": {
+      "post": {
+        "operationId": "analyse_PS",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Run analysis PS",
+        "tags": [
+          "analyses"
+        ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/api/meta": {
+      "get": {
+        "operationId": "meta",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetaInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Meta",
+        "tags": [
+          "meta"
+        ]
+      }
+    }
+  }
+}

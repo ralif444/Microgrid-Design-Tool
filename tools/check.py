@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import sys
 
-from _common import BACKEND, FRONTEND, node_bin, node_env, run, uv
+from _common import BACKEND, FRONTEND, ROOT, node_bin, node_env, run, uv
 
 
 def main() -> int:
@@ -21,6 +21,7 @@ def main() -> int:
         ),
         ([uv(), "run", "mypy"], BACKEND, None),
         ([uv(), "run", "lint-imports"], BACKEND, None),
+        ([sys.executable, str(ROOT / "tools" / "gen.py"), "--check"], ROOT, None),
         ([node_bin("tsc"), "--noEmit"], FRONTEND, node_env()),
         (
             [
