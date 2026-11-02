@@ -76,6 +76,17 @@ class LineResult(Model):
     losses_kw: float
 
 
+class SharingResult(Model):
+    """Doc 12 P9 (FR-81), Eq. 12.10-12.13 from the engine; derived output (D-63)."""
+
+    inverter_id: str
+    p_deviation_kw: float
+    q_deviation_kvar: float
+    p_error_pu: float  # of the inverter rating
+    q_error_pu: float
+    q_droop_not_rating_proportional: bool
+
+
 class M1Payload(Model):
     system_frequency_hz: float
     bus_results: list[BusResult]
@@ -86,6 +97,7 @@ class M1Payload(Model):
     total_losses_kw: float
     iterations: int
     epsilon_x_ratio: float
+    sharing: list[SharingResult]
 
 
 # ------------------------------------------------------------------ M2 (§6.3, §3.9)
@@ -154,6 +166,7 @@ class OutputMetric(StrEnum):
     MAX_INVERTER_LOADING = "MAX_INVERTER_LOADING"
     MAX_LINE_CURRENT = "MAX_LINE_CURRENT"
     TOTAL_LOSSES = "TOTAL_LOSSES"
+    MAX_Q_SHARING_ERROR = "MAX_Q_SHARING_ERROR"  # Doc 12 FR-82; not a design constraint
 
 
 class Scheme(StrEnum):
@@ -165,11 +178,12 @@ class Scheme(StrEnum):
 class Sensitivity(Model):
     parameter_path: str
     metric: OutputMetric
-    value: float
-    normalised_value: float
+    value: float | None  # None = not reported, see reason (D-55 K87)
+    normalised_value: float | None  # None when y0 or p0 is 0 (D-52 K53)
     unit: str
-    scheme: Scheme
+    scheme: Scheme | None
     status_change: bool
+    reason: str | None = None
 
 
 class Ranking(Model):
@@ -189,6 +203,7 @@ class KeyMetrics(Model):
     max_loading_ratio: float | None
     total_losses_kw: float | None
     epsilon_x_ratio: float | None
+    max_q_sharing_error_pu: float | None = None
     lambda_c: float | None = None
     zeta_min: float | None = None
     re_lambda_dom_per_s: float | None = None
@@ -231,6 +246,9 @@ class Delta(Model):
     reference_scenario_id: str
     delta: float
     unit: str
+    relative_delta_ratio: float | None = (
+        None  # delta / reference; None when reference is 0 (D-52 K55)
+    )
 
 
 class M3cPayload(Model):
@@ -246,7 +264,7 @@ class M3dPayload(Model):
 # ------------------------------------------------------------------ M4 (§6.8-6.9)
 class Mode(Model):
     eigenvalue_index: int
-    damping_ratio: float
+    damping_ratio: float | None  # None for λ = 0 (Eq. 4.20 undefined, D-55 K87)
     frequency_hz: float
 
 
@@ -287,6 +305,7 @@ class M4aPayload(Model):
     stability_class: StabilityClass
     indicators: Indicators
     outside_definition: bool
+    damping_pass: bool | None = None  # ζ_min ≥ damping_threshold_ratio (D-53 K65)
 
 
 class ElementSeries(Model):
@@ -314,8 +333,9 @@ class M4bPayload(Model):
     inverter_p_kw: list[InverterSeries]
     inverter_q_kvar: list[InverterSeries]
     max_rocof_hz_per_s: float
-    transient_class: TransientClass
-    settled: bool
+    transient_class: TransientClass | None  # None without settling criteria (D-53 K67)
+    settled: bool | None
+    class_reason: str | None = None
 
 
 PAYLOAD_MODEL: dict[AnalysisType, type[Model]] = {

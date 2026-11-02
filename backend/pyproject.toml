@@ -5,9 +5,13 @@ description = "Local web app for early-stage design of islanded droop-controlled
 requires-python = ">=3.13,<3.14"
 dependencies = [
     "fastapi",
+    "mgengine",
     "pydantic",
     "uvicorn",
 ]
+
+[tool.uv.sources]
+mgengine = { path = "../engine", editable = true }  # Doc 9 D-54 K76
 
 [project.scripts]
 mgapp = "mgapp.main:run"

@@ -45,6 +45,7 @@ MESSAGES: dict[IssueCode, str] = {
     IssueCode.TAU_MISSING_FOR_M4: "Enter the power-filter time constants for every inverter.",
     IssueCode.SENSITIVITY_STEP_INVALID: "Give one step size: relative or absolute.",
     IssueCode.DISTURBANCE_INVALID: "Complete the disturbance definition.",
+    IssueCode.MULTIPLE_INVERTERS_ON_BUS: "Stability analysis allows at most one inverter per bus.",
     IssueCode.SWEEP_RANGE_INVALID: "The sweep range or step count is not valid.",
     IssueCode.SCENARIO_PATH_INVALID: "This scenario changes something that does not exist.",
     IssueCode.SCENARIO_COUNT_INVALID: "Compare between 2 and the allowed number of scenarios.",
@@ -55,6 +56,7 @@ MESSAGES: dict[IssueCode, str] = {
 M4_POINT_METRICS = frozenset({"ZETA_MIN", "RE_LAMBDA_DOM", "INDICATORS"})
 DISTURBANCE_KINDS = frozenset({"LOAD_STEP", "LOAD_SCALING", "REFERENCE_STEP", "INVERTER_OUTAGE"})
 REFERENCES = frozenset({"P_SETPOINT", "Q_SETPOINT", "V_SETPOINT", "F_SETPOINT"})
+SETTLING_FIELDS = ("frequency_band_hz", "voltage_band_kv", "window_s")
 COLLECTIONS = {"buses", "lines", "loads", "inverters"}
 
 
@@ -375,6 +377,11 @@ def _parameters(
                 ok = ok and el in invs and d.get("duration_s") is None
             dur = d.get("duration_s")
             ok = ok and (dur is None or (_is_num(dur) and dur > 0))
+        st = p.get("settling")  # optional, no defaults (D-53 K67, D-55 K90)
+        if st is not None and not (
+            isinstance(st, dict) and all(_is_num(st.get(k)) and st[k] > 0 for k in SETTLING_FIELDS)
+        ):
+            ok = False
         if not ok:
             bad(IssueCode.DISTURBANCE_INVALID, "disturbance")
 

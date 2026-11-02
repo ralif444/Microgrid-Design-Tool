@@ -19,13 +19,14 @@ API_PATHS = {
     "/api/projects/import",
     "/api/run-records/verify",
     "/api/run-records/rerun",
+    "/api/catalogs/import",
     *(f"/api/analyses/{t}" for t in ("PS", "M1", "M2", "M3a", "M3b", "M3c", "M3d", "M4a", "M4b")),
 }
 
 # Unit suffixes of Doc 3 §1 plus derived forms used in payloads.
 UNIT_SUFFIX = re.compile(
     r"_(kw|kvar|kva|kv|ohm|ohm_per_km|km|a|hz|hz_per_kw|kv_per_kvar|deg|s|kwh|h|pu|ratio|"
-    r"per_s|hz_per_s|w|mib)$"
+    r"per_s|hz_per_s|w|mib|v|uf_per_km)$"
 )
 # Numeric fields without a unit, by Doc 3 definition (counts, indices, versions, unitless
 # margins and indicators, axis values whose unit is given by the axis, and LimitingConstraint
@@ -40,6 +41,7 @@ UNITLESS = {
     "eigenvalue_index",
     "schema_version",
     "record_schema_version",
+    "catalog_schema_version",
     "migrated_from_version",  # a schema version number
     "max_iterations",
     "sweep_cap",

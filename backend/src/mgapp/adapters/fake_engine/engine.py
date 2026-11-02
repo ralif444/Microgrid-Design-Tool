@@ -12,6 +12,7 @@ import time
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
+from typing import Any
 
 from mgapp.adapters.fake_engine import payloads
 from mgapp.domain.contract import AnalysisRequest, AnalysisResult, EngineIdentity, Warning
@@ -39,6 +40,7 @@ class ScriptEntry:
     outcome: Outcome = Outcome.FEASIBLE
     delay_s: float = 0.0  # sleep before answering (TIMEOUT tests of the execution guard)
     raise_error: bool = False  # defect mode: raise instead of answering (ENGINE_ERROR tests)
+    payload_patch: Mapping[str, Any] | None = None  # top-level payload keys replaced (E2E profiles)
 
 
 @dataclass(frozen=True)
@@ -112,10 +114,12 @@ class FakeEngine:
             time.sleep(entry.delay_s)
         if entry.raise_error:
             raise FakeEngineDefectError("Fake Engine defect mode")
-        return build_result(request, entry.outcome)
+        return build_result(request, entry.outcome, entry.payload_patch)
 
 
-def build_result(request: AnalysisRequest, outcome: Outcome) -> AnalysisResult:
+def build_result(
+    request: AnalysisRequest, outcome: Outcome, payload_patch: Mapping[str, Any] | None = None
+) -> AnalysisResult:
     status, code, message = _MESSAGES[outcome]
     payload = None
     limiting = []
@@ -127,6 +131,8 @@ def build_result(request: AnalysisRequest, outcome: Outcome) -> AnalysisResult:
         else:  # disallowed for other types; used to test the guard (ENGINE_ERROR)
             payload = payloads.feasible_payload(request)
         limiting = payloads.synthetic_violations(request.project_snapshot)
+    if payload is not None and payload_patch:
+        payload = {**payload, **payload_patch}
     warnings = [FAKE_WARNING]
     if request.analysis_type is AnalysisType.M2 and payload and payload["not_evaluated"]:
         warnings.append(

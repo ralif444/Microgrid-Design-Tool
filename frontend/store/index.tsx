@@ -19,4 +19,4 @@ export const useProject = () => useContext(StateCtx);
 export const useProjectDispatch = () => useContext(DispatchCtx);
 export { projectReducer, initialState, adviceInputHash, m1Ref } from "./reducer";
 export { toProjectFile } from "./projectFile";
-export type { Collection, ProjectState, ProjectAction, PsParameters, SizingAdvice } from "./reducer";
+export type { Collection, Override, ProjectState, ProjectAction, PsParameters, Scenario, SizingAdvice } from "./reducer";

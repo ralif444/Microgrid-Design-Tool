@@ -103,3 +103,25 @@ def test_fr_06_ps_redundancy_with_one_unit_input_invalid(api: Api) -> None:
     assert resp["result"]["status"] == "INPUT_INVALID"
     assert resp["result"]["status_code"] == "PS_PARAMETER_INVALID"
     assert api.engine.call_log == []  # type: ignore[attr-defined]
+
+
+def _profile(n: int) -> dict[str, Any]:
+    return {"id": "LP1", "values": [{"hour": h, "p_kw": 1.0} for h in range(n)]}
+
+
+@pytest.mark.parametrize(("n", "valid"), [(24, True), (23, False), (25, False)])
+def test_fr_04_load_profile_needs_24_points(api: Api, n: int, valid: bool) -> None:
+    snap = two_bus_snapshot() | {"load_profile": _profile(n)}
+    rep = _validate(api, {"project_snapshot": snap})
+    assert rep["valid"] is valid, rep
+    if not valid:
+        assert ("PROFILE_LENGTH", "LP1", "values") in _issues(rep)
+
+
+def test_fr_20_all_violations_in_one_response(api: Api) -> None:
+    snap = two_bus_snapshot()
+    snap["loads"][0]["p_kw"] = -1.0
+    snap["loads"][1]["p_kw"] = None
+    rep = _validate(api, {"project_snapshot": snap})
+    assert {("NEGATIVE_POWER", "LD1", "p_kw"), ("EMPTY_REQUIRED", "LD2", "p_kw")} <= _issues(rep)
+    assert all(i["message"] for i in rep["issues"])

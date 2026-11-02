@@ -52,7 +52,10 @@ def server() -> Iterator[Callable[[str], str]]:
 
     yield start
     for proc, _ in procs.values():
-        proc.terminate()
+        if os.name == "nt":  # terminate() stops only uv.exe; the mgapp child would keep running
+            subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)], capture_output=True)
+        else:
+            proc.terminate()
         proc.wait(timeout=10)
 
 

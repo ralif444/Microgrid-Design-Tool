@@ -15,14 +15,16 @@ from fixtures.designs import two_bus_snapshot
 from fixtures.reference_canonical import _num, sha256
 
 from mgapp.adapters.fake_engine import FakeEngine
+from mgapp.adapters.real_engine import RealEngine
 from mgapp.main import create_app
 
 SOLVER = {"mismatch_tolerance_w": 0.001, "max_iterations": 50, "initial_guess": "DEFAULT"}
 
 
-@pytest.fixture
-def client() -> TestClient:
-    return TestClient(create_app(engine=FakeEngine(), serve_static=False))
+@pytest.fixture(params=["FAKE", "REAL"])
+def client(request: pytest.FixtureRequest) -> TestClient:
+    engine = RealEngine() if request.param == "REAL" else FakeEngine()
+    return TestClient(create_app(engine=engine, serve_static=False))
 
 
 def snapshot_hash(client: TestClient, snap: dict, t: str = "M1", **extra: object) -> str:

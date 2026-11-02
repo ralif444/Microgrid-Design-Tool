@@ -248,6 +248,262 @@
         "title": "BusSeries",
         "type": "object"
       },
+      "Catalog": {
+        "additionalProperties": false,
+        "properties": {
+          "app_version": {
+            "title": "App Version",
+            "type": "string"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogEntry"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "schema_version": {
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "schema_version",
+          "app_version",
+          "entries"
+        ],
+        "title": "Catalog",
+        "type": "object"
+      },
+      "CatalogEntry": {
+        "additionalProperties": false,
+        "properties": {
+          "conductor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConductorValues"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "inverter": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InverterValues"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "kind": {
+            "enum": [
+              "INVERTER",
+              "CONDUCTOR"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/Provenance",
+            "default": {
+              "document": null,
+              "manufacturer": null,
+              "model": null,
+              "revision": null
+            }
+          },
+          "sources": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "title": "Sources",
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "kind"
+        ],
+        "title": "CatalogEntry",
+        "type": "object"
+      },
+      "CatalogImportResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "catalog": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Catalog"
+          },
+          "entry_checks": {
+            "items": {
+              "$ref": "#/components/schemas/EntryCheck"
+            },
+            "title": "Entry Checks",
+            "type": "array"
+          },
+          "file_check": {
+            "$ref": "#/components/schemas/FileCheckResult"
+          }
+        },
+        "required": [
+          "file_check",
+          "catalog",
+          "entry_checks"
+        ],
+        "title": "CatalogImportResponse",
+        "type": "object"
+      },
+      "CatalogRef": {
+        "additionalProperties": false,
+        "description": "Copied with the values into an Inverter or Line (FR-69); part of the snapshot.",
+        "properties": {
+          "catalog_schema_version": {
+            "title": "Catalog Schema Version",
+            "type": "integer"
+          },
+          "current_limit_confirmed": {
+            "default": false,
+            "title": "Current Limit Confirmed",
+            "type": "boolean"
+          },
+          "entry_id": {
+            "title": "Entry Id",
+            "type": "string"
+          },
+          "modified": {
+            "default": false,
+            "title": "Modified",
+            "type": "boolean"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/Provenance"
+          },
+          "sources": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "title": "Sources",
+            "type": "object"
+          },
+          "tau_in_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tau In S"
+          }
+        },
+        "required": [
+          "entry_id",
+          "provenance",
+          "catalog_schema_version"
+        ],
+        "title": "CatalogRef",
+        "type": "object"
+      },
+      "ConductorValues": {
+        "additionalProperties": false,
+        "properties": {
+          "ampacity_a": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Ampacity A"
+          },
+          "ampacity_conditions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Ampacity Conditions"
+          },
+          "r_ohm_per_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "R Ohm Per Km"
+          },
+          "rx_conditions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Rx Conditions"
+          },
+          "shunt_capacitance_uf_per_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Shunt Capacitance Uf Per Km"
+          },
+          "x_ohm_per_km": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "X Ohm Per Km"
+          }
+        },
+        "title": "ConductorValues",
+        "type": "object"
+      },
       "ConstraintKind": {
         "enum": [
           "BUS_VOLTAGE_MIN",
@@ -274,6 +530,18 @@
           "reference_scenario_id": {
             "title": "Reference Scenario Id",
             "type": "string"
+          },
+          "relative_delta_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Relative Delta Ratio"
           },
           "scenario_id": {
             "title": "Scenario Id",
@@ -432,8 +700,15 @@
             "type": "array"
           },
           "damping_ratio": {
-            "title": "Damping Ratio",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Damping Ratio"
           },
           "eigenvalue_index": {
             "title": "Eigenvalue Index",
@@ -574,6 +849,33 @@
           "engine_git_commit"
         ],
         "title": "EngineSide",
+        "type": "object"
+      },
+      "EntryCheck": {
+        "additionalProperties": false,
+        "properties": {
+          "entry_id": {
+            "title": "Entry Id",
+            "type": "string"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "usable": {
+            "title": "Usable",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "entry_id",
+          "usable",
+          "reasons"
+        ],
+        "title": "EntryCheck",
         "type": "object"
       },
       "FileCheckCode": {
@@ -820,6 +1122,17 @@
             ],
             "default": null,
             "title": "Bus Id"
+          },
+          "catalog_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CatalogRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           },
           "frequency_droop_hz_per_kw": {
             "anyOf": [
@@ -1077,6 +1390,205 @@
         "title": "InverterSizing",
         "type": "object"
       },
+      "InverterValues": {
+        "additionalProperties": false,
+        "properties": {
+          "current_limit_a": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Current Limit A"
+          },
+          "dc_voltage_max_v": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Dc Voltage Max V"
+          },
+          "dc_voltage_min_v": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Dc Voltage Min V"
+          },
+          "efficiency_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Efficiency Ratio"
+          },
+          "frequency_droop_max_hz_per_kw": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Frequency Droop Max Hz Per Kw"
+          },
+          "frequency_droop_min_hz_per_kw": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Frequency Droop Min Hz Per Kw"
+          },
+          "grid_forming": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Grid Forming"
+          },
+          "grid_forming_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Grid Forming Reference"
+          },
+          "nominal_frequency_hz": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Nominal Frequency Hz"
+          },
+          "nominal_voltage_kv": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Nominal Voltage Kv"
+          },
+          "output_filter": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Output Filter"
+          },
+          "overload_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Overload Ratio"
+          },
+          "rated_kva": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Rated Kva"
+          },
+          "tau_in_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tau In S"
+          },
+          "voltage_droop_max_kv_per_kvar": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Voltage Droop Max Kv Per Kvar"
+          },
+          "voltage_droop_min_kv_per_kvar": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Voltage Droop Min Kv Per Kvar"
+          }
+        },
+        "title": "InverterValues",
+        "type": "object"
+      },
       "IssueCode": {
         "description": "Stage-1 validation codes (Doc 3 §4).",
         "enum": [
@@ -1111,6 +1623,7 @@
           "DURATION_CAP_EXCEEDED",
           "SCENARIO_COUNT_INVALID",
           "DEPENDS_ON_NOT_ALLOWED",
+          "MULTIPLE_INVERTERS_ON_BUS",
           "MALFORMED_REQUEST"
         ],
         "title": "IssueCode",
@@ -1174,6 +1687,18 @@
               }
             ],
             "title": "Max Loading Ratio"
+          },
+          "max_q_sharing_error_pu": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Q Sharing Error Pu"
           },
           "min_voltage_pu": {
             "anyOf": [
@@ -1367,6 +1892,17 @@
       "Line": {
         "additionalProperties": false,
         "properties": {
+          "catalog_ref": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CatalogRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
           "current_limit_a": {
             "anyOf": [
               {
@@ -1751,6 +2287,13 @@
             "title": "Line Results",
             "type": "array"
           },
+          "sharing": {
+            "items": {
+              "$ref": "#/components/schemas/SharingResult"
+            },
+            "title": "Sharing",
+            "type": "array"
+          },
           "system_frequency_hz": {
             "title": "System Frequency Hz",
             "type": "number"
@@ -1777,7 +2320,8 @@
           "total_load_kvar",
           "total_losses_kw",
           "iterations",
-          "epsilon_x_ratio"
+          "epsilon_x_ratio",
+          "sharing"
         ],
         "title": "M1Payload",
         "type": "object"
@@ -1923,6 +2467,18 @@
       "M4aPayload": {
         "additionalProperties": false,
         "properties": {
+          "damping_pass": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Damping Pass"
+          },
           "dominant_modes": {
             "items": {
               "$ref": "#/components/schemas/DominantMode"
@@ -1999,6 +2555,18 @@
             "title": "Bus Voltage Kv",
             "type": "array"
           },
+          "class_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Class Reason"
+          },
           "inverter_p_kw": {
             "items": {
               "$ref": "#/components/schemas/InverterSeries"
@@ -2018,8 +2586,15 @@
             "type": "number"
           },
           "settled": {
-            "title": "Settled",
-            "type": "boolean"
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settled"
           },
           "system_frequency_hz": {
             "items": {
@@ -2036,7 +2611,14 @@
             "type": "array"
           },
           "transient_class": {
-            "$ref": "#/components/schemas/TransientClass"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TransientClass"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -2105,8 +2687,15 @@
         "additionalProperties": false,
         "properties": {
           "damping_ratio": {
-            "title": "Damping Ratio",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Damping Ratio"
           },
           "eigenvalue_index": {
             "title": "Eigenvalue Index",
@@ -2158,7 +2747,8 @@
           "MAX_BUS_VOLTAGE",
           "MAX_INVERTER_LOADING",
           "MAX_LINE_CURRENT",
-          "TOTAL_LOSSES"
+          "TOTAL_LOSSES",
+          "MAX_Q_SHARING_ERROR"
         ],
         "title": "OutputMetric",
         "type": "string"
@@ -2441,6 +3031,62 @@
           }
         },
         "title": "ProjectSnapshot",
+        "type": "object"
+      },
+      "Provenance": {
+        "additionalProperties": false,
+        "description": "As entered by the user (FR-65).",
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Document"
+          },
+          "manufacturer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Manufacturer"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Model"
+          },
+          "revision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Revision"
+          }
+        },
+        "title": "Provenance",
         "type": "object"
       },
       "PsPayload": {
@@ -2848,15 +3494,41 @@
             "$ref": "#/components/schemas/OutputMetric"
           },
           "normalised_value": {
-            "title": "Normalised Value",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Normalised Value"
           },
           "parameter_path": {
             "title": "Parameter Path",
             "type": "string"
           },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Reason"
+          },
           "scheme": {
-            "$ref": "#/components/schemas/Scheme"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Scheme"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "status_change": {
             "title": "Status Change",
@@ -2867,8 +3539,15 @@
             "type": "string"
           },
           "value": {
-            "title": "Value",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
           }
         },
         "required": [
@@ -2881,6 +3560,46 @@
           "status_change"
         ],
         "title": "Sensitivity",
+        "type": "object"
+      },
+      "SharingResult": {
+        "additionalProperties": false,
+        "description": "Doc 12 P9 (FR-81), Eq. 12.10-12.13 from the engine; derived output (D-63).",
+        "properties": {
+          "inverter_id": {
+            "title": "Inverter Id",
+            "type": "string"
+          },
+          "p_deviation_kw": {
+            "title": "P Deviation Kw",
+            "type": "number"
+          },
+          "p_error_pu": {
+            "title": "P Error Pu",
+            "type": "number"
+          },
+          "q_deviation_kvar": {
+            "title": "Q Deviation Kvar",
+            "type": "number"
+          },
+          "q_droop_not_rating_proportional": {
+            "title": "Q Droop Not Rating Proportional",
+            "type": "boolean"
+          },
+          "q_error_pu": {
+            "title": "Q Error Pu",
+            "type": "number"
+          }
+        },
+        "required": [
+          "inverter_id",
+          "p_deviation_kw",
+          "q_deviation_kvar",
+          "p_error_pu",
+          "q_error_pu",
+          "q_droop_not_rating_proportional"
+        ],
+        "title": "SharingResult",
         "type": "object"
       },
       "SizingAdviceItem": {
@@ -3724,6 +4443,37 @@
         "summary": "Run analysis PS",
         "tags": [
           "analyses"
+        ]
+      }
+    },
+    "/api/catalogs/import": {
+      "post": {
+        "operationId": "import_catalog",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Catalog"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogImportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Check a Catalogue file: version, shape, unique ids, selection guard per entry",
+        "tags": [
+          "projects"
         ]
       }
     },

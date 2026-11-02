@@ -10,7 +10,7 @@ from collections.abc import Callable
 import pytest
 from api.conftest import RUN_RECORD_FIELDS, Api
 
-from mgapp.adapters.fake_engine import FakeEngine, Outcome, ScriptEntry
+from mgapp.adapters.fake_engine import Outcome, ScriptEntry
 from mgapp.domain.enums import AnalysisType
 from mgapp.services.limits import Limits
 
@@ -24,7 +24,7 @@ def assert_record(resp: dict, *, engine_called: bool) -> dict:
     assert len(rec["snapshot_hash"]) == 64 and len(rec["result_hash"]) == 64
     engine_fields = (rec["engine_kind"], rec["engine_version"], rec["engine_git_commit"])
     if engine_called:
-        assert rec["engine_kind"] == "FAKE" and all(engine_fields)
+        assert rec["engine_kind"] in ("FAKE", "REAL") and all(engine_fields)
     else:
         assert engine_fields == (None, None, None)
     r = resp["result"]
@@ -40,9 +40,11 @@ def _with_m1_ref(api: Api, t: str) -> dict:
 @pytest.mark.parametrize("t", ALL_TYPES)
 def test_fr_46_feasible_for_every_type(api: Api, t: str) -> None:
     resp = _with_m1_ref(api, t)
-    assert resp["result"]["status"] == "FEASIBLE"
-    assert "ENGINE_KIND_FAKE" in [w["code"] for w in resp["result"]["warnings"]]
-    assert_record(resp, engine_called=True)
+    kind = api.engine.identity().engine_kind
+    assert resp["result"]["status"] == "FEASIBLE", resp["result"]["message"]
+    codes = [w["code"] for w in resp["result"]["warnings"]]
+    assert ("ENGINE_KIND_FAKE" in codes) == (kind == "FAKE")
+    assert assert_record(resp, engine_called=True)["engine_kind"] == kind
 
 
 @pytest.mark.parametrize(
@@ -196,7 +198,7 @@ def test_result_hash_covers_status_and_payload_only(api: Api) -> None:
     )
 
 
-def test_fake_identity_engine_fields(api: Api) -> None:
-    ident = FakeEngine().identity()
+def test_engine_identity_in_run_record(api: Api) -> None:
+    ident = api.engine.identity()
     rec = api.run("M1")["run_record"]
     assert rec["engine_version"] == ident.engine_version

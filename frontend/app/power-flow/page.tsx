@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { runAnalysis } from "../../api-client";
 import type { AnalysisResponse, M1Payload } from "../../api-types";
+import { IndicatorPanel } from "../../components/IndicatorPanel";
 import { M1FreshnessBadge } from "../../components/M1Freshness";
 import { M1Results } from "../../components/M1Results";
 import { RequireProject } from "../../components/RequireProject";
@@ -63,6 +64,7 @@ function PowerFlow() {
       {error && <p role="alert">{error}</p>}
       {resp && <StatusBanner type="M1" result={resp.result} />}
       {payload && <M1Results p={payload} />}
+      {payload && <IndicatorPanel />}
       {resp && (
         <p>
           RunRecord <code data-testid="record-id">{resp.run_record.record_id}</code>, snapshot hash{" "}

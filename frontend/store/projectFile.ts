@@ -1,5 +1,5 @@
-// Project file layout (Doc 3 §8, Doc 9 D-47 K14): nominal values sit in `project`; scenarios
-// stay [] until stage 1.5. The versions come from /api/meta so the app never hard-codes them.
+// Project file layout (Doc 3 §8, Doc 9 D-47 K14): nominal values sit in `project`; Scenarios
+// since stage 1.5 (D-56 K96). The versions come from /api/meta so the app never hard-codes them.
 import type { ProjectFile } from "../api-types";
 import type { ProjectState } from "./reducer";
 
@@ -26,7 +26,7 @@ export function toProjectFile(
     load_profile: d.load_profile ?? null,
     design_constraints: d.design_constraints ?? {},
     sizing_advice: s.sizingAdvice as unknown as ProjectFile["sizing_advice"],
-    scenarios: [],
+    scenarios: s.scenarios,
     run_records: s.runRecords,
   };
 }

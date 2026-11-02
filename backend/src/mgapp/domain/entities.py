@@ -8,6 +8,7 @@ or unknown fields still fail parsing and become INPUT_INVALID / MALFORMED_REQUES
 from __future__ import annotations
 
 from mgapp.domain.base import Model
+from mgapp.domain.catalog import CatalogRef
 from mgapp.domain.enums import PfDirection
 
 
@@ -29,6 +30,7 @@ class Line(Model):
     # Server-derived (Doc 3 §3.3); any client value is overwritten during canonicalisation.
     r_ohm: float | None = None  # Ω
     x_ohm: float | None = None  # Ω
+    catalog_ref: CatalogRef | None = None  # never sent to the engine (Doc 12 FR-69)
 
 
 class Load(Model):
@@ -62,6 +64,7 @@ class Inverter(Model):
     q_setpoint_kvar: float | None = None  # kvar; absent = 0
     tau_p_s: float | None = None  # s; required for M4a/M4b, no default
     tau_q_s: float | None = None  # s; required for M4a/M4b, no default
+    catalog_ref: CatalogRef | None = None  # never sent to the engine (Doc 12 FR-69)
 
 
 class DesignConstraints(Model):

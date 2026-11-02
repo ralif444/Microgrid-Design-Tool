@@ -19,7 +19,7 @@ Dokumen ini adalah kamus istilah dan kontrak data untuk seluruh aplikasi. Setiap
 | Ids | Strings matching `^[A-Za-z0-9_-]{1,32}$`, unique within their entity list; references by id, never by position. [ASSUMPTION] pattern and length. |
 | Timestamps | UTC, ISO 8601 with `Z` suffix. |
 | Contract units | Engineering units (manuscript 4.2.1d): kV line-to-line, kW, kvar, kVA, Ω/km, A, Hz, Hz/kW, kV/kvar, s, kWh, degrees; power = three-phase total. **One exception:** the DesignConstraints voltage band and voltage LimitingConstraints are in p.u. of `nominal_voltage_kv`. |
-| Engine units | The engine uses SI per phase internally (V phase RMS, W, VAR, rad/s, rad). Conversion is the **Real Engine adapter's job** and happens only at recorded points (√3, 2π) (manuscript 4.2.1d, Tabel D.1 rule 7). Droop conversion: $m_p\,[\mathrm{rad/(s\cdot W)}] = 2\pi\cdot 10^{-3}\cdot$ `frequency_droop_hz_per_kw`; $n_q\,[\mathrm{V/VAR}] = $ `voltage_droop_kv_per_kvar` $/\sqrt3$ (phase voltage against three-phase Q). [ASSUMPTION: confirm against the engine package at stage 1.4.] |
+| Engine units | The engine uses SI per phase internally (V phase RMS, W, VAR, rad/s, rad). Conversion is the **Real Engine adapter's job** and happens only at recorded points (√3, 2π) (manuscript 4.2.1d, Tabel D.1 rule 7). Droop conversion: $m_p\,[\mathrm{rad/(s\cdot W)}] = 2\pi\cdot 10^{-3}\cdot$ `frequency_droop_hz_per_kw`; $n_q\,[\mathrm{V/VAR}] = $ `voltage_droop_kv_per_kvar` $/\sqrt3$ (phase voltage against three-phase Q). Confirmed against `mgengine` 0.3.0 (Doc 9 D-54 K74). |
 | Balanced three-phase | The network is balanced three-phase (A6). |
 | Single voltage level | One nominal voltage for the whole Project; no transformers (manuscript 1.5). |
 | Hidden conversions | **None** in the app. The app stores and displays the value in the declared unit. |
@@ -162,7 +162,7 @@ One per Project. **No numeric defaults** (manuscript 4.2.4: standards fixing lim
 | frequency_min_hz, frequency_max_hz | number | Hz | N | > 0; min < max when both given | Reference designs use 49.75–50.25 Hz. |
 | inverter_loading_limit_ratio | number | ratio of rated_kva (μ_max) | N | 0 < μ ≤ 1 | Reference designs use 1. |
 | line_current_limit_a | number | A | N | > 0 | Project-wide; Line.current_limit_a overrides. Thermal limit is user-set (4.2.4). |
-| balance_tolerance_kw | number | kW | N | > 0 | ε_bal of the power-balance consistency check (Eq. 4.10); absent = engine default. [ASSUMPTION] |
+| balance_tolerance_kw | number | kW | N | > 0 | ε_bal of the power-balance consistency check (Eq. 4.10); absent = check not evaluated, like every other limit (Doc 9 D-54 K84). |
 
 ### 3.8 SizingAdvice
 
@@ -241,6 +241,7 @@ Stage 1 runs in the application service before any engine call and yields `INPUT
 | DURATION_CAP_EXCEEDED | request | M4b duration above cap [ASSUMPTION value] | "The simulation time is too long." |
 | SCENARIO_COUNT_INVALID | request | M3c count < 2 or > SCENARIO_CAP | "Compare between 2 and the allowed number of scenarios." |
 | DEPENDS_ON_NOT_ALLOWED | request | depends_on on PS or M1 | "This analysis does not use an earlier result." |
+| MULTIPLE_INVERTERS_ON_BUS | request | Engine-side only (M4a, M4b): two Inverters on one Bus (D-53 K61, D-55 K91) | "Stability analysis allows at most one inverter per bus." |
 | MALFORMED_REQUEST | request | Body does not match the schema (framework validation converted) | "The request could not be read." |
 
 `SWEEP_CAP_EXCEEDED` is an `INPUT_INVALID` code checked after the issue collection and before any engine call; it is never an `UNAVAILABLE` reason (manuscript 4.3.3).
@@ -297,7 +298,7 @@ Checks with an empty limit appear in the payload list `not_evaluated` as {kind, 
 | Status | Meaning | Produced by | payload | Example codes |
 |---|---|---|---|---|
 | INPUT_INVALID | Rejected before calculation | App (stage 1); engine if it detects what stage 1 missed | null; issues in diagnostics | §4 codes, MULTIPLE_ISSUES |
-| SOLVER_FAILED | No convergence or numerical failure | Engine | null | NO_CONVERGENCE, MAX_ITERATIONS_REACHED, ILL_CONDITIONED_JACOBIAN (cond > 10¹²), NON_FINITE, EIGEN_SOLVER_FAILED, SIMULATION_FAILED |
+| SOLVER_FAILED | No convergence or numerical failure | Engine | null | NO_CONVERGENCE, MAX_ITERATIONS_REACHED, ILL_CONDITIONED_JACOBIAN (cond > 10¹²), NON_FINITE, EIGEN_SOLVER_FAILED, SIMULATION_FAILED, EQUILIBRIUM_INVALID (M4a, D-55 K91) |
 | PHYSICALLY_INADMISSIBLE | Converged, not physical | Engine (M1) | optional, diagnostic only | OPERATING_POINT_NOT_PHYSICAL (e.g. $V_b \le 0$) |
 | INFEASIBLE | Valid, constraints violated | Engine (M2) | yes | CONSTRAINT_VIOLATED |
 | FEASIBLE | Success: PS "advice produced"; M1 "operating point found" (no constraint judgement); M2 "design meets all evaluated constraints"; M3 "analysis completed"; M4 "analysis completed" (stability/transient class in payload) | Engine | yes | OK |
@@ -385,7 +386,7 @@ Convergence: $\max|F_P| < 10^{-3}$ W and $\max|F_Q| < 10^{-3}$ VAR. SOLVER_FAILE
 | parameters.parameter_paths | array of string | — | Each resolves (§3.10); count ≤ cap. |
 | parameters.output_metrics | array of enum | — | SYSTEM_FREQUENCY, MIN_BUS_VOLTAGE, MAX_BUS_VOLTAGE, MAX_INVERTER_LOADING, MAX_LINE_CURRENT, TOTAL_LOSSES. |
 | parameters.step_relative / step_absolute | number | — / parameter unit | Exactly one, > 0, no default (Eq. 4.17). |
-| Output: sensitivities | array of {parameter_path, metric, value, normalised_value, unit, scheme, status_change} | metric unit per parameter unit | Central difference, or one-sided when one side fails (`scheme` = CENTRAL, FORWARD, BACKWARD); `status_change` flags a status difference between sides. |
+| Output: sensitivities | array of {parameter_path, metric, value, normalised_value, unit, scheme, status_change, reason} | metric unit per parameter unit | Central difference, or one-sided when one side fails (`scheme` = CENTRAL, FORWARD, BACKWARD); `status_change` flags a status difference between sides. `value` and `scheme` null when not reported (base point not admissible, h = 0, both sides failed, parameter without a value), `normalised_value` null when y0 or p0 = 0; `reason` says why (D-52 K53, D-55 K87). Relative step: h = step_relative·\|p0\| (D-55 K92). Metric units: Hz, pu, pu, ratio, A, kW. |
 | Output: ranking | array of {metric, parameter_path, rank} | — | By absolute normalised effect. |
 
 ### 6.5 M3b — 1-D sweep
@@ -409,7 +410,7 @@ Convergence: $\max|F_P| < 10^{-3}$ W and $\max|F_Q| < 10^{-3}$ VAR. SOLVER_FAILE
 | request.scenarios | array of {scenario_id, label, project_snapshot} | 2 to SCENARIO_CAP; in the request and the hash. |
 | parameters.reference_scenario_id | string, optional | Default: first scenario. |
 | Output: scenario_results | array of {scenario_id, status, status_code, key_metrics, limiting_constraints} | No ranking (4.2.5). |
-| Output: deltas | array of {metric, scenario_id, reference_scenario_id, delta, unit} | Explicit differences. |
+| Output: deltas | array of {metric, scenario_id, reference_scenario_id, delta, unit, relative_delta_ratio} | Explicit differences; `relative_delta_ratio` = delta / reference value, null when that is 0 (D-52 K55, D-55 K88). |
 
 ### 6.7 M3d — 2-D envelope
 
@@ -427,13 +428,14 @@ Convergence: $\max|F_P| < 10^{-3}$ W and $\max|F_Q| < 10^{-3}$ VAR. SOLVER_FAILE
 | parameters.tau_in_s | number, optional | s | Inner-loop time constant for r_in; without it r_in is "not evaluated". |
 | parameters.damping_threshold_ratio | number, optional | — | User pass threshold; without it no pass/fail on damping (4.2.6). |
 | Output: eigenvalues | array of {real_per_s, imag_per_s} | 1/s | State dimension $(N-1) + 2N$ (δ_j, P_f,i, Q_f,i). |
-| Output: modes | array of {eigenvalue_index, damping_ratio, frequency_hz} | —; Hz | Eq. 4.20. |
+| Output: modes | array of {eigenvalue_index, damping_ratio, frequency_hz} | —; Hz | Eq. 4.20; `damping_ratio` null for λ = 0 (D-55 K87). |
 | Output: zeta_min | number or null | — | Lowest damping among oscillatory modes. |
 | Output: dominant_modes | array of {eigenvalue_index, damping_ratio, frequency_hz, associated_element_ids} | | |
 | Output: participation | {state_names[], factors[mode][state]} or null | — | Eq. 4.21; null when the eigenvector matrix is ill-conditioned (reason in diagnostics). |
 | Output: stability_class | enum | — | STABLE if $\max_k \mathrm{Re}\,\lambda_k < -t_\lambda$, UNSTABLE if $> t_\lambda$, MARGINAL otherwise; $t_\lambda = 10^{-9}\max_k|\lambda_k|$. |
 | Output: indicators | {r_tau, kappa, r_in, epsilon_x} each {value, evaluated, reason} | — | Eq. 4.23, 4.1; thresholds null until stage 1.6, warning VALIDITY_NOT_CALIBRATED. |
 | Output: outside_definition | boolean | — | True when the operating point violates constraints (label "outside definition [19]"). |
+| Output: damping_pass | boolean or null | — | ζ_min ≥ damping_threshold_ratio; null without a threshold or without oscillatory modes (D-53 K65, D-55 K89). |
 
 Initialised from the M1 payload; requires cond($g_y$) ≤ 10¹² (else SOLVER_FAILED).
 
@@ -449,13 +451,15 @@ Initialised from the M1 payload; requires cond($g_y$) ≤ 10¹² (else SOLVER_FA
 | parameters.disturbance.start_time_s | number | s | ≥ 0. |
 | parameters.disturbance.duration_s | number or null | s | Step and scaling: null = permanent; finite = reverts. Outage: always permanent. |
 | parameters.simulation_end_s | number | s | > start_time_s; ≤ cap. |
+| parameters.settling | {frequency_band_hz, voltage_band_kv, window_s}, optional | Hz; kV; s | Each > 0, no defaults; bands around the final value over the final window; window ≤ simulation_end_s − start_time_s. Without it no class is set (D-53 K67, D-55 K90). Invalid → DISTURBANCE_INVALID. |
 | Output: time_s | array | s | |
 | Output: system_frequency_hz | array | Hz | |
 | Output: bus_voltage_kv | array of {bus_id, values[]} | kV | |
 | Output: inverter_p_kw, inverter_q_kvar | array of {inverter_id, values[]} | kW; kvar | |
 | Output: max_rocof_hz_per_s | number | Hz/s | Descriptive; from $d\omega_i/dt = -m_{p,i}\,dP_{f,i}/dt$. |
-| Output: transient_class | enum | — | RECOVERED_STABLE, CRITERIA_VIOLATED, UNSTABLE (all with status FEASIBLE). Simulation failure → SOLVER_FAILED (SIMULATION_FAILED); invalid configuration → INPUT_INVALID. "Simulation did not fail" is never a stability criterion. |
-| Output: settled | boolean | — | Settling-window result used for the class. |
+| Output: transient_class | enum or null | — | Null without `settling` (reason in `class_reason`, D-55 K90); RECOVERED_STABLE, CRITERIA_VIOLATED, UNSTABLE (all with status FEASIBLE). Simulation failure → SOLVER_FAILED (SIMULATION_FAILED); invalid configuration → INPUT_INVALID. "Simulation did not fail" is never a stability criterion. |
+| Output: settled | boolean or null | — | Settling-window result used for the class; null without `settling`. |
+| Output: class_reason | string or null | — | Why the class is set or not (e.g. "settling criteria not given", "not settled", network lost). |
 
 Integrator: LSODA, relative tolerance 10⁻⁸, horizon split at the disturbance, up to eight retries (4.2.6). Time step and output sampling are engine-defined.
 
@@ -517,12 +521,12 @@ Versioning: equal → load; older with a chain → migrate forward step by step 
 
 | # | Item | Tag |
 |---|---|---|
-| 1 | Droop unit conversion in the Real Engine adapter (§1) to be confirmed against the engine package. | [ASSUMPTION] → stage 1.4 |
+| 1 | Droop unit conversion in the Real Engine adapter (§1) to be confirmed against the engine package. | CLOSED (Doc 9 D-54 K74) |
 | 2 | Caps: M3a parameter count, M3c SCENARIO_CAP, M4b duration; 413 body limit initial 10 MiB (Doc 6). | [ASSUMPTION] → WP 1.7.1 |
-| 3 | `balance_tolerance_kw` default and whether it belongs to DesignConstraints or solver_config. | [ASSUMPTION] |
+| 3 | `balance_tolerance_kw` default and whether it belongs to DesignConstraints or solver_config. | CLOSED: no default, stays in DesignConstraints (Doc 9 D-54 K84) |
 | 4 | Settling window and envelope criteria for the transient class (engine side). | → engine design, stage 1.3.5 |
 | 5 | Indicator thresholds (r_τ, κ, r_in, ε_X) calibrated from M5. | → stage 1.6 |
-| 6 | Doc 12 extensions (catalogue, BatteryBank, sharing metrics, profile hour axis) merged at stage 1.5. | PENDING-1.5 |
+| 6 | Doc 12 extensions (catalogue, BatteryBank, sharing metrics, profile hour axis) merged at stage 1.5. Catalogue document, `catalog_ref` on Inverter and Line, and unit suffixes `_v` (V) and `_uf_per_km` (µF/km) for catalogue fields applied by Doc 9 D-61; Sharing group in M1 and MAX_Q_SHARING_ERROR applied by D-63. BatteryBank and the profile hour axis still open (postponed, D-62). | PARTLY APPLIED |
 
 ## Log
 
@@ -530,3 +534,5 @@ Versioning: equal → load; older with a chain → migrate forward step by step 
 |---|---|
 | 2026-10-17 – 10-21 | Revisions 1–2 and change proposals C5.5–C5.7 (see Doc 14 history). |
 | 2026-11-01 | Aligned with the final manuscript (Doc 14 items A1–A20): PS and M2 parameters, SizingCheck fields, loadability margins, optional constraints with "not evaluated", Inverter tau and P*/Q*, M3 axis kinds and per-point metrics, M3 status set, M4a stability class, participation and indicators, M4b four-kind catalogue and transient class, allowed Status per type, warnings, solver defaults, Engine Port rules, 17-field RunRecord grouping; equations allowed. |
+| 2026-11-02 | Stage 1.4 (Doc 9 D-54): droop conversion confirmed (§1, §9 #1); `balance_tolerance_kw` absent = not evaluated (§3.7, §9 #3). |
+| 2026-11-02 | Stage 1.5 (Doc 9 D-55 K87–K92, to be confirmed): M3a nullable `value`/`normalised_value`/`scheme` + `reason`, relative step rule (§6.4); M3c `relative_delta_ratio` (§6.6); M4a nullable `damping_ratio`, `damping_pass` (§6.8); M4b `settling` parameter, nullable `transient_class`/`settled`, `class_reason` (§6.9); codes MULTIPLE_INVERTERS_ON_BUS (§4) and EQUILIBRIUM_INVALID (§5.4). |

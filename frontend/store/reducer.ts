@@ -38,10 +38,23 @@ export interface SizingAdvice {
   edited_values?: Partial<PsPayload>;
 }
 
+// Doc 3 §3.10: a named set of overrides on the current design; no topology changes in v1.
+export interface Override {
+  parameter_path: string;
+  value: number;
+}
+export interface Scenario {
+  id: string;
+  name: string;
+  description?: string | null;
+  overrides: Override[];
+}
+
 export interface ProjectState {
   project: ProjectMeta | null;
   design: ProjectSnapshot;
   sizingAdvice: SizingAdvice[];
+  scenarios: Scenario[];
   runRecords: RunRecord[];
   unsaved: boolean;
 }
@@ -67,8 +80,14 @@ export type ProjectAction =
   | { type: "adviceAdded"; advice: SizingAdvice }
   | { type: "adviceDecided"; id: string; state: "ACCEPTED" | "SKIPPED" }
   | { type: "runRecordAdded"; record: RunRecord }
+  // Scenarios (Doc 7 S-11, D-56 K96): not design data, so they never make M1 stale.
+  | { type: "scenarioAdded"; name: string }
+  | { type: "scenarioUpdated"; id: string; patch: Partial<Omit<Scenario, "id">> }
+  | { type: "scenarioRemoved"; id: string }
   // Project file (D-47): load replaces the open Project; save clears the unsaved flag.
   | { type: "projectLoaded"; file: ProjectFile }
+  // Example Project (Doc 12 FR-85): a new unsaved copy with its own id; the example stays as is.
+  | { type: "exampleOpened"; file: ProjectFile; id: string; created_at: string }
   | { type: "projectSaved"; modified_at: string }
   | { type: "runRecordImported"; record: RunRecord };
 
@@ -87,6 +106,7 @@ export const initialState: ProjectState = {
   project: null,
   design: emptyDesign(),
   sizingAdvice: [],
+  scenarios: [],
   runRecords: [],
   unsaved: false,
 };
@@ -97,10 +117,21 @@ type Row = { id?: string | null; [field: string]: unknown };
 // Generated ids (Doc 9 D-45 K3, D-46 K8); never reuses a number still present.
 export const ID_PREFIX: Record<Exclude<Collection, "buses">, string> = { loads: "L", lines: "LN", inverters: "INV" };
 
-export function nextId(prefix: string, rows: Row[]): string {
+export function nextId(prefix: string, rows: { id?: string | null }[]): string {
   const re = new RegExp(`^${prefix}(\\d+)$`);
   const used = rows.map((r) => re.exec(r.id ?? "")?.[1]).filter(Boolean).map(Number);
   return `${prefix}${Math.max(0, ...used) + 1}`;
+}
+
+// FR-69: editing a value copied from the Catalogue marks the element; catalog_ref is kept.
+const COPIED: Partial<Record<Collection, string[]>> = { lines: ["r_ohm_per_km", "x_ohm_per_km"], inverters: ["rated_kva"] };
+
+function markModified(collection: Collection, row: Row, patch: Row): Row {
+  const ref = row.catalog_ref as { current_limit_confirmed?: boolean } | null | undefined;
+  if (!ref || "catalog_ref" in patch) return { ...row, ...patch };
+  const copied = [...(COPIED[collection] ?? []), ...(ref.current_limit_confirmed ? ["current_limit_a"] : [])];
+  const touched = copied.some((f) => f in patch && patch[f] !== row[f]);
+  return { ...row, ...patch, ...(touched ? { catalog_ref: { ...ref, modified: true } } : {}) };
 }
 
 function edit(state: ProjectState, design: Partial<ProjectSnapshot>): ProjectState {
@@ -135,7 +166,7 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
     case "rowUpdated": {
       const rows: Row[] = d[action.collection] ?? [];
       return edit(state, {
-        [action.collection]: rows.map((x) => (x.id === action.id ? { ...x, ...action.patch } : x)),
+        [action.collection]: rows.map((x) => (x.id === action.id ? markModified(action.collection, x, action.patch) : x)),
       });
     }
     case "rowRemoved": {
@@ -157,8 +188,27 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
       };
     case "runRecordAdded":
       return { ...state, runRecords: [...state.runRecords, action.record] };
+    case "scenarioAdded":
+      return {
+        ...state,
+        scenarios: [...state.scenarios, { id: nextId("S", state.scenarios), name: action.name, overrides: [] }],
+        unsaved: true,
+      };
+    case "scenarioUpdated":
+      return {
+        ...state,
+        scenarios: state.scenarios.map((x) => (x.id === action.id ? { ...x, ...action.patch } : x)),
+        unsaved: true,
+      };
+    case "scenarioRemoved":
+      return { ...state, scenarios: state.scenarios.filter((x) => x.id !== action.id), unsaved: true };
     case "projectLoaded":
       return { ...fromProjectFile(action.file), unsaved: false };
+    case "exampleOpened": {
+      const loaded = fromProjectFile(action.file);
+      const { id, created_at } = action;
+      return { ...loaded, project: loaded.project && { ...loaded.project, id, created_at, modified_at: created_at }, unsaved: true };
+    }
     case "projectSaved":
       return state.project
         ? { ...state, project: { ...state.project, modified_at: action.modified_at }, unsaved: false }
@@ -203,6 +253,7 @@ export function fromProjectFile(f: ProjectFile): Omit<ProjectState, "unsaved"> {
       design_constraints: f.design_constraints,
     },
     sizingAdvice: f.sizing_advice as unknown as SizingAdvice[],
+    scenarios: (f.scenarios ?? []) as Scenario[],
     runRecords: f.run_records as RunRecord[],
   };
 }

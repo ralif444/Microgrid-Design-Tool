@@ -1,7 +1,13 @@
 // M2 result parts (Doc 7 §5.1, §6.4): limiting constraints / margins, "not evaluated" list,
 // loadability, SizingCheck in an advisory panel separate from SizingAdvice (FR-25, FR-16, FR-24, FR-27).
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { getMeta } from "../api-client";
 import type { LimitingConstraint, M2Payload } from "../api-types";
+
+// FR-26: a satisfied constraint with normalised margin below MARGIN_WARN (Eq. 4.18) is near its limit.
+export const nearLimit = (c: LimitingConstraint, marginWarn: number | null) =>
+  marginWarn !== null && c.margin >= 0 && c.normalised_margin < marginWarn;
 
 export const KIND_WORDS: Record<string, string> = {
   BUS_VOLTAGE_MIN: "Bus voltage, lower limit",
@@ -15,7 +21,12 @@ export const KIND_WORDS: Record<string, string> = {
 
 const fmt = (v: number | null | undefined) => (v === null || v === undefined ? "not available" : String(v));
 
-export function ConstraintTable({ label, rows }: { label: string; rows: LimitingConstraint[] }) {
+// `shortcut`: per-row link to M3a pre-filled for that constraint (Doc 12 FR-84), on S-08 only.
+export function ConstraintTable({ label, rows, shortcut = false }: { label: string; rows: LimitingConstraint[]; shortcut?: boolean }) {
+  const [marginWarn, setMarginWarn] = useState<number | null>(null);
+  useEffect(() => {
+    void getMeta().then((m) => m.ok && setMarginWarn(m.data.limits.margin_warn));
+  }, []);
   return (
     <table aria-label={label}>
       <caption>{label}</caption>
@@ -26,6 +37,7 @@ export function ConstraintTable({ label, rows }: { label: string; rows: Limiting
           <th>Value</th>
           <th>Limit</th>
           <th>Margin</th>
+          {shortcut && <th>Next step</th>}
         </tr>
       </thead>
       <tbody>
@@ -46,7 +58,19 @@ export function ConstraintTable({ label, rows }: { label: string; rows: Limiting
             <td>
               {c.limit} {c.unit}
             </td>
-            <td>{c.margin < 0 ? `Violated by ${-c.margin} ${c.unit}` : `${c.margin} ${c.unit}`}</td>
+            <td>
+              {c.margin < 0 ? `Violated by ${-c.margin} ${c.unit}` : `${c.margin} ${c.unit}`}
+              {nearLimit(c, marginWarn) && <strong className="near-limit"> (!) Near limit</strong>}
+            </td>
+            {shortcut && (
+              <td>
+                {c.kind !== "POWER_BALANCE" && (
+                  <Link href={`/sensitivity/?kind=${encodeURIComponent(c.kind)}&element=${encodeURIComponent(c.element_id)}`}>
+                    Most influential parameters for {c.element_id}
+                  </Link>
+                )}
+              </td>
+            )}
           </tr>
         ))}
       </tbody>

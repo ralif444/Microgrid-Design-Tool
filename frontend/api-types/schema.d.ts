@@ -158,6 +158,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/catalogs/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check a Catalogue file: version, shape, unique ids, selection guard per entry */
+        post: operations["import_catalog"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -369,6 +386,121 @@ export interface components {
             /** Values */
             values: number[];
         };
+        /** Catalog */
+        Catalog: {
+            /** App Version */
+            app_version: string;
+            /** Entries */
+            entries: components["schemas"]["CatalogEntry"][];
+            /** Schema Version */
+            schema_version: number;
+        };
+        /** CatalogEntry */
+        CatalogEntry: {
+            /** @default null */
+            conductor?: components["schemas"]["ConductorValues"] | null;
+            /** Id */
+            id: string;
+            /** @default null */
+            inverter?: components["schemas"]["InverterValues"] | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "INVERTER" | "CONDUCTOR";
+            /**
+             * @default {
+             *       "document": null,
+             *       "manufacturer": null,
+             *       "model": null,
+             *       "revision": null
+             *     }
+             */
+            provenance?: components["schemas"]["Provenance"];
+            /**
+             * Sources
+             * @default {}
+             */
+            sources?: {
+                [key: string]: string;
+            };
+        };
+        /** CatalogImportResponse */
+        CatalogImportResponse: {
+            /** Catalog */
+            catalog: {
+                [key: string]: unknown;
+            } | null;
+            /** Entry Checks */
+            entry_checks: components["schemas"]["EntryCheck"][];
+            file_check: components["schemas"]["FileCheckResult"];
+        };
+        /**
+         * CatalogRef
+         * @description Copied with the values into an Inverter or Line (FR-69); part of the snapshot.
+         */
+        CatalogRef: {
+            /** Catalog Schema Version */
+            catalog_schema_version: number;
+            /**
+             * Current Limit Confirmed
+             * @default false
+             */
+            current_limit_confirmed?: boolean;
+            /** Entry Id */
+            entry_id: string;
+            /**
+             * Modified
+             * @default false
+             */
+            modified?: boolean;
+            provenance: components["schemas"]["Provenance"];
+            /**
+             * Sources
+             * @default {}
+             */
+            sources?: {
+                [key: string]: string;
+            };
+            /**
+             * Tau In S
+             * @default null
+             */
+            tau_in_s?: number | null;
+        };
+        /** ConductorValues */
+        ConductorValues: {
+            /**
+             * Ampacity A
+             * @default null
+             */
+            ampacity_a?: number | null;
+            /**
+             * Ampacity Conditions
+             * @default null
+             */
+            ampacity_conditions?: string | null;
+            /**
+             * R Ohm Per Km
+             * @default null
+             */
+            r_ohm_per_km?: number | null;
+            /**
+             * Rx Conditions
+             * @default null
+             */
+            rx_conditions?: string | null;
+            /**
+             * Shunt Capacitance Uf Per Km
+             * @default null
+             */
+            shunt_capacitance_uf_per_km?: number | null;
+            /**
+             * X Ohm Per Km
+             * @default null
+             */
+            x_ohm_per_km?: number | null;
+        };
         /**
          * ConstraintKind
          * @enum {string}
@@ -381,6 +513,11 @@ export interface components {
             metric: components["schemas"]["OutputMetric"];
             /** Reference Scenario Id */
             reference_scenario_id: string;
+            /**
+             * Relative Delta Ratio
+             * @default null
+             */
+            relative_delta_ratio?: number | null;
             /** Scenario Id */
             scenario_id: string;
             /** Unit */
@@ -447,7 +584,7 @@ export interface components {
             /** Associated Element Ids */
             associated_element_ids: string[];
             /** Damping Ratio */
-            damping_ratio: number;
+            damping_ratio: number | null;
             /** Eigenvalue Index */
             eigenvalue_index: number;
             /** Frequency Hz */
@@ -487,6 +624,15 @@ export interface components {
             engine_kind: components["schemas"]["EngineKind"] | null;
             /** Engine Version */
             engine_version: string | null;
+        };
+        /** EntryCheck */
+        EntryCheck: {
+            /** Entry Id */
+            entry_id: string;
+            /** Reasons */
+            reasons: string[];
+            /** Usable */
+            usable: boolean;
         };
         /**
          * FileCheckCode
@@ -571,6 +717,8 @@ export interface components {
              * @default null
              */
             bus_id?: string | null;
+            /** @default null */
+            catalog_ref?: components["schemas"]["CatalogRef"] | null;
             /**
              * Frequency Droop Hz Per Kw
              * @default null
@@ -670,12 +818,95 @@ export interface components {
             /** S Kva */
             s_kva: number;
         };
+        /** InverterValues */
+        InverterValues: {
+            /**
+             * Current Limit A
+             * @default null
+             */
+            current_limit_a?: number | null;
+            /**
+             * Dc Voltage Max V
+             * @default null
+             */
+            dc_voltage_max_v?: number | null;
+            /**
+             * Dc Voltage Min V
+             * @default null
+             */
+            dc_voltage_min_v?: number | null;
+            /**
+             * Efficiency Ratio
+             * @default null
+             */
+            efficiency_ratio?: number | null;
+            /**
+             * Frequency Droop Max Hz Per Kw
+             * @default null
+             */
+            frequency_droop_max_hz_per_kw?: number | null;
+            /**
+             * Frequency Droop Min Hz Per Kw
+             * @default null
+             */
+            frequency_droop_min_hz_per_kw?: number | null;
+            /**
+             * Grid Forming
+             * @default null
+             */
+            grid_forming?: boolean | null;
+            /**
+             * Grid Forming Reference
+             * @default null
+             */
+            grid_forming_reference?: string | null;
+            /**
+             * Nominal Frequency Hz
+             * @default null
+             */
+            nominal_frequency_hz?: number | null;
+            /**
+             * Nominal Voltage Kv
+             * @default null
+             */
+            nominal_voltage_kv?: number | null;
+            /**
+             * Output Filter
+             * @default null
+             */
+            output_filter?: string | null;
+            /**
+             * Overload Ratio
+             * @default null
+             */
+            overload_ratio?: number | null;
+            /**
+             * Rated Kva
+             * @default null
+             */
+            rated_kva?: number | null;
+            /**
+             * Tau In S
+             * @default null
+             */
+            tau_in_s?: number | null;
+            /**
+             * Voltage Droop Max Kv Per Kvar
+             * @default null
+             */
+            voltage_droop_max_kv_per_kvar?: number | null;
+            /**
+             * Voltage Droop Min Kv Per Kvar
+             * @default null
+             */
+            voltage_droop_min_kv_per_kvar?: number | null;
+        };
         /**
          * IssueCode
          * @description Stage-1 validation codes (Doc 3 §4).
          * @enum {string}
          */
-        IssueCode: "NEGATIVE_POWER" | "EMPTY_REQUIRED" | "NOT_POSITIVE" | "PF_OUT_OF_RANGE" | "PF_DIRECTION_MISSING" | "LOAD_Q_AMBIGUOUS" | "BAND_INVERTED" | "LOADING_LIMIT_RANGE" | "DUPLICATE_ID" | "ID_FORMAT" | "DANGLING_BUS_REF" | "SELF_LOOP_LINE" | "DUPLICATE_LINE" | "ISOLATED_BUS" | "DISCONNECTED_NETWORK" | "NO_INVERTER" | "NO_LOAD" | "PROFILE_LENGTH" | "PROFILE_HOUR" | "PS_PARAMETER_INVALID" | "SIZING_MARGIN_INVALID" | "TAU_MISSING_FOR_M4" | "SENSITIVITY_STEP_INVALID" | "DISTURBANCE_INVALID" | "SWEEP_RANGE_INVALID" | "SCENARIO_PATH_INVALID" | "SWEEP_CAP_EXCEEDED" | "PARAMETER_CAP_EXCEEDED" | "DURATION_CAP_EXCEEDED" | "SCENARIO_COUNT_INVALID" | "DEPENDS_ON_NOT_ALLOWED" | "MALFORMED_REQUEST";
+        IssueCode: "NEGATIVE_POWER" | "EMPTY_REQUIRED" | "NOT_POSITIVE" | "PF_OUT_OF_RANGE" | "PF_DIRECTION_MISSING" | "LOAD_Q_AMBIGUOUS" | "BAND_INVERTED" | "LOADING_LIMIT_RANGE" | "DUPLICATE_ID" | "ID_FORMAT" | "DANGLING_BUS_REF" | "SELF_LOOP_LINE" | "DUPLICATE_LINE" | "ISOLATED_BUS" | "DISCONNECTED_NETWORK" | "NO_INVERTER" | "NO_LOAD" | "PROFILE_LENGTH" | "PROFILE_HOUR" | "PS_PARAMETER_INVALID" | "SIZING_MARGIN_INVALID" | "TAU_MISSING_FOR_M4" | "SENSITIVITY_STEP_INVALID" | "DISTURBANCE_INVALID" | "SWEEP_RANGE_INVALID" | "SCENARIO_PATH_INVALID" | "SWEEP_CAP_EXCEEDED" | "PARAMETER_CAP_EXCEEDED" | "DURATION_CAP_EXCEEDED" | "SCENARIO_COUNT_INVALID" | "DEPENDS_ON_NOT_ALLOWED" | "MULTIPLE_INVERTERS_ON_BUS" | "MALFORMED_REQUEST";
         /**
          * IssueLevel
          * @enum {string}
@@ -697,6 +928,11 @@ export interface components {
             lambda_c?: number | null;
             /** Max Loading Ratio */
             max_loading_ratio: number | null;
+            /**
+             * Max Q Sharing Error Pu
+             * @default null
+             */
+            max_q_sharing_error_pu?: number | null;
             /** Min Voltage Pu */
             min_voltage_pu: number | null;
             /**
@@ -757,6 +993,8 @@ export interface components {
         };
         /** Line */
         Line: {
+            /** @default null */
+            catalog_ref?: components["schemas"]["CatalogRef"] | null;
             /**
              * Current Limit A
              * @default null
@@ -899,6 +1137,8 @@ export interface components {
             iterations: number;
             /** Line Results */
             line_results: components["schemas"]["LineResult"][];
+            /** Sharing */
+            sharing: components["schemas"]["SharingResult"][];
             /** System Frequency Hz */
             system_frequency_hz: number;
             /** Total Load Kvar */
@@ -948,6 +1188,11 @@ export interface components {
         };
         /** M4aPayload */
         M4aPayload: {
+            /**
+             * Damping Pass
+             * @default null
+             */
+            damping_pass?: boolean | null;
             /** Dominant Modes */
             dominant_modes: components["schemas"]["DominantMode"][];
             /** Eigenvalues */
@@ -966,6 +1211,11 @@ export interface components {
         M4bPayload: {
             /** Bus Voltage Kv */
             bus_voltage_kv: components["schemas"]["BusSeries"][];
+            /**
+             * Class Reason
+             * @default null
+             */
+            class_reason?: string | null;
             /** Inverter P Kw */
             inverter_p_kw: components["schemas"]["InverterSeries"][];
             /** Inverter Q Kvar */
@@ -973,12 +1223,12 @@ export interface components {
             /** Max Rocof Hz Per S */
             max_rocof_hz_per_s: number;
             /** Settled */
-            settled: boolean;
+            settled: boolean | null;
             /** System Frequency Hz */
             system_frequency_hz: number[];
             /** Time S */
             time_s: number[];
-            transient_class: components["schemas"]["TransientClass"];
+            transient_class: components["schemas"]["TransientClass"] | null;
         };
         /** MetaInfo */
         MetaInfo: {
@@ -998,7 +1248,7 @@ export interface components {
         /** Mode */
         Mode: {
             /** Damping Ratio */
-            damping_ratio: number;
+            damping_ratio: number | null;
             /** Eigenvalue Index */
             eigenvalue_index: number;
             /** Frequency Hz */
@@ -1019,7 +1269,7 @@ export interface components {
          * OutputMetric
          * @enum {string}
          */
-        OutputMetric: "SYSTEM_FREQUENCY" | "MIN_BUS_VOLTAGE" | "MAX_BUS_VOLTAGE" | "MAX_INVERTER_LOADING" | "MAX_LINE_CURRENT" | "TOTAL_LOSSES";
+        OutputMetric: "SYSTEM_FREQUENCY" | "MIN_BUS_VOLTAGE" | "MAX_BUS_VOLTAGE" | "MAX_INVERTER_LOADING" | "MAX_LINE_CURRENT" | "TOTAL_LOSSES" | "MAX_Q_SHARING_ERROR";
         /** Participation */
         Participation: {
             /** Factors */
@@ -1137,6 +1387,32 @@ export interface components {
              * @default null
              */
             nominal_voltage_kv?: number | null;
+        };
+        /**
+         * Provenance
+         * @description As entered by the user (FR-65).
+         */
+        Provenance: {
+            /**
+             * Document
+             * @default null
+             */
+            document?: string | null;
+            /**
+             * Manufacturer
+             * @default null
+             */
+            manufacturer?: string | null;
+            /**
+             * Model
+             * @default null
+             */
+            model?: string | null;
+            /**
+             * Revision
+             * @default null
+             */
+            revision?: string | null;
         };
         /** PsPayload */
         PsPayload: {
@@ -1263,16 +1539,39 @@ export interface components {
         Sensitivity: {
             metric: components["schemas"]["OutputMetric"];
             /** Normalised Value */
-            normalised_value: number;
+            normalised_value: number | null;
             /** Parameter Path */
             parameter_path: string;
-            scheme: components["schemas"]["Scheme"];
+            /**
+             * Reason
+             * @default null
+             */
+            reason?: string | null;
+            scheme: components["schemas"]["Scheme"] | null;
             /** Status Change */
             status_change: boolean;
             /** Unit */
             unit: string;
             /** Value */
-            value: number;
+            value: number | null;
+        };
+        /**
+         * SharingResult
+         * @description Doc 12 P9 (FR-81), Eq. 12.10-12.13 from the engine; derived output (D-63).
+         */
+        SharingResult: {
+            /** Inverter Id */
+            inverter_id: string;
+            /** P Deviation Kw */
+            p_deviation_kw: number;
+            /** P Error Pu */
+            p_error_pu: number;
+            /** Q Deviation Kvar */
+            q_deviation_kvar: number;
+            /** Q Droop Not Rating Proportional */
+            q_droop_not_rating_proportional: boolean;
+            /** Q Error Pu */
+            q_error_pu: number;
         };
         /**
          * SizingAdviceItem
@@ -1704,6 +2003,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AnalysisResponse"];
+                };
+            };
+        };
+    };
+    import_catalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Catalog"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogImportResponse"];
                 };
             };
         };

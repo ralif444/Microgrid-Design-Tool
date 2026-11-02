@@ -390,6 +390,11 @@ DOC 7 COMPLETE
 - C5.1 F3 outcome edge: Status equal and result_hash equal.
 - C5.4 first phase per key flow stated in §4.
 
+## Change log 2026-11-02 (stage 1.5)
+- S-09, S-10, S-11 built (WP 1.5.2); choices recorded in Doc 9 D-56 K95–K99.
+- S-13, S-14 built (WP 1.5.3); choices recorded in Doc 9 D-57 K100–K102.
+- S-12 built (WP 1.5.5); choices recorded in Doc 9 D-58 K103.
+
 ## Change log 2026-11-01 (alignment with the final manuscript, Doc 14 D4)
 - Header: manuscript alignment, guardrail removed, phases read as stages.
 - S-06: no numeric defaults; empty limit shown as "not evaluated".

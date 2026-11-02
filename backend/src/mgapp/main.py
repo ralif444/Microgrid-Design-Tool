@@ -20,10 +20,12 @@ from pydantic import BaseModel
 from mgapp import __version__
 from mgapp.adapters.fake_engine import FakeEngine
 from mgapp.adapters.fake_engine.profiles import PROFILES
+from mgapp.adapters.real_engine import RealEngine
 from mgapp.api import error_mapper
 from mgapp.api.error_mapper import TransportFailureError
 from mgapp.api.routers import analyses, health_meta, projects, run_records
 from mgapp.config import BIND_HOST, EngineChoice, Settings
+from mgapp.domain.catalog import Catalog
 from mgapp.domain.contract import ValidationIssue
 from mgapp.domain.payloads import PAYLOAD_MODEL
 from mgapp.engine_port import EnginePort
@@ -38,9 +40,9 @@ STATIC_DIR = Path(__file__).parent / "static"
 API_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"]
 
 
-def build_engine(settings: Settings) -> EnginePort:
+def build_engine(settings: Settings, limits: Limits | None = None) -> EnginePort:
     if settings.engine is EngineChoice.REAL:
-        raise SystemExit("MGAPP_ENGINE=REAL: the Real Engine adapter arrives at stage 1.4.")
+        return RealEngine(max_points=(limits or Limits()).sweep_cap)
     name = settings.fake_profile or "default"
     if name not in PROFILES:
         raise SystemExit(f"Unknown MGAPP_FAKE_PROFILE '{name}'. Known: {', '.join(PROFILES)}.")
@@ -59,7 +61,7 @@ def create_app(
     limits = limits or Limits()
     if settings.time_budget_s_override is not None:
         limits = dataclasses.replace(limits, time_budget_s=settings.time_budget_s_override)
-    engine = engine or build_engine(settings)
+    engine = engine or build_engine(settings, limits)
 
     app = FastAPI(
         title="mgapp",
@@ -118,6 +120,7 @@ def build_openapi(app: FastAPI) -> dict[str, Any]:
         AnalysisRequestBody,
         ValidateRequest,
         ProjectFile,
+        Catalog,
         ValidationIssue,
         *PAYLOAD_MODEL.values(),
     ]
