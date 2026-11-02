@@ -18,7 +18,7 @@ Dokumen ini mengumpulkan semua hal yang belum pasti dalam kumpulan dokumen arsit
 ## 2. Assumptions (A-xx)
 | ID | Assumption | Sources (doc §) | Impact if wrong | Validation/closing action | Close by | Status |
 |---|---|---|---|---|---|---|
-| A-01 | `TIME_BUDGET` is about 30 s per request; tests use a shortened value. | Doc 1 §4, §9 A1; Doc 2 §1, FR-43, NFR-04, #2; Doc 3 §5.4, §9 #8; Doc 4 §11 #14; Doc 6 §8 #8; Doc 8 §9 #8; Doc 10 §6 #6, XG-P2 item 5; ADR-007 | Sync model may not fit real runs; wrong value causes false TIMEOUT or a hanging UI | Measure on representative cases with the Real Engine adapter; record in this register; `/api/meta` shows null until fixed | XG-P2 | OPEN |
+| A-01 | `TIME_BUDGET` is about 30 s per request; tests use a shortened value. | Doc 1 §4, §9 A1; Doc 2 §1, FR-43, NFR-04, #2; Doc 3 §5.4, §9 #8; Doc 4 §11 #14; Doc 6 §8 #8; Doc 8 §9 #8; Doc 10 §6 #6, XG-P2 item 5; ADR-007 | Sync model may not fit real runs; wrong value causes false TIMEOUT or a hanging UI | Measure on representative cases with the Real Engine adapter; record in this register; `/api/meta` shows null until fixed | XG-P2 | CLOSED 2026-11-02: measured worst M2 0.39 s (WP 1.4.3); user kept 30 s (§10.1 A-01) |
 | A-02 | `SWEEP_CAP` (M3b, M3d sweep/envelope size) value. | Doc 1 §4, §9 A2; Doc 2 §1, FR-44, #1; Doc 3 §4 notes, §9 #7; Doc 4 §4 execution guard, §11 #14; Doc 6 §8 #8; Doc 10 §6 #6; ADR-007 | Cap too low blocks useful sweeps; too high exceeds time budget | Measure after A-01; set from measurement | P4 (EG-P3 needs placeholder) | OPEN |
 | A-03 | Other caps: `SCENARIO_CAP`, `M3A_PARAMETER_CAP`, `M4B_DURATION_CAP_S`. | Doc 3 §4 (PARAMETER_CAP_EXCEEDED, DURATION_CAP_EXCEEDED), §6.4, §6.6, §6.9, §9 #7, #17; Doc 4 §11 #3, #14; Doc 6 §4 (M3a, M4b rows), §8 #4, #8; Doc 7 §3.1 gating text; Doc 10 §3.4 EG-P3, §6 #6 | Same as A-02; Compare/Stability screens would enforce wrong limits | Fix placeholder values before P3 entry; confirm by measurement at P4 | EG-P3 (placeholder), P4 (measured) | OPEN |
 | A-04 | Request body size limit (413) and 415 media-type behaviour; request size grows with M1 payload and M3c snapshots. | Doc 6 §5.2, §8 #8, #12; ADR-010 consequences | Large Projects rejected, or limit set blindly | Measure request sizes on the largest fixture Project; then fix limit | P4 | OPEN |
@@ -239,7 +239,7 @@ The rows above are kept as written on 2026-10-21. This section overrides their s
 ### 10.1 Items closed or changed by the manuscript
 | ID | New status | Basis |
 |---|---|---|
-| A-01 | TIME_BUDGET initial value 30 s, replaced by measurement at WP 1.4.3. MEASURED 2026-11-02 (D-54 K80): worst request PS 0.012 s, M1 0.014 s, M2 0.39 s; 30 s kept until the safety factor is decided. | Manuscript 4.1.3, 4.3.3 |
+| A-01 | TIME_BUDGET initial value 30 s, replaced by measurement at WP 1.4.3. MEASURED 2026-11-02 (D-54 K80): worst request PS 0.012 s, M1 0.014 s, M2 0.39 s; user decision 2026-11-02: keep 30 s (about 75× the worst measured request); revisit when M3/M4 join the Real adapter. | Manuscript 4.1.3, 4.3.3 |
 | A-02 | SWEEP_CAP initial value 1 000 points (largest planned 2-D sweep 891 points); re-set at WP 1.7.1. DECIDED (initial). | 4.1.3, 4.2.9 |
 | A-06, S-04, Q-06 | No numeric defaults for DesignConstraints; empty limit reported "not evaluated". Default nominal frequency 50 Hz stays (Tabel 4.9). CLOSED. | 4.2.4, Tabel 4.9, A.1 #16 |
 | A-07, Q-11 | MARGIN_WARN 0.05 on the normalised margin of Eq. (4.18). DECIDED (initial; re-set at WP 1.7.1). | 4.1.3 |
