@@ -57,7 +57,7 @@ Deferred (not in v1): B3 per-inverter 24-h energy adequacy (only with supervisor
 
 ### 3.3 K — Component catalogue
 
-Scope of catalogue entries: GFM inverter and conductor (Should); battery module (Could, §3.4). PV, PV inverters (grid-following), diesel, transformers and protection devices are not catalogued because the model does not represent them. The application ships no vendor data; only two or three clearly fictitious example entries. Conductor tables from an official standard are postponed (not in this version of the extension).
+Scope of catalogue entries: GFM inverter and conductor (Should); battery module (Could, §3.4). PV, PV inverters (grid-following), diesel, transformers and protection devices are not catalogued because the model does not represent them. The application ships no vendor data and no example entries; the Catalogue starts empty (Doc 9 D-59 K107). Conductor tables from an official standard are postponed (not in this version of the extension).
 
 | ID | Requirement | Priority | Acceptance criteria | Source |
 |---|---|---|---|---|
@@ -100,7 +100,7 @@ The verdict is "fit" when $\mathcal{N}_s \neq \emptyset$ (the hint uses its smal
 
 $$P_{bank,i} = \begin{cases} n_{s,i}\, n_{p,i}\, P_{mod}^{dis} & \text{if } P_{mod}^{dis} \text{ is given} \\ C\, n_{s,i}\, n_{p,i}\, E_{mod} & \text{otherwise} \end{cases} \tag{12.6}$$
 
-$$P_{dc,i} = \frac{P_i}{\eta_{dc,i}}, \qquad \eta_{dc,i} = 1 \text{ when absent (recorded as an assumption)} \tag{12.7}$$
+$$P_{dc,i} = \frac{P_i}{\eta_{dc,i}}, \qquad \eta_{dc,i} \text{ required; when absent the check is not evaluated (Doc 9 D-59 K105)} \tag{12.7}$$
 
 $$m_{bat,i} = P_{bank,i} - P_{dc,i}, \qquad \text{warning} \iff m_{bat,i} < 0 \tag{12.8}$$
 
@@ -163,7 +163,7 @@ $\Delta P_i$ is close to zero in steady state when $m_{p,i} S_{r,i}$ is equal ac
 | Catalogue document | New file type, own `schema_version`; entries of kind INVERTER, CONDUCTOR, BATTERY_MODULE with provenance (FR-64 – FR-68, FR-73). |
 | `catalog_ref` | Optional object on Inverter and Line (and on BatteryBank module): entry id, provenance, catalogue schema version, `modified` flag (FR-69). Part of the canonical snapshot. |
 | BatteryBank | New optional design entity, 0..1 per Inverter: module `catalog_ref` with copied values, series count, parallel count, optional DC efficiency (FR-75). |
-| M2 payload | New optional group `battery_check`: per Inverter {capability_kw, capability_source, dc_side_power_kw, margin_kw, warning, assumptions} (FR-76). |
+| M2 payload | New optional group `battery_check`: per Inverter {capability_kw, capability_source, dc_side_power_kw, margin_kw, warning, assumptions} (FR-76); `not_evaluated` reason when η_dc is absent (D-59 K105). |
 | M1 payload | New group `sharing`: per Inverter {p_deviation_kw, q_deviation_kvar, q_droop_not_rating_proportional} (FR-81). |
 | M3 metrics | Add `MAX_Q_SHARING_ERROR` (FR-82). |
 | M3b parameter path | Add special path `load_profile_hour` (FR-78). |
@@ -216,10 +216,10 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | # | Item | Tag |
 |---|---|---|
 | 1 | Conductor tables from an official standard: postponed by the user (2026-11-01). | POSTPONED |
-| 2 | Eq. (12.3)–(12.13) are author-derived; they enter the skripsi marked "diturunkan dalam penelitian ini" and are verified by hand calculation on D2 before use. | [ASSUMPTION] |
+| 2 | Eq. (12.3)–(12.13) are author-derived; they enter the skripsi marked "diturunkan dalam penelitian ini" and are verified by hand calculation on D2 before use. Their features (B1, B2, P11, P9) follow the Should extensions (D-59 K104). | DECIDED (user 2026-11-02) |
 | 3 | Cancelling DR-08 deviates from the manuscript's documentation requirement (Tabel A.3, "no equations in application design documents"); record the change in the alignment list and in the skripsi methodology. | KONFLIK (user-decided) |
-| 4 | B3 energy adequacy: deferred; needs supervisor approval because of the "detailed battery/dispatch" exclusion. | FUTURE |
-| 5 | Example fictitious catalogue entries: names must be clearly fictitious and not resemble real products. | [ASSUMPTION] |
+| 4 | B3 energy adequacy: out of v1 (D-59 K106). | DECIDED (user 2026-11-02) |
+| 5 | Example catalogue entries: none shipped (D-59 K107). | DECIDED (user 2026-11-02) |
 
 ## Log
 
@@ -227,3 +227,4 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 |---|---|
 | 2026-11-01 | Created from the post-seminar design session (decisions Q1–Q48). |
 | 2026-11-01 | DR-08 cancelled by the user: formulas added (Eq. 12.3–12.13, indicator definitions referenced to the manuscript); B2 capability corrected to count $n_s n_p$ modules; standard conductor tables postponed; separate M4 sweep cap dropped in favour of manuscript SWEEP_CAP 1 000. |
+| 2026-11-02 | Q-22 settled (Doc 9 D-59): Could features with Eq. 12.x after the Should ones; B2 requires η_dc (Eq. 12.7); B3 out of v1; no example catalogue entries. |
