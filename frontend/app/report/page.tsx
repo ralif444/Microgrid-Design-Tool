@@ -1,10 +1,11 @@
 "use client";
 // S-16 Report (Doc 7 §6.7; FR-48, FR-58, FR-59, FR-60): built from the latest RunRecord per
-// analysis in the store. Section toggles (Should) are not built yet; printing uses the browser.
+// analysis in the store; validity indicators and the A1–A6 checklist (Doc 12 FR-61, FR-63). Section toggles (Should) are not built yet; printing uses the browser.
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getMeta } from "../../api-client";
 import type { AnalysisType, M1Payload, M2Payload, MetaInfo, PsPayload, RunRecord } from "../../api-types";
+import { IndicatorPanel, indicatorText, useIndicatorRows } from "../../components/IndicatorPanel";
 import { M1Results } from "../../components/M1Results";
 import { ConstraintTable, KIND_WORDS, M2Results } from "../../components/M2Results";
 import { RequireProject } from "../../components/RequireProject";
@@ -13,14 +14,14 @@ import { useValidation } from "../../components/useValidation";
 import { VoltageChart } from "../../components/VoltageChart";
 import { useProject } from "../../store";
 
-// Manuscript Tabel 1.1 (Bab 1 §1.5), quoted as extracted (Doc 9 D-47 K19).
-const MODEL_ASSUMPTIONS: [string, string][] = [
-  ["A1", "Jaringan kuasi-statis (saluran dimodelkan aljabar)"],
-  ["A2", "Inverter sebagai sumber tegangan ideal inner loop dalam, filter LC, PLL, dan pembatas arus"],
-  ["A3", "Konstanta waktu filter daya ditetapkan pengguna"],
-  ["A4", "Reaktansi saluran tidak diperbarui terhadap frekuensi; tanpa shunt"],
-  ["A5", "Kendali droop primer saja"],
-  ["A6", "Tiga fasa seimbang"],
+// Manuscript Tabel 1.1 (Bab 1 §1.5), quoted as extracted (Doc 9 D-47 K19); handling per Doc 12 FR-63.
+const MODEL_ASSUMPTIONS: [string, string, string][] = [
+  ["A1", "Jaringan kuasi-statis (saluran dimodelkan aljabar)", "Checked by indicator (r_τ, κ)"],
+  ["A2", "Inverter sebagai sumber tegangan ideal inner loop dalam, filter LC, PLL, dan pembatas arus", "By construction; checked by indicator (r_in)"],
+  ["A3", "Konstanta waktu filter daya ditetapkan pengguna", "Set by the user; explored by sweep (M3b)"],
+  ["A4", "Reaktansi saluran tidak diperbarui terhadap frekuensi; tanpa shunt", "Checked by indicator (ε_X)"],
+  ["A5", "Kendali droop primer saja", "By construction"],
+  ["A6", "Tiga fasa seimbang", "By construction"],
 ];
 
 const HAS_PAYLOAD = new Set(["FEASIBLE", "INFEASIBLE"]);
@@ -32,13 +33,14 @@ function Report() {
     void getMeta().then((r) => r.ok && setMeta(r.data));
   }, []);
   const current = useValidation(design)?.snapshot_hash ?? null;
+  const indicators = useIndicatorRows();
 
   const latest = (t: AnalysisType) =>
     runRecords.findLast((r) => r.analysis_type === t && r.result.status !== "INPUT_INVALID") ?? null;
   const m1 = latest("M1");
   const m2 = latest("M2");
   const ps = latest("PS");
-  const used = [ps, m1, m2].filter((r): r is RunRecord => r !== null);
+  const used = [ps, m1, m2, latest("M4a")].filter((r): r is RunRecord => r !== null);
 
   if (used.length === 0)
     return (
@@ -142,12 +144,25 @@ function Report() {
           Sizing check: {m2p.sizing_check.basis} {m2p.sizing_check.assumptions.join(" ")}
         </p>
       )}
+      <IndicatorPanel />
       <table aria-label="Model assumptions">
-        <caption>Model assumptions (manuscript Tabel 1.1)</caption>
+        <caption>Model assumptions (manuscript Tabel 1.1) and how each is handled</caption>
+        <thead>
+          <tr><th>Assumption</th><th>Statement</th><th>Handling</th><th>Indicator values</th><th>RunRecord result hash</th></tr>
+        </thead>
         <tbody>
-          {MODEL_ASSUMPTIONS.map(([n, text]) => (
-            <tr key={n}><th scope="row">{n}</th><td lang="id">{text}</td></tr>
-          ))}
+          {MODEL_ASSUMPTIONS.map(([n, text, handling]) => {
+            const rows = indicators.filter((i) => i.assumption === n);
+            return (
+              <tr key={n}>
+                <th scope="row">{n}</th>
+                <td lang="id">{text}</td>
+                <td>{handling}</td>
+                <td>{rows.map((i) => `${i.label.split(" ")[0]}: ${indicatorText(i)}`).join("; ")}</td>
+                <td>{[...new Set(rows.flatMap((i) => (i.record ? [i.record.result_hash] : [])))].map((h) => <code key={h}>{h}</code>)}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 

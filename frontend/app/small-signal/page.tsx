@@ -1,10 +1,11 @@
 "use client";
 // S-13 Small-signal (M4a) (Doc 7 §6.6, Doc 3 §6.8): optional τ_in and damping threshold; class in
-// words; indicators with "evaluated" and reason, labelled "validity not calibrated" (stage 1.6).
+// words; validity-indicator panel (FR-61).
 import Link from "next/link";
 import { useState } from "react";
-import type { Indicator, M4aPayload } from "../../api-types";
+import type { M4aPayload } from "../../api-types";
 import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
+import { IndicatorPanel } from "../../components/IndicatorPanel";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
@@ -16,13 +17,6 @@ const CLASS_WORDS: Record<string, string> = {
   UNSTABLE: "Unstable: at least one eigenvalue has a positive real part.",
 };
 
-const INDICATORS: [keyof M4aPayload["indicators"], string][] = [
-  ["r_tau", "r_τ line-to-filter time ratio (Eq. 4.23)"],
-  ["kappa", "κ dominant-mode speed (Eq. 4.23)"],
-  ["r_in", "r_in inner-loop ratio (Eq. 4.23)"],
-  ["epsilon_x", "ε_X validity indicator (Eq. 4.1)"],
-];
-
 const yesNo = (b: boolean | null | undefined, none: string) => (b === null || b === undefined ? none : b ? "yes" : "no");
 
 function SmallSignal() {
@@ -31,7 +25,6 @@ function SmallSignal() {
   const [threshold, setThreshold] = useState<number | null>(null);
   const r = resp?.result;
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as M4aPayload) : null;
-  const uncalibrated = r?.warnings?.some((w) => w.code === "VALIDITY_NOT_CALIBRATED");
   const dom = new Set(p?.dominant_modes.map((d) => d.eigenvalue_index));
   return (
     <>
@@ -70,30 +63,7 @@ function SmallSignal() {
             <li>Damping passes the threshold: {yesNo(p.damping_pass, "not judged (no threshold or no oscillatory mode)")}</li>
             {p.outside_definition && <li>The operating point violates constraints: outside definition [19].</li>}
           </ul>
-          <table aria-label="Validity indicators">
-            <caption>Validity indicators{uncalibrated ? " (validity not calibrated)" : ""}</caption>
-            <thead>
-              <tr>
-                <th>Indicator</th>
-                <th>Value (ratio)</th>
-                <th>Evaluated</th>
-                <th>Reason</th>
-              </tr>
-            </thead>
-            <tbody>
-              {INDICATORS.map(([k, label]) => {
-                const i: Indicator = p.indicators[k];
-                return (
-                  <tr key={k}>
-                    <td>{label}</td>
-                    <td>{fmt(i.value)}</td>
-                    <td>{i.evaluated ? "yes" : "no"}</td>
-                    <td>{i.reason ?? ""}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <IndicatorPanel />
           <table aria-label="Dominant modes">
             <caption>Dominant modes</caption>
             <thead>

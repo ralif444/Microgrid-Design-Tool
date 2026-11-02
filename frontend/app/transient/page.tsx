@@ -5,6 +5,7 @@
 import { useState } from "react";
 import type { M4bPayload } from "../../api-types";
 import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
+import { IndicatorPanel } from "../../components/IndicatorPanel";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
@@ -163,6 +164,7 @@ function Transient() {
             <li>Settled: {p.settled === null || p.settled === undefined ? "not judged" : p.settled ? "yes" : "no"}</li>
             <li>Largest rate of change of frequency (descriptive): {fmt(p.max_rocof_hz_per_s)} Hz/s</li>
           </ul>
+          <IndicatorPanel />
           <TimeChart time={p.time_s} series={[{ name: "system", values: p.system_frequency_hz }]} label="System frequency" unit="Hz" />
           <TimeChart time={p.time_s} series={p.bus_voltage_kv.map((b) => ({ name: b.bus_id, values: b.values }))} label="Bus voltage" unit="kV" />
           <TimeChart time={p.time_s} series={p.inverter_p_kw.map((s) => ({ name: s.inverter_id, values: s.values }))} label="Inverter active power" unit="kW" />
