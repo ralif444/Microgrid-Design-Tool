@@ -209,3 +209,25 @@ Windows note: `uv sync` run while `engine/src/mgengine` was still empty left an 
 | 1.3.4 Sensitivity and scenarios (M3a–M3d) | 2026-11-02 | PASS: `mgengine.m3` — point evaluation M1 → M2 checks with limiting constraint (4.18), M3a central/one-sided differences (4.17) with S_norm, status_change and ranking, M3b first infeasible value, M3c absolute and relative deltas, M3d feasible fraction; new engine code CONSTRAINT_VIOLATED; Doc 9 D-52 (K50–K58). Level-1 on Tabel 4.8: dω/dλ = −1.5708 rad/s, dω/dm = −P_L/2, loading S_norm = 1, M3c frequency delta = 0.2·dω/dλ; weak feeder: BACKWARD scheme with status change next to λ_s, first infeasible grid value after λ_s; M3d 4/6 by hand; not-reported cases (base inadmissible, h = 0, y0 = 0 not ranked); λ_c point metric = 2.0. Audit in engine/docs/m3.md. Open contract gaps for Doc 9 before WP 1.4.x: `normalised_value` may be undefined (K53), relative deltas not in Doc 3 §6.6 (K55) | check passed; engine 35 passed; Python seams 308 passed; client 12 passed; e2e not rerun (no app change) |
 | 1.3.5a Stability M4a (+ M3 point metrics) | 2026-11-02 | PASS: `mgengine.m4` — M4 model (δ, P_f, Q_f; algebraic V, θ on buses without inverter), initialisation from M1 with equilibrium check, cond(g_y) ≤ 10¹², A = f_x − f_y g_y⁻¹ g_x (4.20) by central differences, modes, ζ_min, stability class (t_λ), dominant mode, participation (4.21) with cond(Φ) guard, indicators (4.23) and ε_X, outside-definition label, damping_pass; M3 points gain ZETA_MIN, RE_LAMBDA_DOM, r_τ, κ and eigenvalues; scipy added; Doc 9 D-53 (K59–K72). Level-1: oracle (4.22) on Tabel 4.8 s = −10 ± j140.86 (\|Δs\| < 10⁻³), f_osc = 22.42 Hz, ζ = 0.0708, K_s = 1.587×10⁶ W/rad, state size (N − 1) + 2N; one inverter: λ = −1/τ_P, −1/τ_Q; participation rows sum to 1; indicators by hand (R = 0 → not evaluated); load-bus reduction; two inverters on one bus → INPUT_INVALID | check passed; engine 43 passed; Python seams 308 passed; client 12 passed |
 | 1.3.5b Stability M4b | 2026-11-02 | PASS: `mgengine.m4b` — LSODA (rtol 10⁻⁸) on the M4 model with absolute angles in the ω_nom frame, Newton network solve per right-hand-side call, horizon split at the disturbance and its end, up to eight retries with step limit ÷ 4, four disturbance kinds, RoCoF, classes per Gambar C.4b with K67 settling/envelope; audit engine/docs/m4.md. Level-1 on Tabel 4.8: final ω after a 1 kW step = M1 at 11 kW (10⁻⁶ rad/s), RoCoF = m ΔP/τ, oscillation of P₁ − P₂ at f_osc = 22.42 Hz (1 %), reference-inverter outage → ω* − m P_L, ω* step → Δω*/2, reverting step returns to the start; weak feeder scaled ×2 → UNSTABLE (network lost), ×1.02 → RECOVERED_STABLE; envelope → CRITERIA_VIOLATED; short window → not settled; invalid configurations → INPUT_INVALID; deterministic | check passed; engine 51 passed (4.1 s); Python seams 308 passed; client 12 passed |
+
+## Exit gate 1.3 — Mesin perhitungan (2026-11-02)
+Criterion (Tabel 4.15): "Paket PS, M1, M2 berversi untuk masuk 1.4".
+
+| Item | Evidence |
+|---|---|
+| Versioned package | `engine/` = `mgengine` with its own pyproject, uv.lock and version (0.2.0 since WP 1.3.3, PS + M1 + M2 complete; 0.3.0 proposed on confirmation, K72); git commit on branch `tahap-1.3` |
+| PS | `mgengine.ps`, (4.2)–(4.4), (4.13); engine/docs/m2.md |
+| M1 | `mgengine.m1`, `mgengine.results`, (4.5)–(4.9), (4.1); engine/docs/m1.md |
+| M2 | `mgengine.m2`, (4.10)–(4.16), Gambar C.2a–b; engine/docs/m2.md |
+| Beyond the criterion | M3a–M3d (`mgengine.m3`), M4a and M4b (`mgengine.m4`, `mgengine.m4b`); engine/docs/m3.md, m4.md |
+| Level-1 verification (Tabel 3.4) | Tabel 4.8 oracles: f = 49.75 Hz, Δω = 1.5708 rad/s, ε_X = 0.5 %, λ_ub = 2.0, K_s = 1.587×10⁶ W/rad, s = −10 ± j140.86, f_osc = 22.42 Hz, ζ = 0.0708; sanity checks of 4.5.2 (balance, losses ≥ 0, S² = P² + Q²); 51 engine tests |
+| Isolation | Static test: only `adapters/real_engine` may import `mgengine`, the engine never imports `mgapp`; the app still runs the Fake Engine |
+| Unit audit | engine/docs/m1.md–m4.md, conversion table app → engine for WP 1.4.1 |
+
+Carried into stage 1.4 (not exit criteria):
+- Contract gaps to settle by Doc 9 entries (G6) before the adapter maps them: unit of `voltage_droop_kv_per_kvar` (line-to-line or phase, D-49 m1.md); `PsPayload.epsilon_x_ratio` not in Doc 3 §6.1 (D-51); undefined `normalised_value` (D-52 K53); relative deltas in M3c (D-52 K55); `damping_pass` output (D-53 K65); M4b settling parameters (D-53 K67); engine codes EQUILIBRIUM_INVALID, MULTIPLE_INVERTERS_ON_BUS and INPUT_INVALID from M4 (D-53).
+- Untested path: `ImplementationError` (λ_c > λ_ub), no legitimate input reaches it.
+- Level 2 (literature cases [20], [22], [45]) not yet run; stage 1.6 validates against PSIM.
+- Exit 1.2 condition (d), A2 wording, still open.
+
+**Decision: awaiting user confirmation.**
