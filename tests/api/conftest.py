@@ -1,15 +1,22 @@
-"""Seam 1 fixtures: the app built through the composition-root factory with a Fake Engine."""
+"""Seam 1 fixtures: the app built through the composition-root factory.
+
+`api` runs on both adapters (NFR-08, WP 1.4.2); `api_factory` defaults to the Fake Engine
+for scripted outcomes.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
 from fixtures.designs import PARAMETERS, scenarios, two_bus_snapshot
 
-from mgapp.adapters.fake_engine import FakeEngine, ScriptEntry
+from mgapp.adapters.fake_engine import Call, FakeEngine, ScriptEntry
+from mgapp.adapters.real_engine import RealEngine
+from mgapp.domain.contract import AnalysisRequest, AnalysisResult, EngineIdentity
 from mgapp.domain.enums import AnalysisType
 from mgapp.engine_port import EnginePort
 from mgapp.main import create_app
@@ -87,6 +94,21 @@ def api_factory() -> Callable[..., Api]:
     return make
 
 
-@pytest.fixture
-def api(api_factory: Callable[..., Api]) -> Api:
-    return api_factory()
+@dataclass
+class CountingEngine:
+    """Test wrapper giving any adapter the Fake's `call_log` for zero-call assertions."""
+
+    inner: EnginePort
+    call_log: list[Call] = field(default_factory=list)
+
+    def identity(self) -> EngineIdentity:
+        return self.inner.identity()
+
+    def run(self, request: AnalysisRequest) -> AnalysisResult:
+        self.call_log.append(Call(request.analysis_type))
+        return self.inner.run(request)
+
+
+@pytest.fixture(params=["FAKE", "REAL"])
+def api(request: pytest.FixtureRequest, api_factory: Callable[..., Api]) -> Api:
+    return api_factory(engine=CountingEngine(RealEngine()) if request.param == "REAL" else None)

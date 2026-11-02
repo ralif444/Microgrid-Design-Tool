@@ -231,3 +231,14 @@ Carried into stage 1.4 (not exit criteria):
 - Exit 1.2 condition (d), A2 wording, still open.
 
 **Decision: exit gate 1.3 PASS**, confirmed by the user 2026-11-02 (Doc 9 D-53 K72). Package version raised to 0.3.0; PR `tahap-1.3` → `tahap-1.2`.
+
+## Entry gate 1.4 — Adaptor mesin nyata (2026-11-02)
+Entry criterion (roadmap): exit 1.2 + versioned engine package + advisor review. Exit 1.2 PASS (conditional, A2 wording open); `mgengine` 0.3.0 (exit 1.3 PASS). **Advisor review (tinjauan pembimbing) not yet recorded: open entry condition** (Doc 9 D-54 K73). Decision (user 2026-11-02, D-54): start stage 1.4 on branch `tahap-1.4` (from `tahap-1.3`); exit 1.4 is not PASS before the review is recorded.
+
+| WP | Date | Result | Evidence |
+|---|---|---|---|
+| 1.4.1 Real Engine adapter PS, M1, M2 | 2026-11-02 | PASS: `adapters/real_engine` (`convert.py` units, `engine.py` mapping) — kV LL → V phase, Hz/kW and kV/kvar droop per D-54 K74, pf → Q (K83), per-line current limit (D-51 K43); results back in contract units; engine Status/Code 1:1 (K79), exceptions → UNAVAILABLE/ENGINE_ERROR, M3/M4 → UNAVAILABLE/NOT_APPLICABLE (K81); identity `0.3.0` + engine commit (K75); `MGAPP_ENGINE=REAL` builds it at startup, no router or service change; `mgengine` editable path dependency (K76) | `tools/check.py` all checks passed |
+| 1.4.2 Tests on two adapters | 2026-11-02 | PASS: contract suite C1–C9 on FAKE and REAL; seam 1 (`api` fixture) and seam 3 (verify/rerun, canonical hash) parametrized FAKE/REAL; a test wrapper gives REAL the Fake `call_log` for zero-call checks; Fake-scripted outcome tests stay on the Fake (G5). New `tests/api/test_real_engine.py`: REAL at startup, M1 49.75 Hz / 0.4 kV / 5 kW per inverter, PS 12 kVA / 6 kVA units, M2 INFEASIBLE FREQUENCY_MIN in Hz with (4.18) margin — values derived by hand from the fixture. Fixture of the "every limit set" test gains `balance_tolerance_kw` (K84) | engine 51 passed; Python seams 395 passed; client 12 passed; E2E 15 passed |
+| 1.4.3 Measuring the time budget | 2026-11-02 | MEASURED: worst PS 0.012 s, M1 0.014 s, M2 0.39 s on D1, D2, D2S, D2H (Doc 13 §4), 10 repeats, full HTTP pipeline (`tools/measure_time.py`). TIME_BUDGET stays 30 s until the user sets the safety factor (D-54 K80, A-01) | `uv run --python 3.13 python tools\measure_time.py` |
+
+Windows: `tools/gen.py --check` failed when `PYTHONIOENCODING=utf-8` was set — the child wrote UTF-8 while the parent decoded stdout with the ANSI codepage (`§` became `Â§`). Fixed at the cause: the child gets `PYTHONIOENCODING=utf-8` and the parent decodes UTF-8 explicitly; `--check` now passes with and without the variable.

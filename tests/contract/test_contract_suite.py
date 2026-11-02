@@ -14,11 +14,12 @@ from contract.suite import run_suite
 
 from mgapp.adapters.fake_engine import FakeEngine, Outcome, ScriptEntry
 from mgapp.adapters.fake_engine.defective import Defect, DefectiveFakeEngine
+from mgapp.adapters.real_engine import RealEngine
 from mgapp.domain.enums import ALLOWED_STATUS, AnalysisType, Status
 from mgapp.engine_port import EnginePort
 
-# Adapters under test. The Real Engine adapter is added here at stage 1.4 (WP 1.4.2).
-ADAPTERS: dict[str, Callable[[], EnginePort]] = {"FAKE": FakeEngine}
+# Adapters under test (NFR-08); REAL added at WP 1.4.2.
+ADAPTERS: dict[str, Callable[[], EnginePort]] = {"FAKE": FakeEngine, "REAL": RealEngine}
 
 OUTCOME_STATUS = {
     Outcome.FEASIBLE: Status.FEASIBLE,

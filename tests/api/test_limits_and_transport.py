@@ -84,7 +84,7 @@ def test_body_over_limit_413(api: Api) -> None:
 def test_health_and_meta(api: Api) -> None:
     assert api.client.get("/api/health").json() == {"status": "OK"}
     meta = api.client.get("/api/meta").json()
-    assert meta["engine"]["engine_kind"] == "FAKE"
+    assert meta["engine"]["engine_kind"] == api.engine.identity().engine_kind
     assert meta["limits"] == {
         "time_budget_s": 30.0,
         "sweep_cap": 1000,

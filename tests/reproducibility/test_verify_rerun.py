@@ -11,19 +11,27 @@ import copy
 import json
 from typing import Any
 
+import pytest
 from fastapi.testclient import TestClient
 from fixtures.designs import PARAMETERS, two_bus_snapshot
 
 from mgapp.adapters.fake_engine import FakeEngine, Outcome, ScriptEntry
+from mgapp.adapters.real_engine import RealEngine
 from mgapp.domain.contract import EngineIdentity
 from mgapp.domain.enums import AnalysisType, EngineKind
+from mgapp.engine_port import EnginePort
 from mgapp.main import create_app
 
 SOLVER = {"mismatch_tolerance_w": 0.001, "max_iterations": 50, "initial_guess": "DEFAULT"}
 
 
-def _client(engine: FakeEngine | None = None) -> TestClient:
+def _client(engine: EnginePort | None = None) -> TestClient:
     return TestClient(create_app(engine=engine or FakeEngine(), serve_static=False))
+
+
+@pytest.fixture(params=["FAKE", "REAL"])
+def client(request: pytest.FixtureRequest) -> TestClient:
+    return _client(RealEngine() if request.param == "REAL" else None)
 
 
 def _record(c: TestClient, t: str = "M1", **over: Any) -> dict[str, Any]:
@@ -45,8 +53,8 @@ def _post(c: TestClient, path: str, rec: Any) -> dict[str, Any]:
     return r.json()
 
 
-def test_fr_49_fr_50_unchanged_record_accepted() -> None:
-    c = _client()
+def test_fr_49_fr_50_unchanged_record_accepted(client: TestClient) -> None:
+    c = client
     v = _post(c, "verify", _record(c))
     assert v["file_check"]["accepted"] is True
     assert v["file_check"]["code"] == "OK"
@@ -69,8 +77,8 @@ def test_fr_50_tampered_snapshot_and_result_refused_without_engine_call() -> Non
     assert len(eng.call_log) == n
 
 
-def test_verify_refuses_unknown_version_and_non_record() -> None:
-    c = _client()
+def test_verify_refuses_unknown_version_and_non_record(client: TestClient) -> None:
+    c = client
     rec = _record(c)
     newer = _post(c, "verify", {**rec, "schema_version": 2})
     assert newer["file_check"]["code"] == "UNKNOWN_SCHEMA_VERSION"
@@ -80,8 +88,10 @@ def test_verify_refuses_unknown_version_and_non_record() -> None:
     assert _post(c, "verify", None)["file_check"]["code"] == "MALFORMED_FILE"
 
 
-def test_nfr_01_fr_52_fr_53_rerun_reproduced_new_record_imported_unchanged() -> None:
-    c = _client()
+def test_nfr_01_fr_52_fr_53_rerun_reproduced_new_record_imported_unchanged(
+    client: TestClient,
+) -> None:
+    c = client
     for t, over in (("M1", {}), ("PS", {}), ("M1", {"project_snapshot": {}})):
         rec = _record(c, t, **over)
         before = copy.deepcopy(rec)
@@ -95,8 +105,8 @@ def test_nfr_01_fr_52_fr_53_rerun_reproduced_new_record_imported_unchanged() -> 
         assert new["result_hash"] == rec["result_hash"]
 
 
-def test_rerun_of_dependent_m2_reproduced() -> None:
-    c = _client()
+def test_rerun_of_dependent_m2_reproduced(client: TestClient) -> None:
+    c = client
     m1 = _record(c)
     ref = {
         "record_id": m1["record_id"],

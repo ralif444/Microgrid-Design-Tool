@@ -19,7 +19,7 @@ Dokumen ini adalah kamus istilah dan kontrak data untuk seluruh aplikasi. Setiap
 | Ids | Strings matching `^[A-Za-z0-9_-]{1,32}$`, unique within their entity list; references by id, never by position. [ASSUMPTION] pattern and length. |
 | Timestamps | UTC, ISO 8601 with `Z` suffix. |
 | Contract units | Engineering units (manuscript 4.2.1d): kV line-to-line, kW, kvar, kVA, Ω/km, A, Hz, Hz/kW, kV/kvar, s, kWh, degrees; power = three-phase total. **One exception:** the DesignConstraints voltage band and voltage LimitingConstraints are in p.u. of `nominal_voltage_kv`. |
-| Engine units | The engine uses SI per phase internally (V phase RMS, W, VAR, rad/s, rad). Conversion is the **Real Engine adapter's job** and happens only at recorded points (√3, 2π) (manuscript 4.2.1d, Tabel D.1 rule 7). Droop conversion: $m_p\,[\mathrm{rad/(s\cdot W)}] = 2\pi\cdot 10^{-3}\cdot$ `frequency_droop_hz_per_kw`; $n_q\,[\mathrm{V/VAR}] = $ `voltage_droop_kv_per_kvar` $/\sqrt3$ (phase voltage against three-phase Q). [ASSUMPTION: confirm against the engine package at stage 1.4.] |
+| Engine units | The engine uses SI per phase internally (V phase RMS, W, VAR, rad/s, rad). Conversion is the **Real Engine adapter's job** and happens only at recorded points (√3, 2π) (manuscript 4.2.1d, Tabel D.1 rule 7). Droop conversion: $m_p\,[\mathrm{rad/(s\cdot W)}] = 2\pi\cdot 10^{-3}\cdot$ `frequency_droop_hz_per_kw`; $n_q\,[\mathrm{V/VAR}] = $ `voltage_droop_kv_per_kvar` $/\sqrt3$ (phase voltage against three-phase Q). Confirmed against `mgengine` 0.3.0 (Doc 9 D-54 K74). |
 | Balanced three-phase | The network is balanced three-phase (A6). |
 | Single voltage level | One nominal voltage for the whole Project; no transformers (manuscript 1.5). |
 | Hidden conversions | **None** in the app. The app stores and displays the value in the declared unit. |
@@ -162,7 +162,7 @@ One per Project. **No numeric defaults** (manuscript 4.2.4: standards fixing lim
 | frequency_min_hz, frequency_max_hz | number | Hz | N | > 0; min < max when both given | Reference designs use 49.75–50.25 Hz. |
 | inverter_loading_limit_ratio | number | ratio of rated_kva (μ_max) | N | 0 < μ ≤ 1 | Reference designs use 1. |
 | line_current_limit_a | number | A | N | > 0 | Project-wide; Line.current_limit_a overrides. Thermal limit is user-set (4.2.4). |
-| balance_tolerance_kw | number | kW | N | > 0 | ε_bal of the power-balance consistency check (Eq. 4.10); absent = engine default. [ASSUMPTION] |
+| balance_tolerance_kw | number | kW | N | > 0 | ε_bal of the power-balance consistency check (Eq. 4.10); absent = check not evaluated, like every other limit (Doc 9 D-54 K84). |
 
 ### 3.8 SizingAdvice
 
@@ -517,9 +517,9 @@ Versioning: equal → load; older with a chain → migrate forward step by step 
 
 | # | Item | Tag |
 |---|---|---|
-| 1 | Droop unit conversion in the Real Engine adapter (§1) to be confirmed against the engine package. | [ASSUMPTION] → stage 1.4 |
+| 1 | Droop unit conversion in the Real Engine adapter (§1) to be confirmed against the engine package. | CLOSED (Doc 9 D-54 K74) |
 | 2 | Caps: M3a parameter count, M3c SCENARIO_CAP, M4b duration; 413 body limit initial 10 MiB (Doc 6). | [ASSUMPTION] → WP 1.7.1 |
-| 3 | `balance_tolerance_kw` default and whether it belongs to DesignConstraints or solver_config. | [ASSUMPTION] |
+| 3 | `balance_tolerance_kw` default and whether it belongs to DesignConstraints or solver_config. | CLOSED: no default, stays in DesignConstraints (Doc 9 D-54 K84) |
 | 4 | Settling window and envelope criteria for the transient class (engine side). | → engine design, stage 1.3.5 |
 | 5 | Indicator thresholds (r_τ, κ, r_in, ε_X) calibrated from M5. | → stage 1.6 |
 | 6 | Doc 12 extensions (catalogue, BatteryBank, sharing metrics, profile hour axis) merged at stage 1.5. | PENDING-1.5 |
@@ -530,3 +530,4 @@ Versioning: equal → load; older with a chain → migrate forward step by step 
 |---|---|
 | 2026-10-17 – 10-21 | Revisions 1–2 and change proposals C5.5–C5.7 (see Doc 14 history). |
 | 2026-11-01 | Aligned with the final manuscript (Doc 14 items A1–A20): PS and M2 parameters, SizingCheck fields, loadability margins, optional constraints with "not evaluated", Inverter tau and P*/Q*, M3 axis kinds and per-point metrics, M3 status set, M4a stability class, participation and indicators, M4b four-kind catalogue and transient class, allowed Status per type, warnings, solver defaults, Engine Port rules, 17-field RunRecord grouping; equations allowed. |
+| 2026-11-02 | Stage 1.4 (Doc 9 D-54): droop conversion confirmed (§1, §9 #1); `balance_tolerance_kw` absent = not evaluated (§3.7, §9 #3). |

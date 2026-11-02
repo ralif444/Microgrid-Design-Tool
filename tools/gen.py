@@ -6,6 +6,7 @@ Usage: python tools/gen.py           write openapi.json and frontend/api-types/s
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import tempfile
@@ -29,7 +30,9 @@ def openapi_text() -> str:
         [uv(), "run", "--project", str(BACKEND), "python", "-c", DUMP],
         cwd=BACKEND,
         capture_output=True,
-        text=True,
+        # Windows: child stdout and parent decoding default to the ANSI codepage; force UTF-8.
+        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+        encoding="utf-8",
         check=True,
     )
     return out.stdout

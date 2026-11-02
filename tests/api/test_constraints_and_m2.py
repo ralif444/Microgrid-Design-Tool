@@ -60,6 +60,7 @@ def test_fr_16_no_warning_when_every_limit_is_set(api: Api) -> None:
         "frequency_max_hz": 50.25,
         "inverter_loading_limit_ratio": 1.0,
         "line_current_limit_a": 100.0,
+        "balance_tolerance_kw": 1.0,
     }  # FIXTURE ONLY: plumbing values, see fixtures/designs.py
     res = api.run("M2", project_snapshot=snap, depends_on=api.m1_ref(project_snapshot=snap))
     assert res["result"]["payload"]["not_evaluated"] == []
