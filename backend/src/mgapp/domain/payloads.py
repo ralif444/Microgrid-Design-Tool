@@ -76,6 +76,17 @@ class LineResult(Model):
     losses_kw: float
 
 
+class SharingResult(Model):
+    """Doc 12 P9 (FR-81), Eq. 12.10-12.13 from the engine; derived output (D-63)."""
+
+    inverter_id: str
+    p_deviation_kw: float
+    q_deviation_kvar: float
+    p_error_pu: float  # of the inverter rating
+    q_error_pu: float
+    q_droop_not_rating_proportional: bool
+
+
 class M1Payload(Model):
     system_frequency_hz: float
     bus_results: list[BusResult]
@@ -86,6 +97,7 @@ class M1Payload(Model):
     total_losses_kw: float
     iterations: int
     epsilon_x_ratio: float
+    sharing: list[SharingResult]
 
 
 # ------------------------------------------------------------------ M2 (§6.3, §3.9)
@@ -154,6 +166,7 @@ class OutputMetric(StrEnum):
     MAX_INVERTER_LOADING = "MAX_INVERTER_LOADING"
     MAX_LINE_CURRENT = "MAX_LINE_CURRENT"
     TOTAL_LOSSES = "TOTAL_LOSSES"
+    MAX_Q_SHARING_ERROR = "MAX_Q_SHARING_ERROR"  # Doc 12 FR-82; not a design constraint
 
 
 class Scheme(StrEnum):
@@ -190,6 +203,7 @@ class KeyMetrics(Model):
     max_loading_ratio: float | None
     total_losses_kw: float | None
     epsilon_x_ratio: float | None
+    max_q_sharing_error_pu: float | None = None
     lambda_c: float | None = None
     zeta_min: float | None = None
     re_lambda_dom_per_s: float | None = None

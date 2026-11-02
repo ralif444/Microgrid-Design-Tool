@@ -177,3 +177,19 @@ def test_m4b_bad_settling_is_input_invalid(real: Api) -> None:
     r = _dep(real, "M4b", **M4B, settling={"frequency_band_hz": 0.0})
     assert r["status"] == "INPUT_INVALID"
     assert r["diagnostics"]["issues"][0]["code"] == "DISTURBANCE_INVALID"
+
+
+def test_fr_81_fr_82_sharing_from_the_engine(real: Api) -> None:
+    from mgapp.domain.entities import DesignConstraints
+
+    p = real.run("M1", project_snapshot=two_bus_snapshot())["result"]["payload"]
+    # Equal ratings and droops: rating-proportional P sharing, no flag (Doc 12 Eq. 12.11, 12.13).
+    assert [s["inverter_id"] for s in p["sharing"]] == ["INV1", "INV2"]
+    assert [s["p_deviation_kw"] for s in p["sharing"]] == pytest.approx([0.0, 0.0], abs=1e-6)
+    assert not any(s["q_droop_not_rating_proportional"] for s in p["sharing"])
+    q = [i["q_kvar"] for i in p["inverter_results"]]
+    assert p["sharing"][0]["q_deviation_kvar"] == pytest.approx((q[0] - q[1]) / 2, abs=1e-9)
+    axis = {"kind": "LOAD_SCALE", "range_min": 0.5, "range_max": 1.5, "step_count": 3}
+    pts = _dep(real, "M3b", axis=axis)["payload"]["points"]
+    assert all(pt["key_metrics"]["max_q_sharing_error_pu"] is not None for pt in pts)
+    assert not any("sharing" in f for f in DesignConstraints.model_fields)

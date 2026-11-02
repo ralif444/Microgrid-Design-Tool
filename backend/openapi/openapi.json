@@ -1688,6 +1688,18 @@
             ],
             "title": "Max Loading Ratio"
           },
+          "max_q_sharing_error_pu": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Q Sharing Error Pu"
+          },
           "min_voltage_pu": {
             "anyOf": [
               {
@@ -2275,6 +2287,13 @@
             "title": "Line Results",
             "type": "array"
           },
+          "sharing": {
+            "items": {
+              "$ref": "#/components/schemas/SharingResult"
+            },
+            "title": "Sharing",
+            "type": "array"
+          },
           "system_frequency_hz": {
             "title": "System Frequency Hz",
             "type": "number"
@@ -2301,7 +2320,8 @@
           "total_load_kvar",
           "total_losses_kw",
           "iterations",
-          "epsilon_x_ratio"
+          "epsilon_x_ratio",
+          "sharing"
         ],
         "title": "M1Payload",
         "type": "object"
@@ -2727,7 +2747,8 @@
           "MAX_BUS_VOLTAGE",
           "MAX_INVERTER_LOADING",
           "MAX_LINE_CURRENT",
-          "TOTAL_LOSSES"
+          "TOTAL_LOSSES",
+          "MAX_Q_SHARING_ERROR"
         ],
         "title": "OutputMetric",
         "type": "string"
@@ -3539,6 +3560,46 @@
           "status_change"
         ],
         "title": "Sensitivity",
+        "type": "object"
+      },
+      "SharingResult": {
+        "additionalProperties": false,
+        "description": "Doc 12 P9 (FR-81), Eq. 12.10-12.13 from the engine; derived output (D-63).",
+        "properties": {
+          "inverter_id": {
+            "title": "Inverter Id",
+            "type": "string"
+          },
+          "p_deviation_kw": {
+            "title": "P Deviation Kw",
+            "type": "number"
+          },
+          "p_error_pu": {
+            "title": "P Error Pu",
+            "type": "number"
+          },
+          "q_deviation_kvar": {
+            "title": "Q Deviation Kvar",
+            "type": "number"
+          },
+          "q_droop_not_rating_proportional": {
+            "title": "Q Droop Not Rating Proportional",
+            "type": "boolean"
+          },
+          "q_error_pu": {
+            "title": "Q Error Pu",
+            "type": "number"
+          }
+        },
+        "required": [
+          "inverter_id",
+          "p_deviation_kw",
+          "q_deviation_kvar",
+          "p_error_pu",
+          "q_error_pu",
+          "q_droop_not_rating_proportional"
+        ],
+        "title": "SharingResult",
         "type": "object"
       },
       "SizingAdviceItem": {

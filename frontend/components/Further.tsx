@@ -16,6 +16,7 @@ export const METRICS: [OutputMetric, string, string][] = [
   ["MAX_INVERTER_LOADING", "Highest inverter loading", "ratio"],
   ["MAX_LINE_CURRENT", "Highest line current", "A"],
   ["TOTAL_LOSSES", "Total line losses", "kW"],
+  ["MAX_Q_SHARING_ERROR", "Largest Q-sharing error", "pu of rating"],
 ];
 
 // Numeric fields a parameter path may name (Doc 3 §3.3, §3.4, §3.6; D-56 K97).

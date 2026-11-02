@@ -181,6 +181,7 @@ METRIC_UNIT = {
     Metric.MAX_INVERTER_LOADING: "ratio",
     Metric.MAX_LINE_CURRENT: "A",
     Metric.TOTAL_LOSSES: "kW",
+    Metric.MAX_Q_SHARING_ERROR: "pu",
 }
 
 

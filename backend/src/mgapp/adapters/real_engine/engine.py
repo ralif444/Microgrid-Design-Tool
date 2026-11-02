@@ -51,6 +51,7 @@ from mgapp.domain.payloads import (
     NotEvaluated,
     PsPayload,
     RequiredInverter,
+    SharingResult,
     SizingCheck,
     SizingStorage,
     StorageEnergy,
@@ -265,6 +266,17 @@ class RealEngine:
             total_losses_kw=d.total_losses_w / 1e3,
             iterations=res.iterations,
             epsilon_x_ratio=d.epsilon_x_ratio,
+            sharing=[
+                SharingResult(
+                    inverter_id=sh.inverter_id,
+                    p_deviation_kw=sh.dp_w / 1e3,
+                    q_deviation_kvar=sh.dq_var / 1e3,
+                    p_error_pu=sh.e_p_ratio,
+                    q_error_pu=sh.e_q_ratio,
+                    q_droop_not_rating_proportional=sh.q_droop_not_rating_proportional,
+                )
+                for sh in d.sharing
+            ],
         ).model_dump(mode="json")
         return _result(
             Status.FEASIBLE,

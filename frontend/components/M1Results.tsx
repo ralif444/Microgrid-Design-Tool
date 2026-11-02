@@ -1,5 +1,5 @@
 // M1 payload with units (FR-23, NFR-05): the groups of Doc 3 §6.2 including ε_X. Placeholder
-// values come from the Fake Engine.
+// values come from the Fake Engine. Power sharing per Doc 12 P9 (FR-81): advisory, not a constraint.
 import type { M1Payload } from "../api-types";
 
 export function M1Results({ p }: { p: M1Payload }) {
@@ -37,6 +37,20 @@ export function M1Results({ p }: { p: M1Payload }) {
           {p.inverter_results.map((i) => (
             <tr key={i.inverter_id}>
               <td>{i.inverter_id}</td><td>{i.p_kw}</td><td>{i.q_kvar}</td><td>{i.s_kva}</td><td>{i.loading_ratio}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <table aria-label="Power sharing">
+        <caption>Power sharing against rating-proportional sharing (advisory, not a constraint)</caption>
+        <thead>
+          <tr><th>Inverter</th><th>ΔP (kW)</th><th>ΔQ (kvar)</th><th>P error (pu of rating)</th><th>Q error (pu of rating)</th><th>Q–V droop not rating-proportional</th></tr>
+        </thead>
+        <tbody>
+          {p.sharing.map((s) => (
+            <tr key={s.inverter_id}>
+              <td>{s.inverter_id}</td><td>{s.p_deviation_kw}</td><td>{s.q_deviation_kvar}</td><td>{s.p_error_pu}</td><td>{s.q_error_pu}</td>
+              <td>{s.q_droop_not_rating_proportional ? "yes" : "no"}</td>
             </tr>
           ))}
         </tbody>

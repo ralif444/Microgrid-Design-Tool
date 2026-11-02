@@ -31,6 +31,7 @@ class Metric(StrEnum):  # same names as the contract OutputMetric
     MAX_INVERTER_LOADING = "MAX_INVERTER_LOADING"
     MAX_LINE_CURRENT = "MAX_LINE_CURRENT"
     TOTAL_LOSSES = "TOTAL_LOSSES"
+    MAX_Q_SHARING_ERROR = "MAX_Q_SHARING_ERROR"  # Doc 12 (12.12); not a constraint
 
 
 class Scheme(StrEnum):
@@ -48,6 +49,7 @@ class KeyMetrics:
     max_line_current_a: float
     total_losses_w: float
     epsilon_x_ratio: float
+    e_q_max_ratio: float
     lambda_c: float | None = None  # only when requested (K56)
     # M4a point metrics, only when requested (D-53): None when not asked or M4a failed
     zeta_min: float | None = None
@@ -64,6 +66,7 @@ class KeyMetrics:
             Metric.MAX_INVERTER_LOADING: self.max_loading_ratio,
             Metric.MAX_LINE_CURRENT: self.max_line_current_a,
             Metric.TOTAL_LOSSES: self.total_losses_w,
+            Metric.MAX_Q_SHARING_ERROR: self.e_q_max_ratio,
         }[metric]
 
 
@@ -116,6 +119,7 @@ def evaluate(
         max_line_current_a=max((lf.current_a for lf in d.lines), default=0.0),
         total_losses_w=d.total_losses_w,
         epsilon_x_ratio=d.epsilon_x_ratio,
+        e_q_max_ratio=d.e_q_max_ratio,
         lambda_c=lam_c,
         zeta_min=stab.zeta_min if ok and m4 else None,
         re_lambda_dom_per_s=dom.real if dom is not None and m4 else None,

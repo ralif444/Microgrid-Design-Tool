@@ -18,6 +18,7 @@ from test_network_m1_m2 import _run_m1
 def test_fr_61_fr_62_fr_63_panel_and_checklist(server: Callable[[str], str], page: Page) -> None:
     enter_design(page, server("m4a-indicators"), gui_snapshot())
     _run_m1(page)
+    expect(page.get_by_role("table", name="Power sharing")).to_contain_text("INV2")  # FR-81
     panel = page.get_by_role("table", name="Validity indicators")
     expect(panel).to_contain_text("threshold not yet calibrated")
     expect(panel.locator("tbody tr").nth(0)).to_contain_text(

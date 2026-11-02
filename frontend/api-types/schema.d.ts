@@ -928,6 +928,11 @@ export interface components {
             lambda_c?: number | null;
             /** Max Loading Ratio */
             max_loading_ratio: number | null;
+            /**
+             * Max Q Sharing Error Pu
+             * @default null
+             */
+            max_q_sharing_error_pu?: number | null;
             /** Min Voltage Pu */
             min_voltage_pu: number | null;
             /**
@@ -1132,6 +1137,8 @@ export interface components {
             iterations: number;
             /** Line Results */
             line_results: components["schemas"]["LineResult"][];
+            /** Sharing */
+            sharing: components["schemas"]["SharingResult"][];
             /** System Frequency Hz */
             system_frequency_hz: number;
             /** Total Load Kvar */
@@ -1262,7 +1269,7 @@ export interface components {
          * OutputMetric
          * @enum {string}
          */
-        OutputMetric: "SYSTEM_FREQUENCY" | "MIN_BUS_VOLTAGE" | "MAX_BUS_VOLTAGE" | "MAX_INVERTER_LOADING" | "MAX_LINE_CURRENT" | "TOTAL_LOSSES";
+        OutputMetric: "SYSTEM_FREQUENCY" | "MIN_BUS_VOLTAGE" | "MAX_BUS_VOLTAGE" | "MAX_INVERTER_LOADING" | "MAX_LINE_CURRENT" | "TOTAL_LOSSES" | "MAX_Q_SHARING_ERROR";
         /** Participation */
         Participation: {
             /** Factors */
@@ -1547,6 +1554,24 @@ export interface components {
             unit: string;
             /** Value */
             value: number | null;
+        };
+        /**
+         * SharingResult
+         * @description Doc 12 P9 (FR-81), Eq. 12.10-12.13 from the engine; derived output (D-63).
+         */
+        SharingResult: {
+            /** Inverter Id */
+            inverter_id: string;
+            /** P Deviation Kw */
+            p_deviation_kw: number;
+            /** P Error Pu */
+            p_error_pu: number;
+            /** Q Deviation Kvar */
+            q_deviation_kvar: number;
+            /** Q Droop Not Rating Proportional */
+            q_droop_not_rating_proportional: boolean;
+            /** Q Error Pu */
+            q_error_pu: number;
         };
         /**
          * SizingAdviceItem

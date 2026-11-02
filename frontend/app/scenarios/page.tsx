@@ -16,6 +16,7 @@ const KEY: Record<string, keyof M3cPayload["scenario_results"][number]["key_metr
   MIN_BUS_VOLTAGE: "min_voltage_pu",
   MAX_INVERTER_LOADING: "max_loading_ratio",
   TOTAL_LOSSES: "total_losses_kw",
+  MAX_Q_SHARING_ERROR: "max_q_sharing_error_pu",
 };
 
 function OverrideEditor({ sc, paths }: { sc: Scenario; paths: string[] }) {

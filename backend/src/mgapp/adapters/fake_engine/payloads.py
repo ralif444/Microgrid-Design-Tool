@@ -41,6 +41,7 @@ from mgapp.domain.payloads import (
     ScenarioResult,
     Scheme,
     Sensitivity,
+    SharingResult,
     SizingCheck,
     StabilityClass,
     SweepPoint,
@@ -121,6 +122,17 @@ def m1(req: AnalysisRequest) -> dict[str, Any]:
         total_losses_kw=0.0,
         iterations=0,
         epsilon_x_ratio=0.0,
+        sharing=[
+            SharingResult(
+                inverter_id=i,
+                p_deviation_kw=0.0,
+                q_deviation_kvar=0.0,
+                p_error_pu=0.0,
+                q_error_pu=0.0,
+                q_droop_not_rating_proportional=False,
+            )
+            for i in _ids(s.inverters)
+        ],
     ).model_dump(mode="json")
 
 

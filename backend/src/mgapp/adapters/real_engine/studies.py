@@ -139,6 +139,7 @@ def _key_metrics(m: e_m3.KeyMetrics | None, s: ProjectSnapshot, flags: set[str])
         max_loading_ratio=m.max_loading_ratio,
         total_losses_kw=m.total_losses_w / 1e3,
         epsilon_x_ratio=m.epsilon_x_ratio,
+        max_q_sharing_error_pu=m.e_q_max_ratio,
         lambda_c=m.lambda_c,
         zeta_min=m.zeta_min if "ZETA_MIN" in flags else None,
         re_lambda_dom_per_s=m.re_lambda_dom_per_s if "RE_LAMBDA_DOM" in flags else None,

@@ -18,6 +18,7 @@ const KEY_METRICS: [keyof KeyMetrics, string][] = [
   ["max_loading_ratio", "Highest inverter loading (ratio)"],
   ["total_losses_kw", "Total line losses (kW)"],
   ["epsilon_x_ratio", "ε_X validity indicator (ratio)"],
+  ["max_q_sharing_error_pu", "Largest Q-sharing error (pu of rating)"],
 ];
 
 function Sweep() {
