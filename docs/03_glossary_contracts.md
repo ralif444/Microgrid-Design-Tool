@@ -526,7 +526,7 @@ Versioning: equal → load; older with a chain → migrate forward step by step 
 | 3 | `balance_tolerance_kw` default and whether it belongs to DesignConstraints or solver_config. | CLOSED: no default, stays in DesignConstraints (Doc 9 D-54 K84) |
 | 4 | Settling window and envelope criteria for the transient class (engine side). | → engine design, stage 1.3.5 |
 | 5 | Indicator thresholds (r_τ, κ, r_in, ε_X) calibrated from M5. | → stage 1.6 |
-| 6 | Doc 12 extensions (catalogue, BatteryBank, sharing metrics, profile hour axis) merged at stage 1.5. | PENDING-1.5 |
+| 6 | Doc 12 extensions (catalogue, BatteryBank, sharing metrics, profile hour axis) merged at stage 1.5. Catalogue document, `catalog_ref` on Inverter and Line, and unit suffixes `_v` (V) and `_uf_per_km` (µF/km) for catalogue fields applied by Doc 9 D-61; BatteryBank, sharing metrics and the profile hour axis still open. | PARTLY APPLIED |
 
 ## Log
 

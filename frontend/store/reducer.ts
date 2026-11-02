@@ -121,6 +121,17 @@ export function nextId(prefix: string, rows: { id?: string | null }[]): string {
   return `${prefix}${Math.max(0, ...used) + 1}`;
 }
 
+// FR-69: editing a value copied from the Catalogue marks the element; catalog_ref is kept.
+const COPIED: Partial<Record<Collection, string[]>> = { lines: ["r_ohm_per_km", "x_ohm_per_km"], inverters: ["rated_kva"] };
+
+function markModified(collection: Collection, row: Row, patch: Row): Row {
+  const ref = row.catalog_ref as { current_limit_confirmed?: boolean } | null | undefined;
+  if (!ref || "catalog_ref" in patch) return { ...row, ...patch };
+  const copied = [...(COPIED[collection] ?? []), ...(ref.current_limit_confirmed ? ["current_limit_a"] : [])];
+  const touched = copied.some((f) => f in patch && patch[f] !== row[f]);
+  return { ...row, ...patch, ...(touched ? { catalog_ref: { ...ref, modified: true } } : {}) };
+}
+
 function edit(state: ProjectState, design: Partial<ProjectSnapshot>): ProjectState {
   return { ...state, design: { ...state.design, ...design }, unsaved: true };
 }
@@ -153,7 +164,7 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
     case "rowUpdated": {
       const rows: Row[] = d[action.collection] ?? [];
       return edit(state, {
-        [action.collection]: rows.map((x) => (x.id === action.id ? { ...x, ...action.patch } : x)),
+        [action.collection]: rows.map((x) => (x.id === action.id ? markModified(action.collection, x, action.patch) : x)),
       });
     }
     case "rowRemoved": {

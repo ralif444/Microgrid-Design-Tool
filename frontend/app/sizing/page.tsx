@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { runAnalysis } from "../../api-client";
 import type { AnalysisResponse, PsPayload } from "../../api-types";
+import { useCatalog } from "../../components/Catalog";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
@@ -84,6 +85,22 @@ function AdvicePanel({ a }: { a: SizingAdvice }) {
         </tbody>
       </table>
       <p data-testid="advice-state">State: {a.state}</p>
+      <CatalogHints unitKva={plan.unit_rating_kva} />
+    </section>
+  );
+}
+
+// Doc 12 FR-72: a hint only; the advice values above are never changed or rounded.
+function CatalogHints({ unitKva }: { unitKva: number }) {
+  const fits = useCatalog().catalog.entries.filter(
+    (e) => e.kind === "INVERTER" && typeof e.inverter?.rated_kva === "number" && e.inverter.rated_kva >= unitKva,
+  );
+  return (
+    <section aria-label="Catalogue hints">
+      <p>
+        Catalogue inverter entries rated at least {unitKva} kVA (hint only):{" "}
+        {fits.length === 0 ? "none" : fits.map((e) => `${e.id} (${e.inverter?.rated_kva} kVA)`).join(", ")}
+      </p>
     </section>
   );
 }

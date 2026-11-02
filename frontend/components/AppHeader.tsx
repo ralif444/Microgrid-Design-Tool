@@ -28,7 +28,7 @@ export function AppHeader() {
         · 7 Further analyses: <Link href="/sensitivity/">Sensitivity (M3a)</Link>, <Link href="/sweep/">Sweep (M3b)</Link>,{" "}
         <Link href="/scenarios/">Scenarios (M3c)</Link>, <Link href="/envelope/">Envelope (M3d)</Link>,{" "}
         <Link href="/small-signal/">Small-signal (M4a)</Link>,{" "}
-        <Link href="/transient/">Transient (M4b)</Link> · <Link href="/report/">8 Report</Link> | <Link href="/runs/">Run history</Link>
+        <Link href="/transient/">Transient (M4b)</Link> · <Link href="/report/">8 Report</Link> | <Link href="/runs/">Run history</Link> · <Link href="/catalogue/">Catalogue</Link>
       </nav>
       <ProjectFileMenu />
       <EngineBadge />

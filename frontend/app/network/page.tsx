@@ -1,8 +1,11 @@
 "use client";
 // S-05 Network editor (Doc 7 §6.3): Buses, Lines, Inverters as tables (FR-10, FR-12, FR-13),
 // derived Line totals (display only, D-46 K9), live topology issues (FR-19). Diagram (FR-14)
-// and the Bus delete guard (FR-11) are Should, stage 1.5.
+// and the Bus delete guard (FR-11) are Should, stage 1.5. Catalogue entries fill Lines and
+// Inverters (Doc 12 FR-66, FR-69, FR-70).
 import { useEffect, useState } from "react";
+import type { CatalogRef } from "../../api-types";
+import { block, fromEntry, refText, useCatalog } from "../../components/Catalog";
 import { EntityTable, type Column } from "../../components/EntityTable";
 import { RequireProject } from "../../components/RequireProject";
 import { useValidation } from "../../components/useValidation";
@@ -19,6 +22,7 @@ const LINE_COLUMNS: Column[] = [
   { field: "current_limit_a", label: "Current limit, optional", kind: "number", unit: "A" },
   { label: "Total R, derived, read-only", kind: "derived", unit: "Ω", value: (r) => times(r.r_ohm_per_km, r.length_km) },
   { label: "Total X, derived, read-only", kind: "derived", unit: "Ω", value: (r) => times(r.x_ohm_per_km, r.length_km) },
+  { label: "From catalogue", kind: "derived", unit: "entry", value: (r) => refText(r.catalog_ref as CatalogRef | null) },
 ];
 
 const INVERTER_COLUMNS: Column[] = [
@@ -32,7 +36,62 @@ const INVERTER_COLUMNS: Column[] = [
   { field: "q_setpoint_kvar", label: "Q setpoint, optional", kind: "number", unit: "kvar" },
   { field: "tau_p_s", label: "τ_P, needed for M4", kind: "number", unit: "s" },
   { field: "tau_q_s", label: "τ_Q, needed for M4", kind: "number", unit: "s" },
+  { label: "From catalogue", kind: "derived", unit: "entry", value: (r) => refText(r.catalog_ref as CatalogRef | null) },
 ];
+
+// "Choose from catalogue" (Doc 12 §5 S-05): the server's guard decides; a refusal names why.
+function CatalogPick({ collection }: { collection: "lines" | "inverters" }) {
+  const { design } = useProject();
+  const dispatch = useProjectDispatch();
+  const { catalog, checks } = useCatalog();
+  const kind = collection === "lines" ? "CONDUCTOR" : "INVERTER";
+  const entries = catalog.entries.filter((e) => e.kind === kind);
+  const [element, setElement] = useState("");
+  const [entryId, setEntryId] = useState("");
+  const [confirm, setConfirm] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const entry = entries.find((e) => e.id === entryId);
+  const ampacity = entry ? block(entry).ampacity_a : null;
+  if (entries.length === 0) return <p>No {kind.toLowerCase()} entries in the Catalogue.</p>;
+  return (
+    <form
+      aria-label="Choose from catalogue"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const check = checks.find((c) => c.entry_id === entryId);
+        if (!entry || !element) return setNote("Choose an element and an entry.");
+        if (!check?.usable) return setNote(`${entryId} cannot be used: ${check?.reasons.join("; ") ?? "not checked yet"}.`);
+        dispatch({ type: "rowUpdated", collection, id: element, patch: fromEntry(entry, catalog.schema_version, confirm) });
+        setNote(`${element} filled from ${entryId}.`);
+      }}
+    >
+      <label htmlFor="pick-element">Element</label>{" "}
+      <select id="pick-element" value={element} onChange={(e) => setElement(e.target.value)}>
+        <option value="">Choose…</option>
+        {(design[collection] ?? []).map((r) => (
+          <option key={r.id}>{r.id}</option>
+        ))}
+      </select>{" "}
+      <label htmlFor="pick-entry">Catalogue entry</label>{" "}
+      <select id="pick-entry" value={entryId} onChange={(e) => setEntryId(e.target.value)}>
+        <option value="">Choose…</option>
+        {entries.map((e) => (
+          <option key={e.id} value={e.id}>
+            {e.id} {[e.provenance?.manufacturer, e.provenance?.model].filter(Boolean).join(" ")}
+          </option>
+        ))}
+      </select>{" "}
+      {typeof ampacity === "number" && (
+        <label>
+          <input type="checkbox" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} /> Also use {ampacity} A as the
+          current limit (datasheet reference conditions)
+        </label>
+      )}{" "}
+      <button type="submit">Use in Project</button>
+      {note && <p role="status">{note}</p>}
+    </form>
+  );
+}
 
 type Tab = "Buses" | "Lines" | "Inverters";
 const ROW_ENTITIES = new Set(["Bus", "Line", "Inverter"]);
@@ -107,6 +166,7 @@ function Network() {
               + Add line
             </button>
             <EntityTable collection="lines" entity="Line" label="Lines" columns={LINE_COLUMNS} issues={issues} focus={focus} />
+            <CatalogPick collection="lines" />
           </>
         )}
         {tab === "Inverters" && (
@@ -115,6 +175,7 @@ function Network() {
               + Add inverter
             </button>
             <EntityTable collection="inverters" entity="Inverter" label="Inverters" columns={INVERTER_COLUMNS} issues={issues} focus={focus} />
+            <CatalogPick collection="inverters" />
           </>
         )}
       </section>

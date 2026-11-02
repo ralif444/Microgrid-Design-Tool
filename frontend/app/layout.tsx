@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { AppHeader } from "../components/AppHeader";
+import { CatalogProvider } from "../components/Catalog";
 import { ProjectProvider } from "../store";
 import "./globals.css";
 
@@ -10,8 +11,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="id">
       <body>
         <ProjectProvider>
-          <AppHeader />
-          <main>{children}</main>
+          <CatalogProvider>
+            <AppHeader />
+            <main>{children}</main>
+          </CatalogProvider>
         </ProjectProvider>
       </body>
     </html>

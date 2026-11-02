@@ -1,6 +1,6 @@
 "use client";
 // S-13 Small-signal (M4a) (Doc 7 §6.6, Doc 3 §6.8): optional τ_in and damping threshold; class in
-// words; validity-indicator panel (FR-61).
+// words; validity-indicator panel (FR-61); τ_in pre-filled from a catalogue entry (Doc 12 FR-71).
 import Link from "next/link";
 import { useState } from "react";
 import type { M4aPayload } from "../../api-types";
@@ -20,8 +20,11 @@ const CLASS_WORDS: Record<string, string> = {
 const yesNo = (b: boolean | null | undefined, none: string) => (b === null || b === undefined ? none : b ? "yes" : "no");
 
 function SmallSignal() {
-  const { fresh, busy, resp, error, run, m2Infeasible } = useDependentRun("M4a");
-  const [tauIn, setTauIn] = useState<number | null>(null);
+  const { design, fresh, busy, resp, error, run, m2Infeasible } = useDependentRun("M4a");
+  const refs = (design.inverters ?? []).flatMap((i) => (i.catalog_ref?.tau_in_s != null ? [i.catalog_ref] : []));
+  const taus = new Set(refs.map((r) => r.tau_in_s));
+  const from = taus.size === 1 ? refs[0] : null; // one τ_in per run, so only one shared value pre-fills
+  const [tauIn, setTauIn] = useState<number | null>(from?.tau_in_s ?? null);
   const [threshold, setThreshold] = useState<number | null>(null);
   const r = resp?.result;
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as M4aPayload) : null;
@@ -44,6 +47,16 @@ function SmallSignal() {
         <p>
           <NumberField id="tau-in" label="Inner-loop time constant τ_in, optional" unit="s" value={tauIn} onChange={setTauIn} />
         </p>
+        {from && (
+          <p data-testid="tau-in-source">
+            Pre-filled from catalogue entry {from.entry_id}:{" "}
+            {[from.provenance.manufacturer, from.provenance.model, from.provenance.document, from.provenance.revision, from.sources?.tau_in_s]
+              .filter(Boolean)
+              .join(", ")}
+            .
+          </p>
+        )}
+        {taus.size > 1 && <p>Catalogue entries give different τ_in values, so none is pre-filled.</p>}
         <p>
           <NumberField id="damping-threshold" label="Damping pass threshold, optional" unit="ratio" value={threshold} onChange={setThreshold} />
         </p>

@@ -25,6 +25,7 @@ from mgapp.api import error_mapper
 from mgapp.api.error_mapper import TransportFailureError
 from mgapp.api.routers import analyses, health_meta, projects, run_records
 from mgapp.config import BIND_HOST, EngineChoice, Settings
+from mgapp.domain.catalog import Catalog
 from mgapp.domain.contract import ValidationIssue
 from mgapp.domain.payloads import PAYLOAD_MODEL
 from mgapp.engine_port import EnginePort
@@ -119,6 +120,7 @@ def build_openapi(app: FastAPI) -> dict[str, Any]:
         AnalysisRequestBody,
         ValidateRequest,
         ProjectFile,
+        Catalog,
         ValidationIssue,
         *PAYLOAD_MODEL.values(),
     ]

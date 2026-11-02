@@ -227,7 +227,7 @@ Import: the server sees content only; checks version first; migrates forward or 
 | 2 | SCENARIO_CAP, M3A_PARAMETER_CAP, M4B_DURATION_CAP_S values. | [ASSUMPTION] |
 | 3 | Fake Engine scenario selection and call recording: in-process test control, not a request field or route (manuscript 4.3.2). Mechanism in Doc 8. | DECIDED (mechanism → Doc 8) |
 | 4 | File extensions. | [ASSUMPTION] |
-| 5 | Endpoint 16 `/api/catalogs/import` (Doc 12). | PENDING-1.5 |
+| 5 | Endpoint 16 `/api/catalogs/import` (Doc 12): body `Catalog`, HTTP 200 `CatalogImportResponse` {file_check, catalog or null, entry_checks [{entry_id, usable, reasons}]}; version rules as the Project file; duplicate entry ids refused (MALFORMED_FILE). | APPLIED (Doc 9 D-61) |
 
 ## Log
 | Date | Change |

@@ -8,7 +8,7 @@ export type Column =
   | { field: string; label: string; kind: "text" }
   | { field: string; label: string; kind: "bus" }
   | { field: string; label: string; kind: "number"; unit: string }
-  | { label: string; kind: "derived"; unit: string; value: (row: Row) => number | null };
+  | { label: string; kind: "derived"; unit: string; value: (row: Row) => number | string | null };
 
 type Row = { id?: string | null; [field: string]: unknown };
 

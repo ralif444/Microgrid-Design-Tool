@@ -3,6 +3,7 @@ import type {
   AnalysisRequestBody,
   AnalysisResponse,
   AnalysisType,
+  CatalogImportResponse,
   ImportResponse,
   MetaInfo,
   RerunResponse,
@@ -60,6 +61,10 @@ const post = (body: unknown): RequestInit => ({
 // The server stores nothing; it checks the file and returns it (Doc 6 §3.6).
 export function importProject(file: unknown): Promise<ApiOutcome<ImportResponse>> {
   return call<ImportResponse>("/api/projects/import", post(file));
+}
+
+export function importCatalog(file: unknown): Promise<ApiOutcome<CatalogImportResponse>> {
+  return call<CatalogImportResponse>("/api/catalogs/import", post(file));
 }
 
 export function verifyRunRecord(record: unknown): Promise<ApiOutcome<VerifyResponse>> {
