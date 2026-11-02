@@ -90,3 +90,23 @@ def test_fr_49_fr_50_fr_53_runs_export_import_rerun_and_project_file(
     expect(page.get_by_test_id("project-name")).to_have_text("E2E project")
     page.get_by_role("link", name="Run history").click()
     expect(rows).to_have_count(2)
+
+
+def test_fr_83_compare_two_runs(server: Callable[[str], str], page: Page) -> None:
+    enter_design(page, server("default"), gui_snapshot())
+    _run_m1(page)
+    page.get_by_role("link", name="3 Network").click()
+    page.get_by_role("tab", name="Lines").click()
+    page.get_by_label("R (Ω/km) of LN1").fill("0.9")
+    _run_m1(page)
+    page.get_by_role("link", name="Run history").click()
+    rows = page.get_by_role("table", name="Runs").locator("tbody tr")
+    expect(rows).to_have_count(2)
+    ids = [str(rows.nth(k).get_attribute("data-testid")).removeprefix("run-") for k in (0, 1)]
+    page.get_by_label("First run").select_option(ids[0])
+    page.get_by_label("Second run").select_option(ids[1])
+    diff = page.get_by_role("table", name="Input differences")
+    expect(diff).to_contain_text("lines[LN1].r_ohm_per_km")
+    expect(diff).to_contain_text("0.9")
+    # Fake M1 results do not depend on R, so no result difference is expected here.
+    expect(page.get_by_text("Result differences: no differences.")).to_be_visible()

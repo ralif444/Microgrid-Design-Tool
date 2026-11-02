@@ -1,10 +1,10 @@
 "use client";
 // S-11 Scenarios and comparison (M3c) (Doc 7 §6.5): Scenarios = overrides on the current design
 // (Doc 3 §3.10), applied by the client (Doc 3 §5.1); compare two or more, first selected is the
-// reference (Doc 3 §6.6 default), explicit deltas, no ranking (4.2.5).
+// reference (Doc 3 §6.6 default), explicit deltas, no ranking (4.2.5). Static N−1 check (Doc 12 FR-80).
 import { useState } from "react";
 import type { M3cPayload } from "../../api-types";
-import { applyOverrides, fmt, InfeasibleNote, METRICS, numericPaths, unitOf, useDependentRun } from "../../components/Further";
+import { applyOverrides, fmt, nMinus1, InfeasibleNote, METRICS, numericPaths, unitOf, useDependentRun } from "../../components/Further";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
@@ -65,12 +65,18 @@ function Scenarios() {
   const { design, fresh, busy, resp, error, run, m2Infeasible } = useDependentRun("M3c");
   const [selected, setSelected] = useState<string[]>([]);
   const [name, setName] = useState("");
+  const [runLabels, setRunLabels] = useState<Record<string, string>>({});
+  const inverterCount = design.inverters?.length ?? 0;
   const paths = numericPaths(design);
   const chosen = scenarios.filter((s) => selected.includes(s.id));
 
   const r = resp?.result;
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as M3cPayload) : null;
-  const label = (id: string) => scenarios.find((s) => s.id === id)?.name ?? id;
+  const label = (id: string) => runLabels[id] ?? scenarios.find((s) => s.id === id)?.name ?? id;
+  function compare(list: { scenario_id: string; label: string; project_snapshot: typeof design }[]) {
+    setRunLabels(Object.fromEntries(list.map((x) => [x.scenario_id, x.label])));
+    void run({ parameters: {}, scenarios: list });
+  }
   return (
     <>
       <h1>Scenarios and comparison (M3c)</h1>
@@ -113,15 +119,14 @@ function Scenarios() {
       <button
         type="button"
         disabled={busy || fresh !== "current" || chosen.length < 2}
-        onClick={() =>
-          void run({
-            parameters: {},
-            scenarios: chosen.map((s) => ({ scenario_id: s.id, label: s.name, project_snapshot: applyOverrides(design, s.overrides) })),
-          })
-        }
+        onClick={() => compare(chosen.map((s) => ({ scenario_id: s.id, label: s.name, project_snapshot: applyOverrides(design, s.overrides) })))}
       >
         {busy ? "Running..." : "Compare"}
+      </button>{" "}
+      <button type="button" disabled={busy || fresh !== "current" || inverterCount < 2} onClick={() => compare(nMinus1(design))}>
+        Run N−1 check (base plus one scenario per removed inverter)
       </button>
+      {inverterCount < 2 && <p>N−1 needs at least two inverters.</p>}
       <M1BlockedNote f={fresh} />
       {error && <p role="alert">{error}</p>}
       {r && <StatusBanner type="M3c" result={r} />}

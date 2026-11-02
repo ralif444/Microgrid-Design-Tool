@@ -101,3 +101,22 @@ def test_fr_25_infeasible_lists_limiting_constraints(
     expect(table).to_contain_text("Bus voltage, lower limit")
     expect(table).to_contain_text("Inverter loading")
     expect(table).to_contain_text("Violated by")
+
+
+def test_fr_84_limiting_constraint_shortcut_to_m3a(
+    server: Callable[[str], str], page: Page
+) -> None:
+    enter_design(page, server("m2-infeasible"), gui_snapshot())
+    _run_m1(page)
+    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    _margins(page)
+    page.get_by_role("button", name="Run M2").click()
+    # Fake limiting rows are bus voltage and inverter loading; the line case is a client test.
+    page.get_by_role("link", name="Most influential parameters for INV1").click()
+    expect(page.get_by_role("heading", name="Sensitivity (M3a)")).to_be_visible()
+    expect(page.get_by_label("inverters/INV1/rated_kva")).to_be_checked()
+    expect(page.get_by_label("inverters/INV2/voltage_droop_kv_per_kvar")).to_be_checked()
+    expect(page.get_by_label("lines/LN1/r_ohm_per_km")).not_to_be_checked()
+    expect(page.get_by_label("Highest inverter loading (ratio)")).to_be_checked()
+    expect(page.get_by_label("System frequency (Hz)")).not_to_be_checked()
+    expect(page.get_by_role("status", name="Status")).to_have_count(0)  # nothing ran

@@ -1,9 +1,10 @@
 "use client";
 // S-09 Sensitivity (M3a) (Doc 7 §6.5): parameters and output metrics, one step size without a
-// default (Doc 3 §6.4); results ranked per metric by absolute normalised effect.
-import { useState } from "react";
+// default (Doc 3 §6.4); results ranked per metric by absolute normalised effect. Pre-filled from an
+// M2 limiting constraint via ?kind=&element= (Doc 12 FR-84); nothing runs until Run is pressed.
+import { useEffect, useState } from "react";
 import type { M3aPayload, OutputMetric } from "../../api-types";
-import { fmt, InfeasibleNote, METRICS, numericPaths, useDependentRun } from "../../components/Further";
+import { fmt, InfeasibleNote, METRICS, numericPaths, shortcutPrefill, useDependentRun } from "../../components/Further";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
@@ -15,6 +16,14 @@ function Sensitivity() {
   const [metrics, setMetrics] = useState<OutputMetric[]>([]);
   const [stepKind, setStepKind] = useState<"step_relative" | "step_absolute">("step_relative");
   const [step, setStep] = useState<number | null>(null);
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const pre = shortcutPrefill(design, q.get("kind") ?? "", q.get("element") ?? "");
+    if (!pre) return;
+    setPaths(pre.paths);
+    setMetrics([pre.metric]);
+    // runs once on arrival; later edits are the user's
+  }, []);
   const toggle = <T,>(xs: T[], x: T) => (xs.includes(x) ? xs.filter((y) => y !== x) : [...xs, x]);
 
   const r = resp?.result;

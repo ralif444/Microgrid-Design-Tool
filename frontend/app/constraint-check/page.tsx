@@ -89,7 +89,7 @@ function ConstraintCheck() {
           {w.message}
         </p>
       ))}
-      {r?.status === "INFEASIBLE" && <ConstraintTable label="Limiting constraints" rows={r.limiting_constraints ?? []} />}
+      {r?.status === "INFEASIBLE" && <ConstraintTable label="Limiting constraints" rows={r.limiting_constraints ?? []} shortcut />}
       {payload && <M2Results p={payload} />}
       {!resp && <p>Not run yet.</p>}
     </>

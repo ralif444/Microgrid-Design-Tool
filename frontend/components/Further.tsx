@@ -48,6 +48,7 @@ export function numericPaths(d: ProjectSnapshot): string[] {
 
 // Unit from the field suffix (Doc 3 §1); longest suffix first.
 const SUFFIX: [string, string][] = [
+  ["_hz_per_s", "Hz/s"], ["_per_s", "1/s"], ["_pu", "p.u."], ["_ratio", "ratio"], ["_kwh", "kWh"],
   ["_hz_per_kw", "Hz/kW"], ["_kv_per_kvar", "kV/kvar"], ["_ohm_per_km", "Ω/km"], ["_kva", "kVA"],
   ["_kvar", "kvar"], ["_kw", "kW"], ["_kv", "kV"], ["_hz", "Hz"], ["_km", "km"], ["_s", "s"], ["_a", "A"],
 ];
@@ -60,6 +61,41 @@ export function applyOverrides(d: ProjectSnapshot, overrides: { parameter_path: 
     out = { ...out, [c]: (out[c] ?? []).map((r) => (r.id === id ? { ...r, [f]: o.value } : r)) };
   }
   return out;
+}
+
+// Doc 12 P7 (FR-84): M3a pre-fill from a limiting constraint; null for kinds without a metric.
+const SHORTCUT_METRIC: Record<string, OutputMetric> = {
+  BUS_VOLTAGE_MIN: "MIN_BUS_VOLTAGE",
+  BUS_VOLTAGE_MAX: "MAX_BUS_VOLTAGE",
+  FREQUENCY_MIN: "SYSTEM_FREQUENCY",
+  FREQUENCY_MAX: "SYSTEM_FREQUENCY",
+  INVERTER_LOADING: "MAX_INVERTER_LOADING",
+  LINE_CURRENT: "MAX_LINE_CURRENT",
+};
+
+export function shortcutPrefill(d: ProjectSnapshot, kind: string, elementId: string): { paths: string[]; metric: OutputMetric } | null {
+  const metric = SHORTCUT_METRIC[kind];
+  if (!metric) return null;
+  const wanted = (pp: string) => {
+    const [c, id, f] = pp.split("/");
+    if (c === "inverters") return ["rated_kva", "frequency_droop_hz_per_kw", "voltage_droop_kv_per_kvar"].includes(f);
+    return c === "lines" && id === elementId && (f === "r_ohm_per_km" || f === "x_ohm_per_km");
+  };
+  return { paths: numericPaths(d).filter(wanted), metric };
+}
+
+// Doc 12 P12 (FR-80): the base design plus one snapshot per Inverter with that Inverter removed.
+// Sent as M3c snapshots only; stored Scenarios stay overrides without topology changes (D-62).
+export function nMinus1(d: ProjectSnapshot): { scenario_id: string; label: string; project_snapshot: ProjectSnapshot }[] {
+  const inv = d.inverters ?? [];
+  return [
+    { scenario_id: "BASE", label: "Base design", project_snapshot: d },
+    ...inv.map((x) => ({
+      scenario_id: `N-1 ${x.id}`,
+      label: `Without ${x.id}`,
+      project_snapshot: { ...d, inverters: inv.filter((y) => y !== x) },
+    })),
+  ];
 }
 
 // Run gate and request state shared by S-09..S-11: Run needs a current M1 (Doc 7 §3.1).

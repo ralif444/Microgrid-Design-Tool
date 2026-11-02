@@ -106,3 +106,21 @@ def test_fr_32_fr_44_envelope(server: Callable[[str], str], page: Page) -> None:
     page.get_by_role("button", name="Run envelope").click()
     _status(page, "INPUT_INVALID")
     expect(page.get_by_role("status", name="Status")).to_contain_text("SWEEP_CAP_EXCEEDED")
+
+
+def test_fr_80_static_n_minus_1(server: Callable[[str], str], page: Page) -> None:
+    enter_design(page, server("default"), gui_snapshot())
+    _run_m1(page)
+    page.get_by_role("link", name="Scenarios (M3c)").click()
+    page.get_by_role("button", name="Run N−1 check").click()
+    head = page.get_by_role("table", name="Scenario comparison").locator("thead")
+    expect(head).to_contain_text("Base design (FEASIBLE)")
+    expect(head).to_contain_text("Without INV1 (FEASIBLE)")
+    expect(head).to_contain_text("Without INV2 (FEASIBLE)")
+
+    page.get_by_role("link", name="3 Network").click()
+    page.get_by_role("tab", name="Inverters").click()
+    page.get_by_role("button", name="Delete INV2").click()
+    page.get_by_role("link", name="Scenarios (M3c)").click()
+    expect(page.get_by_role("button", name="Run N−1 check")).to_be_disabled()
+    expect(page.get_by_text("N−1 needs at least two inverters.")).to_be_visible()

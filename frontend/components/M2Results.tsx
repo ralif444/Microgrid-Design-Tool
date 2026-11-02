@@ -15,7 +15,8 @@ export const KIND_WORDS: Record<string, string> = {
 
 const fmt = (v: number | null | undefined) => (v === null || v === undefined ? "not available" : String(v));
 
-export function ConstraintTable({ label, rows }: { label: string; rows: LimitingConstraint[] }) {
+// `shortcut`: per-row link to M3a pre-filled for that constraint (Doc 12 FR-84), on S-08 only.
+export function ConstraintTable({ label, rows, shortcut = false }: { label: string; rows: LimitingConstraint[]; shortcut?: boolean }) {
   return (
     <table aria-label={label}>
       <caption>{label}</caption>
@@ -26,6 +27,7 @@ export function ConstraintTable({ label, rows }: { label: string; rows: Limiting
           <th>Value</th>
           <th>Limit</th>
           <th>Margin</th>
+          {shortcut && <th>Next step</th>}
         </tr>
       </thead>
       <tbody>
@@ -47,6 +49,15 @@ export function ConstraintTable({ label, rows }: { label: string; rows: Limiting
               {c.limit} {c.unit}
             </td>
             <td>{c.margin < 0 ? `Violated by ${-c.margin} ${c.unit}` : `${c.margin} ${c.unit}`}</td>
+            {shortcut && (
+              <td>
+                {c.kind !== "POWER_BALANCE" && (
+                  <Link href={`/sensitivity/?kind=${encodeURIComponent(c.kind)}&element=${encodeURIComponent(c.element_id)}`}>
+                    Most influential parameters for {c.element_id}
+                  </Link>
+                )}
+              </td>
+            )}
           </tr>
         ))}
       </tbody>

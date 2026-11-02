@@ -2,10 +2,13 @@
 // S-15 Run history (Doc 7 §6.8, flow F3): list, detail, export one file (FR-49), import with
 // verify (FR-50, FR-57), re-run with reproduction outcome (FR-51..FR-53). Verified imports join
 // the Project (D-47 K18); a refused file is not added, so every listed record may be re-run.
+// Compare two RunRecords in the client (Doc 12 FR-83).
 import { useEffect, useState } from "react";
 import { getMeta, rerunRunRecord, verifyRunRecord } from "../../api-client";
 import type { EngineComparison, FileCheckResult, MetaInfo, RerunResponse, RunRecord } from "../../api-types";
+import { jsonDiff } from "../../components/diff";
 import { downloadJson, NOT_JSON, readJson } from "../../components/files";
+import { unitOf } from "../../components/Further";
 import { FileCheckText } from "../../components/ProjectFileMenu";
 import { RequireProject } from "../../components/RequireProject";
 import { useProject, useProjectDispatch } from "../../store";
@@ -84,6 +87,60 @@ function Reproduction({ out }: { out: RerunResponse }) {
             ))}
           </tbody>
         </table>
+      )}
+    </section>
+  );
+}
+
+const show = (v: unknown) => (v === undefined ? "absent" : JSON.stringify(v));
+
+function Compare({ runs }: { runs: RunRecord[] }) {
+  const [a, setA] = useState("");
+  const [b, setB] = useState("");
+  const ra = runs.find((r) => r.record_id === a);
+  const rb = runs.find((r) => r.record_id === b);
+  const pick = (id: string, label: string, v: string, set: (v: string) => void) => (
+    <>
+      <label htmlFor={id}>{label}</label>{" "}
+      <select id={id} value={v} onChange={(e) => set(e.target.value)}>
+        <option value="">Choose…</option>
+        {runs.map((r) => (
+          <option key={r.record_id} value={r.record_id}>
+            {r.analysis_type} {r.record_id}
+          </option>
+        ))}
+      </select>{" "}
+    </>
+  );
+  const table = (label: string, rows: ReturnType<typeof jsonDiff>, units: boolean) =>
+    rows.length === 0 ? (
+      <p>{label}: no differences.</p>
+    ) : (
+      <table aria-label={label}>
+        <thead>
+          <tr><th>Path</th>{units && <th>Unit</th>}<th>First run</th><th>Second run</th></tr>
+        </thead>
+        <tbody>
+          {rows.map((d) => (
+            <tr key={d.path}>
+              <td>{d.path}</td>{units && <td>{unitOf(d.path)}</td>}<td>{show(d.a)}</td><td>{show(d.b)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  return (
+    <section aria-label="Compare runs">
+      <h2>Compare two runs</h2>
+      <p>
+        {pick("cmp-a", "First run", a, setA)}
+        {pick("cmp-b", "Second run", b, setB)}
+      </p>
+      {ra && rb && (
+        <>
+          {table("Input differences", jsonDiff(ra.snapshot, rb.snapshot), false)}
+          {table("Result differences", jsonDiff(ra.result.payload, rb.result.payload), true)}
+        </>
       )}
     </section>
   );
@@ -191,6 +248,7 @@ function Runs() {
           </tbody>
         </table>
       )}
+      {runRecords.length >= 2 && <Compare runs={runRecords} />}
       {rerun && <Reproduction out={rerun} />}
       {sel && <Detail r={sel} meta={meta} />}
     </>

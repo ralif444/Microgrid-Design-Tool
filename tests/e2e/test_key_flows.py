@@ -62,7 +62,9 @@ def test_f1_pipeline_infeasible_loop_to_report(server: Callable[[str], str], pag
     _fake_banner(page)
 
     # INFEASIBLE → back to the design with the limiting element marked (K22)
-    page.get_by_role("table", name="Limiting constraints").get_by_role("link", name="INV1").click()
+    page.get_by_role("table", name="Limiting constraints").get_by_role(
+        "link", name="INV1", exact=True
+    ).click()
     expect(page.get_by_role("tab", name="Inverters")).to_have_attribute("aria-selected", "true")
     row = page.locator("tr[aria-current='true']")
     expect(row).to_have_count(1)
