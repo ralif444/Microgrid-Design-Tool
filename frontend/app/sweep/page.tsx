@@ -2,19 +2,15 @@
 // S-10 Sweep (M3b) (Doc 7 §6.5, F4): one axis, range and point count; size indicator against
 // SWEEP_CAP from /api/meta; over the cap the request is still sendable and comes back
 // INPUT_INVALID / SWEEP_CAP_EXCEEDED (Doc 7 §3.1).
-import { useEffect, useState } from "react";
-import { getMeta } from "../../api-client";
+import { useState } from "react";
 import type { KeyMetrics, M3bPayload } from "../../api-types";
-import { FIELDS, fmt, InfeasibleNote, numericPaths, unitOf, useDependentRun } from "../../components/Further";
+import { SizeIndicator, useAxis, useSweepCap } from "../../components/AxisForm";
+import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { ConstraintTable } from "../../components/M2Results";
-import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
 import { SweepChart } from "../../components/SweepChart";
-
-type Kind = "PARAMETER" | "SCALE_FACTOR" | "LOAD_SCALE";
-type Coll = keyof typeof FIELDS;
 
 const KEY_METRICS: [keyof KeyMetrics, string][] = [
   ["system_frequency_hz", "System frequency (Hz)"],
@@ -26,31 +22,10 @@ const KEY_METRICS: [keyof KeyMetrics, string][] = [
 
 function Sweep() {
   const { design, fresh, busy, resp, error, run, m2Infeasible } = useDependentRun("M3b");
-  const [kind, setKind] = useState<Kind>("PARAMETER");
-  const [path, setPath] = useState("");
-  const [coll, setColl] = useState<Coll>("inverters");
-  const [field, setField] = useState(FIELDS.inverters[0]);
-  const [lo, setLo] = useState<number | null>(null);
-  const [hi, setHi] = useState<number | null>(null);
-  const [steps, setSteps] = useState<number | null>(null);
-  const [cap, setCap] = useState<number | null>(null);
+  const ax = useAxis(design);
+  const cap = useSweepCap();
   const [metric, setMetric] = useState<keyof KeyMetrics>("system_frequency_hz");
-  useEffect(() => {
-    void getMeta().then((m) => setCap(m.ok ? (m.data.limits.sweep_cap ?? null) : null));
-  }, []);
-
-  // D-56 K98: SCALE_FACTOR applies to every element of the chosen kind that has the field.
-  const elementSet = (design[coll] ?? [])
-    .filter((r) => typeof (r as Record<string, unknown>)[field] === "number")
-    .map((r) => `${coll}/${r.id}`);
-  const axis =
-    kind === "PARAMETER"
-      ? { kind, parameter_path: path }
-      : kind === "SCALE_FACTOR"
-        ? { kind, element_set: elementSet, field }
-        : { kind };
-  const unit = kind === "PARAMETER" ? unitOf(path) : "factor";
-  const over = cap !== null && steps !== null && steps > cap;
+  const unit = ax.unit;
 
   const r = resp?.result;
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as M3bPayload) : null;
@@ -63,61 +38,11 @@ function Sweep() {
         aria-label="Sweep settings"
         onSubmit={(e) => {
           e.preventDefault();
-          void run({ parameters: { axis: { ...axis, range_min: lo, range_max: hi, step_count: steps } } });
+          void run({ parameters: { axis: ax.axis } });
         }}
       >
-        <p>
-          <label htmlFor="axis-kind">Axis</label>{" "}
-          <select id="axis-kind" value={kind} onChange={(e) => setKind(e.target.value as Kind)}>
-            <option value="PARAMETER">One parameter</option>
-            <option value="SCALE_FACTOR">Shared scale factor over a set of elements</option>
-            <option value="LOAD_SCALE">Load scale λ (all loads, fixed power factor)</option>
-          </select>
-        </p>
-        {kind === "PARAMETER" && (
-          <p>
-            <label htmlFor="axis-path">Parameter</label>{" "}
-            <select id="axis-path" value={path} onChange={(e) => setPath(e.target.value)}>
-              <option value="">Choose…</option>
-              {numericPaths(design).map((pp) => (
-                <option key={pp}>{pp}</option>
-              ))}
-            </select>
-          </p>
-        )}
-        {kind === "SCALE_FACTOR" && (
-          <p>
-            <label htmlFor="axis-coll">Elements</label>{" "}
-            <select
-              id="axis-coll"
-              value={coll}
-              onChange={(e) => {
-                const c = e.target.value as Coll;
-                setColl(c);
-                setField(FIELDS[c][0]);
-              }}
-            >
-              <option value="inverters">Inverters</option>
-              <option value="loads">Loads</option>
-              <option value="lines">Lines</option>
-            </select>{" "}
-            <label htmlFor="axis-field">Field</label>{" "}
-            <select id="axis-field" value={field} onChange={(e) => setField(e.target.value)}>
-              {FIELDS[coll].map((f) => (
-                <option key={f}>{f}</option>
-              ))}
-            </select>{" "}
-            <span>Applies to: {elementSet.join(", ") || "none"}</span>
-          </p>
-        )}
-        <p>
-          <NumberField id="range-min" label="From" unit={unit} value={lo} onChange={setLo} />{" "}
-          <NumberField id="range-max" label="To" unit={unit} value={hi} onChange={setHi} />{" "}
-          <NumberField id="step-count" label="Points" unit="count" step="1" value={steps} onChange={setSteps} />
-        </p>
-        <p data-testid="sweep-size" role={over ? "alert" : undefined}>
-          Points: {steps ?? "—"} of cap {cap ?? "unknown"} ({over ? "too many; the request will be refused" : "ok"})
-        </p>
+        {ax.fields}
+        <SizeIndicator points={ax.steps} cap={cap} />
         <button type="submit" disabled={busy || fresh !== "current"}>
           {busy ? "Running..." : "Run sweep"}
         </button>
@@ -144,7 +69,7 @@ function Sweep() {
           <SweepChart
             points={p.points}
             metric={metric}
-            xLabel={`${kind === "PARAMETER" ? path : kind} (${unit})`}
+            xLabel={`${ax.name} (${unit})`}
             yLabel={KEY_METRICS.find(([k]) => k === metric)?.[1] ?? metric}
           />
           <table aria-label="Sweep points">

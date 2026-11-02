@@ -77,3 +77,32 @@ def test_fr_28_fr_29_fr_44_fr_30_fr_31_further_analyses(
     page.get_by_role("button", name="Compare").click()
     _status(page, "FEASIBLE")
     expect(page.get_by_role("table", name="Scenario comparison")).to_contain_text("Bigger load")
+
+
+def test_fr_32_fr_44_envelope(server: Callable[[str], str], page: Page) -> None:
+    """S-12 (WP 1.5.5, Could): two axes, grid of Status, feasible fraction, cap on the product."""
+    enter_design(page, server("default"), gui_snapshot())
+    _run_m1(page)
+    page.get_by_role("link", name="Envelope (M3d)").click()
+    page.get_by_label("X axis: Axis").select_option("LOAD_SCALE")
+    page.get_by_label("X axis: From (factor)").fill("0.5")
+    page.get_by_label("X axis: To (factor)").fill("1.5")
+    page.get_by_label("X axis: Points (count)").fill("2")
+    page.get_by_label("Y axis: Parameter").select_option("inverters/INV1/rated_kva")
+    page.get_by_label("Y axis: From (kVA)").fill("5")
+    page.get_by_label("Y axis: To (kVA)").fill("15")
+    page.get_by_label("Y axis: Points (count)").fill("2")
+    _numeric_inputs_have_units(page)
+    page.get_by_role("button", name="Run envelope").click()
+    _status(page, "FEASIBLE")
+    expect(page.get_by_role("table", name="Envelope grid").locator("tbody tr")).to_have_count(2)
+    expect(page.get_by_test_id("feasible-fraction")).to_have_text(
+        "Feasible fraction: 100 % of 4 points"
+    )
+
+    page.get_by_label("X axis: Points (count)").fill("40")
+    page.get_by_label("Y axis: Points (count)").fill("30")  # 1200 > cap 1000
+    expect(page.get_by_test_id("sweep-size")).to_contain_text("too many")
+    page.get_by_role("button", name="Run envelope").click()
+    _status(page, "INPUT_INVALID")
+    expect(page.get_by_role("status", name="Status")).to_contain_text("SWEEP_CAP_EXCEEDED")

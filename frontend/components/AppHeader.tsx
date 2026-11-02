@@ -26,7 +26,8 @@ export function AppHeader() {
         <Link href="/constraint-check/">6 Constraint check (M2)</Link>
         {project && fresh !== "current" && <span data-testid="step-6-blocked"> (blocked: M1 {fresh === "stale" ? "stale" : "missing"})</span>}{" "}
         · 7 Further analyses: <Link href="/sensitivity/">Sensitivity (M3a)</Link>, <Link href="/sweep/">Sweep (M3b)</Link>,{" "}
-        <Link href="/scenarios/">Scenarios (M3c)</Link>, <Link href="/small-signal/">Small-signal (M4a)</Link>,{" "}
+        <Link href="/scenarios/">Scenarios (M3c)</Link>, <Link href="/envelope/">Envelope (M3d)</Link>,{" "}
+        <Link href="/small-signal/">Small-signal (M4a)</Link>,{" "}
         <Link href="/transient/">Transient (M4b)</Link> · <Link href="/report/">8 Report</Link> | <Link href="/runs/">Run history</Link>
       </nav>
       <ProjectFileMenu />

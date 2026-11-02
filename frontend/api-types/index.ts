@@ -39,3 +39,4 @@ export type M3cPayload = S["M3cPayload"];
 export type M4aPayload = S["M4aPayload"];
 export type M4bPayload = S["M4bPayload"];
 export type Indicator = S["Indicator"];
+export type M3dPayload = S["M3dPayload"];
