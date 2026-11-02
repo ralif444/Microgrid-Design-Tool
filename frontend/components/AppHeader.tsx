@@ -1,6 +1,6 @@
 "use client";
 // Global header (Doc 7 §2): Project name, unsaved indicator, pipeline stepper, engine badge.
-// Step 7 (M3/M4) appears in stage 1.3; Run history is reachable at any time (Doc 7 §3).
+// Step 7 lists the further analyses (stage 1.5, D-56 K95); Run history is reachable at any time (Doc 7 §3).
 import Link from "next/link";
 import { m1Ref, useProject } from "../store";
 import { EngineBadge } from "./EngineBadge";
@@ -25,7 +25,8 @@ export function AppHeader() {
         <Link href="/constraints/">4 Constraints</Link> · <Link href="/power-flow/">5 Power flow (M1)</Link> ·{" "}
         <Link href="/constraint-check/">6 Constraint check (M2)</Link>
         {project && fresh !== "current" && <span data-testid="step-6-blocked"> (blocked: M1 {fresh === "stale" ? "stale" : "missing"})</span>}{" "}
-        · <Link href="/report/">8 Report</Link> | <Link href="/runs/">Run history</Link>
+        · 7 Further analyses: <Link href="/sensitivity/">Sensitivity (M3a)</Link>, <Link href="/sweep/">Sweep (M3b)</Link>,{" "}
+        <Link href="/scenarios/">Scenarios (M3c)</Link> · <Link href="/report/">8 Report</Link> | <Link href="/runs/">Run history</Link>
       </nav>
       <ProjectFileMenu />
       <EngineBadge />
