@@ -36,3 +36,6 @@ export type SweepPoint = S["SweepPoint"];
 export type M3aPayload = S["M3aPayload"];
 export type M3bPayload = S["M3bPayload"];
 export type M3cPayload = S["M3cPayload"];
+export type M4aPayload = S["M4aPayload"];
+export type M4bPayload = S["M4bPayload"];
+export type Indicator = S["Indicator"];
