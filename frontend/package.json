@@ -1,0 +1,28 @@
+{
+  "name": "mgapp-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=26.7.0"
+  },
+  "scripts": {
+    "build": "next build",
+    "typecheck": "tsc --noEmit",
+    "depcruise": "depcruise --config .dependency-cruiser.cjs app components store api-client api-types",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "next": "16.4.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "dependency-cruiser": "18.7.0",
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3",
+    "vitest": "5.0.5"
+  }
+}

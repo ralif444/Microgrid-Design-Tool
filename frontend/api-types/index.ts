@@ -1,0 +1,32 @@
+// Convenience aliases over the GENERATED schema (do not edit schema.d.ts by hand).
+import type { components } from "./schema";
+
+type S = components["schemas"];
+export type AnalysisType = S["AnalysisType"];
+export type AnalysisRequestBody = S["AnalysisRequestBody"];
+export type AnalysisResponse = S["AnalysisResponse"];
+export type AnalysisResult = S["AnalysisResult"];
+export type RunRecord = S["RunRecord"];
+export type MetaInfo = S["MetaInfo"];
+export type ValidationIssue = S["ValidationIssue"];
+export type M1Payload = S["M1Payload"];
+export type ProjectSnapshot = S["ProjectSnapshot"];
+export type Status = S["Status"];
+export type Bus = S["Bus"];
+export type Load = S["Load"];
+export type PsPayload = S["PsPayload"];
+export type ValidateRequest = S["ValidateRequest"];
+export type ValidationReport = S["ValidationReport"];
+export type Line = S["Line"];
+export type Inverter = S["Inverter"];
+export type DesignConstraints = S["DesignConstraints"];
+export type RunRecordRef = S["RunRecordRef"];
+export type M2Payload = S["M2Payload"];
+export type LimitingConstraint = S["LimitingConstraint"];
+export type ProjectFile = S["ProjectFile"];
+export type ImportResponse = S["ImportResponse"];
+export type VerifyResponse = S["VerifyResponse"];
+export type RerunResponse = S["RerunResponse"];
+export type FileCheckResult = S["FileCheckResult"];
+export type EngineComparison = S["EngineComparison"];
+export type SizingCheck = S["SizingCheck"];

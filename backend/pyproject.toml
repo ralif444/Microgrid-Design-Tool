@@ -1,0 +1,104 @@
+[project]
+name = "mgapp"
+version = "0.1.0"
+description = "Local web app for early-stage design of islanded droop-controlled AC microgrids (App v1)."
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "fastapi",
+    "pydantic",
+    "uvicorn",
+]
+
+[project.scripts]
+mgapp = "mgapp.main:run"
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "httpx",
+    "ruff",
+    "mypy",
+    "import-linter",
+    "playwright==1.63.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mgapp"]
+
+# ---------------------------------------------------------------- tests
+[tool.pytest.ini_options]
+# Tests live at the repository root (Doc 8 §1); run via `python tools/test.py`.
+testpaths = ["../tests"]
+addopts = "-q"
+filterwarnings = ["ignore:Using `httpx` with `starlette.testclient` is deprecated"]
+
+# ---------------------------------------------------------------- lint
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "SIM"]
+
+[tool.mypy]
+strict = true
+plugins = ["pydantic.mypy"]
+files = ["src"]
+
+# ---------------------------------------------------------------- import rules
+# Doc 4 §6, Doc 8 §2, manuscript 4.3.1. Any violation fails `python tools/check.py`.
+[tool.importlinter]
+root_package = "mgapp"
+
+[[tool.importlinter.contracts]]
+name = "domain is the inner module and imports nothing else in the app"
+type = "forbidden"
+source_modules = ["mgapp.domain"]
+forbidden_modules = [
+    "mgapp.engine_port", "mgapp.adapters", "mgapp.services", "mgapp.api",
+    "mgapp.main", "mgapp.config",
+]
+
+[[tool.importlinter.contracts]]
+name = "engine_port depends only on domain"
+type = "forbidden"
+source_modules = ["mgapp.engine_port"]
+forbidden_modules = ["mgapp.adapters", "mgapp.services", "mgapp.api", "mgapp.main", "mgapp.config"]
+
+[[tool.importlinter.contracts]]
+name = "adapters never import services, api or the composition root"
+type = "forbidden"
+source_modules = ["mgapp.adapters"]
+forbidden_modules = ["mgapp.services", "mgapp.api", "mgapp.main", "mgapp.config"]
+
+[[tool.importlinter.contracts]]
+name = "Fake Engine and Real Engine adapter are independent"
+type = "independence"
+modules = ["mgapp.adapters.fake_engine", "mgapp.adapters.real_engine"]
+
+[[tool.importlinter.contracts]]
+name = "services never import concrete adapters, api or the composition root"
+type = "forbidden"
+source_modules = ["mgapp.services"]
+forbidden_modules = ["mgapp.adapters", "mgapp.api", "mgapp.main", "mgapp.config"]
+
+[[tool.importlinter.contracts]]
+name = "among services only the execution guard imports the Engine Port"
+type = "forbidden"
+source_modules = ["mgapp.services"]
+forbidden_modules = ["mgapp.engine_port"]
+ignore_imports = ["mgapp.services.guard -> mgapp.engine_port"]
+# The guard module is added in WP 1.1.4; keep the rule valid before it exists.
+unmatched_ignore_imports_alerting = "none"
+allow_indirect_imports = "True"
+
+[[tool.importlinter.contracts]]
+name = "api never imports the Engine Port or adapters"
+type = "forbidden"
+source_modules = ["mgapp.api"]
+forbidden_modules = ["mgapp.engine_port", "mgapp.adapters", "mgapp.main"]
+allow_indirect_imports = "True"
