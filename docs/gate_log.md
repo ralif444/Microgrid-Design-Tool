@@ -243,4 +243,11 @@ Entry criterion (roadmap): exit 1.2 + versioned engine package + advisor review.
 
 **Exit 1.4: not PASS.** Contract suite and seams 1, 3 pass on REAL; TIME_BUDGET measured and kept at 30 s (A-01 CLOSED); K83–K85 confirmed by the user. Open: advisor review (K73), M5 steady archive (K82, stage 1.6). Decision (user 2026-11-02, D-55): proceed to stage 1.5 with these open.
 
+## Stage 1.5 — Fitur lanjutan (2026-11-02)
+Entry: exit 1.4 not PASS (advisor review, M5 archive open); user decision D-55 to proceed. Branch `tahap-1.5`.
+
+| WP | Date | Result | Evidence |
+|---|---|---|---|
+| 1.5.4 Real Engine adapter M3a–M3d, M4a–M4b | 2026-11-02 | PASS: `adapters/real_engine/studies.py` applies paths, axes (PARAMETER, SCALE_FACTOR, LOAD_SCALE) and scenarios in contract units and converts back (D-55 K92–K93); M4a/M4b map engine Status/Code incl. INPUT_INVALID with issues; contract gaps of exit 1.3 closed by D-55 K87–K91 (Doc 3 updated, OpenAPI and TS types regenerated). REAL tests derived by hand: M3a df/dP = −0.025 Hz/kW, M3b f(λ) = 50 − 0.25λ, M3c Δf = −0.05 Hz, M4a state count (N − 1) + 2N, M4b final f = M1 after the step. The two-inverter fixture is small-signal unstable (λ = 6.1 ± j117 s⁻¹); M4b tests use one inverter | contract suite and seams 1, 3 on FAKE and REAL |
+
 Windows: `tools/gen.py --check` failed when `PYTHONIOENCODING=utf-8` was set — the child wrote UTF-8 while the parent decoded stdout with the ANSI codepage (`§` became `Â§`). Fixed at the cause: the child gets `PYTHONIOENCODING=utf-8` and the parent decodes UTF-8 explicitly; `--check` now passes with and without the variable.

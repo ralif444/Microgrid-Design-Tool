@@ -1,8 +1,8 @@
-"""Real Engine adapter for PS, M1, M2 (WP 1.4.1; Doc 9 D-51, D-54).
+"""Real Engine adapter (WP 1.4.1, 1.5.4; Doc 9 D-51, D-54, D-55).
 
 Calls `mgengine` in SI, converts to contract units, maps engine Status/Code 1:1 to the
 contract (the names match, Doc 3 §5.4). Any exception becomes UNAVAILABLE / ENGINE_ERROR
-(Engine Port rule 4); other analysis types return UNAVAILABLE / NOT_APPLICABLE (D-54 K81).
+(Engine Port rule 4). PS, M1, M2 here; M3a–M3d, M4a, M4b in `studies.py`.
 """
 
 from __future__ import annotations
@@ -12,7 +12,6 @@ import math
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
 
 import mgengine
 from mgengine import m1 as e_m1
@@ -22,15 +21,16 @@ from mgengine.results import m1_details
 from mgengine.types import Status as EStatus
 
 from mgapp.adapters.real_engine import convert as cv
+from mgapp.adapters.real_engine import studies
+from mgapp.adapters.real_engine.studies import constraint
+from mgapp.adapters.real_engine.studies import result as _result
 from mgapp.domain.contract import (
     AnalysisRequest,
     AnalysisResult,
     EngineIdentity,
-    LimitingConstraint,
     Warning,
 )
 from mgapp.domain.enums import (
-    CONSTRAINT_UNIT,
     AnalysisType,
     ConstraintKind,
     EngineKind,
@@ -66,10 +66,6 @@ MSG_ENGINE_ERROR = (
     "The calculation engine failed unexpectedly (internal error, not a solver result). "
     "Run again; if it repeats, report the RunRecord."
 )
-MSG_NOT_APPLICABLE = (
-    "This analysis is not available in the Real Engine adapter yet (stage 1.4 covers PS, M1 "
-    "and M2). Choose another analysis."
-)
 _M1_MESSAGES = {
     EStatus.SOLVER_FAILED: "The power flow did not converge ({code}). This is a calculation "
     "problem, not a limit violation. Check inverter droop and line data, then run again.",
@@ -94,26 +90,6 @@ def engine_commit() -> str:
     except (OSError, subprocess.SubprocessError):
         return "unknown"
     return out or "unknown"
-
-
-def _result(
-    status: Status,
-    code: StatusCode,
-    message: str,
-    payload: dict[str, Any] | None = None,
-    limiting: list[LimitingConstraint] | None = None,
-    warnings: list[Warning] | None = None,
-    diagnostics: dict[str, Any] | None = None,
-) -> AnalysisResult:
-    return AnalysisResult(
-        status=status,
-        status_code=code,
-        message=message,
-        payload=payload,
-        limiting_constraints=limiting or [],
-        warnings=warnings or [],
-        diagnostics={"engine": "REAL", **(diagnostics or {})},
-    )
 
 
 def _storage_assumptions(st: e_ps.StorageEnergy) -> list[str]:
@@ -152,10 +128,20 @@ class RealEngine:
                 return self._m1(request)
             if t is AnalysisType.M2:
                 return self._m2(request)
+            if t is AnalysisType.M3A:
+                return studies.m3a(request)
+            if t is AnalysisType.M3B:
+                return studies.m3b(request, self.max_points)
+            if t is AnalysisType.M3C:
+                return studies.m3c(request)
+            if t is AnalysisType.M3D:
+                return studies.m3d(request, self.max_points)
+            if t is AnalysisType.M4A:
+                return studies.m4a(request)
+            return studies.m4b(request)
         except Exception:  # noqa: BLE001 - rule 4: never raise; e.g. m2.ImplementationError (K45)
             log.exception("Real Engine failed on %s", t)
             return _result(Status.UNAVAILABLE, StatusCode.ENGINE_ERROR, MSG_ENGINE_ERROR)
-        return _result(Status.UNAVAILABLE, StatusCode.NOT_APPLICABLE, MSG_NOT_APPLICABLE)
 
     # ------------------------------------------------------------------ PS (Doc 3 §6.1)
     def _ps(self, req: AnalysisRequest) -> AnalysisResult:
@@ -304,20 +290,7 @@ class RealEngine:
             cv.solver(req.solver_config),
         )
 
-        def lc(c: e_m2.Constraint) -> LimitingConstraint:
-            k = cv.to_contract(c.kind, s)
-            kind = ConstraintKind(c.kind.value)
-            return LimitingConstraint(
-                kind=kind,
-                element_id=c.element_id,
-                value=c.value * k,
-                limit=c.limit * k,
-                unit=CONSTRAINT_UNIT[kind],
-                margin=c.margin * k,
-                normalised_margin=c.normalised_margin,  # unchanged by linear scaling (K40)
-            )
-
-        margins = [lc(c) for c in r.constraints]
+        margins = [constraint(c, s) for c in r.constraints]
         violated = [m for m, c in zip(margins, r.constraints, strict=True) if c.violated]
         storage = None
         assumptions = ["Rating headroom is advisory; a short rating is a warning, not a breach."]

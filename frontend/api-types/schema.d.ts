@@ -381,6 +381,11 @@ export interface components {
             metric: components["schemas"]["OutputMetric"];
             /** Reference Scenario Id */
             reference_scenario_id: string;
+            /**
+             * Relative Delta Ratio
+             * @default null
+             */
+            relative_delta_ratio?: number | null;
             /** Scenario Id */
             scenario_id: string;
             /** Unit */
@@ -447,7 +452,7 @@ export interface components {
             /** Associated Element Ids */
             associated_element_ids: string[];
             /** Damping Ratio */
-            damping_ratio: number;
+            damping_ratio: number | null;
             /** Eigenvalue Index */
             eigenvalue_index: number;
             /** Frequency Hz */
@@ -675,7 +680,7 @@ export interface components {
          * @description Stage-1 validation codes (Doc 3 §4).
          * @enum {string}
          */
-        IssueCode: "NEGATIVE_POWER" | "EMPTY_REQUIRED" | "NOT_POSITIVE" | "PF_OUT_OF_RANGE" | "PF_DIRECTION_MISSING" | "LOAD_Q_AMBIGUOUS" | "BAND_INVERTED" | "LOADING_LIMIT_RANGE" | "DUPLICATE_ID" | "ID_FORMAT" | "DANGLING_BUS_REF" | "SELF_LOOP_LINE" | "DUPLICATE_LINE" | "ISOLATED_BUS" | "DISCONNECTED_NETWORK" | "NO_INVERTER" | "NO_LOAD" | "PROFILE_LENGTH" | "PROFILE_HOUR" | "PS_PARAMETER_INVALID" | "SIZING_MARGIN_INVALID" | "TAU_MISSING_FOR_M4" | "SENSITIVITY_STEP_INVALID" | "DISTURBANCE_INVALID" | "SWEEP_RANGE_INVALID" | "SCENARIO_PATH_INVALID" | "SWEEP_CAP_EXCEEDED" | "PARAMETER_CAP_EXCEEDED" | "DURATION_CAP_EXCEEDED" | "SCENARIO_COUNT_INVALID" | "DEPENDS_ON_NOT_ALLOWED" | "MALFORMED_REQUEST";
+        IssueCode: "NEGATIVE_POWER" | "EMPTY_REQUIRED" | "NOT_POSITIVE" | "PF_OUT_OF_RANGE" | "PF_DIRECTION_MISSING" | "LOAD_Q_AMBIGUOUS" | "BAND_INVERTED" | "LOADING_LIMIT_RANGE" | "DUPLICATE_ID" | "ID_FORMAT" | "DANGLING_BUS_REF" | "SELF_LOOP_LINE" | "DUPLICATE_LINE" | "ISOLATED_BUS" | "DISCONNECTED_NETWORK" | "NO_INVERTER" | "NO_LOAD" | "PROFILE_LENGTH" | "PROFILE_HOUR" | "PS_PARAMETER_INVALID" | "SIZING_MARGIN_INVALID" | "TAU_MISSING_FOR_M4" | "SENSITIVITY_STEP_INVALID" | "DISTURBANCE_INVALID" | "SWEEP_RANGE_INVALID" | "SCENARIO_PATH_INVALID" | "SWEEP_CAP_EXCEEDED" | "PARAMETER_CAP_EXCEEDED" | "DURATION_CAP_EXCEEDED" | "SCENARIO_COUNT_INVALID" | "DEPENDS_ON_NOT_ALLOWED" | "MULTIPLE_INVERTERS_ON_BUS" | "MALFORMED_REQUEST";
         /**
          * IssueLevel
          * @enum {string}
@@ -948,6 +953,11 @@ export interface components {
         };
         /** M4aPayload */
         M4aPayload: {
+            /**
+             * Damping Pass
+             * @default null
+             */
+            damping_pass?: boolean | null;
             /** Dominant Modes */
             dominant_modes: components["schemas"]["DominantMode"][];
             /** Eigenvalues */
@@ -966,6 +976,11 @@ export interface components {
         M4bPayload: {
             /** Bus Voltage Kv */
             bus_voltage_kv: components["schemas"]["BusSeries"][];
+            /**
+             * Class Reason
+             * @default null
+             */
+            class_reason?: string | null;
             /** Inverter P Kw */
             inverter_p_kw: components["schemas"]["InverterSeries"][];
             /** Inverter Q Kvar */
@@ -973,12 +988,12 @@ export interface components {
             /** Max Rocof Hz Per S */
             max_rocof_hz_per_s: number;
             /** Settled */
-            settled: boolean;
+            settled: boolean | null;
             /** System Frequency Hz */
             system_frequency_hz: number[];
             /** Time S */
             time_s: number[];
-            transient_class: components["schemas"]["TransientClass"];
+            transient_class: components["schemas"]["TransientClass"] | null;
         };
         /** MetaInfo */
         MetaInfo: {
@@ -998,7 +1013,7 @@ export interface components {
         /** Mode */
         Mode: {
             /** Damping Ratio */
-            damping_ratio: number;
+            damping_ratio: number | null;
             /** Eigenvalue Index */
             eigenvalue_index: number;
             /** Frequency Hz */
@@ -1263,16 +1278,21 @@ export interface components {
         Sensitivity: {
             metric: components["schemas"]["OutputMetric"];
             /** Normalised Value */
-            normalised_value: number;
+            normalised_value: number | null;
             /** Parameter Path */
             parameter_path: string;
-            scheme: components["schemas"]["Scheme"];
+            /**
+             * Reason
+             * @default null
+             */
+            reason?: string | null;
+            scheme: components["schemas"]["Scheme"] | null;
             /** Status Change */
             status_change: boolean;
             /** Unit */
             unit: string;
             /** Value */
-            value: number;
+            value: number | null;
         };
         /**
          * SizingAdviceItem

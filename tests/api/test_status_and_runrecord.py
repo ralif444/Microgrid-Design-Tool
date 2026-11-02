@@ -41,8 +41,7 @@ def _with_m1_ref(api: Api, t: str) -> dict:
 def test_fr_46_feasible_for_every_type(api: Api, t: str) -> None:
     resp = _with_m1_ref(api, t)
     kind = api.engine.identity().engine_kind
-    not_yet = kind == "REAL" and t not in ("PS", "M1", "M2")  # Doc 9 D-54 K81
-    assert resp["result"]["status"] == ("UNAVAILABLE" if not_yet else "FEASIBLE")
+    assert resp["result"]["status"] == "FEASIBLE", resp["result"]["message"]
     codes = [w["code"] for w in resp["result"]["warnings"]]
     assert ("ENGINE_KIND_FAKE" in codes) == (kind == "FAKE")
     assert assert_record(resp, engine_called=True)["engine_kind"] == kind

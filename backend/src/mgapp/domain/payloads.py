@@ -165,11 +165,12 @@ class Scheme(StrEnum):
 class Sensitivity(Model):
     parameter_path: str
     metric: OutputMetric
-    value: float
-    normalised_value: float
+    value: float | None  # None = not reported, see reason (D-55 K87)
+    normalised_value: float | None  # None when y0 or p0 is 0 (D-52 K53)
     unit: str
-    scheme: Scheme
+    scheme: Scheme | None
     status_change: bool
+    reason: str | None = None
 
 
 class Ranking(Model):
@@ -231,6 +232,9 @@ class Delta(Model):
     reference_scenario_id: str
     delta: float
     unit: str
+    relative_delta_ratio: float | None = (
+        None  # delta / reference; None when reference is 0 (D-52 K55)
+    )
 
 
 class M3cPayload(Model):
@@ -246,7 +250,7 @@ class M3dPayload(Model):
 # ------------------------------------------------------------------ M4 (§6.8-6.9)
 class Mode(Model):
     eigenvalue_index: int
-    damping_ratio: float
+    damping_ratio: float | None  # None for λ = 0 (Eq. 4.20 undefined, D-55 K87)
     frequency_hz: float
 
 
@@ -287,6 +291,7 @@ class M4aPayload(Model):
     stability_class: StabilityClass
     indicators: Indicators
     outside_definition: bool
+    damping_pass: bool | None = None  # ζ_min ≥ damping_threshold_ratio (D-53 K65)
 
 
 class ElementSeries(Model):
@@ -314,8 +319,9 @@ class M4bPayload(Model):
     inverter_p_kw: list[InverterSeries]
     inverter_q_kvar: list[InverterSeries]
     max_rocof_hz_per_s: float
-    transient_class: TransientClass
-    settled: bool
+    transient_class: TransientClass | None  # None without settling criteria (D-53 K67)
+    settled: bool | None
+    class_reason: str | None = None
 
 
 PAYLOAD_MODEL: dict[AnalysisType, type[Model]] = {

@@ -275,6 +275,18 @@
             "title": "Reference Scenario Id",
             "type": "string"
           },
+          "relative_delta_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Relative Delta Ratio"
+          },
           "scenario_id": {
             "title": "Scenario Id",
             "type": "string"
@@ -432,8 +444,15 @@
             "type": "array"
           },
           "damping_ratio": {
-            "title": "Damping Ratio",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Damping Ratio"
           },
           "eigenvalue_index": {
             "title": "Eigenvalue Index",
@@ -1111,6 +1130,7 @@
           "DURATION_CAP_EXCEEDED",
           "SCENARIO_COUNT_INVALID",
           "DEPENDS_ON_NOT_ALLOWED",
+          "MULTIPLE_INVERTERS_ON_BUS",
           "MALFORMED_REQUEST"
         ],
         "title": "IssueCode",
@@ -1923,6 +1943,18 @@
       "M4aPayload": {
         "additionalProperties": false,
         "properties": {
+          "damping_pass": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Damping Pass"
+          },
           "dominant_modes": {
             "items": {
               "$ref": "#/components/schemas/DominantMode"
@@ -1999,6 +2031,18 @@
             "title": "Bus Voltage Kv",
             "type": "array"
           },
+          "class_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Class Reason"
+          },
           "inverter_p_kw": {
             "items": {
               "$ref": "#/components/schemas/InverterSeries"
@@ -2018,8 +2062,15 @@
             "type": "number"
           },
           "settled": {
-            "title": "Settled",
-            "type": "boolean"
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settled"
           },
           "system_frequency_hz": {
             "items": {
@@ -2036,7 +2087,14 @@
             "type": "array"
           },
           "transient_class": {
-            "$ref": "#/components/schemas/TransientClass"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TransientClass"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -2105,8 +2163,15 @@
         "additionalProperties": false,
         "properties": {
           "damping_ratio": {
-            "title": "Damping Ratio",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Damping Ratio"
           },
           "eigenvalue_index": {
             "title": "Eigenvalue Index",
@@ -2848,15 +2913,41 @@
             "$ref": "#/components/schemas/OutputMetric"
           },
           "normalised_value": {
-            "title": "Normalised Value",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Normalised Value"
           },
           "parameter_path": {
             "title": "Parameter Path",
             "type": "string"
           },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Reason"
+          },
           "scheme": {
-            "$ref": "#/components/schemas/Scheme"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Scheme"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "status_change": {
             "title": "Status Change",
@@ -2867,8 +2958,15 @@
             "type": "string"
           },
           "value": {
-            "title": "Value",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
           }
         },
         "required": [
