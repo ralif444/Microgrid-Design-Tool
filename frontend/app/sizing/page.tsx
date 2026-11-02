@@ -90,6 +90,33 @@ function AdvicePanel({ a }: { a: SizingAdvice }) {
   );
 }
 
+// FR-09: accepted advice offers editable Inverter drafts (unit_count rows at the unit rating) for
+// S-05; Accept itself changes no design entity (FR-08).
+function InverterDrafts({ plan }: { plan: PsPayload["inverter_plan"] }) {
+  const dispatch = useProjectDispatch();
+  const [added, setAdded] = useState(false);
+  if (added)
+    return (
+      <p role="status">
+        {plan.unit_count} inverter drafts added. <Link href="/network/">Complete them in Network</Link>
+      </p>
+    );
+  return (
+    <p>
+      <button
+        type="button"
+        onClick={() => {
+          for (let k = 0; k < plan.unit_count; k++)
+            dispatch({ type: "rowAdded", collection: "inverters", row: { rated_kva: plan.unit_rating_kva } });
+          setAdded(true);
+        }}
+      >
+        Add {plan.unit_count} inverter drafts of {plan.unit_rating_kva} kVA
+      </button>
+    </p>
+  );
+}
+
 // Doc 12 FR-72: a hint only; the advice values above are never changed or rounded.
 function CatalogHints({ unitKva }: { unitKva: number }) {
   const { catalog, checks } = useCatalog();
@@ -202,6 +229,7 @@ function Sizing() {
               </button>
             </p>
           )}
+          {latest.state === "ACCEPTED" && <InverterDrafts plan={latest.result.inverter_plan} />}
         </>
       )}
     </>
