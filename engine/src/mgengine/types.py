@@ -27,6 +27,7 @@ class Load:
     bus: str
     p_w: float
     q_var: float
+    id: str = ""  # Load id, used by M4b disturbances
 
 
 @dataclass(frozen=True)
@@ -42,6 +43,8 @@ class Inverter:
     rated_va: float  # three-phase apparent power rating (D-50 K35)
     p_set_w: float = 0.0
     q_set_var: float = 0.0
+    tau_p_s: float | None = None  # power filter time constants (2.7), required by M4 (A3)
+    tau_q_s: float | None = None
 
 
 @dataclass(frozen=True)
@@ -65,6 +68,7 @@ class Status(StrEnum):
     FEASIBLE = "FEASIBLE"
     SOLVER_FAILED = "SOLVER_FAILED"
     PHYSICALLY_INADMISSIBLE = "PHYSICALLY_INADMISSIBLE"
+    INPUT_INVALID = "INPUT_INVALID"  # engine-side catch (Doc 3 §5.4), e.g. D-53 K61
 
 
 class Code(StrEnum):
@@ -74,6 +78,11 @@ class Code(StrEnum):
     NON_FINITE = "NON_FINITE"
     OPERATING_POINT_NOT_PHYSICAL = "OPERATING_POINT_NOT_PHYSICAL"
     CONSTRAINT_VIOLATED = "CONSTRAINT_VIOLATED"
+    EQUILIBRIUM_INVALID = "EQUILIBRIUM_INVALID"
+    EIGEN_SOLVER_FAILED = "EIGEN_SOLVER_FAILED"
+    SIMULATION_FAILED = "SIMULATION_FAILED"
+    MULTIPLE_INVERTERS_ON_BUS = "MULTIPLE_INVERTERS_ON_BUS"
+    DISTURBANCE_INVALID = "DISTURBANCE_INVALID"
 
 
 @dataclass(frozen=True)

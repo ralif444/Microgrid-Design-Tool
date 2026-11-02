@@ -3,7 +3,7 @@ name = "mgengine"
 version = "0.2.0"
 description = "Calculation engine for islanded droop-controlled AC microgrids (manuscript 4.2). SI units per phase."
 requires-python = ">=3.13,<3.14"
-dependencies = ["numpy"]
+dependencies = ["numpy", "scipy"]
 
 [dependency-groups]
 dev = ["pytest", "ruff", "mypy"]

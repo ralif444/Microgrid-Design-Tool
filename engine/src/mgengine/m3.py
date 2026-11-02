@@ -12,6 +12,7 @@ from enum import StrEnum
 
 from mgengine.m1 import solve_m1
 from mgengine.m2 import Constraint, Kind, Limits, check, trace
+from mgengine.m4 import M4aResult, solve_m4a
 from mgengine.results import m1_details
 from mgengine.types import Code, Network, SolverConfig, Status
 
@@ -48,6 +49,12 @@ class KeyMetrics:
     total_losses_w: float
     epsilon_x_ratio: float
     lambda_c: float | None = None  # only when requested (K56)
+    # M4a point metrics, only when requested (D-53): None when not asked or M4a failed
+    zeta_min: float | None = None
+    re_lambda_dom_per_s: float | None = None
+    r_tau: float | None = None
+    kappa: float | None = None
+    eigenvalues: tuple[complex, ...] | None = None
 
     def get(self, metric: Metric) -> float:
         return {
@@ -82,8 +89,11 @@ def evaluate(
     omega_nom_rad_s: float,
     cfg: SolverConfig | None = None,
     lambda_c_points: int | None = None,
+    m4: bool = False,
+    include_eigenvalues: bool = False,
+    tau_in_s: float | None = None,
 ) -> PointResult:
-    """One sweep point: M1, then the M2 checks; λ_c only when lambda_c_points is given."""
+    """One sweep point: M1, then the M2 checks; λ_c and M4a metrics only when asked."""
     res = solve_m1(net, cfg)
     if res.status is not Status.FEASIBLE:
         return PointResult(PointStatus(res.status.value), res.code, None, None)
@@ -93,6 +103,11 @@ def evaluate(
     lam_c = None
     if lambda_c_points is not None:
         lam_c = trace(net, limits, omega_nom_rad_s, lambda_c_points, cfg).lambda_c
+    stab = M4aResult(Status.SOLVER_FAILED, Code.OK)
+    if m4 or include_eigenvalues:
+        stab = solve_m4a(net, limits, omega_nom_rad_s, cfg, tau_in_s, m1=res)
+    ok = stab.status is Status.FEASIBLE and stab.indicators is not None
+    dom = stab.eigenvalues[stab.dominant[0].index] if ok else None
     metrics = KeyMetrics(
         omega_rad_s=res.omega_rad_s,
         v_min_v=min(res.v_v),
@@ -102,6 +117,11 @@ def evaluate(
         total_losses_w=d.total_losses_w,
         epsilon_x_ratio=d.epsilon_x_ratio,
         lambda_c=lam_c,
+        zeta_min=stab.zeta_min if ok and m4 else None,
+        re_lambda_dom_per_s=dom.real if dom is not None and m4 else None,
+        r_tau=stab.indicators.r_tau.value if ok and m4 and stab.indicators else None,
+        kappa=stab.indicators.kappa.value if ok and m4 and stab.indicators else None,
+        eigenvalues=stab.eigenvalues if ok and include_eigenvalues else None,
     )
     if any(c.violated for c in cons):
         return PointResult(
