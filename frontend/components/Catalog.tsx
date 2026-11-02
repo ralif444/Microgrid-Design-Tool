@@ -65,6 +65,17 @@ export function fromEntry(e: CatalogEntry, schemaVersion: number, confirmLimit =
   };
 }
 
+// FR-71: one τ_in per M4a run, so it pre-fills only when every catalogue τ_in agrees (D-61 K116).
+export function tauInSource(inverters: { catalog_ref?: CatalogRef | null }[]): { from: CatalogRef | null; conflict: boolean } {
+  const refs = inverters.flatMap((i) => (i.catalog_ref?.tau_in_s != null ? [i.catalog_ref] : []));
+  const n = new Set(refs.map((r) => r.tau_in_s)).size;
+  return { from: n === 1 ? refs[0] : null, conflict: n > 1 };
+}
+
+// FR-72: inverter entries rated at least the advised unit rating; a hint, never a change.
+export const catalogHints = (entries: CatalogEntry[], unitKva: number) =>
+  entries.filter((e) => e.kind === "INVERTER" && typeof e.inverter?.rated_kva === "number" && e.inverter.rated_kva >= unitKva);
+
 export function refText(ref: CatalogRef | null | undefined): string {
   if (!ref) return "—";
   return [

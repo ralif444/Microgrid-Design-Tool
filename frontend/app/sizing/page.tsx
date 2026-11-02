@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { runAnalysis } from "../../api-client";
 import type { AnalysisResponse, PsPayload } from "../../api-types";
-import { useCatalog } from "../../components/Catalog";
+import { catalogHints, useCatalog } from "../../components/Catalog";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
@@ -92,9 +92,7 @@ function AdvicePanel({ a }: { a: SizingAdvice }) {
 
 // Doc 12 FR-72: a hint only; the advice values above are never changed or rounded.
 function CatalogHints({ unitKva }: { unitKva: number }) {
-  const fits = useCatalog().catalog.entries.filter(
-    (e) => e.kind === "INVERTER" && typeof e.inverter?.rated_kva === "number" && e.inverter.rated_kva >= unitKva,
-  );
+  const fits = catalogHints(useCatalog().catalog.entries, unitKva);
   return (
     <section aria-label="Catalogue hints">
       <p>

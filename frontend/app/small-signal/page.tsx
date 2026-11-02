@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { M4aPayload } from "../../api-types";
+import { tauInSource } from "../../components/Catalog";
 import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
 import { IndicatorPanel } from "../../components/IndicatorPanel";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
@@ -21,9 +22,7 @@ const yesNo = (b: boolean | null | undefined, none: string) => (b === null || b 
 
 function SmallSignal() {
   const { design, fresh, busy, resp, error, run, m2Infeasible } = useDependentRun("M4a");
-  const refs = (design.inverters ?? []).flatMap((i) => (i.catalog_ref?.tau_in_s != null ? [i.catalog_ref] : []));
-  const taus = new Set(refs.map((r) => r.tau_in_s));
-  const from = taus.size === 1 ? refs[0] : null; // one τ_in per run, so only one shared value pre-fills
+  const { from, conflict } = tauInSource(design.inverters ?? []);
   const [tauIn, setTauIn] = useState<number | null>(from?.tau_in_s ?? null);
   const [threshold, setThreshold] = useState<number | null>(null);
   const r = resp?.result;
@@ -56,7 +55,7 @@ function SmallSignal() {
             .
           </p>
         )}
-        {taus.size > 1 && <p>Catalogue entries give different τ_in values, so none is pre-filled.</p>}
+        {conflict && <p>Catalogue entries give different τ_in values, so none is pre-filled.</p>}
         <p>
           <NumberField id="damping-threshold" label="Damping pass threshold, optional" unit="ratio" value={threshold} onChange={setThreshold} />
         </p>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CatalogEntry } from "../api-types";
 import { initialState, projectReducer, type ProjectAction } from "../store";
-import { fromEntry, refText } from "./Catalog";
+import { catalogHints, fromEntry, refText, tauInSource } from "./Catalog";
 
 const conductor: CatalogEntry = {
   id: "E1",
@@ -34,5 +34,26 @@ describe("Catalogue copy into a Line (Doc 12 FR-68, FR-69, FR-70)", () => {
     expect(refText(line([...filled, { type: "rowUpdated", collection: "lines", id: "LN1", patch: { length_km: 2 } }]).catalog_ref as never)).not.toContain(
       "modified",
     );
+  });
+});
+
+const inv = (id: string, rated_kva: number, tau_in_s?: number): CatalogEntry => ({ id, kind: "INVERTER", inverter: { rated_kva, tau_in_s } });
+
+describe("PS hint (Doc 12 FR-72)", () => {
+  it("lists the inverter entries meeting the unit rating and leaves the advice untouched", () => {
+    const entries = [inv("E1", 5), inv("E2", 10), inv("E3", 20), conductor];
+    const advice = { unit_rating_kva: 10 };
+    const before = JSON.stringify(advice);
+    expect(catalogHints(entries, advice.unit_rating_kva).map((e) => e.id)).toEqual(["E2", "E3"]);
+    expect(JSON.stringify(advice)).toBe(before);
+  });
+});
+
+describe("τ_in pre-fill (Doc 12 FR-71, D-61 K116)", () => {
+  const ref = (e: CatalogEntry) => ({ catalog_ref: fromEntry(e, 1).catalog_ref as never });
+  it("pre-fills one shared value; none without τ_in or when entries disagree", () => {
+    expect(tauInSource([ref(inv("E1", 10, 0.002)), {}]).from?.tau_in_s).toBe(0.002);
+    expect(tauInSource([ref(inv("E1", 10))])).toEqual({ from: null, conflict: false });
+    expect(tauInSource([ref(inv("E1", 10, 0.002)), ref(inv("E2", 10, 0.003))])).toEqual({ from: null, conflict: true });
   });
 });
