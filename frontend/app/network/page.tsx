@@ -5,7 +5,7 @@
 // Inverters (Doc 12 FR-66, FR-69, FR-70).
 import { useEffect, useState } from "react";
 import type { CatalogRef } from "../../api-types";
-import { block, fromEntry, refText, useCatalog } from "../../components/Catalog";
+import { block, entryWarnings, fromEntry, refText, useCatalog } from "../../components/Catalog";
 import { EntityTable, type Column } from "../../components/EntityTable";
 import { RequireProject } from "../../components/RequireProject";
 import { useValidation } from "../../components/useValidation";
@@ -62,7 +62,9 @@ function CatalogPick({ collection }: { collection: "lines" | "inverters" }) {
         if (!entry || !element) return setNote("Choose an element and an entry.");
         if (!check?.usable) return setNote(`${entryId} cannot be used: ${check?.reasons.join("; ") ?? "not checked yet"}.`);
         dispatch({ type: "rowUpdated", collection, id: element, patch: fromEntry(entry, catalog.schema_version, confirm) });
-        setNote(`${element} filled from ${entryId}.`);
+        const row = (design[collection] ?? []).find((r) => r.id === element) ?? {};
+        const warnings = entryWarnings(entry, design, row);
+        setNote(`${element} filled from ${entryId}.${warnings.length ? ` Warning: ${warnings.join("; ")}.` : ""}`);
       }}
     >
       <label htmlFor="pick-element">Element</label>{" "}

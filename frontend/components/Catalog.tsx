@@ -72,9 +72,39 @@ export function tauInSource(inverters: { catalog_ref?: CatalogRef | null }[]): {
   return { from: n === 1 ? refs[0] : null, conflict: n > 1 };
 }
 
-// FR-72: inverter entries rated at least the advised unit rating; a hint, never a change.
-export const catalogHints = (entries: CatalogEntry[], unitKva: number) =>
-  entries.filter((e) => e.kind === "INVERTER" && typeof e.inverter?.rated_kva === "number" && e.inverter.rated_kva >= unitKva);
+// FR-72: usable inverter entries (FR-66 guard) rated at least the advised unit rating; a hint, never a change.
+export const catalogHints = (entries: CatalogEntry[], unitKva: number, checks: EntryCheck[]) =>
+  entries.filter(
+    (e) =>
+      e.kind === "INVERTER" &&
+      checks.some((c) => c.entry_id === e.id && c.usable) &&
+      typeof e.inverter?.rated_kva === "number" &&
+      e.inverter.rated_kva >= unitKva,
+  );
+
+// D-61 K114: warnings, not refusals, when an inverter entry does not match the Project nominal
+// values or the element's droop gains lie outside the entry's ranges.
+export function entryWarnings(
+  e: CatalogEntry,
+  nominal: { nominal_voltage_kv?: number | null; nominal_frequency_hz?: number | null },
+  row: Record<string, unknown>,
+): string[] {
+  const inv = e.inverter;
+  if (e.kind !== "INVERTER" || !inv) return [];
+  const out: string[] = [];
+  const differs = (a: unknown, b: unknown) => typeof a === "number" && typeof b === "number" && a !== b;
+  if (differs(inv.nominal_voltage_kv, nominal.nominal_voltage_kv))
+    out.push(`entry nominal voltage ${inv.nominal_voltage_kv} kV differs from the Project ${nominal.nominal_voltage_kv} kV`);
+  if (differs(inv.nominal_frequency_hz, nominal.nominal_frequency_hz))
+    out.push(`entry nominal frequency ${inv.nominal_frequency_hz} Hz differs from the Project ${nominal.nominal_frequency_hz} Hz`);
+  const outside = (v: unknown, lo: unknown, hi: unknown) =>
+    typeof v === "number" && typeof lo === "number" && typeof hi === "number" && (v < lo || v > hi);
+  if (outside(row.frequency_droop_hz_per_kw, inv.frequency_droop_min_hz_per_kw, inv.frequency_droop_max_hz_per_kw))
+    out.push(`P–f droop ${row.frequency_droop_hz_per_kw} Hz/kW is outside the entry range ${inv.frequency_droop_min_hz_per_kw}–${inv.frequency_droop_max_hz_per_kw} Hz/kW`);
+  if (outside(row.voltage_droop_kv_per_kvar, inv.voltage_droop_min_kv_per_kvar, inv.voltage_droop_max_kv_per_kvar))
+    out.push(`Q–V droop ${row.voltage_droop_kv_per_kvar} kV/kvar is outside the entry range ${inv.voltage_droop_min_kv_per_kvar}–${inv.voltage_droop_max_kv_per_kvar} kV/kvar`);
+  return out;
+}
 
 export function refText(ref: CatalogRef | null | undefined): string {
   if (!ref) return "—";

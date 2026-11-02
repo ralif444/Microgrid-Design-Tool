@@ -19,7 +19,8 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def _lint_imports(pythonpath: Path | None = None) -> subprocess.CompletedProcess[str]:
-    env = dict(os.environ)
+    # Windows: the child's stdout codepage depends on the console; pin UTF-8 on both sides.
+    env = dict(os.environ, PYTHONIOENCODING="utf-8")
     if pythonpath is not None:
         env["PYTHONPATH"] = str(pythonpath)
     return subprocess.run(
@@ -36,7 +37,7 @@ def _lint_imports(pythonpath: Path | None = None) -> subprocess.CompletedProcess
         cwd=BACKEND,
         env=env,
         capture_output=True,
-        text=True,
+        encoding="utf-8",
     )
 
 

@@ -92,11 +92,12 @@ function AdvicePanel({ a }: { a: SizingAdvice }) {
 
 // Doc 12 FR-72: a hint only; the advice values above are never changed or rounded.
 function CatalogHints({ unitKva }: { unitKva: number }) {
-  const fits = catalogHints(useCatalog().catalog.entries, unitKva);
+  const { catalog, checks } = useCatalog();
+  const fits = catalogHints(catalog.entries, unitKva, checks);
   return (
     <section aria-label="Catalogue hints">
       <p>
-        Catalogue inverter entries rated at least {unitKva} kVA (hint only):{" "}
+        Usable catalogue inverter entries rated at least {unitKva} kVA (hint only):{" "}
         {fits.length === 0 ? "none" : fits.map((e) => `${e.id} (${e.inverter?.rated_kva} kVA)`).join(", ")}
       </p>
     </section>

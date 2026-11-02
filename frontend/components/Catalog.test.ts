@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CatalogEntry } from "../api-types";
 import { initialState, projectReducer, type ProjectAction } from "../store";
-import { catalogHints, fromEntry, refText, tauInSource } from "./Catalog";
+import { catalogHints, entryWarnings, fromEntry, refText, tauInSource } from "./Catalog";
 
 const conductor: CatalogEntry = {
   id: "E1",
@@ -40,12 +40,37 @@ describe("Catalogue copy into a Line (Doc 12 FR-68, FR-69, FR-70)", () => {
 const inv = (id: string, rated_kva: number, tau_in_s?: number): CatalogEntry => ({ id, kind: "INVERTER", inverter: { rated_kva, tau_in_s } });
 
 describe("PS hint (Doc 12 FR-72)", () => {
-  it("lists the inverter entries meeting the unit rating and leaves the advice untouched", () => {
-    const entries = [inv("E1", 5), inv("E2", 10), inv("E3", 20), conductor];
+  it("lists the usable inverter entries meeting the unit rating and leaves the advice untouched", () => {
+    const entries = [inv("E1", 5), inv("E2", 10), inv("E3", 20), inv("E4", 30), conductor];
+    const checks = ["E1", "E2", "E3", "E4"].map((id) => ({ entry_id: id, usable: id !== "E4", reasons: [] }));
     const advice = { unit_rating_kva: 10 };
     const before = JSON.stringify(advice);
-    expect(catalogHints(entries, advice.unit_rating_kva).map((e) => e.id)).toEqual(["E2", "E3"]);
+    expect(catalogHints(entries, advice.unit_rating_kva, checks).map((e) => e.id)).toEqual(["E2", "E3"]);
     expect(JSON.stringify(advice)).toBe(before);
+  });
+});
+
+describe("Mismatch warnings (D-61 K114)", () => {
+  const e: CatalogEntry = {
+    id: "E1",
+    kind: "INVERTER",
+    inverter: {
+      rated_kva: 10,
+      nominal_voltage_kv: 0.4,
+      nominal_frequency_hz: 50,
+      frequency_droop_min_hz_per_kw: 0.01,
+      frequency_droop_max_hz_per_kw: 0.1,
+      voltage_droop_min_kv_per_kvar: 0.001,
+      voltage_droop_max_kv_per_kvar: 0.01,
+    },
+  };
+  it("warns on a nominal mismatch or a droop gain outside the range; silent when all match or are unset", () => {
+    const w = entryWarnings(e, { nominal_voltage_kv: 0.44, nominal_frequency_hz: 50 }, { frequency_droop_hz_per_kw: 0.2, voltage_droop_kv_per_kvar: 0.005 });
+    expect(w).toHaveLength(2);
+    expect(w[0]).toContain("0.44 kV");
+    expect(w[1]).toContain("P–f droop 0.2");
+    expect(entryWarnings(e, { nominal_voltage_kv: 0.4, nominal_frequency_hz: 50 }, { frequency_droop_hz_per_kw: 0.05 })).toEqual([]);
+    expect(entryWarnings(conductor, { nominal_voltage_kv: 0.44 }, {})).toEqual([]);
   });
 });
 

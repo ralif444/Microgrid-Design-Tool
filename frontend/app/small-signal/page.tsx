@@ -52,7 +52,7 @@ function SmallSignal() {
             {[from.provenance.manufacturer, from.provenance.model, from.provenance.document, from.provenance.revision, from.sources?.tau_in_s]
               .filter(Boolean)
               .join(", ")}
-            .
+            . One τ_in applies to every inverter in this run.
           </p>
         )}
         {conflict && <p>Catalogue entries give different τ_in values, so none is pre-filled.</p>}
