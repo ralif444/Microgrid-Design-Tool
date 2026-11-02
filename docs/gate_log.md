@@ -230,4 +230,4 @@ Carried into stage 1.4 (not exit criteria):
 - Level 2 (literature cases [20], [22], [45]) not yet run; stage 1.6 validates against PSIM.
 - Exit 1.2 condition (d), A2 wording, still open.
 
-**Decision: awaiting user confirmation.**
+**Decision: exit gate 1.3 PASS**, confirmed by the user 2026-11-02 (Doc 9 D-53 K72). Package version raised to 0.3.0; PR `tahap-1.3` → `tahap-1.2`.
