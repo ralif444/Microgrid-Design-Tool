@@ -29,6 +29,11 @@ async function call<T>(path: string, init?: RequestInit): Promise<ApiOutcome<T>>
   }
 }
 
+// Example Project files shipped with the frontend (Doc 12 FR-85); checked by importProject after.
+export function getExample(name: string): Promise<ApiOutcome<unknown>> {
+  return call<unknown>(`/examples/${name}.mgproj.json`);
+}
+
 export function getMeta(): Promise<ApiOutcome<MetaInfo>> {
   return call<MetaInfo>("/api/meta");
 }

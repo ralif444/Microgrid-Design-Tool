@@ -131,3 +131,27 @@ describe("network and constraints", () => {
     });
   });
 });
+
+describe("Example Project (Doc 12 FR-85)", () => {
+  it("opens as a new unsaved copy and leaves the example file unchanged", () => {
+    const file = {
+      schema_version: 1,
+      app_version: "0.1.0",
+      project: { id: "example-d2", name: "Example D2", description: null, created_at: "t0", modified_at: "t0", nominal_voltage_kv: 0.44, nominal_frequency_hz: 50 },
+      buses: [{ id: "B1" }],
+      lines: [],
+      loads: [],
+      inverters: [],
+      load_profile: null,
+      design_constraints: {},
+      sizing_advice: [],
+      scenarios: [],
+      run_records: [],
+    };
+    const before = JSON.stringify(file);
+    const s = projectReducer(initialState, { type: "exampleOpened", file, id: "new", created_at: "t1" });
+    expect([s.project?.id, s.project?.name, s.project?.created_at, s.unsaved]).toEqual(["new", "Example D2", "t1", true]);
+    expect(s.design.nominal_voltage_kv).toBe(0.44);
+    expect(JSON.stringify(file)).toBe(before);
+  });
+});

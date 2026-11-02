@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "app_version": "0.1.0",
+  "project": {
+    "id": "example-d2",
+    "name": "Example D2",
+    "description": "Two inverters with different droop gains. Reference design from Doc 13 §4 (prototype values, confirmed or replaced at WP 1.6.1). Lines: Doc 13 totals entered as 1 km.",
+    "created_at": "2026-11-02T00:00:00Z",
+    "modified_at": "2026-11-02T00:00:00Z",
+    "nominal_voltage_kv": 0.44,
+    "nominal_frequency_hz": 50.0
+  },
+  "buses": [
+    {
+      "id": "B1"
+    },
+    {
+      "id": "B2"
+    },
+    {
+      "id": "B3"
+    }
+  ],
+  "lines": [
+    {
+      "id": "LN1",
+      "from_bus_id": "B1",
+      "to_bus_id": "B2",
+      "r_ohm_per_km": 0.02,
+      "x_ohm_per_km": 0.04,
+      "length_km": 1.0
+    },
+    {
+      "id": "LN2",
+      "from_bus_id": "B2",
+      "to_bus_id": "B3",
+      "r_ohm_per_km": 0.025,
+      "x_ohm_per_km": 0.045,
+      "length_km": 1.0
+    }
+  ],
+  "loads": [
+    {
+      "id": "L1",
+      "bus_id": "B2",
+      "p_kw": 25.0,
+      "q_kvar": 10.0
+    }
+  ],
+  "inverters": [
+    {
+      "id": "INV1",
+      "bus_id": "B1",
+      "rated_kva": 70.0,
+      "frequency_droop_hz_per_kw": 0.007957747154594767,
+      "voltage_droop_kv_per_kvar": 0.0008660254037844386,
+      "frequency_setpoint_hz": 50.0,
+      "voltage_setpoint_kv": 0.44,
+      "p_setpoint_kw": 0.0,
+      "q_setpoint_kvar": 0.0,
+      "tau_p_s": 0.05,
+      "tau_q_s": 0.05
+    },
+    {
+      "id": "INV2",
+      "bus_id": "B3",
+      "rated_kva": 45.0,
+      "frequency_droop_hz_per_kw": 0.012732395447351628,
+      "voltage_droop_kv_per_kvar": 0.001212435565298214,
+      "frequency_setpoint_hz": 50.0,
+      "voltage_setpoint_kv": 0.44,
+      "p_setpoint_kw": 0.0,
+      "q_setpoint_kvar": 0.0,
+      "tau_p_s": 0.05,
+      "tau_q_s": 0.05
+    }
+  ],
+  "load_profile": null,
+  "design_constraints": {},
+  "sizing_advice": [],
+  "scenarios": [],
+  "run_records": []
+}

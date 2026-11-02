@@ -86,6 +86,8 @@ export type ProjectAction =
   | { type: "scenarioRemoved"; id: string }
   // Project file (D-47): load replaces the open Project; save clears the unsaved flag.
   | { type: "projectLoaded"; file: ProjectFile }
+  // Example Project (Doc 12 FR-85): a new unsaved copy with its own id; the example stays as is.
+  | { type: "exampleOpened"; file: ProjectFile; id: string; created_at: string }
   | { type: "projectSaved"; modified_at: string }
   | { type: "runRecordImported"; record: RunRecord };
 
@@ -202,6 +204,11 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
       return { ...state, scenarios: state.scenarios.filter((x) => x.id !== action.id), unsaved: true };
     case "projectLoaded":
       return { ...fromProjectFile(action.file), unsaved: false };
+    case "exampleOpened": {
+      const loaded = fromProjectFile(action.file);
+      const { id, created_at } = action;
+      return { ...loaded, project: loaded.project && { ...loaded.project, id, created_at, modified_at: created_at }, unsaved: true };
+    }
     case "projectSaved":
       return state.project
         ? { ...state, project: { ...state.project, modified_at: action.modified_at }, unsaved: false }
