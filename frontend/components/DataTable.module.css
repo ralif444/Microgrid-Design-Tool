@@ -5,11 +5,11 @@
 .table td > * { vertical-align: middle; } /* inputs, selects and radio groups share one centre line */
 .table td input[type="text"] { width: 7em; }
 .actions { white-space: nowrap; }
-.row[data-invalid] > tr > td { background: var(--role-negative-bg); }
+.row[data-invalid] > tr > td { background: var(--role-error-bg); }
 .row[data-invalid] > tr:first-child > td { border-bottom-color: transparent; }
 .errorRow > td {
-  color: var(--role-negative-fg); font-size: var(--text-xs);
-  border-bottom: var(--border-width) solid var(--role-negative-border); padding-top: 0;
+  color: var(--role-error-fg); font-size: var(--text-xs);
+  border-bottom: var(--border-width) solid var(--role-error-border); padding-top: 0;
 }
 .errorRow svg { margin-right: var(--space-1); vertical-align: -2px; }
 .current > td { background: var(--role-info-bg); box-shadow: inset 0 2px 0 var(--focus-color), inset 0 -2px 0 var(--focus-color); }

@@ -40,24 +40,39 @@
   --mdt-header-focus: #5dc4cc;       /* brand-teal-300, 7.9:1 on navy */
   --mdt-gradient: linear-gradient(90deg, #0e9aa7, #7ed957); /* signature accent only, never text */
 
-  /* ---- Colour ROLES (Doc 7 §5). Each role: fg (icon + word, ≥ 4.5:1 on white and on its tint),
-     bg (banner/row tint), border (≥ 3:1 on white). Status is always colour + icon + word. ---- */
-  /* success: FEASIBLE (M1 operating point, M2 meets constraints, PS/M3/M4 completed) — check icon */
-  --role-success-fg: #1e6b34;  --role-success-bg: #ecf6ef;  --role-success-border: #2f8a4a; /* 6.55 / 5.92 / 4.33 */
-  /* negative: INFEASIBLE, violated constraint rows — cross icon */
-  --role-negative-fg: #a3241b; --role-negative-bg: #fcefed; --role-negative-border: #c8372b; /* 7.43 / 6.62 / 5.20 */
-  /* error: SOLVER_FAILED, PHYSICALLY_INADMISSIBLE, ENGINE_ERROR — distinct hue from negative, own icons */
-  --role-error-fg: #8c1d5e;    --role-error-bg: #f9edf4;    --role-error-border: #a8336f;    /* 8.56 / 7.52 / 6.24 */
-  /* caution: INPUT_INVALID, SWEEP_CAP_EXCEEDED, "Near limit" badge — list icon */
-  --role-caution-fg: #7a4b00;  --role-caution-bg: #fdf3e1;  --role-caution-border: #b5780f;  /* 7.41 / 6.73 / 3.71 */
-  /* neutral-attention: UNAVAILABLE TIMEOUT / DEPENDENCY_NOT_MET, stale M1 — clock / link icon */
-  --role-attention-fg: #3a4f66; --role-attention-bg: #eef2f6; --role-attention-border: #5f7690; /* 8.43 / 7.50 / 4.69 */
-  /* info: UNAVAILABLE NOT_APPLICABLE, notes, "not evaluated" — info icon */
-  --role-info-fg: #1a56a8;     --role-info-bg: #edf3fb;     --role-info-border: #3b74c4;     /* 7.14 / 6.40 / 4.69 */
-  /* advisory: SizingAdvice (PS) and SizingCheck (M2) — dashed outline + "Advice" tag, never solid */
-  --role-advisory-fg: #4f3f8f; --role-advisory-bg: #f3f1fa; --role-advisory-border: #6a59b0; /* 8.61 / 7.69 / 5.72 */
+  /* ---- Colour ROLES (guideline §7.2, ADR-012). Each role: edge (left border, the §7.2 token),
+     icon (banner icon, >= 3:1 on white), fg (coloured text and small icons: Carbon 70 step, >= 7:1 on
+     white, tint and page), bg (tint for chips and rows: Carbon 10 step). Values from @carbon/colors.
+     Status is always colour + icon + word. ---- */
+  /* success: FEASIBLE — CheckmarkFilled */
+  --role-success-edge: var(--cds-support-success); --role-success-icon: var(--cds-support-success); /* 3.35:1 */
+  --role-success-fg: #0e6027;  --role-success-bg: #defbe6;  /* green-70 7.7:1 / green-10 */
+  /* negative: INFEASIBLE, violated constraint rows — Misuse. Icon one step darker than the token
+     (#FF832B is 2.46:1), owner decision 2026-11-03 */
+  --role-negative-edge: var(--cds-support-caution-major); --role-negative-icon: #ba4e00; /* orange-60 5.0:1 */
+  --role-negative-fg: #8a3800; --role-negative-bg: #fff2e8; /* orange-70 7.9:1 / orange-10 */
+  /* error: SOLVER_FAILED, PHYSICALLY_INADMISSIBLE, ENGINE_ERROR, input field errors — own icons */
+  --role-error-edge: var(--cds-support-error); --role-error-icon: var(--cds-support-error); /* 5.0:1 */
+  --role-error-fg: #a2191f;    --role-error-bg: #fff1f1;    /* red-70 7.8:1 / red-10 */
+  /* caution: INPUT_INVALID, SWEEP_CAP_EXCEEDED, Fake note — ListBulleted. Icon one step darker than
+     the token (#F1C21B is 1.68:1), owner decision 2026-11-03 */
+  --role-caution-edge: var(--cds-support-warning); --role-caution-icon: #8e6a00; /* yellow-60 5.0:1 */
+  --role-caution-fg: #684e00;  --role-caution-bg: #fcf4d6;  /* yellow-70 7.8:1 / yellow-10 */
+  /* attention: UNAVAILABLE TIMEOUT / DEPENDENCY_NOT_MET, stale M1 — Time / Link */
+  --role-attention-edge: var(--cds-support-info); --role-attention-icon: var(--cds-support-info); /* 7.8:1 */
+  --role-attention-fg: #0043ce; --role-attention-bg: #edf5ff; /* blue-70 / blue-10 */
+  /* info: UNAVAILABLE NOT_APPLICABLE, notes, "not evaluated" — Information */
+  --role-info-edge: var(--cds-border-strong-01); --role-info-icon: var(--cds-border-strong-01); /* 3.3:1 */
+  --role-info-fg: var(--cds-text-secondary); --role-info-bg: #f4f4f4; /* 6.8:1 on page / gray-10 */
+  /* advisory: SizingAdvice (PS), SizingCheck (M2) — 1 px dashed outline on layer-02, purple Tag (§8) */
+  --role-advisory-edge: var(--cds-border-strong-01); --role-advisory-bg: var(--cds-layer-02);
+  --role-advisory-fg: #6929c4; /* purple-70 7.7:1 */
   --advisory-border-style: dashed;
-  /* Engine kind badge: FAKE reuses caution (placeholders), REAL uses neutral. */
+  /* old name kept for the screen modules until step (c) */
+  --role-success-border: var(--role-success-edge); --role-negative-border: var(--role-negative-edge);
+  --role-error-border: var(--role-error-edge); --role-caution-border: var(--role-caution-edge);
+  --role-attention-border: var(--role-attention-edge); --role-info-border: var(--role-info-edge);
+  --role-advisory-border: var(--role-advisory-edge);
 
   /* ---- Typography (system stacks only) ---- */
   --font-sans: "IBM Plex Sans", system-ui, "Segoe UI", Arial, sans-serif;   /* self-hosted, @ibm/plex-sans */
@@ -101,7 +116,7 @@
   --radius-pill: 0;  /* no rounded pills */
   --border-width: 1px;
   --border-width-strong: 2px;   /* advisory dashed outline, banner edge */
-  --banner-edge: 4px;           /* left edge of status banners */
+  --banner-edge: 3px;           /* left edge of status banners (guideline §7.2) */
   --shadow-1: none;  /* flat surfaces */
 
   /* ---- Focus ring (visible everywhere, independent of status hues) ---- */

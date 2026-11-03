@@ -1,4 +1,4 @@
-// Empty state (Doc 7 §6 "States: Empty"): what is missing and the one action that fills it.
+// Empty state (Doc 7 §6 "States: Empty"; guideline §6): 32 px icon, what is missing, the one action.
 import type { ReactNode } from "react";
 import { Icon, type IconName } from "./Icon";
 import styles from "./ui.module.css";
@@ -17,7 +17,7 @@ export function EmptyState({
   return (
     <div className={styles.empty}>
       <p className={styles.emptyTitle}>
-        <Icon name={icon} />
+        <Icon name={icon} size={32} />
         {title}
       </p>
       {children && <p>{children}</p>}

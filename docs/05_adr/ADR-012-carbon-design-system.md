@@ -69,6 +69,18 @@ React 19.3.1 falls inside the peer range of `@carbon/react`. Next.js 16 supports
 4. **Logos (D8).** These wait on the visual-identity check. Proposal: no logos in this round; the cover block in the Report gets the gradient bar, the title and the meta line only.
 5. **Rework.** The five screens already restyled under ADR-011 will be restyled again. Their selectors and layout stay; mostly classes and components change.
 
+## Deviations decided during implementation
+1. **Icon colour for INFEASIBLE and INPUT_INVALID** (owner decision, 2026-11-03, step b).
+   - Problem: on the white banner the §7.2 tokens fail the §12 rule that icons need 3:1. `support-caution-major` #FF832B measures 2.46:1 and `support-warning` #F1C21B measures 1.68:1.
+   - Decision:
+     - The left edge keeps the token.
+     - The icon uses the next darker step of the same hue from `@carbon/colors`: orange-60 #BA4E00 and yellow-60 #8E6A00, both 5.0:1.
+     - Coloured text in every role uses the 70 step, which is at least 7:1 on white, on the tint and on the page background.
+2. **Tertiary look of native buttons** (step b).
+   - Problem: §3.2 allows no override beyond its list, so the Carbon token `button-tertiary` stays blue.
+   - Decision: native buttons take their teal outline and hover from `button-primary*` instead.
+   - Consequence: a Carbon `<Button kind="tertiary">` would still render blue. Check this again when screens adopt Carbon Button in step (c).
+
 ## Trade-offs and consequences
 - Positive:
   - a recognised design system with tested Tabs, Modal and Toast;

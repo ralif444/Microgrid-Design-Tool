@@ -1,14 +1,18 @@
-// Advisory treatment (Doc 7 P4, FR-08, FR-27): dashed outline and an "Advice" tag, never design data.
+// Advisory treatment (Doc 7 P4, FR-08, FR-27; guideline §8): dashed outline on layer-02 and a purple
+// Tag, never design data.
+import { Tag } from "@carbon/react";
 import type { ReactNode } from "react";
 import styles from "./ui.module.css";
 
-export function AdvisoryPanel({ label, title, children }: { label: string; title: string; children: ReactNode }) {
+export function AdvisoryPanel({ label, title, tag = "Advice", children }: { label: string; title: string; tag?: string; children: ReactNode }) {
   return (
     <section className={styles.advice} aria-label={label}>
-      <p className={styles.adviceHead}>
-        <span className={styles.adviceChip}>Advice</span>
+      <div className={styles.adviceHead}>
+        <Tag type="purple" size="sm" className={styles.adviceTag}>
+          {tag}
+        </Tag>
         {title}
-      </p>
+      </div>
       {children}
     </section>
   );

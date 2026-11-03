@@ -2,6 +2,7 @@
 // Pipeline stepper (Doc 7 P1, §3): eight steps with done / stale / blocked state and the current
 // screen. Guidance only, never a wizard lock: every step stays a link. States are derived from the
 // Project store and the snapshot hash already used for the stale-M1 check (D-46); nothing is stored.
+import { Tag } from "@carbon/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ValidationReport } from "../api-types";
@@ -95,11 +96,16 @@ export function PipelineStepperView({ states, path, m1Missing = false }: { state
                 </span>
               )}
               {(state === "stale" || state === "blocked") && (
-                <span className={styles.flag} data-testid={st.n === 6 && state === "blocked" ? "step-6-blocked" : undefined}>
-                  <Icon name={state === "stale" ? "clock" : "ban"} size={12} />
-                  {state}
+                <Tag
+                  type={state === "stale" ? "warm-gray" : "cool-gray"}
+                  size="md"
+                  renderIcon={() => <Icon name={state === "stale" ? "clock" : "ban"} />}
+                  className={styles.flag}
+                  data-testid={st.n === 6 && state === "blocked" ? "step-6-blocked" : undefined}
+                >
+                  {state === "stale" ? "Stale" : "Blocked"}
                   {state === "blocked" && <span className="sr-only">: M1 {m1Missing ? "missing" : "stale"}</span>}
-                </span>
+                </Tag>
               )}
               {state === "done" && st.n !== null && <span className="sr-only">done</span>}
             </li>

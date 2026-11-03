@@ -1,17 +1,19 @@
 // M1 freshness badge and blocked banner for S-07 and S-08 (Doc 7 §3.1, §5).
+import { Tag } from "@carbon/react";
 import Link from "next/link";
 import { Icon } from "./Icon";
 import styles from "./ui.module.css";
 import type { Freshness } from "./useValidation";
 
+// Carbon Tag (guideline §6 badges): green current, warm-gray stale, cool-gray not run yet.
 export function M1FreshnessBadge({ f }: { f: Freshness }) {
   const text = { missing: "not run yet", stale: "stale", current: "current" }[f];
-  const icon = ({ missing: "dot", stale: "warn", current: "check" } as const)[f];
+  const icon = ({ missing: "dot", stale: "clock", current: "feasible" } as const)[f];
+  const type = ({ missing: "cool-gray", stale: "warm-gray", current: "green" } as const)[f];
   return (
-    <p data-testid="m1-freshness" data-f={f} className={styles.fresh}>
-      <Icon name={icon} size={14} />
+    <Tag type={type} size="md" renderIcon={() => <Icon name={icon} />} data-testid="m1-freshness" data-f={f} className={styles.fresh}>
       M1 result: {text}
-    </p>
+    </Tag>
   );
 }
 

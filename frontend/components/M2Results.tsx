@@ -1,5 +1,6 @@
 // M2 result parts (Doc 7 §5.1, §6.4): limiting constraints / margins, "not evaluated" list,
 // loadability, SizingCheck in an advisory panel separate from SizingAdvice (FR-25, FR-16, FR-24, FR-27).
+import { Tag } from "@carbon/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getMeta } from "../api-client";
@@ -51,17 +52,19 @@ export function ConstraintTable({ label, rows, shortcut = false }: { label: stri
       cell: (c) =>
         c.margin < 0 ? (
           <span className={styles.violated}>
-            <Icon name="cross" size={14} />
+            <Icon name="misuse" size={16} />
             Violated by {num(-c.margin)} {c.unit}
           </span>
         ) : (
           <>
             {num(c.margin)} {c.unit}
             {nearLimit(c, marginWarn) && (
-              <strong className="near-limit">
+              <>
                 {" "}
-                <Icon name="warn" size={12} /> Near limit
-              </strong>
+                <Tag type="warm-gray" size="md" renderIcon={() => <Icon name="warn" />} className={styles.near}>
+                  Near limit
+                </Tag>
+              </>
             )}
           </>
         ),
@@ -133,7 +136,7 @@ export function M2Results({ p }: { p: M2Payload }) {
         <dt>Stop reason</dt>
         <dd className={styles.text}>{l.stop_reason ?? "none"}</dd>
       </dl>
-      <AdvisoryPanel label="Sizing check" title="Sizing check (advisory, from the network)">
+      <AdvisoryPanel label="Sizing check" tag="Sizing check · from the network" title="Sizing check (advisory, from the network)">
         <DataTable label="Inverter ratings" columns={INV_SIZING} rows={s.per_inverter} rowKey={(i) => i.inverter_id} rowName={(i) => i.inverter_id} />
         <DataTable label="Line currents" columns={LINE_SIZING} rows={s.per_line} rowKey={(x) => x.line_id} rowName={(x) => x.line_id} />
         <p className={styles.basis}>

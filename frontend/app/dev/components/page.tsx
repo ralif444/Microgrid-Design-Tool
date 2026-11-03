@@ -1,16 +1,20 @@
 "use client";
-// Component gallery (ADR-011 step 1): every core component in every state, for review and
-// screenshots. Not linked from the app. All content is sample UI data: banner rows use the
+// Component gallery (ADR-011 step 1, ADR-012 step b): every core component in every state, for review
+// and screenshots. Not linked from the app. All content is sample UI data: banner rows use the
 // Doc 7 §5 texts from status-text.ts, table rows are the D2 example inputs, not results.
+import { Tag } from "@carbon/react";
 import { useState } from "react";
 import type { AnalysisResult, AnalysisType } from "../../../api-types";
 import { AdvisoryPanel } from "../../../components/AdvisoryPanel";
 import { DataTable, type DataColumn, type RowError } from "../../../components/DataTable";
 import { EmptyState } from "../../../components/EmptyState";
 import { EngineBadgeView } from "../../../components/EngineBadge";
+import { Icon } from "../../../components/Icon";
+import { M1BlockedNote, M1FreshnessBadge } from "../../../components/M1Freshness";
 import { NumberField } from "../../../components/NumberField";
 import { PipelineStepperView, STEPS, type StepState } from "../../../components/PipelineStepper";
-import { StatusBanner } from "../../../components/StatusBanner";
+import { StatusBanner, TOKEN_ROLE, statusIcon } from "../../../components/StatusBanner";
+import { bannerText } from "../../../components/status-text";
 import { Toast } from "../../../components/Toast";
 import { UnsavedFlag } from "../../../components/AppShell";
 
@@ -51,6 +55,19 @@ const BANNERS: [string, AnalysisType, AnalysisResult][] = [
   ["UNAVAILABLE / DEPENDENCY_NOT_MET, M1 not usable", "M2", r("UNAVAILABLE", "DEPENDENCY_NOT_MET", { diagnostics: { dependency_reason: "NOT_FEASIBLE" } })],
   ["UNAVAILABLE / NOT_APPLICABLE", "M4b", r("UNAVAILABLE", "NOT_APPLICABLE")],
   ["UNAVAILABLE / ENGINE_ERROR", "M1", r("UNAVAILABLE", "ENGINE_ERROR")],
+];
+
+// One row per guideline §7.2 line.
+const MAPPING = [
+  "FEASIBLE (M1)",
+  "INFEASIBLE (M2)",
+  "SOLVER_FAILED",
+  "PHYSICALLY_INADMISSIBLE",
+  "UNAVAILABLE / ENGINE_ERROR",
+  "INPUT_INVALID",
+  "UNAVAILABLE / TIMEOUT",
+  "UNAVAILABLE / DEPENDENCY_NOT_MET, missing",
+  "UNAVAILABLE / NOT_APPLICABLE",
 ];
 
 const STEPPER: [string, StepState[], string, boolean][] = [
@@ -119,10 +136,63 @@ export default function ComponentsPage() {
   return (
     <>
       <h1>Component gallery</h1>
-      <p>Sample states for review (ADR-011). Banner texts are the Doc 7 §5 texts; table rows are the D2 example inputs. Nothing here is a result.</p>
+      <p>Sample states for review (ADR-012). Banner texts are the Doc 7 §5 texts; table rows are the D2 example inputs. Nothing here is a result.</p>
+
+      <Demo title="Status mapping, guideline §7.2">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Status / reason</th>
+              <th scope="col">Role</th>
+              <th scope="col">Icon and word</th>
+            </tr>
+          </thead>
+          <tbody>
+            {BANNERS.filter(([label]) => MAPPING.includes(label)).map(([label, type, res]) => {
+              const role = TOKEN_ROLE[bannerText(type, res).role];
+              return (
+                <tr key={label}>
+                  <td>{label}</td>
+                  <td>{role}</td>
+                  <td>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--space-2)" }}>
+                      <span style={{ display: "inline-flex", color: `var(--role-${role}-icon)` }}>
+                        <Icon name={statusIcon(res)} size={20} />
+                      </span>
+                      {res.status}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </Demo>
+
+      <Demo title="Tags">
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-3)", alignItems: "center" }}>
+          <Tag type="warm-gray" size="md" renderIcon={() => <Icon name="warn" />}>
+            Near limit
+          </Tag>
+          <Tag type="purple" size="sm">
+            Advice
+          </Tag>
+          <Tag type="purple" size="sm">
+            Sizing check · from the network
+          </Tag>
+          <M1FreshnessBadge f="current" />
+          <M1FreshnessBadge f="stale" />
+          <M1FreshnessBadge f="missing" />
+        </div>
+      </Demo>
+
+      <Demo title="M1 blocked note">
+        <M1BlockedNote f="stale" />
+        <M1BlockedNote f="missing" />
+      </Demo>
 
       <Demo title="Engine badge and unsaved indicator">
-        <p style={{ display: "flex", gap: "var(--space-3)", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "var(--space-3)", alignItems: "center" }}>
           <EngineBadgeView kind="REAL" />
           <EngineBadgeView kind="FAKE" />
           <EngineBadgeView kind="unreachable" />
@@ -130,7 +200,7 @@ export default function ComponentsPage() {
             Example D2
             <UnsavedFlag />
           </span>
-        </p>
+        </div>
       </Demo>
 
       <Demo title="Pipeline stepper">
@@ -180,7 +250,10 @@ export default function ComponentsPage() {
 
       <Demo title="Buttons">
         <div style={{ display: "flex", gap: "var(--space-2)" }}>
-          <button type="button">Secondary</button>
+          <button type="button">Tertiary</button>
+          <button type="button" className="primary">
+            Primary
+          </button>
           <form onSubmit={(e) => e.preventDefault()} style={{ display: "inline" }}>
             <button type="submit">Run M1</button>
           </form>
@@ -196,6 +269,9 @@ export default function ComponentsPage() {
       <Demo title="Advisory panel">
         <AdvisoryPanel label="Sizing advice sample" title="Sizing advice (not design data)">
           <p>Accept makes it design data; Skip leaves the design unchanged.</p>
+        </AdvisoryPanel>
+        <AdvisoryPanel label="Sizing check sample" tag="Sizing check · from the network" title="Sizing check (advisory, from the network)">
+          <p>Computed from the network result; it never changes the design.</p>
         </AdvisoryPanel>
       </Demo>
 

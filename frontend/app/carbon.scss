@@ -38,4 +38,9 @@
 // Carbon v11 emits theme tokens only where asked: the whole app uses the custom light theme.
 :root {
   @include theme.theme();
+  // theme.theme() then emits the Button component tokens from Carbon white (blue) over the map
+  // values above; set them back from the same map (§3.2 values, nothing new).
+  @each $t in (button-primary, button-primary-hover, button-primary-active) {
+    --cds-#{$t}: #{map.get(theme.$theme, $t)};
+  }
 }

@@ -5,16 +5,16 @@ import { Icon, type IconName } from "./Icon";
 import styles from "./StatusBanner.module.css";
 import { type BannerText, bannerText } from "./status-text";
 
-// status-text roles → token roles (ADR-011 decision 4)
+// status-text roles → token roles (tokens.css, guideline §7.2)
 export const TOKEN_ROLE: Record<BannerText["role"], string> = {
   success: "success", warning: "negative", error: "error", caution: "caution", attention: "attention", neutral: "info",
 };
 
-// One icon per Doc 7 §5 row; error rows get distinct icons.
+// One icon per guideline §7.2 row; calculation failures share a colour and differ by icon.
 export function statusIcon(r: Pick<AnalysisResult, "status" | "status_code">): IconName {
   if (r.status === "UNAVAILABLE")
     return ({ TIMEOUT: "clock", DEPENDENCY_NOT_MET: "link", ENGINE_ERROR: "wrench" } as Record<string, IconName>)[r.status_code] ?? "info";
-  return ({ FEASIBLE: "check", INFEASIBLE: "cross", SOLVER_FAILED: "alert", PHYSICALLY_INADMISSIBLE: "ban", INPUT_INVALID: "list" } as Record<string, IconName>)[r.status];
+  return ({ FEASIBLE: "feasible", INFEASIBLE: "misuse", SOLVER_FAILED: "alert", PHYSICALLY_INADMISSIBLE: "hex", INPUT_INVALID: "list" } as Record<string, IconName>)[r.status];
 }
 
 const plain = (s: string) => s.trim().replace(/\.$/, "");
@@ -34,7 +34,7 @@ export function StatusBanner({ type, result }: { type: AnalysisType; result: Ana
       <p className={styles.headline}>{t.headline}</p>
       {message && <p className={styles.message}>{message}</p>}
       {fake && (
-        <p className={`fake-note ${styles.fake}`} data-testid="fake-warning">
+        <p className="fake-note" data-testid="fake-warning">
           <strong>FAKE engine:</strong> {fake.message}
         </p>
       )}
