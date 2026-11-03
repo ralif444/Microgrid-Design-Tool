@@ -24,3 +24,7 @@
 .bad { background: var(--role-negative-bg); color: var(--role-negative-fg); }
 .other { background: var(--role-caution-bg); color: var(--role-caution-fg); }
 .readout { margin: var(--space-2) 0 0; font-size: var(--text-sm); }
+/* S-11 scenario boxes and the compare row */
+.scenario h2 { margin: 0; font-size: var(--text-lg); }
+.scenario ul { margin: 0; }
+.actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }

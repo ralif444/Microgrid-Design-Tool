@@ -4,7 +4,7 @@ FR-93 (the latest result on the current design survives leaving a screen; a desi
 FR-86 (a chart figure's "Show data" table lists as many rows as the payload),
 FR-87 (S-07, S-08, S-10, S-12, S-13 and S-14 KPI strips), FR-88 (S-07 charts; S-08 margin chart and
 loadability axis; S-10 sweep chart; S-12 status grid; S-13 eigenvalue plot, participation note;
-S-14 time responses),
+S-14 time responses; S-09 tornado per metric; S-11 bars per metric across scenarios),
 FR-89 (crosshair: arrow keys move it, it shows a value with unit, Escape hides it),
 FR-90 (Inspector side panel).
 """
@@ -240,3 +240,35 @@ def test_fr_87_fr_88_fr_89_sweep_and_envelope(server: Callable[[str], str], page
     expect(
         page.get_by_role("table", name="Status per point data").locator("tbody tr")
     ).to_have_count(4)
+
+
+def test_fr_88_tornado_and_scenario_bars(server: Callable[[str], str], page: Page) -> None:
+    enter_design(page, server("default"), gui_snapshot())
+    _run_m1(page)
+    page.get_by_role("link", name="Sensitivity (M3a)").click()
+    page.get_by_label("inverters/INV1/rated_kva").check()
+    page.get_by_label("inverters/INV2/rated_kva").check()
+    page.get_by_label("System frequency (Hz)").check()
+    page.get_by_label("Step (ratio)").fill("0.01")
+    page.get_by_role("button", name="Run M3a").click()
+    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
+    tornado = page.get_by_role("figure", name="Tornado: System frequency")
+    expect(
+        tornado.get_by_role("img", name="Normalised sensitivity (ratio) bar chart, 2 bars")
+    ).to_be_visible()
+    expect(tornado).to_contain_text("FAKE engine: placeholder, not an engine result")
+    expect(tornado).to_contain_text("rank order")
+
+    page.get_by_role("link", name="Scenarios (M3c)").click()
+    page.get_by_role("button", name="Run N−1 check").click()
+    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
+    bars = page.get_by_role("figure", name="System frequency per scenario")
+    expect(
+        bars.get_by_role("img", name="System frequency (Hz) dot chart, 3 points")
+    ).to_be_visible()
+    expect(bars).to_contain_text("not a ranking")
+    expect(bars).to_contain_text("FAKE engine: placeholder, not an engine result")
+    bars.get_by_role("button", name="Show data: System frequency per scenario").click()
+    data = page.get_by_role("table", name="System frequency per scenario data")
+    expect(data.locator("tbody tr")).to_have_count(3)
+    expect(data).to_contain_text("Without INV1 (FEASIBLE)")

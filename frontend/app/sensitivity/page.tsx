@@ -2,13 +2,24 @@
 // S-09 Sensitivity (M3a) (Doc 7 §6.5): parameters and output metrics, one step size without a
 // default (Doc 3 §6.4); results ranked per metric by absolute normalised effect. Pre-filled from an
 // M2 limiting constraint via ?kind=&element= (Doc 12 FR-84); nothing runs until Run is pressed.
+// UX-8 (Doc 12 X3): one tornado chart per metric (normalised values in payload rank order; a null
+// is listed as not reported with its reason, never drawn); a status change is flagged with icon + word.
 import { useEffect, useState } from "react";
 import type { M3aPayload, OutputMetric } from "../../api-types";
+import { BarChart } from "../../components/charts/BarChart";
+import { DataTable, type DataColumn } from "../../components/DataTable";
+import { EmptyState } from "../../components/EmptyState";
 import { fmt, InfeasibleNote, METRICS, numericPaths, shortcutPrefill, useDependentRun } from "../../components/Further";
+import styles from "../../components/Further.module.css";
+import { Icon } from "../../components/Icon";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
+import { Toast } from "../../components/Toast";
+
+type Sens = M3aPayload["sensitivities"][number];
+const FLAG = "status differs between the two sides";
 
 function Sensitivity() {
   const { design, fresh, busy, resp, error, run, m2Infeasible } = useDependentRun("M3a");
@@ -16,6 +27,7 @@ function Sensitivity() {
   const [metrics, setMetrics] = useState<OutputMetric[]>([]);
   const [stepKind, setStepKind] = useState<"step_relative" | "step_absolute">("step_relative");
   const [step, setStep] = useState<number | null>(null);
+  const [dismissed, setDismissed] = useState<string | null>(null);
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     const pre = shortcutPrefill(design, q.get("kind") ?? "", q.get("element") ?? "");
@@ -30,17 +42,21 @@ function Sensitivity() {
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as M3aPayload) : null;
   return (
     <>
-      <h1>Sensitivity (M3a)</h1>
-      <M1FreshnessBadge f={fresh} />
+      <div className={styles.head}>
+        <h1>Sensitivity (M3a)</h1>
+        <M1FreshnessBadge f={fresh} />
+      </div>
+      <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
       <form
         aria-label="Sensitivity settings"
+        className={styles.form}
         onSubmit={(e) => {
           e.preventDefault();
           void run({ parameters: { parameter_paths: paths, output_metrics: metrics, ...(step === null ? {} : { [stepKind]: step }) } });
         }}
       >
-        <fieldset>
+        <fieldset className={styles.box}>
           <legend>Parameters</legend>
           {numericPaths(design).map((pp) => (
             <label key={pp}>
@@ -48,7 +64,7 @@ function Sensitivity() {
             </label>
           ))}
         </fieldset>
-        <fieldset>
+        <fieldset className={styles.box}>
           <legend>Output metrics</legend>
           {METRICS.map(([m, label, unit]) => (
             <label key={m}>
@@ -56,7 +72,7 @@ function Sensitivity() {
             </label>
           ))}
         </fieldset>
-        <fieldset>
+        <fieldset className={styles.box}>
           <legend>Step size (Eq. 4.17)</legend>
           <label>
             <input type="radio" checked={stepKind === "step_relative"} onChange={() => setStepKind("step_relative")} /> relative to the parameter value
@@ -64,55 +80,75 @@ function Sensitivity() {
           <label>
             <input type="radio" checked={stepKind === "step_absolute"} onChange={() => setStepKind("step_absolute")} /> absolute, in the parameter unit
           </label>
-          <p>
-            <NumberField id="step" label="Step" unit={stepKind === "step_relative" ? "ratio" : "parameter unit"} value={step} onChange={setStep} />
-          </p>
+          <NumberField id="step" label="Step" unit={stepKind === "step_relative" ? "ratio" : "parameter unit"} value={step} onChange={setStep} />
         </fieldset>
         {paths.length === 0 && <p>Pick at least one parameter.</p>}
-        <button type="submit" disabled={busy || fresh !== "current"}>
+        <button type="submit" className="primary" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
           {busy ? "Running..." : "Run M3a"}
         </button>
       </form>
-      <M1BlockedNote f={fresh} />
-      {error && <p role="alert">{error}</p>}
+      {error && error !== dismissed && <Toast message={error} onDismiss={() => setDismissed(error)} />}
       {r && <StatusBanner type="M3a" result={r} />}
       {p &&
-        METRICS.filter(([m]) => p.sensitivities.some((s) => s.metric === m)).map(([m, label]) => {
+        resp &&
+        METRICS.filter(([m]) => p.sensitivities.some((s) => s.metric === m)).map(([m, label, unit]) => {
           const rank = new Map(p.ranking.filter((x) => x.metric === m).map((x) => [x.parameter_path, x.rank]));
           const rows = p.sensitivities
             .filter((s) => s.metric === m)
             .sort((a, b) => (rank.get(a.parameter_path) ?? Infinity) - (rank.get(b.parameter_path) ?? Infinity));
+          const drawn = rows.filter((s) => s.normalised_value !== null && s.normalised_value !== undefined);
+          const missing = rows.filter((s) => !drawn.includes(s));
+          const flagged = rows.filter((s) => s.status_change);
+          const columns: DataColumn<Sens>[] = [
+            { key: "rank", header: "Rank", numeric: true, cell: (s) => rank.get(s.parameter_path) ?? "—" },
+            { key: "path", header: "Parameter", cell: (s) => s.parameter_path },
+            { key: "v", header: "dy/dp", cell: (s) => `${fmt(s.value)}${s.value === null || !s.unit ? "" : ` ${s.unit}`}` },
+            { key: "n", header: "Normalised", unit: "ratio", numeric: true, cell: (s) => fmt(s.normalised_value) },
+            { key: "s", header: "Scheme", cell: (s) => s.scheme ?? "—" },
+            {
+              key: "note",
+              header: "Note",
+              cell: (s) => (
+                <>
+                  {s.status_change && (
+                    <>
+                      <Icon name="warn" /> {FLAG}
+                      {s.reason ? "; " : ""}
+                    </>
+                  )}
+                  {s.reason ?? (s.status_change ? "" : "—")}
+                </>
+              ),
+            },
+          ];
           return (
-            <table key={m} aria-label={`Sensitivity of ${label}`}>
-              <caption>Sensitivity of {label}</caption>
-              <thead>
-                <tr>
-                  <th>Rank</th>
-                  <th>Parameter</th>
-                  <th>dy/dp</th>
-                  <th>Normalised</th>
-                  <th>Scheme</th>
-                  <th>Note</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((s) => (
-                  <tr key={s.parameter_path}>
-                    <td>{rank.get(s.parameter_path) ?? "—"}</td>
-                    <td>{s.parameter_path}</td>
-                    <td>
-                      {fmt(s.value)} {s.value === null ? "" : s.unit}
-                    </td>
-                    <td>{fmt(s.normalised_value)}</td>
-                    <td>{s.scheme ?? "—"}</td>
-                    <td>{[s.reason, s.status_change ? "status differs between the two sides" : null].filter(Boolean).join("; ")}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <section key={m} aria-label={`Results for ${label}`}>
+              <BarChart
+                title={`Tornado: ${label}`}
+                valueTitle="Normalised sensitivity (ratio)"
+                categoryTitle="Parameter"
+                categories={drawn.map((s) => `${s.parameter_path}${s.status_change ? " (status differs)" : ""}`)}
+                series={[{ name: label, values: drawn.map((s) => s.normalised_value ?? null) }]}
+                labelWidth={230}
+                note={[
+                  `Bars in the payload's rank order (largest absolute normalised effect first); metric unit ${unit}.`,
+                  missing.length ? `Not reported: ${missing.map((s) => `${s.parameter_path} (${s.reason ?? "no reason given"})`).join("; ")}.` : null,
+                  flagged.length ? `Status differs between the two sides for: ${flagged.map((s) => s.parameter_path).join(", ")}.` : null,
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                record={resp.run_record}
+              />
+              <DataTable label={`Sensitivity of ${label}`} caption={`Sensitivity of ${label}`} columns={columns} rows={rows} rowKey={(s) => s.parameter_path} rowName={(s) => s.parameter_path} />
+            </section>
           );
         })}
-      {!resp && <p>Not run yet.</p>}
+      {p && resp && (
+        <p className={styles.record}>
+          RunRecord <code>{resp.run_record.record_id}</code>, engine {resp.run_record.engine_kind ?? "not called"}.
+        </p>
+      )}
+      {!resp && <EmptyState title="Not run yet.">Pick parameters, output metrics and a step, then run M3a to rank the parameters by effect.</EmptyState>}
     </>
   );
 }
