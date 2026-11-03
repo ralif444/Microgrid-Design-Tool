@@ -27,11 +27,13 @@ export type SldLayout = {
 
 // Geometry in diagram units (1 unit = 1 px at 100 %), guideline §3
 export const BAR_H = 6;
-export const SLOT_W = 70;
-export const INV_TIER = 90; // bus label, inverter square 36, stub 20, labels
-export const BUS_LABEL = 22; // bus label above a bar without inverters
-export const LOAD_TIER = 76; // arrow 30 + head 14 + two label lines
-const SYSTEM = { w: 240, h: 64 };
+export const SLOT_W = 90; // 70 in guideline §3; 90 so stacked inverter labels clear their neighbour (SLD-3)
+export const INV_TIER = 132; // mark, id, rating and two M1 lines above the square 36, stub 20
+export const BUS_LABEL = 64; // bus label stack (mark, id, two M1 lines) above a bar without inverters
+/** Left end of every bar holds the bus label stack; inverter slots start after it (SLD-3). */
+export const LABEL_W = 100;
+export const LOAD_TIER = 104; // arrow 30 + head 14 + up to four label lines
+const SYSTEM = { w: 240, h: 76 };
 const GAP = 40;
 const ROW_GAP = 60;
 
@@ -69,7 +71,7 @@ function boxSize(model: SldModel, id: string) {
   const lines = model.lines.filter((l) => l.from === id || l.to === id).length;
   const top = inv ? INV_TIER : BUS_LABEL;
   const bottom = load ? LOAD_TIER : 10;
-  return { w: Math.max(140, SLOT_W * (Math.max(inv, load) + lines) + 40), top, h: top + BAR_H + bottom };
+  return { w: Math.max(140, LABEL_W + SLOT_W * (Math.max(inv, load) + lines) + 20), top, h: top + BAR_H + bottom };
 }
 
 /** BFS hops from the nearest inverter Bus; Buses no source reaches get Infinity. */
@@ -162,7 +164,8 @@ export async function layoutSld(model: SldModel): Promise<SldLayout> {
       const own = list.filter((e) => e.busId === b.id);
       // a Line on either side counts: a stub in line with a conductor reads as one wire
       const c = covered.get(b.id)!;
-      const xs = slots(box.x, box.x + box.w, own.length, tier === "top" ? [...c.top, ...c.bottom] : [...c.bottom, ...c.top]);
+      const x1 = tier === "top" ? box.x + LABEL_W : box.x;
+      const xs = slots(x1, box.x + box.w, own.length, (tier === "top" ? [...c.top, ...c.bottom] : [...c.bottom, ...c.top]).filter((o) => o > x1));
       return own.map((e, k) => ({ id: e.id, busId: b.id, x: xs[k], barY: box.barY }));
     });
 

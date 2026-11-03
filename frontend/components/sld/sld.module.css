@@ -1,0 +1,57 @@
+/* Single-line diagram (Doc 12 X8; SLD guideline §3, §5; VISUAL §7, §11). Symbols draw in `currentColor`:
+   navy by default, teal on hover/focus/selection, caution-major for a violated or limiting element.
+   Text keeps its own colour; status is icon + word. Tokens only, no hex. */
+.el { color: var(--cds-text-primary); }
+.marked { color: var(--role-negative-edge); }
+.el:hover, .el:focus-visible, .hover, .selected { color: var(--cds-interactive); }
+.el:focus { outline: none; }
+
+.bar { fill: currentColor; stroke: currentColor; stroke-width: 0; }
+.wire, .conductor { fill: none; stroke: currentColor; stroke-width: 2; }
+.box { fill: var(--cds-layer-01); stroke: currentColor; stroke-width: 2; }
+.head { fill: currentColor; }
+.block { fill: var(--cds-layer-01); stroke: var(--cds-border-subtle-01); stroke-width: 1; }
+.el:hover .wire, .el:hover .conductor, .el:hover .box, .el:focus-visible .wire, .el:focus-visible .conductor, .el:focus-visible .box,
+.hover .wire, .hover .conductor, .hover .box, .selected .wire, .selected .conductor, .selected .box { stroke-width: 3; }
+.el:hover .bar, .el:focus-visible .bar, .hover .bar, .selected .bar { stroke-width: 2; }
+
+/* selection: highlight halo behind the element (guideline §5) */
+.halo { fill: none; stroke: none; }
+.lineHalo { fill: none; stroke: none; stroke-width: 12; stroke-linejoin: round; }
+.selected .halo { fill: var(--cds-highlight); }
+.selected .lineHalo { stroke: var(--cds-highlight); }
+
+.issueOutline { fill: none; stroke: var(--role-error-edge); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.isolatedOutline { fill: none; stroke: var(--role-caution-edge); stroke-width: 1.5; stroke-dasharray: 4 3; }
+
+.id, .label, .sec, .tag, .deco, .glyph { font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
+.id { font-size: 13px; font-weight: 600; fill: var(--cds-text-primary); }
+.label { font-size: 12px; fill: var(--cds-text-primary); }
+.sec { font-size: 12px; fill: var(--cds-text-secondary); }
+.tag { font-size: 12px; fill: var(--cds-text-secondary); }
+.glyph { font-size: 16px; font-weight: 600; fill: currentColor; }
+.deco { font-size: 12px; font-weight: 600; }
+.pill { fill: var(--cds-layer-01); }
+
+.negative .deco { fill: var(--role-negative-fg); }
+.negative .icon { color: var(--role-negative-icon); }
+.neutral .deco { fill: var(--cds-text-primary); }
+.neutral .icon { color: var(--cds-text-secondary); }
+.error .deco { fill: var(--role-error-fg); }
+.error .icon { color: var(--role-error-icon); }
+.caution .deco { fill: var(--role-caution-fg); }
+.caution .icon { color: var(--role-caution-icon); }
+
+.legend { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-6); margin: var(--space-2) 0 0; padding: var(--space-2) var(--space-4); list-style: none;
+  background: var(--cds-layer-01); color: var(--cds-text-primary); font-size: var(--text-sm); }
+.legend li { display: inline-flex; align-items: center; gap: var(--space-2); }
+
+.figure { margin: 0; overflow: auto; background: var(--cds-layer-01); border: var(--border-width) solid var(--cds-border-subtle-01); }
+.figure svg { display: block; }
+
+/* print: navy/black strokes, no teal, no halo, grayscale-readable (guideline §7) */
+@media print {
+  .el, .hover, .selected { color: var(--cds-text-primary); }
+  .marked { color: var(--cds-text-primary); }
+  .selected .halo, .selected .lineHalo { fill: none; stroke: none; }
+}
