@@ -18,7 +18,8 @@ export function M1FreshnessBadge({ f }: { f: Freshness }) {
 export function M1BlockedNote({ f }: { f: Freshness }) {
   if (f === "current") return null;
   return (
-    <p role="alert" data-testid="m1-blocked">
+    <p role="alert" data-testid="m1-blocked" className={styles.blocked}>
+      <Icon name={f === "stale" ? "clock" : "link"} />
       {f === "stale"
         ? "The design changed after the last power flow. Re-run M1 to continue."
         : "Run power flow (M1) first."}{" "}

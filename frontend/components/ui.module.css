@@ -54,3 +54,9 @@
 }
 .fresh[data-f="current"] { border-color: var(--role-success-border); background: var(--role-success-bg); color: var(--role-success-fg); }
 .fresh[data-f="stale"] { border-color: var(--role-caution-border); background: var(--role-caution-bg); color: var(--role-caution-fg); }
+.blocked {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); max-width: var(--prose-max);
+  margin: var(--space-3) 0; padding: var(--space-2) var(--space-4);
+  background: var(--role-attention-bg); color: var(--role-attention-fg);
+  border-left: var(--banner-edge) solid var(--role-attention-border); border-radius: var(--radius-2);
+}

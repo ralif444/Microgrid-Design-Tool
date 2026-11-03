@@ -4,13 +4,18 @@
 import { useState } from "react";
 import { runAnalysis } from "../../api-client";
 import type { AnalysisResponse, M2Payload, RunRecord } from "../../api-types";
+import Link from "next/link";
+import { EmptyState } from "../../components/EmptyState";
+import { Icon } from "../../components/Icon";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { ConstraintTable, M2Results } from "../../components/M2Results";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
+import { Toast } from "../../components/Toast";
 import { m1Freshness, useValidation } from "../../components/useValidation";
 import { m1Ref, useProject, useProjectDispatch } from "../../store";
+import styles from "./constraint-check.module.css";
 
 const SOLVER = { mismatch_tolerance_w: 0.001, max_iterations: 50, initial_guess: "DEFAULT" as const };
 
@@ -63,35 +68,46 @@ function ConstraintCheck() {
   const notices = r?.warnings?.filter((w) => w.code !== "ENGINE_KIND_FAKE") ?? [];
   return (
     <>
-      <h1>Constraint check (M2)</h1>
-      <M1FreshnessBadge f={fresh} />
+      <div className={styles.head}>
+        <h1>Constraint check (M2)</h1>
+        <M1FreshnessBadge f={fresh} />
+      </div>
+      <M1BlockedNote f={fresh} />
       <form
         aria-label="Constraint check settings"
+        className={styles.form}
         onSubmit={(e) => {
           e.preventDefault();
           void run();
         }}
       >
         {FIELDS.map(([k, label, unit, step]) => (
-          <p key={k}>
-            <NumberField id={k} label={label} unit={unit} step={step} value={params[k]} onChange={(v) => setParams({ ...params, [k]: v })} />
-          </p>
+          <NumberField key={k} id={k} label={label} unit={unit} step={step} value={params[k]} onChange={(v) => setParams({ ...params, [k]: v })} />
         ))}
-        <button type="submit" disabled={busy || fresh !== "current"}>
+        <button type="submit" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
           {busy ? "Running..." : "Run M2"}
         </button>
       </form>
-      <M1BlockedNote f={fresh} />
-      {error && <p role="alert">{error}</p>}
+      {error && <Toast message={error} onDismiss={() => setError(null)} />}
       {r && <StatusBanner type="M2" result={r} />}
       {notices.map((w, k) => (
-        <p key={k} data-testid="m2-warning">
+        <p key={k} data-testid="m2-warning" className={styles.warning}>
+          <Icon name="warn" />
           {w.message}
         </p>
       ))}
       {r?.status === "INFEASIBLE" && <ConstraintTable label="Limiting constraints" rows={r.limiting_constraints ?? []} shortcut />}
       {payload && <M2Results p={payload} />}
-      {!resp && <p>Not run yet.</p>}
+      {!resp &&
+        fresh === "current" &&
+        (runRecords.some((x) => x.analysis_type === "M2") ? (
+          // results live in page state; the last run stays in Run history and the Report
+          <EmptyState title="No result on this screen." action={<Link href="/runs/">Open run history</Link>}>
+            Run M2 again to see the results here.
+          </EmptyState>
+        ) : (
+          <EmptyState title="Not run yet.">Enter both design margins, then run M2.</EmptyState>
+        ))}
     </>
   );
 }
