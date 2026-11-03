@@ -136,7 +136,7 @@ function Loads() {
         />
       )}
       {other.length > 0 && (
-        <div className={styles.other}>
+        <div className="problems">
           <Icon name="list" size={20} />
           <ul aria-label="Other problems">
             {other.map((i, k) => (

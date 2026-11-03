@@ -196,12 +196,12 @@ function Network() {
       </details>
       <h2>Issues</h2>
       {listed.length === 0 ? (
-        <p className={styles.ok}>
+        <p className="all-clear">
           <Icon name="feasible" />
           No network-level problems found.
         </p>
       ) : (
-        <div className={styles.issues}>
+        <div className="problems">
           <Icon name="list" size={20} />
           <ul aria-label="Network issues">
             {listed.map((i, k) => (

@@ -55,18 +55,21 @@ function PowerFlow() {
       {report === null ? (
         <p className={styles.checking}>Checking the design…</p>
       ) : report.valid ? (
-        <p className={styles.ok}>
-          <Icon name="check" />
+        <p className="all-clear">
+          <Icon name="feasible" />
           No problems found.
         </p>
       ) : (
-        <ul aria-label="Readiness warnings" className={styles.warnings}>
-          {report.issues.map((i, k) => (
-            <li key={k}>
-              {[i.entity, i.id, i.field].filter(Boolean).join(" / ") || "Design"}: {i.message}
-            </li>
-          ))}
-        </ul>
+        <div className="problems">
+          <Icon name="list" size={20} />
+          <ul aria-label="Readiness warnings">
+            {report.issues.map((i, k) => (
+              <li key={k}>
+                {[i.entity, i.id, i.field].filter(Boolean).join(" / ") || "Design"}: {i.message}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       {report && !report.valid && <p className={styles.note}>You can still run M1; the result will list every problem.</p>}
       {error && <Toast message={error} onDismiss={() => setError(null)} />}

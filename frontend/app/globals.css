@@ -52,6 +52,10 @@ button[aria-busy="true"]::before {
   content: ""; display: inline-block; width: 0.8em; height: 0.8em; margin-right: var(--space-2); vertical-align: -0.1em;
   border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;
 }
+/* a busy primary keeps its colour, like Carbon InlineLoading in the button area (guideline §6) */
+button.primary[aria-busy="true"]:disabled, form button[type="submit"][aria-busy="true"]:disabled {
+  background: var(--cds-button-primary); border-color: var(--cds-button-primary); color: var(--cds-text-on-color); cursor: progress;
+}
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { button[aria-busy="true"]::before { animation: none; } }
 /* Fields look like Carbon TextInput / Select (guideline §6): field-01 on the page, a tint on a white
@@ -105,6 +109,18 @@ td, code { overflow-wrap: anywhere; }
 .fake-note { background: var(--role-caution-bg); color: var(--role-caution-fg); border-left: var(--banner-edge) solid var(--role-caution-border); padding: var(--space-1) var(--space-2); }
 .outdated { font-weight: var(--weight-semibold); color: var(--role-negative-fg); }
 tr.focus { outline: var(--focus-width) solid var(--focus-color); background: var(--role-info-bg); }
+
+/* Design problems listed before a run: the INPUT_INVALID banner look (guideline §7.2) with text in
+   text-primary; "all clear" lines carry the FEASIBLE icon. Used on S-03, S-05, S-07. */
+.problems {
+  display: flex; align-items: flex-start; gap: var(--space-2); max-width: var(--prose-max); margin: var(--space-2) 0 var(--space-4);
+  padding: var(--space-3) var(--space-4); background: var(--cds-layer-01); border: var(--border-width) solid var(--color-border);
+  border-left: var(--banner-edge) solid var(--role-caution-edge);
+}
+.problems > svg { fill: var(--role-caution-icon); flex: none; }
+.problems ul { margin: 0; padding-left: var(--space-5); }
+.all-clear { display: flex; align-items: center; gap: var(--space-2); }
+.all-clear > svg { fill: var(--role-success-icon); }
 
 /* Print layout (FR-60): hide controls, keep tables and charts whole. */
 @media print {
