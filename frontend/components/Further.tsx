@@ -2,8 +2,8 @@
 // Shared parts of the further-analysis screens S-09..S-11 (Doc 7 §6.5, Doc 9 D-56).
 import { useState } from "react";
 import { runAnalysis } from "../api-client";
-import type { AnalysisRequestBody, AnalysisResponse, AnalysisType, OutputMetric, ProjectSnapshot } from "../api-types";
-import { m1Ref, useProject, useProjectDispatch } from "../store";
+import type { AnalysisRequestBody, AnalysisResponse, AnalysisType, OutputMetric, ProjectSnapshot, RunRecord } from "../api-types";
+import { latestRun, m1Ref, useProject, useProjectDispatch } from "../store";
 import { m1Freshness, useValidation } from "./useValidation";
 
 export const SOLVER = { mismatch_tolerance_w: 0.001, max_iterations: 50, initial_guess: "DEFAULT" as const };
@@ -104,9 +104,10 @@ export function useDependentRun(type: AnalysisType) {
   const { design, runRecords } = useProject();
   const dispatch = useProjectDispatch();
   const ref = m1Ref(runRecords);
-  const fresh = m1Freshness(ref?.snapshot_hash ?? null, useValidation(design));
+  const report = useValidation(design);
+  const fresh = m1Freshness(ref?.snapshot_hash ?? null, report);
   const [busy, setBusy] = useState(false);
-  const [resp, setResp] = useState<AnalysisResponse | null>(null);
+  const resp = asResponse(latestRun(runRecords, type, report?.snapshot_hash ?? null));
   const [error, setError] = useState<string | null>(null);
   async function run(extra: Pick<AnalysisRequestBody, "parameters" | "scenarios">) {
     if (!ref) return;
@@ -118,11 +119,13 @@ export function useDependentRun(type: AnalysisType) {
       setError(out.message);
       return;
     }
-    setResp(out.data);
     dispatch({ type: "runRecordAdded", record: out.data.run_record });
   }
   return { design, fresh, busy, resp, error, run, m2Infeasible: lastM2Infeasible(runRecords) };
 }
+
+// A stored RunRecord in the shape of a fresh response (Doc 12 X0, FR-93).
+export const asResponse = (r: RunRecord | null): AnalysisResponse | null => (r ? { result: r.result, run_record: r } : null);
 
 function lastM2Infeasible(records: { analysis_type: string; result: { status: string } }[]): boolean {
   return records.findLast((r) => r.analysis_type === "M2")?.result.status === "INFEASIBLE";

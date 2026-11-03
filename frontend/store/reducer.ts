@@ -233,6 +233,16 @@ export function adviceInputHash(design: ProjectSnapshot, ps: PsParameters): Prom
   return sha256Hex({ loads: design.loads ?? [], load_profile: design.load_profile ?? null, ps_parameters: ps });
 }
 
+// Doc 12 X0 (FR-93): the latest RunRecord of a type on the current design, any Status. Result
+// screens show it, so a result survives leaving the screen; a design edit hides it (D-72 K151).
+// An M3c hash also covers its scenarios (Doc 3 §6), so M3c matches on its M1 reference, whose hash
+// equals the base design by the dependency rule (Doc 3 §5).
+export function latestRun(runRecords: RunRecord[], type: string, current: string | null): RunRecord | null {
+  if (current === null) return null;
+  const hash = (r: RunRecord) => (type === "M3c" ? (r.depends_on as RunRecordRef | null)?.snapshot_hash : r.snapshot_hash);
+  return runRecords.findLast((r) => r.analysis_type === type && hash(r) === current) ?? null;
+}
+
 // Latest FEASIBLE M1 as the dependency reference for M2 (Doc 3 §5.1 RunRecordRef), or null.
 export function m1Ref(runRecords: RunRecord[]): RunRecordRef | null {
   const rec = runRecords.findLast((r) => r.analysis_type === "M1" && r.result.status === "FEASIBLE");

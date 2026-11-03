@@ -4,8 +4,9 @@
 import Link from "next/link";
 import { useState } from "react";
 import { runAnalysis } from "../../api-client";
-import type { AnalysisResponse, M1Payload } from "../../api-types";
+import type { M1Payload } from "../../api-types";
 import { EmptyState } from "../../components/EmptyState";
+import { asResponse } from "../../components/Further";
 import { Icon } from "../../components/Icon";
 import { IndicatorPanel } from "../../components/IndicatorPanel";
 import { M1FreshnessBadge } from "../../components/M1Freshness";
@@ -14,7 +15,7 @@ import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import { m1Freshness, useValidation } from "../../components/useValidation";
-import { m1Ref, useProject, useProjectDispatch } from "../../store";
+import { latestRun, m1Ref, useProject, useProjectDispatch } from "../../store";
 import styles from "./power-flow.module.css";
 
 const SOLVER = { mismatch_tolerance_w: 0.001, max_iterations: 50, initial_guess: "DEFAULT" as const };
@@ -23,9 +24,9 @@ function PowerFlow() {
   const { design, runRecords } = useProject();
   const dispatch = useProjectDispatch();
   const [busy, setBusy] = useState(false);
-  const [resp, setResp] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const report = useValidation(design);
+  const resp = asResponse(latestRun(runRecords, "M1", report?.snapshot_hash ?? null));
   const fresh = m1Freshness(m1Ref(runRecords)?.snapshot_hash ?? null, report);
 
   async function run() {
@@ -37,7 +38,6 @@ function PowerFlow() {
       setError(out.message);
       return;
     }
-    setResp(out.data);
     dispatch({ type: "runRecordAdded", record: out.data.run_record });
   }
 
@@ -78,9 +78,9 @@ function PowerFlow() {
         (fresh === "missing" ? (
           <EmptyState title="Not run yet.">Run M1 to see bus voltages, inverter outputs and line flows.</EmptyState>
         ) : (
-          // results live in page state; the last run stays in Run history and the Report
+          // the design changed after the last run (FR-93); that run stays in Run history and the Report
           <EmptyState title="No result on this screen." action={<Link href="/runs/">Open run history</Link>}>
-            Run M1 again to see the results here.
+            The design changed after the last run. Run M1 again to see the results here.
           </EmptyState>
         ))}
       {resp && <StatusBanner type="M1" result={resp.result} />}

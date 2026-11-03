@@ -3,14 +3,16 @@
 // SWEEP_CAP from /api/meta; over the cap the request is still sendable and comes back
 // INPUT_INVALID / SWEEP_CAP_EXCEEDED (Doc 7 §3.1).
 import { useState } from "react";
-import type { KeyMetrics, M3bPayload } from "../../api-types";
+import type { KeyMetrics, M3bPayload, RunRecord, SweepPoint } from "../../api-types";
 import { SizeIndicator, useAxis, useSweepCap } from "../../components/AxisForm";
 import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { ConstraintTable } from "../../components/M2Results";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
-import { SweepChart } from "../../components/SweepChart";
+import { LineChart } from "../../components/charts/LineChart";
+import { Swatch } from "../../components/charts/marks";
+import { SERIES } from "../../components/charts/palette";
 
 const KEY_METRICS: [keyof KeyMetrics, string][] = [
   ["system_frequency_hz", "System frequency (Hz)"],
@@ -67,12 +69,7 @@ function Sweep() {
               ))}
             </select>
           </p>
-          <SweepChart
-            points={p.points}
-            metric={metric}
-            xLabel={`${ax.name} (${unit})`}
-            yLabel={KEY_METRICS.find(([k]) => k === metric)?.[1] ?? metric}
-          />
+          <SweepPlot points={p.points} metric={metric} xTitle={`${ax.name} (${unit})`} record={resp?.run_record ?? null} />
           <table aria-label="Sweep points">
             <caption>Sweep points</caption>
             <thead>
@@ -116,5 +113,27 @@ export default function SweepPage() {
     <RequireProject>
       <Sweep />
     </RequireProject>
+  );
+}
+
+// Marker shape carries the Status (circle feasible, cross infeasible); a point without a value is
+// a gap, listed in the point table (Doc 12 X1, FR-86). Points without an axis value are not drawn.
+function SweepPlot({ points, metric, xTitle, record }: { points: SweepPoint[]; metric: keyof KeyMetrics; xTitle: string; record: RunRecord | null }) {
+  const shown = points.filter((p) => typeof p.value === "number");
+  const legend = [
+    { name: "feasible", swatch: <Swatch color={SERIES[0]} marker="circle" /> },
+    { name: "infeasible", swatch: <Swatch color={SERIES[0]} marker="cross" /> },
+  ];
+  return (
+    <LineChart
+      title="Sweep"
+      xTitle={xTitle}
+      yTitle={KEY_METRICS.find(([k]) => k === metric)?.[1] ?? metric}
+      x={shown.map((p) => p.value as number)}
+      series={[{ name: KEY_METRICS.find(([k]) => k === metric)?.[1] ?? metric, values: shown.map((p) => (typeof p.key_metrics[metric] === "number" ? (p.key_metrics[metric] as number) : null)), marker: (i) => (shown[i].status === "FEASIBLE" ? "circle" : "cross") }]}
+      legend={legend}
+      note="A point with no operating point (failed) has no value and leaves a gap."
+      record={record}
+    />
   );
 }

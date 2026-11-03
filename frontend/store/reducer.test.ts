@@ -3,6 +3,7 @@ import type { PsPayload, RunRecord } from "../api-types";
 import {
   adviceInputHash,
   initialState,
+  latestRun,
   m1Ref,
   nextId,
   projectReducer,
@@ -129,6 +130,20 @@ describe("network and constraints", () => {
       result_hash: "r-b",
       result_payload: { id: "b" },
     });
+  });
+
+  it("latestRun picks the latest record of a type on the current design (FR-93)", () => {
+    const rec = (id: string, analysis_type: string, hash: string, status = "FEASIBLE") =>
+      ({ record_id: id, analysis_type, snapshot_hash: hash, result: { status } }) as unknown as RunRecord;
+    const runs = [rec("a", "M1", "h1"), rec("b", "M1", "h1", "INPUT_INVALID"), rec("c", "M2", "h1"), rec("d", "M1", "h2")];
+    expect(latestRun(runs, "M1", "h1")?.record_id).toBe("b"); // any Status
+    expect(latestRun(runs, "M1", "h2")?.record_id).toBe("d");
+    expect(latestRun(runs, "M1", "h3")).toBeNull(); // design edited after the runs
+    expect(latestRun(runs, "M1", null)).toBeNull(); // hash not known yet
+    // M3c: its own hash covers the scenarios, so it matches on its M1 reference (Doc 3 §5, §6)
+    const m3c = { ...rec("e", "M3c", "h-with-scenarios"), depends_on: { snapshot_hash: "h1" } } as unknown as RunRecord;
+    expect(latestRun([m3c], "M3c", "h1")?.record_id).toBe("e");
+    expect(latestRun([m3c], "M3c", "h-with-scenarios")).toBeNull();
   });
 });
 

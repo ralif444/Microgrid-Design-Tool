@@ -4,7 +4,9 @@
 // Doc 7 §5 texts from status-text.ts, table rows are the D2 example inputs, not results.
 import { Tag } from "@carbon/react";
 import { useState } from "react";
-import type { AnalysisResult, AnalysisType } from "../../../api-types";
+import type { AnalysisResult, AnalysisType, RunRecord } from "../../../api-types";
+import { BarChart } from "../../../components/charts/BarChart";
+import { LineChart } from "../../../components/charts/LineChart";
 import { AdvisoryPanel } from "../../../components/AdvisoryPanel";
 import { DataTable, type DataColumn, type RowError } from "../../../components/DataTable";
 import { EmptyState } from "../../../components/EmptyState";
@@ -120,6 +122,10 @@ function TableDemo({ withError }: { withError: boolean }) {
     />
   );
 }
+
+// Gallery placeholders only (counting numbers), not results of any analysis.
+const SAMPLE_X = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+const FAKE_RECORD = { analysis_type: "M4b", record_id: "gallery-sample", engine_kind: "FAKE" } as unknown as RunRecord;
 
 function Demo({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -273,6 +279,16 @@ export default function ComponentsPage() {
         <AdvisoryPanel label="Sizing check sample" tag="Sizing check · from the network" title="Sizing check (advisory, from the network)">
           <p>Computed from the network result; it never changes the design.</p>
         </AdvisoryPanel>
+      </Demo>
+
+      <Demo title="Charts">
+        <p>Placeholder numbers for the look only; no analysis produced them.</p>
+        <LineChart title="Line chart, two series" xTitle="sample index (count)" yTitle="sample value (count)" x={SAMPLE_X} series={[{ name: "series A", values: [1, 2, 3, 4, 5, 6, 7, 8, 9] }, { name: "series B", values: [9, 8, 7, 6, 5, 4, 3, 2, 1] }]} />
+        <LineChart title="Line chart with gaps (null values)" xTitle="sample index (count)" yTitle="sample value (count)" x={SAMPLE_X} series={[{ name: "series A", values: [1, 2, null, 4, 5, null, null, 8, 9] }]} />
+        <LineChart title="Point chart with markers" xTitle="sample index (count)" yTitle="sample value (count)" x={SAMPLE_X} line={false} series={[{ name: "series A", values: [2, 3, null, 5, 4, 6, 5, 7, 6], marker: (i) => (i % 3 === 0 ? "cross" : "circle") }]} />
+        <LineChart title="FAKE caption" xTitle="sample index (count)" yTitle="sample value (count)" x={SAMPLE_X} series={[{ name: "series A", values: [1, 1, 2, 2, 3, 3, 2, 2, 1] }]} record={FAKE_RECORD} />
+        <LineChart title="Empty chart" xTitle="sample index (count)" yTitle="sample value (count)" x={[]} series={[{ name: "series A", values: [] }]} />
+        <BarChart title="Bar chart with a reference line and a missing value" valueTitle="sample value (count)" categoryTitle="Item" bars={[{ label: "A", value: 3 }, { label: "B", value: null }, { label: "C", value: 5 }]} refs={[{ value: 4, label: "reference 4" }]} />
       </Demo>
 
       <Demo title="Empty state">

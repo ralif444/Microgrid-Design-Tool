@@ -10,7 +10,7 @@ import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
-import { TimeChart } from "../../components/TimeChart";
+import { LineChart } from "../../components/charts/LineChart";
 
 type Kind = "LOAD_STEP" | "LOAD_SCALING" | "REFERENCE_STEP" | "INVERTER_OUTAGE";
 type Ref = "P_SETPOINT" | "Q_SETPOINT" | "V_SETPOINT" | "F_SETPOINT";
@@ -165,10 +165,16 @@ function Transient() {
             <li>Largest rate of change of frequency (descriptive): {fmt(p.max_rocof_hz_per_s)} Hz/s</li>
           </ul>
           <IndicatorPanel />
-          <TimeChart time={p.time_s} series={[{ name: "system", values: p.system_frequency_hz }]} label="System frequency" unit="Hz" />
-          <TimeChart time={p.time_s} series={p.bus_voltage_kv.map((b) => ({ name: b.bus_id, values: b.values }))} label="Bus voltage" unit="kV" />
-          <TimeChart time={p.time_s} series={p.inverter_p_kw.map((s) => ({ name: s.inverter_id, values: s.values }))} label="Inverter active power" unit="kW" />
-          <TimeChart time={p.time_s} series={p.inverter_q_kvar.map((s) => ({ name: s.inverter_id, values: s.values }))} label="Inverter reactive power" unit="kvar" />
+          {(
+            [
+              ["System frequency", "Hz", [{ name: "system", values: p.system_frequency_hz }]],
+              ["Bus voltage", "kV", p.bus_voltage_kv.map((b) => ({ name: b.bus_id, values: b.values }))],
+              ["Inverter active power", "kW", p.inverter_p_kw.map((s) => ({ name: s.inverter_id, values: s.values }))],
+              ["Inverter reactive power", "kvar", p.inverter_q_kvar.map((s) => ({ name: s.inverter_id, values: s.values }))],
+            ] as const
+          ).map(([label, unit, series]) => (
+            <LineChart key={label} title={label} xTitle="time (s)" yTitle={`${label} (${unit})`} x={p.time_s} series={[...series]} record={resp?.run_record ?? null} />
+          ))}
           <details>
             <summary>Data table</summary>
             <table aria-label="Time responses">

@@ -17,7 +17,7 @@ import { RequireProject } from "../../components/RequireProject";
 import { statusIcon, TOKEN_ROLE } from "../../components/StatusBanner";
 import { bannerText } from "../../components/status-text";
 import { useValidation } from "../../components/useValidation";
-import { VoltageChart } from "../../components/VoltageChart";
+import { BarChart } from "../../components/charts/BarChart";
 import { useProject } from "../../store";
 import styles from "./report.module.css";
 
@@ -170,7 +170,14 @@ function Report() {
         <>
           {m1 && outdated(m1)}
           <div className={styles.chart}>
-            <VoltageChart p={m1p} />
+            <BarChart
+              title="Bus voltage magnitude from the latest power flow (M1)"
+              valueTitle="Bus voltage (p.u.)"
+              categoryTitle="Bus"
+              bars={m1p.bus_results.map((b) => ({ label: b.bus_id, value: b.voltage_pu }))}
+              refs={[{ value: 1, label: "1.0 p.u." }]}
+              record={m1}
+            />
           </div>
           <M1Results p={m1p} />
         </>
