@@ -54,8 +54,8 @@ button[aria-busy="true"]::before {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { button[aria-busy="true"]::before { animation: none; } }
-/* Fields look like Carbon TextInput / Select (guideline §6): field-01 on the page, field-02 on a white
-   layer (tables), bottom border only, 2 px support-error outline when invalid. */
+/* Fields look like Carbon TextInput / Select (guideline §6): field-01 on the page, a tint on a white
+   layer (tables: layer-02), bottom border only, 2 px support-error outline when invalid. */
 input:not([type="radio"], [type="checkbox"], [type="file"]), select {
   box-sizing: border-box;
   min-height: var(--control-height);
@@ -65,7 +65,8 @@ input:not([type="radio"], [type="checkbox"], [type="file"]), select {
   border-radius: 0;
   background: var(--cds-field-01);
 }
-td input:not([type="radio"], [type="checkbox"]), td select { background: var(--cds-field-02); }
+/* on a white layer: layer-02, since field-02 is white in Carbon white and §3.2 makes field-01 white too */
+td input:not([type="radio"], [type="checkbox"]), td select { background: var(--cds-layer-02); }
 input:disabled, select:disabled { color: var(--cds-text-disabled); border-bottom-color: transparent; cursor: not-allowed; }
 input[aria-invalid="true"], select[aria-invalid="true"] { outline: 2px solid var(--role-error-edge); outline-offset: -2px; }
 /* hideSteppers: engineering values are typed, not stepped */

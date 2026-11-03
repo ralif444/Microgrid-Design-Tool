@@ -16,7 +16,7 @@ There is no loading state, because editing is local.
 ## Changes
 - **Fields (global):** they now look like Carbon TextInput and Select (guideline §6):
   - bottom border only
-  - `field-01` on the page, `field-02` inside tables
+  - `field-01` on the page; inside tables `field-02` (corrected at S-05: `field-02` is white in Carbon white, so cells now use `layer-02`)
   - a 2 px `support-error` outline when invalid
   - number steppers hidden (`hideSteppers`)
 

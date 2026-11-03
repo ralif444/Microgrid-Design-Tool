@@ -129,6 +129,7 @@ function Network() {
   return (
     <>
       <h1>Network</h1>
+      {!enabled.Lines && <p className={styles.hint}>Lines need two buses; inverters need one.</p>}
       <div role="tablist" aria-label="Network tables" className={styles.tabs}>
         {(["Buses", "Lines", "Inverters"] as Tab[]).map((t) => (
           <button key={t} type="button" role="tab" aria-selected={tab === t} disabled={!enabled[t]} onClick={() => setTab(t)}>
@@ -136,7 +137,6 @@ function Network() {
           </button>
         ))}
       </div>
-      {!enabled.Lines && <p className={styles.hint}>Lines need two buses; inverters need one.</p>}
       <section role="tabpanel" aria-label={tab} className={styles.panel}>
         {tab === "Buses" && (
           <>
@@ -197,17 +197,20 @@ function Network() {
       <h2>Issues</h2>
       {listed.length === 0 ? (
         <p className={styles.ok}>
-          <Icon name="check" />
+          <Icon name="feasible" />
           No network-level problems found.
         </p>
       ) : (
-        <ul aria-label="Network issues" className={styles.issues}>
-          {listed.map((i, k) => (
-            <li key={k}>
-              {[i.entity, i.id, i.field].filter(Boolean).join(" / ") || "Design"}: {i.message}
-            </li>
-          ))}
-        </ul>
+        <div className={styles.issues}>
+          <Icon name="list" size={20} />
+          <ul aria-label="Network issues">
+            {listed.map((i, k) => (
+              <li key={k}>
+                {[i.entity, i.id, i.field].filter(Boolean).join(" / ") || "Design"}: {i.message}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </>
   );

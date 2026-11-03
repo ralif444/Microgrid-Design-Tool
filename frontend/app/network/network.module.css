@@ -1,27 +1,36 @@
-.tabs { display: flex; gap: var(--space-1); margin-top: var(--space-4); border-bottom: var(--border-width) solid var(--color-border); }
+/* Tabs styled like Carbon contained Tabs (guideline §6). Own markup, not Carbon Tabs: its roving
+   tabindex takes inactive tabs out of the Tab order the keyboard flow relies on (ADR-012 option C). */
+.tabs { display: flex; flex-wrap: wrap; gap: 1px; margin-top: var(--space-4); }
 .tabs button {
-  border: var(--border-width) solid transparent; border-bottom: none; border-radius: var(--radius-2) var(--radius-2) 0 0;
-  background: transparent; margin-bottom: calc(-1 * var(--border-width)); padding: var(--space-2) var(--space-4);
+  min-width: 10rem; min-height: 3rem; margin: 0; padding: 0 var(--space-4); text-align: left;
+  border: 0; border-top: var(--border-width-strong) solid transparent;
+  background: var(--cds-layer-accent-01); color: var(--cds-text-secondary);
 }
-.tabs button[aria-selected="true"] {
-  background: var(--color-bg); border-color: var(--color-border); font-weight: var(--weight-semibold);
-  box-shadow: inset 0 3px 0 var(--focus-color);
+.tabs button:hover:not(:disabled, [aria-selected="true"]) { background: var(--cds-layer-accent-hover-01); color: var(--color-fg); }
+.tabs button[aria-selected="true"], .tabs button[aria-selected="true"]:hover { /* :hover beats the global button hover */
+  background: var(--cds-layer-01); border-top-color: var(--cds-interactive); color: var(--color-fg); font-weight: var(--weight-semibold);
 }
+.tabs button:disabled { background: var(--cds-layer-accent-01); color: var(--cds-text-disabled); }
 .hint { color: var(--color-fg-muted); font-size: var(--text-sm); margin: var(--space-2) 0 0; }
-.panel { padding-top: var(--space-4); }
+.panel { padding: var(--space-4); background: var(--cds-layer-01); } /* the contained tab's panel */
+.panel input:not([type="checkbox"], [type="radio"]), .panel select { background: var(--cds-layer-02); } /* see globals: fields on a white layer */
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .pick {
-  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3);
-  padding: var(--space-3) var(--space-4); background: var(--color-surface-sunken);
-  border: var(--border-width) solid var(--color-border); border-radius: var(--radius-2);
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4); background: var(--cds-layer-02); border: var(--border-width) solid var(--color-border);
 }
-.pick h2 { margin: 0; width: 100%; font-size: var(--text-sm); }
+.pick h2 { margin: 0; width: 100%; font-size: var(--text-sm); font-weight: var(--weight-semibold); }
 .pick p { width: 100%; margin: 0; }
 .diagram { margin: var(--space-6) 0; }
 .diagram summary { cursor: pointer; font-weight: var(--weight-medium); }
+.diagram[open] > :not(summary) { display: block; max-width: 100%; margin-top: var(--space-2); background: var(--cds-layer-01); border: var(--border-width) solid var(--color-border); }
+/* network-level problems: banner look of INPUT_INVALID (guideline §7.2), text in text-primary */
 .issues {
-  max-width: var(--prose-max); margin: var(--space-2) 0 var(--space-4); padding: var(--space-2) var(--space-4) var(--space-2) var(--space-8);
-  background: var(--role-caution-bg); color: var(--role-caution-fg);
-  border-left: var(--banner-edge) solid var(--role-caution-border); border-radius: var(--radius-2);
+  display: flex; align-items: flex-start; gap: var(--space-2); max-width: var(--prose-max); margin: var(--space-2) 0 var(--space-4);
+  padding: var(--space-3) var(--space-4); background: var(--cds-layer-01); border: var(--border-width) solid var(--color-border);
+  border-left: var(--banner-edge) solid var(--role-caution-edge);
 }
-.ok { display: flex; align-items: center; gap: var(--space-2); color: var(--role-success-fg); }
+.issues > svg { fill: var(--role-caution-icon); flex: none; }
+.issues ul { margin: 0; padding-left: var(--space-5); }
+.ok { display: flex; align-items: center; gap: var(--space-2); }
+.ok > svg { fill: var(--role-success-icon); }
