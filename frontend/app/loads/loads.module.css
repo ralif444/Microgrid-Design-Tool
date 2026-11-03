@@ -3,9 +3,13 @@
 .id { font-weight: var(--weight-medium); }
 .mode { display: inline-flex; gap: var(--space-3); white-space: nowrap; }
 .mode label { display: inline-flex; align-items: center; gap: var(--space-1); }
+/* design-level problems: banner look of INPUT_INVALID (guideline §7.2), text in text-primary */
 .other {
-  max-width: var(--prose-max); margin: var(--space-2) 0 var(--space-4); padding: var(--space-2) var(--space-4) var(--space-2) var(--space-8);
-  background: var(--role-caution-bg); color: var(--role-caution-fg);
-  border-left: var(--banner-edge) solid var(--role-caution-border); border-radius: var(--radius-2);
+  max-width: var(--prose-max); margin: var(--space-2) 0 var(--space-4); padding: var(--space-3) var(--space-4);
+  background: var(--cds-layer-01); border: var(--border-width) solid var(--color-border);
+  border-left: var(--banner-edge) solid var(--role-caution-edge);
 }
+.other { display: flex; align-items: flex-start; gap: var(--space-2); }
+.other > svg { fill: var(--role-caution-icon); flex: none; }
+.other ul { margin: 0; padding-left: var(--space-5); }
 .next { margin-top: var(--space-6); }

@@ -54,22 +54,30 @@ button[aria-busy="true"]::before {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { button[aria-busy="true"]::before { animation: none; } }
+/* Fields look like Carbon TextInput / Select (guideline §6): field-01 on the page, field-02 on a white
+   layer (tables), bottom border only, 2 px support-error outline when invalid. */
 input:not([type="radio"], [type="checkbox"], [type="file"]), select {
   box-sizing: border-box;
   min-height: var(--control-height);
   padding: 0 var(--space-2);
-  border: var(--border-width) solid var(--color-border-strong);
-  border-radius: var(--radius-1);
-  background: var(--color-surface);
+  border: 0;
+  border-bottom: var(--border-width) solid var(--cds-border-strong-01);
+  border-radius: 0;
+  background: var(--cds-field-01);
 }
-input[aria-invalid="true"], select[aria-invalid="true"] { border-color: var(--role-error-edge); box-shadow: inset 0 0 0 1px var(--role-error-edge); }
+td input:not([type="radio"], [type="checkbox"]), td select { background: var(--cds-field-02); }
+input:disabled, select:disabled { color: var(--cds-text-disabled); border-bottom-color: transparent; cursor: not-allowed; }
+input[aria-invalid="true"], select[aria-invalid="true"] { outline: 2px solid var(--role-error-edge); outline-offset: -2px; }
+/* hideSteppers: engineering values are typed, not stepped */
+input[type="number"] { appearance: textfield; -moz-appearance: textfield; }
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type="number"] { width: 8em; text-align: right; font-variant-numeric: var(--numeric); }
 input[type="radio"], input[type="checkbox"] { accent-color: var(--color-link); }
 input[type="file"]::file-selector-button {
   font: inherit; min-height: var(--control-height); padding: 0 var(--space-3); margin-right: var(--space-2);
   border: var(--border-width) solid var(--cds-button-primary); border-radius: 0; background: transparent; color: var(--cds-button-primary); cursor: pointer;
 }
-textarea { font-family: var(--font-mono); width: 100%; max-width: 60rem; padding: var(--space-2); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-1); }
+textarea { font-family: var(--font-mono); width: 100%; max-width: 60rem; padding: var(--space-2); border: 0; border-bottom: var(--border-width) solid var(--cds-border-strong-01); border-radius: 0; background: var(--cds-field-01); }
 fieldset { border: 0; padding: 0; margin: 0; display: inline; }
 
 /* Tables: hairline rows, sunken header, tabular numbers. Text cells left; numeric cells carry

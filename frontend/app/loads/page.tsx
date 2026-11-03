@@ -7,6 +7,7 @@ import { useState } from "react";
 import type { Load, ValidationIssue } from "../../api-types";
 import { CellInput, CellSelect, DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
+import { Icon } from "../../components/Icon";
 import { RequireProject } from "../../components/RequireProject";
 import { useValidation } from "../../components/useValidation";
 import { useProject, useProjectDispatch } from "../../store";
@@ -135,13 +136,16 @@ function Loads() {
         />
       )}
       {other.length > 0 && (
-        <ul aria-label="Other problems" className={styles.other}>
-          {other.map((i, k) => (
-            <li key={k}>
-              {where(i) || "Design"}: {i.message}
-            </li>
-          ))}
-        </ul>
+        <div className={styles.other}>
+          <Icon name="list" size={20} />
+          <ul aria-label="Other problems">
+            {other.map((i, k) => (
+              <li key={k}>
+                {where(i) || "Design"}: {i.message}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       <p className={styles.next}>
         <Link href="/sizing/">Go to sizing advice</Link>

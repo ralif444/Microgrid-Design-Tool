@@ -38,3 +38,9 @@
   border-left: var(--banner-edge) solid var(--role-attention-edge);
 }
 .blocked > svg { fill: var(--role-attention-icon); }
+/* the empty state's one action is primary (guideline §6); a link keeps its role and looks like a button */
+.empty > :is(a, button) {
+  display: inline-flex; align-items: center; min-height: var(--control-height); padding: 0 var(--space-4);
+  border: 0; background: var(--cds-button-primary); color: var(--cds-text-on-color); text-decoration: none;
+}
+.empty > :is(a, button):hover { background: var(--cds-button-primary-hover); color: var(--cds-text-on-color); }

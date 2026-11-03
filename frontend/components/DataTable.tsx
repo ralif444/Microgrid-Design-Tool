@@ -192,7 +192,7 @@ export function DataTable<R>({
               {errors.length > 0 && (
                 <tr className={styles.errorRow}>
                   <td colSpan={span} role="alert">
-                    <Icon name="warn" size={14} />
+                    <Icon name="alert" size={16} />
                     {errors
                       .map((x) => {
                         const col = owner(x.field);
