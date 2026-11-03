@@ -155,3 +155,28 @@ describe("Example Project (Doc 12 FR-85)", () => {
     expect(JSON.stringify(file)).toBe(before);
   });
 });
+
+describe("FR-02 name and description; FR-11 Bus delete guard", () => {
+  it("name and description survive save and reopen", async () => {
+    const { toProjectFile } = await import("./projectFile");
+    const s = run([created, { type: "projectUpdated", name: "Renamed", description: "Two-bus test" }]);
+    const file = toProjectFile(s, { schema_version: 1, app_version: "t" }, "t1");
+    const back = run([{ type: "projectLoaded", file }]);
+    expect([back.project?.name, back.project?.description]).toEqual(["Renamed", "Two-bus test"]);
+  });
+
+  it("a Bus still referenced is kept, and its dependents are named", async () => {
+    const { busDependents } = await import("./reducer");
+    const s = run([
+      created,
+      { type: "rowAdded", collection: "buses", row: { id: "B1" } },
+      { type: "rowAdded", collection: "buses", row: { id: "B2" } },
+      { type: "rowAdded", collection: "lines", row: { from_bus_id: "B1", to_bus_id: "B2" } },
+      { type: "rowAdded", collection: "loads", row: { bus_id: "B1" } },
+    ]);
+    expect(busDependents(s.design, "B1")).toEqual(["LN1", "L1"]);
+    expect(run([{ type: "rowRemoved", collection: "buses", id: "B1" }], s).design.buses).toHaveLength(2);
+    const freed = run([{ type: "rowRemoved", collection: "lines", id: "LN1" }, { type: "rowRemoved", collection: "buses", id: "B2" }], s);
+    expect(freed.design.buses?.map((b) => b.id)).toEqual(["B1"]);
+  });
+});

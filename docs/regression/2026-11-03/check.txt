@@ -1,0 +1,50 @@
+﻿$ (backend) C:\Users\Rifky Alif\.local\bin\uv.EXE run ruff format --check . ../tests ../tools
+91 files already formatted
+$ (backend) C:\Users\Rifky Alif\.local\bin\uv.EXE run ruff check .
+All checks passed!
+$ (backend) C:\Users\Rifky Alif\.local\bin\uv.EXE run ruff check --config pyproject.toml ../tests ../tools
+All checks passed!
+$ (backend) C:\Users\Rifky Alif\.local\bin\uv.EXE run mypy
+Success: no issues found in 42 source files
+$ (backend) C:\Users\Rifky Alif\.local\bin\uv.EXE run lint-imports
+
+╔══╗─────────▶╔╗ ╔╗      ╔╗◀───┐
+╚╣╠╝◀─────┐  ╔╝╚╗║║────▶╔╝╚╗   │
+ ║║   ╔══╦══╦╩╗╔╝║║  ╔╦═╩╗╔╝╔═╦══╗
+ ║║╔══╣╔╗║╔╗║╔╣║ ║║ ╔╬╣╔╗║║ ║│║╔═╝
+╔╣╠╣║║║╚╝║╚╝║║║╚╗║╚═╝║║║║║╚╗║═╣║
+╚══╩╩╩╣╔═╩══╩╝╚═╝╚═══╩╩╝╚╩═╩╩═╩╝
+  └──▶║║                    ▲ 
+      ╚╝────────────────────┘
+
+
+---------
+Contracts
+---------
+
+Analyzed 42 files, 132 dependencies.
+------------------------------------
+
+domain is the inner module and imports nothing else in the app KEPT
+engine_port depends only on domain KEPT
+adapters never import services, api or the composition root KEPT
+Fake Engine and Real Engine adapter are independent KEPT
+services never import concrete adapters, api or the composition root KEPT
+among services only the execution guard imports the Engine Port KEPT (1 ignored import)
+api never imports the Engine Port or adapters KEPT
+
+Contracts: 7 kept, 0 broken.
+$ (engine) C:\Users\Rifky Alif\.local\bin\uv.EXE run ruff format --check .
+21 files already formatted
+$ (engine) C:\Users\Rifky Alif\.local\bin\uv.EXE run ruff check .
+All checks passed!
+$ (engine) C:\Users\Rifky Alif\.local\bin\uv.EXE run mypy
+Success: no issues found in 10 source files
+$ (.) C:\Users\Rifky Alif\AppData\Roaming\uv\python\cpython-3.13-windows-x86_64-none\python.exe C:\Users\Rifky Alif\Documents\Microgrid-Design-Tool\tools\gen.py --check
+$ (frontend) C:\Users\Rifky Alif\Documents\Microgrid-Design-Tool\frontend\node_modules\.bin\tsc.cmd --noEmit
+$ (frontend) C:\Users\Rifky Alif\Documents\Microgrid-Design-Tool\frontend\node_modules\.bin\depcruise.cmd --config .dependency-cruiser.cjs app components store api-client api-types
+
+✔ no dependency violations found (62 modules, 238 dependencies cruised)
+
+
+all checks passed

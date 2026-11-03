@@ -69,6 +69,7 @@ export type ProjectAction =
   | {
       type: "projectUpdated";
       name?: string;
+      description?: string | null;
       nominal_voltage_kv?: number | null;
       nominal_frequency_hz?: number | null;
     }
@@ -134,6 +135,13 @@ function markModified(collection: Collection, row: Row, patch: Row): Row {
   return { ...row, ...patch, ...(touched ? { catalog_ref: { ...ref, modified: true } } : {}) };
 }
 
+// FR-11: Lines, Loads and Inverters that still reference a Bus; a Bus with any cannot be deleted.
+export function busDependents(d: ProjectSnapshot, busId: string): string[] {
+  const lines = (d.lines ?? []).filter((l) => l.from_bus_id === busId || l.to_bus_id === busId);
+  const others = [...(d.loads ?? []), ...(d.inverters ?? [])].filter((r) => r.bus_id === busId);
+  return [...lines, ...others].map((r) => r.id ?? "(no id)");
+}
+
 function edit(state: ProjectState, design: Partial<ProjectSnapshot>): ProjectState {
   return { ...state, design: { ...state.design, ...design }, unsaved: true };
 }
@@ -154,9 +162,10 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
       };
     case "projectUpdated": {
       if (!state.project) return state;
-      const { type: _t, name, ...nominal } = action;
+      const { type: _t, name, description, ...nominal } = action;
       const next = edit(state, nominal);
-      return name === undefined ? next : { ...next, project: { ...state.project, name } };
+      const meta = { ...(name === undefined ? {} : { name }), ...(description === undefined ? {} : { description }) };
+      return { ...next, project: { ...state.project, ...meta } };
     }
     case "rowAdded": {
       const rows: Row[] = d[action.collection] ?? [];
@@ -170,6 +179,7 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
       });
     }
     case "rowRemoved": {
+      if (action.collection === "buses" && busDependents(d, action.id).length > 0) return state; // FR-11
       const rows: Row[] = d[action.collection] ?? [];
       return edit(state, { [action.collection]: rows.filter((x) => x.id !== action.id) });
     }

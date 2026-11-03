@@ -1,12 +1,13 @@
 "use client";
 // S-05 Network editor (Doc 7 §6.3): Buses, Lines, Inverters as tables (FR-10, FR-12, FR-13),
-// derived Line totals (display only, D-46 K9), live topology issues (FR-19). Diagram (FR-14)
-// and the Bus delete guard (FR-11) are Should, stage 1.5. Catalogue entries fill Lines and
+// derived Line totals (display only, D-46 K9), live topology issues (FR-19), read-only diagram
+// (FR-14) and the Bus delete guard (FR-11, in EntityTable). Catalogue entries fill Lines and
 // Inverters (Doc 12 FR-66, FR-69, FR-70).
 import { useEffect, useState } from "react";
 import type { CatalogRef } from "../../api-types";
 import { block, entryWarnings, fromEntry, refText, useCatalog } from "../../components/Catalog";
 import { EntityTable, type Column } from "../../components/EntityTable";
+import { NetworkDiagram } from "../../components/NetworkDiagram";
 import { RequireProject } from "../../components/RequireProject";
 import { useValidation } from "../../components/useValidation";
 import { useProject, useProjectDispatch } from "../../store";
@@ -181,6 +182,10 @@ function Network() {
           </>
         )}
       </section>
+      <details>
+        <summary>Diagram (read-only)</summary>
+        <NetworkDiagram design={design} />
+      </details>
       <h2>Issues</h2>
       {listed.length === 0 ? (
         <p>No network-level problems found.</p>

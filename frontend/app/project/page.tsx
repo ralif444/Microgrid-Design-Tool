@@ -32,6 +32,17 @@ function Overview() {
         />
       </p>
       <p>
+        <label htmlFor="description">Description, optional</label>
+        <br />
+        <textarea
+          id="description"
+          rows={3}
+          maxLength={1000}
+          value={project?.description ?? ""}
+          onChange={(e) => dispatch({ type: "projectUpdated", description: e.target.value || null })}
+        />
+      </p>
+      <p>
         <NumberField
           id="kv"
           label="Nominal voltage, line-to-line"

@@ -1,0 +1,3 @@
+﻿$ (.) C:\Users\Rifky Alif\.local\bin\uv.EXE run --project C:\Users\Rifky Alif\Documents\Microgrid-Design-Tool\backend pytest -c C:\Users\Rifky Alif\Documents\Microgrid-Design-Tool\backend\pyproject.toml --rootdir C:\Users\Rifky Alif\Documents\Microgrid-Design-Tool C:\Users\Rifky Alif\Documents\Microgrid-Design-Tool\tests\e2e
+..............................                                           [100%]
+30 passed in 132.19s (0:02:12)

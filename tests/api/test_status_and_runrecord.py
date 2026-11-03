@@ -153,6 +153,7 @@ def test_depends_on_not_allowed_on_m1(api: Api) -> None:
 
 
 def test_fr_43_timeout_returns_unavailable_with_runrecord(api_factory: Callable[..., Api]) -> None:
+    """NFR-04 overrun test: the request returns UNAVAILABLE / TIMEOUT within the budget."""
     api = api_factory(
         script={AnalysisType.M1: ScriptEntry(delay_s=0.5)}, limits=Limits(time_budget_s=0.05)
     )
