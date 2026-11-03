@@ -1,0 +1,12 @@
+/* Inline-level on purpose: screens wrap fields in <p>. A form aligns its fields by setting
+   --field-label (e.g. 16rem); the default keeps label and input together. */
+.field { display: inline-grid; grid-template-columns: var(--field-label, max-content) auto; align-items: center; gap: var(--space-1) var(--space-3); }
+.label { color: var(--color-fg); }
+.control { display: inline-flex; align-items: stretch; }
+.control input { border-radius: var(--radius-1) 0 0 var(--radius-1); }
+.unit {
+  display: inline-flex; align-items: center; min-width: 2.5rem; padding: 0 var(--space-2);
+  border: var(--border-width) solid var(--color-border-strong); border-left: 0; border-radius: 0 var(--radius-1) var(--radius-1) 0;
+  background: var(--color-surface-sunken); color: var(--color-fg-muted); font-size: var(--text-xs); white-space: nowrap;
+}
+.error { grid-column: 2; color: var(--role-negative-fg); font-size: var(--text-xs); }

@@ -1,0 +1,49 @@
+/* Small shared pieces: engine badge, file menu, advisory panel, empty state, toast. */
+.engine {
+  display: inline-flex; align-items: center; min-height: var(--control-height); padding: 0 var(--space-3); white-space: nowrap;
+  border: var(--border-width) solid var(--role-attention-border); border-radius: var(--radius-2); box-sizing: border-box;
+  background: var(--role-attention-bg); color: var(--role-attention-fg); font-size: var(--text-sm); font-weight: var(--weight-semibold);
+}
+.engine[data-kind="FAKE"] { background: var(--role-caution-bg); color: var(--role-caution-fg); border-color: var(--role-caution-border); }
+.engine[data-kind="unreachable"] { background: var(--role-error-bg); color: var(--role-error-fg); border-color: var(--role-error-border); }
+
+.fileMenu { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.fileButton {
+  position: relative; display: inline-flex; align-items: center; min-height: var(--control-height); padding: 0 var(--space-3);
+  border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-2); background: var(--color-surface);
+  font-size: var(--text-sm); cursor: pointer; box-sizing: border-box;
+}
+.fileButton:hover { background: var(--color-surface-hover); }
+.fileButton input { position: absolute; inset: 0; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.fileButton:has(input:focus-visible) { outline: var(--focus-width) solid var(--focus-color); outline-offset: var(--focus-offset); }
+.fileNote { flex-basis: 100%; font-size: var(--text-xs); color: var(--color-fg-muted); }
+
+.advice {
+  margin: var(--space-4) 0; padding: var(--space-3) var(--space-4);
+  border: var(--border-width-strong) var(--advisory-border-style) var(--role-advisory-border);
+  border-radius: var(--radius-3); background: var(--role-advisory-bg);
+}
+.adviceHead { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-2); font-weight: var(--weight-semibold); color: var(--role-advisory-fg); }
+.adviceChip {
+  padding: 0 var(--space-2); border: var(--border-width) var(--advisory-border-style) var(--role-advisory-border); border-radius: var(--radius-pill);
+  font-size: var(--text-xs); letter-spacing: 0.04em; text-transform: uppercase; background: var(--color-surface);
+}
+
+.empty {
+  display: grid; justify-items: start; gap: var(--space-2); max-width: var(--prose-max);
+  margin: var(--space-4) 0; padding: var(--space-5) var(--space-6);
+  border: var(--border-width) dashed var(--color-border-strong); border-radius: var(--radius-3); background: var(--color-surface-sunken);
+}
+.emptyTitle { display: flex; align-items: center; gap: var(--space-2); margin: 0; font-weight: var(--weight-semibold); color: var(--color-fg); }
+.empty p { margin: 0; color: var(--color-fg-muted); }
+
+.toastArea { position: fixed; right: var(--space-6); bottom: var(--space-6); z-index: 10; display: grid; gap: var(--space-2); max-width: 26rem; }
+.toast {
+  --fg: var(--role-error-fg); --edge: var(--role-error-border);
+  display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-3) var(--space-4);
+  background: var(--color-surface); border: var(--border-width) solid var(--edge); border-left: var(--banner-edge) solid var(--edge);
+  border-radius: var(--radius-2); box-shadow: 0 4px 12px rgb(22 25 31 / 0.16);
+}
+.toast > svg { color: var(--fg); margin-top: 0.15em; }
+.toast p { margin: 0; flex: 1; }
+@media print { .toastArea { display: none; } }

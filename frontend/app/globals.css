@@ -1,33 +1,97 @@
-/* Minimal, local styles only (no external fonts or CDNs, NFR-03). */
-body { font-family: system-ui, sans-serif; margin: 0; }
-header { display: flex; gap: 1rem; align-items: center; padding: 0.5rem 1rem; border-bottom: 1px solid #ccc; }
-main { padding: 1rem; }
-.engine-badge { margin-left: auto; padding: 0.1rem 0.5rem; border: 1px solid; border-radius: 4px; }
-.engine-FAKE { background: #fff4ce; }
-.banner { border-left: 6px solid; padding: 0.5rem 1rem; margin: 1rem 0; }
-.banner-success { border-color: #2e7d32; }
-.banner-warning, .banner-error { border-color: #c62828; }
-.banner-caution { border-color: #ef6c00; }
-.banner-attention, .banner-neutral { border-color: #546e7a; }
-table { border-collapse: collapse; margin: 0.5rem 0; }
-th, td { border: 1px solid #ccc; padding: 0.2rem 0.5rem; text-align: right; }
-caption { text-align: left; font-weight: bold; }
-textarea { font-family: monospace; width: 100%; max-width: 60rem; }
-.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* Base styles on the design tokens (ADR-011 option A). Local only: no external fonts or CDNs (NFR-03).
+   Component looks live in components/*.module.css; this sheet holds element defaults and the few
+   global hooks screens still use. */
+html { color-scheme: light; }
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  color: var(--color-fg);
+  background: var(--color-bg);
+}
+main { box-sizing: border-box; max-width: var(--content-max); margin: 0 auto; padding: var(--space-6) var(--space-6) var(--space-12); }
+h1, h2, h3 { line-height: var(--leading-tight); font-weight: var(--weight-semibold); }
+h1 { font-size: var(--text-2xl); margin: 0 0 var(--space-4); }
+h2 { font-size: var(--text-xl); margin: var(--space-8) 0 var(--space-3); }
+h3 { font-size: var(--text-lg); margin: var(--space-6) 0 var(--space-2); }
+p { margin: 0 0 var(--space-3); }
+a { color: var(--color-link); text-underline-offset: 2px; }
+code { font-family: var(--font-mono); font-size: var(--text-xs); }
+details > summary { cursor: pointer; color: var(--color-fg-muted); }
+
+/* Visible keyboard focus everywhere (Doc 7 §8); one hue, never a status colour. */
+:focus-visible { outline: var(--focus-width) solid var(--focus-color); outline-offset: var(--focus-offset); }
+
+/* Controls */
+button, input, select, textarea { font: inherit; font-size: var(--text-sm); color: var(--color-fg); }
+button {
+  min-height: var(--control-height);
+  padding: 0 var(--space-3);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-2);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+button:hover:not(:disabled) { background: var(--color-surface-hover); }
+button:disabled { color: var(--color-fg-subtle); background: var(--color-surface-sunken); border-color: var(--color-border); cursor: not-allowed; }
+form button[type="submit"]:not(:disabled) { background: var(--color-link); border-color: var(--color-link); color: var(--n-0); font-weight: var(--weight-medium); }
+form button[type="submit"]:hover:not(:disabled) { background: #164a90; }
+button[aria-busy="true"]::before {
+  content: ""; display: inline-block; width: 0.8em; height: 0.8em; margin-right: var(--space-2); vertical-align: -0.1em;
+  border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { button[aria-busy="true"]::before { animation: none; } }
+input:not([type="radio"], [type="checkbox"], [type="file"]), select {
+  box-sizing: border-box;
+  min-height: var(--control-height);
+  padding: 0 var(--space-2);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-1);
+  background: var(--color-surface);
+}
+input[aria-invalid="true"], select[aria-invalid="true"] { border-color: var(--role-negative-border); box-shadow: inset 0 0 0 1px var(--role-negative-border); }
+input[type="number"] { width: 8em; text-align: right; font-variant-numeric: var(--numeric); }
+input[type="radio"], input[type="checkbox"] { accent-color: var(--color-link); }
+input[type="file"]::file-selector-button {
+  font: inherit; min-height: var(--control-height); padding: 0 var(--space-3); margin-right: var(--space-2);
+  border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-2); background: var(--color-surface); cursor: pointer;
+}
+textarea { font-family: var(--font-mono); width: 100%; max-width: 60rem; padding: var(--space-2); border: var(--border-width) solid var(--color-border-strong); border-radius: var(--radius-1); }
 fieldset { border: 0; padding: 0; margin: 0; display: inline; }
-.advice { border: 2px dashed #546e7a; padding: 0.5rem 1rem; margin: 1rem 0; }
-.advice-tag { font-weight: bold; text-transform: uppercase; }
-td:lang(id) { text-align: left; }
+
+/* Tables: hairline rows, sunken header, tabular numbers. Text cells left; numeric cells carry
+   .num (right-aligned), set per column by DataTable as screens are restyled (ADR-011 step 2). */
+table { border-collapse: collapse; margin: var(--space-2) 0 var(--space-4); font-size: var(--text-sm); }
+th, td { padding: var(--cell-pad-y) var(--cell-pad-x); border-bottom: var(--border-width) solid var(--color-border); text-align: left; vertical-align: middle; }
+th.num, td.num { text-align: right; white-space: nowrap; }
+td { font-variant-numeric: var(--numeric); }
+thead th { background: var(--color-surface-sunken); color: var(--color-fg-muted); font-weight: var(--weight-semibold); border-bottom-color: var(--color-border-strong); }
+th[scope="row"] { text-align: left; font-weight: var(--weight-medium); }
+tbody tr:hover { background: var(--n-25); }
+caption { text-align: left; font-weight: var(--weight-semibold); font-size: var(--text-md); padding-bottom: var(--space-1); }
 /* 200 % zoom (WP 1.7.2): 64-hex hashes wrap, number inputs keep table rows narrow. */
 td, code { overflow-wrap: anywhere; }
-input[type="number"] { width: 8em; }
 .table-scroll { max-width: 100%; overflow-x: auto; }
-.outdated { font-weight: bold; color: #c62828; }
+
+/* Global hooks still used by screens (replaced by components in step 2). */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.advice {
+  border: var(--border-width-strong) var(--advisory-border-style) var(--role-advisory-border);
+  border-radius: var(--radius-3); background: var(--role-advisory-bg); padding: var(--space-3) var(--space-4); margin: var(--space-4) 0;
+}
+.advice-tag { color: var(--role-advisory-fg); font-weight: var(--weight-semibold); font-size: var(--text-xs); letter-spacing: 0.04em; text-transform: uppercase; }
+.fake-note { background: var(--role-caution-bg); color: var(--role-caution-fg); border-left: var(--banner-edge) solid var(--role-caution-border); padding: var(--space-1) var(--space-2); }
+.outdated { font-weight: var(--weight-semibold); color: var(--role-negative-fg); }
+.near-limit { color: var(--role-caution-fg); background: var(--role-caution-bg); border: var(--border-width) solid var(--role-caution-border); border-radius: var(--radius-pill); padding: 0 var(--space-2); font-size: var(--text-xs); }
+tr.focus { outline: var(--focus-width) solid var(--focus-color); background: var(--role-info-bg); }
+
 /* Print layout (FR-60): hide controls, keep tables and charts whole. */
 @media print {
   header, .no-print { display: none; }
+  main { max-width: none; padding: 0; }
   table, figure { break-inside: avoid; }
   h2 { break-after: avoid; }
+  * { print-color-adjust: exact; }
 }
-.fake-note { background: #fff4ce; padding: 0.2rem 0.5rem; }
-tr.focus { outline: 3px solid #ef6c00; }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { num } from "./M2Results";
+import { num } from "./format";
 
 describe("K147 number display", () => {
   it("hides unit round-trip noise and keeps real digits", () => {

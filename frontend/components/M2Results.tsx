@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getMeta } from "../api-client";
 import type { LimitingConstraint, M2Payload } from "../api-types";
+import { num } from "./format";
 
 // FR-26: a satisfied constraint with normalised margin below MARGIN_WARN (Eq. 4.18) is near its limit.
 export const nearLimit = (c: LimitingConstraint, marginWarn: number | null) =>
@@ -19,8 +20,6 @@ export const KIND_WORDS: Record<string, string> = {
   POWER_BALANCE: "Power balance",
 };
 
-// K147: 6 significant digits hide unit round-trip noise (49.75000000000001 Hz).
-export const num = (v: number) => Number(v.toPrecision(6));
 const fmt = (v: number | null | undefined) => (v === null || v === undefined ? "not available" : String(num(v)));
 
 // `shortcut`: per-row link to M3a pre-filled for that constraint (Doc 12 FR-84), on S-08 only.

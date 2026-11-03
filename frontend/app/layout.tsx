@@ -1,19 +1,19 @@
 import type { ReactNode } from "react";
-import { AppHeader } from "../components/AppHeader";
+import { AppShell } from "../components/AppShell";
 import { CatalogProvider } from "../components/Catalog";
 import { ProjectProvider } from "../store";
+import "./tokens.css";
 import "./globals.css";
 
 export const metadata = { title: "Microgrid design tool" };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="id">
+    <html lang="en">
       <body>
         <ProjectProvider>
           <CatalogProvider>
-            <AppHeader />
-            <main>{children}</main>
+            <AppShell>{children}</AppShell>
           </CatalogProvider>
         </ProjectProvider>
       </body>
