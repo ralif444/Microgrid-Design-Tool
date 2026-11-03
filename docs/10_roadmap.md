@@ -122,6 +122,9 @@ The manuscript cells are short; the lists below are how each cell is checked. It
 
 Count: 6 + 4 + 5 + 3 + 5 + 6 + 6 + 4 = 39. A prerequisite numbered at level 2 (e.g. "1.1") means that stage's exit gate. PS is placed in 1.3.3 because it uses the same sizing-rule form as M2 (author's reading, manuscript 4.5.5).
 
+### 4.1 Order inside stage 1.5 for the presentation rounds (D-72, D-75)
+The UX and analytics round (UX-0 – UX-12) and the SLD round (SLD-0 – SLD-7) run inside WP 1.5.1 on the Fake Engine and must not delay stage 1.6. Order: UX-0 – UX-2, then SLD-0 – SLD-7, then UX-3 resumes. UX-4 (S-05 inspector and diagram `onSelect`) is absorbed into SLD-4. Each step stops for the owner's confirmation.
+
 ## 5. Gate rules
 The manuscript states six gate rules bind the order of Gambar 4.6 and C.8a–C.8d and names two of them (manuscript 4.5.6):
 
@@ -161,4 +164,5 @@ Final chapter mapping is Doc 14 D8 (PENDING-1.7).
 | Date | Change |
 |---|---|
 | 2026-10-17 – 10-21 | Drafted with phases P0–P4; C5.2, C5.13, C5.18, C5.20, UP-08, UP-13. |
+| 2026-11-03 | §4.1 added: order of the UX and SLD rounds inside WP 1.5.1 (D-72, D-75): SLD after UX-2, UX-4 absorbed into SLD-4, UX-3 resumes after SLD-7. |
 | 2026-11-01 | Aligned with the manuscript (Doc 14 D7): stages 1.1–1.8 replace P0–P4; Tabel 4.15 gates with operational criteria; 39 work packages of Tabel B.1; durations of 4.5.6; six gate rules (two from manuscript text, four confirmed by the user); 1.1 endpoint scope decided; no-equations guardrail removed. |

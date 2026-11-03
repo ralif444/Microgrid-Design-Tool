@@ -268,11 +268,14 @@ Notation: `[ ]` button/field, `( )` option, `<..>` placeholder. Header and stepp
 | .. |[bus v]|[bus v]| [      ]   | [      ]   | [     ]  |<A>   |
 |    derived total R <ohm>, X <ohm> (read-only)                |
 | Issues panel: <isolated bus>, <duplicate line>, <no inverter>|
-| Diagram panel (Should): o----o----o     o (isolated)         |
+| Diagram panel (Should): single-line diagram (X8)             |
+|   [GFM]      [GFM]                                           |
+|  ==B1== LN1 ==B2==        Not connected:  - - B9 - -        |
+|     v          v   (loads)    [Show results] [Download SVG] |
 | [Delete bus] -> refused: "Bus is used by <Line id>, <Load id>"|
 ```
 - Regions: tabs (Buses, Lines, Inverters), editable table, live issues panel (topology: isolated Bus, missing Inverter, duplicate Line), collapsible diagram panel (Should).
-- Actions: add, edit, delete rows; Inverter form with rating, droop settings, setpoints; Bus delete guard lists dependents (FR-11); diagram selection syncs with table selection; diagram position changes are layout-only.
+- Actions: add, edit, delete rows; Inverter form with rating, droop settings, setpoints; Bus delete guard lists dependents (FR-11); diagram selection syncs with table selection; diagram position changes are layout-only. Single-line diagram (Doc 12 X8, FR-94 – FR-98, ADR-013): busbars, Inverters above and Loads below their Bus, orthogonal Lines, system block and legend; hover or focus opens a tooltip with the same rows as the inspector; Enter, Space or click opens the inspector (FR-90) and highlights the table row; "View as table" lists every element; no symbol for anything not modelled. The same diagram with a results overlay appears on S-07 and S-08 (FR-96) and as a static figure on S-16 (FR-97).
 - States: Empty: "No buses yet. Add a bus to start." Lines tab disabled until two Buses exist; Inverters tab asks for a Bus first. Loading: none. Error: inline field messages; refused deletion shown as a dismissible message; diagram unavailable shows "Diagram could not be drawn; the tables still work."
 
 ### 6.4 M2 results with limiting constraints (S-08)
@@ -408,6 +411,9 @@ DOC 7 COMPLETE
 ## Change log 2026-10-21 (user-approved change proposals from the proposal design checks)
 - C5.1 F3 outcome edge: Status equal and result_hash equal.
 - C5.4 first phase per key flow stated in §4.
+
+## Change log 2026-11-03 (SLD round, D-75)
+- §6.3: the circle diagram becomes the automatic single-line diagram (Doc 12 X8); overlay on S-07 and S-08, figure on S-16. §9 #4 stays: read-only first; drag-to-edit not in v1.
 
 ## Change log 2026-11-03 (UX and analytics round, D-72)
 - §2.2 added: KPI strip, charts, crosshair and inspector per screen (Doc 12 X0–X7, FR-86 – FR-93); S-17 About built in this round with the glossary.

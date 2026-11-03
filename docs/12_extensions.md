@@ -4,7 +4,7 @@
 
 ## Ringkasan
 
-Dokumen ini memuat sepuluh fitur tambahan yang disepakati setelah seminar proposal. Semua fitur wajib tetap berada di dalam asumsi A1–A6 dan batasan naskah: fitur hanya boleh berupa perubahan antarmuka dan alur kerja, keluaran turunan dari model yang sama, atau mode baru yang menyusun ulang M1–M4, tanpa persamaan, variabel keadaan, atau asumsi baru. Tiga fitur berprioritas Should, yaitu panel indikator keabsahan, daftar periksa asumsi A1–A6 pada laporan, dan katalog komponen yang diisi pengguna dari datasheet; tujuh lainnya berprioritas Could. Bagian yang hanya menyentuh antarmuka mulai dikerjakan pada Tahap 1.2 dengan Fake Engine, sedangkan bagian yang memerlukan mesin nyata dikerjakan setelah gerbang 1.4. Tidak ada fitur tambahan yang boleh menunda gerbang Must atau Should dari naskah. Faktor partisipasi dan metrik stabilitas per titik sapuan tidak termasuk di sini karena sudah dijanjikan naskah; keduanya masuk daftar penyelarasan inti. Aplikasi tidak membawa data vendor bawaan, sehingga katalog tidak menjadi sumber rujukan skripsi. Putaran UX dan analitik (2026-11-03, X0–X7) menambah delapan fitur antarmuka murni: hasil terakhir yang bertahan saat berpindah layar, fondasi grafik, kartu KPI, grafik analitik, *crosshair*, panel inspektur, tooltip glosarium, dan unduhan SVG; semuanya hanya menampilkan payload yang sudah ada.
+Dokumen ini memuat sepuluh fitur tambahan yang disepakati setelah seminar proposal. Semua fitur wajib tetap berada di dalam asumsi A1–A6 dan batasan naskah: fitur hanya boleh berupa perubahan antarmuka dan alur kerja, keluaran turunan dari model yang sama, atau mode baru yang menyusun ulang M1–M4, tanpa persamaan, variabel keadaan, atau asumsi baru. Tiga fitur berprioritas Should, yaitu panel indikator keabsahan, daftar periksa asumsi A1–A6 pada laporan, dan katalog komponen yang diisi pengguna dari datasheet; tujuh lainnya berprioritas Could. Bagian yang hanya menyentuh antarmuka mulai dikerjakan pada Tahap 1.2 dengan Fake Engine, sedangkan bagian yang memerlukan mesin nyata dikerjakan setelah gerbang 1.4. Tidak ada fitur tambahan yang boleh menunda gerbang Must atau Should dari naskah. Faktor partisipasi dan metrik stabilitas per titik sapuan tidak termasuk di sini karena sudah dijanjikan naskah; keduanya masuk daftar penyelarasan inti. Aplikasi tidak membawa data vendor bawaan, sehingga katalog tidak menjadi sumber rujukan skripsi. Putaran UX dan analitik (2026-11-03, X0–X7) menambah delapan fitur antarmuka murni: hasil terakhir yang bertahan saat berpindah layar, fondasi grafik, kartu KPI, grafik analitik, *crosshair*, panel inspektur, tooltip glosarium, dan unduhan SVG; semuanya hanya menampilkan payload yang sudah ada. Diagram segaris otomatis (X8, FR-94 – FR-98) menggantikan diagram lingkaran di S-05 dan menambah tooltip, lapisan hasil di S-07 dan S-08, gambar laporan, serta unduhan SVG, tanpa simbol untuk komponen yang tidak dimodelkan.
 
 ---
 
@@ -42,6 +42,7 @@ Dokumen ini memuat sepuluh fitur tambahan yang disepakati setelah seminar propos
 | X5 | Inspector panel for Bus, Line, Inverter | L1 | Should | UX round | FR-90 |
 | X6 | Glossary toggletips and the glossary on S-17 | L1 | Could | UX round | FR-91 |
 | X7 | Chart download as SVG with caption metadata | L1 | Could | UX round | FR-92 |
+| X8 | Automatic single-line diagram: symbols, tooltip, result overlay, report figure, SVG export | L1 | Could | SLD round (2026-11-03, after UX-2) | FR-94 – FR-98 |
 
 X0–X7 are the UX and analytics round of `docs/UX_ANALYTICS_GUIDELINES.md` (decisions Q1–Q7 there, Doc 9 D-72). The guideline calls them U0–U7; they are coded X here because U1–U4 already name the user groups (Doc 1 §6, Doc 11). All eight are presentation only: no payload, contract, API or Engine Port change, and the browser computes no engine number (it only selects, counts, sorts, filters and rounds for display).
 
@@ -179,6 +180,18 @@ Rules for all eight (guideline §1): values come only from payloads the engine a
 | FR-91 | (X6) Domain terms on labels, table headers and KPI labels shall carry a "?" toggletip (click or Enter, closes on Escape or outside click, never hover only); S-17 About lists the glossary. Text is Indonesian (Doc 7 §9 #1) and comes from Doc 3 or the manuscript only, each entry naming its source; a term with no such definition is left out and listed as an open point. | Could | Client: every glossary entry has a source. **E2E:** a toggletip opens with Enter and closes with Escape. | Guideline §7; Doc 7 §9 |
 | FR-92 | (X7) Each chart shall offer "Download SVG": the same SVG with a caption block (analysis, RunRecord id, result hash, engine kind, date) and fonts of at least 8 pt at A4 text width; a FAKE chart carries "FAKE ENGINE — not an engine result". | Could | **E2E:** the downloaded SVG contains the RunRecord id and the engine kind; a FAKE chart contains the FAKE caption. | Guideline §8 |
 
+### 3.11 X8 — Automatic single-line diagram (SLD)
+
+Source: `docs/SLD_FEATURE_GUIDELINES.md` v2 (§A wins over the rest of that file); layout and dependencies in ADR-013; Doc 9 D-75. FR-14 stays the core requirement (every Bus and Line drawn, an isolated Bus visibly unconnected, read-only); X8 adds what goes beyond it. The rules of §3.10 apply, plus: no symbol for anything the model does not have (no breaker, switch, transformer, grounding, instrument transformer, utility grid or battery); no IEEE clause or figure number in the app; tooltip, inspector and "View as table" read the same element rows from one model builder; diagram positions are computed, never stored (Doc 3 §3.2).
+
+| ID | Requirement | Priority | Acceptance criteria | Source |
+|---|---|---|---|---|
+| FR-94 | (X8) S-05 shall show an automatically laid-out single-line diagram of the open Project instead of the circle diagram: busbars, Inverters above and Loads below their Bus, Lines as orthogonal conductors, a system block (nominal kV and Hz), a legend; the same topology gives the same picture; isolated Buses sit in a "Not connected" row; a Bus, Line, Load or Inverter with a stage-1 validation issue is marked (outline + icon + word). | Could | Client: every Bus, Line, Load and Inverter appears once with values copied verbatim; identical coordinates for shuffled input; no overlapping node boxes; a meshed loop lays out. **E2E:** the FR-14 test passes unchanged. | Guideline §3, §4, §5 |
+| FR-95 | (X8) Hover and keyboard focus on a diagram element shall open a tooltip with the element rows of guideline §6 (design data, then results and checks only when a current run exists, FR-93); a missing optional value shows "—" with its reason, never 0; Escape closes it. | Could | Client: tooltip rows equal the inspector rows of the same element. **E2E:** focus opens the tooltip with a unit on every value; Escape closes it. | Guideline §6, §A7 |
+| FR-96 | (X8) On S-07 and S-08 the diagram shall carry a results overlay (toggle "Show results", on by default): M1 labels of guideline §5.1 from the current FEASIBLE M1, and on S-08 violated, limiting and near-limit elements (icon + word) chosen by the S-08 rules (`margin < 0`, `nearLimit`, limiting per Doc 12 §9 #17); with no current run the overlay is hidden and the reason is shown. | Could | **E2E:** after M1 a Bus label shows its voltage in p.u.; after a design edit the overlay is hidden; on the m2-infeasible profile a violated element shows the word "Violated". | Guideline §5, §A5, §A6 |
+| FR-97 | (X8) S-16 shall include the diagram as a static figure "Single-line diagram of the analysed design" with the overlay of the reported M1 RunRecord and a caption with its RunRecord id and short snapshot hash; print keeps text at 8 pt or more; "Download SVG" uses the shared exporter of FR-92 with its caption block. | Could | **E2E:** the report figure caption names the RunRecord id; the downloaded SVG contains it and the engine kind, and the FAKE caption for a FAKE run. | Guideline §7, §A9 |
+| FR-98 | (X8) The diagram shall be keyboard and screen-reader operable: a group named "Single-line diagram", each element a focusable button with a full name (for example "Inverter INV1 at bus B1, rated 70 kVA"), Enter or Space selects (opens the inspector, FR-90, and highlights the table row), and a "View as table" toggle lists every element with the tooltip fields. | Could | **E2E:** Tab reaches every element; Enter on a Bus opens the inspector; "View as table" has one row per element. | Guideline §8, §A4 |
+
 ---
 
 ## 4. Contract changes (merge into Doc 3 at stage 1.5)
@@ -211,6 +224,8 @@ Rules for all eight (guideline §1): values come only from payloads the engine a
 | S-07, S-08, S-10, S-12, S-13, S-14 | KPI strip (FR-87). |
 | S-07 – S-14, S-16 | Analytics charts (FR-86, FR-88), crosshair on line and point charts (FR-89), Download SVG (FR-92); every result screen reads its latest matching RunRecord (FR-93). |
 | S-05, S-07, S-08 | Inspector panel (FR-90); S-05 diagram `onSelect`. |
+| S-05, S-07, S-08, S-16 | Single-line diagram replaces the circle diagram (FR-94); tooltip (FR-95); results overlay on S-07 and S-08 (FR-96); report figure and Download SVG (FR-97); keyboard access and "View as table" (FR-98). |
+| `/dev/sld` | Every SLD symbol and state of guideline §5 (FR-94). |
 | All screens, S-17 About (built in this round) | Glossary toggletips; glossary list on S-17 (FR-91). |
 | `/dev/components` | Every chart and state (FR-86). |
 
@@ -233,6 +248,7 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | FR-80 | API (Fake) + E2E | n_minus_1_builds_scenarios; single_inverter_disabled |
 | FR-81, FR-82 | API (Fake) | sharing_group_present; metric_not_a_constraint |
 | FR-83 – FR-85 | E2E | diff_lists_paths; shortcut_prefills_m3a; example_opens_as_copy |
+| FR-94 – FR-98 | Client + E2E | sld_model_verbatim; sld_layout_deterministic_no_overlap_meshed; tooltip_rows_equal_inspector; overlay_hidden_when_stale; violated_word_on_m2_infeasible; report_sld_caption; sld_svg_caption; sld_keyboard_and_table |
 | FR-86 – FR-93 | Client + E2E | scale_ticks_domain_nearest_nulls; kpi_selectors_empty_and_null; latest_matching_run; figure_show_data_row_count; crosshair_arrow_keys; inspector_focus_and_stale; fake_caption_every_chart; glossary_entries_have_source; toggletip_enter_escape; svg_download_caption; report_charts_within_718px |
 
 ## 8. Core alignment items moved out of this document
@@ -256,6 +272,14 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | 8 | M4b disturbance start: `parameters.disturbance.start_time_s` (Doc 3 §6.9). | DECIDED (from Doc 3, 2026-11-03) |
 | 9 | Glossary terms with no Doc 3 or manuscript definition: listed at work package UX-10. | OPEN |
 | 10 | S-17 About is built in this round, as the home of the glossary (D-72 K151). | DECIDED (user 2026-11-03) |
+| 11 | X8: `elkjs` as an exception to D-72 K150, scoped to the SLD (ADR-013). | DECIDED (user 2026-11-03) |
+| 12 | X8: symbols against IEEE Std 315 / 315A and the thesis wording; until checked the thesis says "single-line diagram conventions". | OPEN (owner, guideline §12 #1) |
+| 13 | X8: inverter loading shown as a ratio, the contract unit (`loading_ratio`, Doc 3 §6.2; R2 of the guideline). | DECIDED (from Doc 3, 2026-11-03) |
+| 14 | X8: no drag-to-rearrange in v1; positions computed, never stored (Doc 3 §3.2, Doc 7 §9 #4 read-only first). | DECIDED (from Doc 3 and Doc 7, 2026-11-03) |
+| 15 | X8: no battery symbol; the design has no battery entity until B2 lands (§3.5, after 1.4). | DECIDED (from §3.5 and the guideline rule "no symbol for anything the model doesn't have", 2026-11-03) |
+| 16 | X8: SVG export only, no PNG (FR-92 asks for SVG; guideline §12 #6 default). | DECIDED (from FR-92, 2026-11-03) |
+| 17 | X8: source of "Limiting" on S-08. Guideline §A6 says the smallest `normalised_margin` of `constraint_margins`, because `M2Payload` has no `limiting_constraints`. But the M2 *result* carries `limiting_constraints` (Doc 3 §5: non-empty when INFEASIBLE, may list near-limit items when FEASIBLE), and S-08 already shows it as the "Limiting constraints" table. Proposal: "Limiting" = an element in `result.limiting_constraints`; "Violated" = `margin < 0` in `constraint_margins`; "Near limit" = `nearLimit()`. | DECIDED (user approved the SLD-0 draft with this proposal, 2026-11-03) |
+| 18 | X8 priority: Could (FR-14 is Should; the guideline does not set X8's priority). | DECIDED (user approved the SLD-0 draft, 2026-11-03) |
 
 ## Log
 
@@ -265,3 +289,4 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | 2026-11-01 | DR-08 cancelled by the user: formulas added (Eq. 12.3–12.13, indicator definitions referenced to the manuscript); B2 capability corrected to count $n_s n_p$ modules; standard conductor tables postponed; separate M4 sweep cap dropped in favour of manuscript SWEEP_CAP 1 000. |
 | 2026-11-02 | Q-22 settled (Doc 9 D-59): Could features with Eq. 12.x after the Should ones; B2 requires η_dc (Eq. 12.7); B3 out of v1; no example catalogue entries. |
 | 2026-11-03 | UX and analytics round added (Doc 9 D-72): X0–X7 with FR-86 – FR-93 (§2, §3.10, §5, §7, §9 points 6–10). |
+| 2026-11-03 | SLD round added (Doc 9 D-75, ADR-013, user-confirmed at SLD-0): X8 with FR-94 – FR-98 (§2, §3.11, §5, §7, §9 points 11–18). |
