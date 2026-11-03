@@ -12,7 +12,7 @@ import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
 import { LineChart } from "../../components/charts/LineChart";
 import { Swatch } from "../../components/charts/marks";
-import { SERIES } from "../../components/charts/palette";
+import { FEAS } from "../../components/charts/palette";
 
 const KEY_METRICS: [keyof KeyMetrics, string][] = [
   ["system_frequency_hz", "System frequency (Hz)"],
@@ -116,23 +116,24 @@ export default function SweepPage() {
   );
 }
 
-// Marker shape carries the Status (circle feasible, cross infeasible); a point without a value is
-// a gap, listed in the point table (Doc 12 X1, FR-86). Points without an axis value are not drawn.
+// Feasibility markers per VISUAL §9: ● feasible, ✕ infeasible, – unavailable (on the x axis); a
+// point without a value is a gap in the line (Doc 12 X1, FR-86). Points without an axis value are not drawn.
 function SweepPlot({ points, metric, xTitle, record }: { points: SweepPoint[]; metric: keyof KeyMetrics; xTitle: string; record: RunRecord | null }) {
   const shown = points.filter((p) => typeof p.value === "number");
-  const legend = [
-    { name: "feasible", swatch: <Swatch color={SERIES[0]} marker="circle" /> },
-    { name: "infeasible", swatch: <Swatch color={SERIES[0]} marker="cross" /> },
-  ];
+  const legend = (Object.keys(FEAS) as (keyof typeof FEAS)[]).map((k) => ({ name: k, swatch: <Swatch color={FEAS[k].color} marker={FEAS[k].marker} filled={FEAS[k].filled} /> }));
+  const mark = (p: SweepPoint) => {
+    const f = typeof p.key_metrics[metric] !== "number" ? FEAS.unavailable : p.status === "FEASIBLE" ? FEAS.feasible : FEAS.infeasible;
+    return { m: f.marker, color: f.color, filled: f.filled };
+  };
   return (
     <LineChart
       title="Sweep"
       xTitle={xTitle}
       yTitle={KEY_METRICS.find(([k]) => k === metric)?.[1] ?? metric}
       x={shown.map((p) => p.value as number)}
-      series={[{ name: KEY_METRICS.find(([k]) => k === metric)?.[1] ?? metric, values: shown.map((p) => (typeof p.key_metrics[metric] === "number" ? (p.key_metrics[metric] as number) : null)), marker: (i) => (shown[i].status === "FEASIBLE" ? "circle" : "cross") }]}
+      series={[{ name: KEY_METRICS.find(([k]) => k === metric)?.[1] ?? metric, values: shown.map((p) => (typeof p.key_metrics[metric] === "number" ? (p.key_metrics[metric] as number) : null)), marker: (i) => mark(shown[i]) }]}
       legend={legend}
-      note="A point with no operating point (failed) has no value and leaves a gap."
+      note="A point without a value (no operating point) leaves a gap in the line and is marked – on the x axis."
       record={record}
     />
   );

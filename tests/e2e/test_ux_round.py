@@ -1,7 +1,8 @@
-"""Seam 5: UX and analytics round (Doc 12 X0, X1; Doc 9 D-72).
+"""Seam 5: UX and analytics round (Doc 12 X0–X3, X5; Doc 9 D-72).
 
 FR-93 (the latest result on the current design survives leaving a screen; a design edit hides it),
-FR-86 (a chart figure's "Show data" table lists as many rows as the payload).
+FR-86 (a chart figure's "Show data" table lists as many rows as the payload),
+FR-87 (S-07 KPI strip), FR-88 (S-07 charts), FR-90 (Inspector side panel).
 """
 
 from __future__ import annotations
@@ -10,7 +11,7 @@ from collections.abc import Callable
 
 from flows import enter_design, gui_snapshot
 from playwright.sync_api import Page, expect
-from test_network_m1_m2 import _run_m1
+from test_network_m1_m2 import _margins, _run_m1
 
 
 def test_fr_93_result_survives_leaving_and_hides_after_edit(
@@ -48,3 +49,50 @@ def test_fr_86_show_data_lists_the_payload_rows(server: Callable[[str], str], pa
     buses = page.get_by_role("table", name="Bus voltages")
     expect(data.locator("tbody tr")).to_have_count(buses.locator("tbody tr").count())
     expect(data).to_contain_text("B1")
+
+
+def test_fr_87_fr_88_power_flow_kpis_and_charts(server: Callable[[str], str], page: Page) -> None:
+    enter_design(page, server("default"), gui_snapshot())
+    _run_m1(page)
+    kpis = page.get_by_role("region", name="Power flow key figures")
+    expect(kpis).to_contain_text("Lowest bus voltage")
+    expect(kpis).to_contain_text("FAKE engine: placeholder values, not engine results.")
+    for title in (
+        "Bus voltage profile",
+        "Inverter loading",
+        "Inverter output, P and Q",
+        "Line loading",
+    ):
+        expect(page.get_by_role("button", name=f"Show data: {title}")).to_be_visible()
+    expect(page.get_by_role("img", name="Bus voltage (p.u.) dot chart, 2 points")).to_be_visible()
+
+
+def test_fr_90_inspector_opens_from_a_table_and_closes_on_escape(
+    server: Callable[[str], str], page: Page
+) -> None:
+    enter_design(page, server("default"), gui_snapshot())
+    _run_m1(page)
+    trigger = page.get_by_role("button", name="Inspect B1")
+    trigger.click()
+    panel = page.get_by_role("complementary", name="Inspector: Bus B1")
+    expect(panel.get_by_role("heading", name="Bus B1")).to_be_focused()
+    expect(panel.get_by_role("definition").first).to_be_visible()
+    expect(panel).to_contain_text("No current constraint check for this design.")
+    expect(panel.get_by_role("link", name="Edit in table")).to_have_attribute(
+        "href", "/network/?focus=B1"
+    )
+    page.keyboard.press("Escape")
+    expect(panel).to_have_count(0)
+    expect(trigger).to_be_focused()
+
+    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    _margins(page)
+    page.get_by_role("button", name="Run M2").click()
+    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
+    page.get_by_role("link", name="5 Power flow (M1)").click()
+    page.get_by_role("button", name="Inspect INV1").click()
+    panel = page.get_by_role("complementary", name="Inspector: Inverter INV1")
+    expect(panel.get_by_role("definition").first).to_be_visible()
+    expect(panel.get_by_label("Sizing check values")).to_contain_text("Required rating")
+    panel.get_by_role("button", name="Close inspector").click()
+    expect(panel).to_have_count(0)

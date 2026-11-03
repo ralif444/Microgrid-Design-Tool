@@ -9,6 +9,9 @@ import { EmptyState } from "../../components/EmptyState";
 import { asResponse } from "../../components/Further";
 import { Icon } from "../../components/Icon";
 import { IndicatorPanel } from "../../components/IndicatorPanel";
+import { Inspector, type ElementRef } from "../../components/Inspector";
+import { m1Kpis } from "../../components/kpi";
+import { KpiStrip } from "../../components/KpiStrip";
 import { M1FreshnessBadge } from "../../components/M1Freshness";
 import { M1Results } from "../../components/M1Results";
 import { RequireProject } from "../../components/RequireProject";
@@ -25,6 +28,7 @@ function PowerFlow() {
   const dispatch = useProjectDispatch();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [inspect, setInspect] = useState<ElementRef | null>(null);
   const report = useValidation(design);
   const resp = asResponse(latestRun(runRecords, "M1", report?.snapshot_hash ?? null));
   const fresh = m1Freshness(m1Ref(runRecords)?.snapshot_hash ?? null, report);
@@ -84,7 +88,9 @@ function PowerFlow() {
           </EmptyState>
         ))}
       {resp && <StatusBanner type="M1" result={resp.result} />}
-      {payload && <M1Results p={payload} />}
+      {payload && resp && <KpiStrip label="Power flow key figures" kpis={m1Kpis(payload)} record={resp.run_record} />}
+      {payload && resp && <M1Results p={payload} charts={{ limits: design.design_constraints, record: resp.run_record }} onInspect={setInspect} />}
+      {inspect && <Inspector target={inspect} onClose={() => setInspect(null)} />}
       {payload && <IndicatorPanel />}
       {resp && (
         <p className={styles.record}>

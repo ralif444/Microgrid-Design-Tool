@@ -6,15 +6,16 @@ import { memo, useMemo } from "react";
 import type { RunRecord } from "../../api-types";
 import { num } from "../format";
 import { ChartFrame, type LegendItem } from "./ChartFrame";
-import { MarkerShape, Swatch } from "./marks";
-import { DASH, DASH_WORD, SERIES, type Marker } from "./palette";
+import { MarkerShape, Swatch, type Mark } from "./marks";
+import { DASH, DASH_WORD, SERIES } from "./palette";
 import { linearScale, niceDomain, niceTicks, splitAtNulls } from "./scale";
 
 const W = 560;
 const H = 260;
 const M = { l: 64, r: 16, t: 12, b: 44 };
 
-export type LineSeries = { name: string; values: (number | null)[]; marker?: (i: number) => Marker | null };
+// `marker` may also mark a point without a value; it is then drawn on the x axis (e.g. "–" unavailable).
+export type LineSeries = { name: string; values: (number | null)[]; marker?: (i: number) => Mark | null };
 
 export const LineChart = memo(function LineChart({
   title,
@@ -104,8 +105,8 @@ export const LineChart = memo(function LineChart({
                 )}
               {s.marker &&
                 s.values.map((v, i) => {
-                  const m = v === null ? null : s.marker!(i);
-                  return m && <MarkerShape key={i} m={m} x={g.sx(x[i])} y={g.sy(v as number)} color={color} />;
+                  const k = s.marker!(i);
+                  return k && <MarkerShape key={i} m={k.m} filled={k.filled} x={g.sx(x[i])} y={v === null ? H - M.b - 6 : g.sy(v)} color={k.color ?? color} />;
                 })}
             </g>
           );

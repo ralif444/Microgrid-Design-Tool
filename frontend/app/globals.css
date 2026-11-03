@@ -57,6 +57,9 @@ button.primary[aria-busy="true"]:disabled, form button[type="submit"][aria-busy=
   background: var(--cds-button-primary); border-color: var(--cds-button-primary); color: var(--cds-text-on-color); cursor: progress;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+/* an element id that opens the Inspector (Doc 12 X5): reads as a link inside a table cell */
+button.inspect { min-height: 0; padding: 0; border: 0; font-weight: 600; color: var(--cds-link-primary); text-decoration: underline; }
+button.inspect:hover:not(:disabled) { background: transparent; color: var(--cds-link-primary-hover); }
 @media (prefers-reduced-motion: reduce) { button[aria-busy="true"]::before { animation: none; } }
 /* Fields look like Carbon TextInput / Select (guideline §6): field-01 on the page, a tint on a white
    layer (tables: layer-02), bottom border only, 2 px support-error outline when invalid. */

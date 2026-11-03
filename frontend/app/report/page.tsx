@@ -174,7 +174,8 @@ function Report() {
               title="Bus voltage magnitude from the latest power flow (M1)"
               valueTitle="Bus voltage (p.u.)"
               categoryTitle="Bus"
-              bars={m1p.bus_results.map((b) => ({ label: b.bus_id, value: b.voltage_pu }))}
+              categories={m1p.bus_results.map((b) => b.bus_id)}
+              series={[{ name: "Voltage", values: m1p.bus_results.map((b) => b.voltage_pu) }]}
               refs={[{ value: 1, label: "1.0 p.u." }]}
               record={m1}
             />

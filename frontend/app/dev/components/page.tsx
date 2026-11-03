@@ -285,10 +285,12 @@ export default function ComponentsPage() {
         <p>Placeholder numbers for the look only; no analysis produced them.</p>
         <LineChart title="Line chart, two series" xTitle="sample index (count)" yTitle="sample value (count)" x={SAMPLE_X} series={[{ name: "series A", values: [1, 2, 3, 4, 5, 6, 7, 8, 9] }, { name: "series B", values: [9, 8, 7, 6, 5, 4, 3, 2, 1] }]} />
         <LineChart title="Line chart with gaps (null values)" xTitle="sample index (count)" yTitle="sample value (count)" x={SAMPLE_X} series={[{ name: "series A", values: [1, 2, null, 4, 5, null, null, 8, 9] }]} />
-        <LineChart title="Point chart with markers" xTitle="sample index (count)" yTitle="sample value (count)" x={SAMPLE_X} line={false} series={[{ name: "series A", values: [2, 3, null, 5, 4, 6, 5, 7, 6], marker: (i) => (i % 3 === 0 ? "cross" : "circle") }]} />
+        <LineChart title="Point chart with markers" xTitle="sample index (count)" yTitle="sample value (count)" x={SAMPLE_X} line={false} series={[{ name: "series A", values: [2, 3, null, 5, 4, 6, 5, 7, 6], marker: (i) => ({ m: i % 3 === 0 ? "cross" : "circle" }) }]} />
         <LineChart title="FAKE caption" xTitle="sample index (count)" yTitle="sample value (count)" x={SAMPLE_X} series={[{ name: "series A", values: [1, 1, 2, 2, 3, 3, 2, 2, 1] }]} record={FAKE_RECORD} />
         <LineChart title="Empty chart" xTitle="sample index (count)" yTitle="sample value (count)" x={[]} series={[{ name: "series A", values: [] }]} />
-        <BarChart title="Bar chart with a reference line and a missing value" valueTitle="sample value (count)" categoryTitle="Item" bars={[{ label: "A", value: 3 }, { label: "B", value: null }, { label: "C", value: 5 }]} refs={[{ value: 4, label: "reference 4" }]} />
+        <BarChart title="Bar chart with a reference line and a missing value" valueTitle="sample value (count)" categoryTitle="Item" categories={["A", "B", "C"]} series={[{ name: "series A", values: [3, null, 5] }]} refs={[{ value: 4, label: "reference 4" }]} />
+        <BarChart title="Grouped bars to both sides of zero" valueTitle="sample value (count)" categoryTitle="Item" categories={["A", "B"]} series={[{ name: "series A", values: [3, -2] }, { name: "series B", values: [-1, 4] }]} />
+        <BarChart title="Dot chart on a fitted axis" valueTitle="sample value (count)" categoryTitle="Item" categories={["A", "B", "C"]} series={[{ name: "series A", values: [10.2, 9.8, 10.1] }]} refs={[{ value: 9.9, label: "lower 9.9" }, { value: 10.3, label: "upper 10.3" }]} dots />
       </Demo>
 
       <Demo title="Empty state">
