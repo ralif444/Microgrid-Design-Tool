@@ -2,7 +2,8 @@
 
 FR-93 (the latest result on the current design survives leaving a screen; a design edit hides it),
 FR-86 (a chart figure's "Show data" table lists as many rows as the payload),
-FR-87 (S-07 KPI strip), FR-88 (S-07 charts), FR-90 (Inspector side panel).
+FR-87 (S-07 and S-08 KPI strips), FR-88 (S-07 charts; S-08 margin chart and loadability axis),
+FR-90 (Inspector side panel).
 """
 
 from __future__ import annotations
@@ -96,3 +97,31 @@ def test_fr_90_inspector_opens_from_a_table_and_closes_on_escape(
     expect(panel.get_by_label("Sizing check values")).to_contain_text("Required rating")
     panel.get_by_role("button", name="Close inspector").click()
     expect(panel).to_have_count(0)
+
+
+def test_fr_87_fr_88_constraint_check_kpis_and_charts(
+    server: Callable[[str], str], page: Page
+) -> None:
+    enter_design(page, server("m2-infeasible"), gui_snapshot())
+    _run_m1(page)
+    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    _margins(page)
+    page.get_by_role("button", name="Run M2").click()
+    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "INFEASIBLE")
+    kpis = page.get_by_role("region", name="Constraint check key figures")
+    expect(kpis).to_contain_text("INFEASIBLE")
+    expect(kpis).to_contain_text("Tightest constraint")
+    expect(kpis).to_contain_text("solution-existence diagnostic, not a stability limit")
+    expect(kpis).to_contain_text("FAKE engine: placeholder values, not engine results.")
+
+    margins = page.get_by_role("img", name="Normalised margin (ratio) bar chart, 2 bars")
+    expect(margins).to_contain_text("Violated (margin < 0)")
+    axis = page.get_by_role("img", name="Load scale λ (ratio) axis, 0 markers")
+    expect(axis).to_be_visible()
+    for title in ("Normalised margin per constraint", "Loadability along the load scale λ"):
+        figure = page.get_by_role("figure").filter(has_text=title)
+        expect(figure).to_contain_text("FAKE engine: placeholder, not an engine result")
+    page.get_by_role("button", name="Show data: Loadability along the load scale λ").click()
+    data = page.get_by_role("table", name="Loadability along the load scale λ data")
+    expect(data).to_contain_text("λ_c")
+    expect(data).to_contain_text("—")

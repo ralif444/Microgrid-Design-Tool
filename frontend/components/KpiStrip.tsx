@@ -2,6 +2,7 @@
 // unit (rounded for display), and the element it comes from. A FAKE run is marked (CLAUDE.md).
 import type { RunRecord } from "../api-types";
 import { num } from "./format";
+import { Icon } from "./Icon";
 import type { Kpi } from "./kpi";
 import styles from "./KpiStrip.module.css";
 
@@ -13,7 +14,8 @@ export function KpiStrip({ label, kpis, record }: { label: string; kpis: Kpi[]; 
           <div key={k.label} className={styles.tile}>
             <dt>{k.label}</dt>
             <dd className={styles.value}>
-              {k.value === null ? "—" : num(k.value)} <span className={styles.unit}>{k.unit}</span>
+              {k.icon && <Icon name={k.icon} size={20} />}
+              {k.value === null ? "—" : typeof k.value === "string" ? k.value : num(k.value)} <span className={styles.unit}>{k.unit}</span>
             </dd>
             {k.detail && <dd className={styles.detail}>{k.detail}</dd>}
           </div>

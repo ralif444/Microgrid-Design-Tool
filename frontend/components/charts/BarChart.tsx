@@ -2,7 +2,8 @@
 // Horizontal bar chart (Doc 12 X1, FR-86): bars from zero, to either side, one bar per series in
 // each category; or dots on a data-fitted axis (`dots`), for values far from zero such as p.u.
 // voltages. A null value gets no bar and the label "—" (guideline §1 rule 5). Reference lines
-// mark user-set limits.
+// mark user-set limits. `negative` shades and names the side below zero (S-08 margins: "Violated");
+// `labelWidth` widens the category column for long names.
 import { memo, useMemo } from "react";
 import type { RunRecord } from "../../api-types";
 import { num } from "../format";
@@ -29,6 +30,8 @@ export const BarChart = memo(function BarChart({
   dots = false,
   note,
   record,
+  negative,
+  labelWidth = M.l,
 }: {
   title: string;
   valueTitle: string; // with unit, e.g. "Bus voltage (p.u.)"
@@ -39,6 +42,8 @@ export const BarChart = memo(function BarChart({
   dots?: boolean;
   note?: string;
   record?: RunRecord | null;
+  negative?: string;
+  labelWidth?: number;
 }) {
   const band = dots ? BAR : BAR * series.length;
   const h = M.t + categories.length * (band + GAP) + M.b;
@@ -49,8 +54,10 @@ export const BarChart = memo(function BarChart({
     const d: [number, number] = raw[0] === raw[1] ? [raw[0], raw[0] + 1] : raw;
     const ticks = niceTicks(d);
     const dom: [number, number] = [Math.min(d[0], ticks[0]), Math.max(d[1], ticks[ticks.length - 1])];
-    return { sx: linearScale(dom, [M.l, W - M.r]), ticks, zero: dots ? null : 0 };
-  }, [series, refs, dots]);
+    // room left of the plot for the value labels of negative bars, so they never meet a category name
+    const pad = !dots && fin.some((v) => v < 0) ? 36 : 0;
+    return { sx: linearScale(dom, [labelWidth + pad, W - M.r]), ticks, zero: dots ? null : 0, lo: dom[0] };
+  }, [series, refs, dots, labelWidth]);
   const multi = series.length > 1;
   return (
     <ChartFrame
@@ -61,6 +68,14 @@ export const BarChart = memo(function BarChart({
       data={{ columns: [categoryTitle, ...series.map((s) => (multi ? `${s.name}, ${valueTitle}` : valueTitle))], rows: categories.map((c, i) => [c, ...series.map((s) => s.values[i] ?? null)]) }}
     >
       <svg role="img" aria-label={`${valueTitle} ${dots ? "dot" : "bar"} chart, ${categories.length} ${dots ? "points" : "bars"}`} viewBox={`0 0 ${W} ${h}`} className="chart-svg">
+        {negative && g.zero !== null && g.lo < 0 && (
+          <g>
+            <rect x={g.sx(g.lo)} y={M.t} width={g.sx(0) - g.sx(g.lo)} height={h - M.t - M.b} className="chart-negative" />
+            <text x={g.sx(0) - 4} y={14} textAnchor="end" className="chart-negative-word">
+              {negative}
+            </text>
+          </g>
+        )}
         {g.ticks.map((t) => (
           <g key={t}>
             <line x1={g.sx(t)} x2={g.sx(t)} y1={M.t} y2={h - M.b} className="chart-grid" />
@@ -73,7 +88,7 @@ export const BarChart = memo(function BarChart({
           const y0 = M.t + i * (band + GAP);
           return (
             <g key={c}>
-              <text x={M.l - 6} y={y0 + band / 2 + 4} textAnchor="end">
+              <text x={labelWidth - 6} y={y0 + band / 2 + 4} textAnchor="end">
                 {c}
               </text>
               {series.map((s, k) => {
@@ -110,7 +125,7 @@ export const BarChart = memo(function BarChart({
             </text>
           </g>
         ))}
-        <text x={(M.l + W - M.r) / 2} y={h - 2} textAnchor="middle">
+        <text x={(labelWidth + W - M.r) / 2} y={h - 2} textAnchor="middle">
           {valueTitle}
         </text>
       </svg>

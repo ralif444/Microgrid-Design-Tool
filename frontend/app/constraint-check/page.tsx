@@ -10,6 +10,8 @@ import { EmptyState } from "../../components/EmptyState";
 import { asResponse } from "../../components/Further";
 import { Icon } from "../../components/Icon";
 import { Inspector, type ElementRef } from "../../components/Inspector";
+import { m2Kpis } from "../../components/kpi";
+import { KpiStrip } from "../../components/KpiStrip";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { ConstraintTable, M2Results } from "../../components/M2Results";
 import { NumberField } from "../../components/NumberField";
@@ -95,6 +97,7 @@ function ConstraintCheck() {
       </form>
       {error && <Toast message={error} onDismiss={() => setError(null)} />}
       {r && <StatusBanner type="M2" result={r} />}
+      {payload && resp && <KpiStrip label="Constraint check key figures" kpis={m2Kpis(payload)} record={resp.run_record} />}
       {notices.map((w, k) => (
         <p key={k} data-testid="m2-warning" className="problems">
           <Icon name="warn" size={20} />
@@ -104,7 +107,7 @@ function ConstraintCheck() {
       {r?.status === "INFEASIBLE" && <ConstraintTable label="Limiting constraints" rows={r.limiting_constraints ?? []} shortcut />}
       <ResultsDiagram fresh={fresh} checks selected={inspect?.id ?? null} onSelect={setInspect} />
       {inspect && <Inspector target={inspect} onClose={() => setInspect(null)} />}
-      {payload && <M2Results p={payload} />}
+      {payload && resp && <M2Results p={payload} charts={{ record: resp.run_record }} />}
       {!resp &&
         fresh === "current" &&
         (runRecords.some((x) => x.analysis_type === "M2") ? (

@@ -6,6 +6,7 @@ import { Tag } from "@carbon/react";
 import { useState } from "react";
 import type { AnalysisResult, AnalysisType, RunRecord } from "../../../api-types";
 import { BarChart } from "../../../components/charts/BarChart";
+import { LoadabilityAxis } from "../../../components/charts/LoadabilityAxis";
 import { LineChart } from "../../../components/charts/LineChart";
 import { AdvisoryPanel } from "../../../components/AdvisoryPanel";
 import { DataTable, type DataColumn, type RowError } from "../../../components/DataTable";
@@ -290,6 +291,9 @@ export default function ComponentsPage() {
         <LineChart title="Empty chart" xTitle="sample index (count)" yTitle="sample value (count)" x={[]} series={[{ name: "series A", values: [] }]} />
         <BarChart title="Bar chart with a reference line and a missing value" valueTitle="sample value (count)" categoryTitle="Item" categories={["A", "B", "C"]} series={[{ name: "series A", values: [3, null, 5] }]} refs={[{ value: 4, label: "reference 4" }]} />
         <BarChart title="Grouped bars to both sides of zero" valueTitle="sample value (count)" categoryTitle="Item" categories={["A", "B"]} series={[{ name: "series A", values: [3, -2] }, { name: "series B", values: [-1, 4] }]} />
+        <BarChart title="Diverging bars with the negative side named" valueTitle="sample value (count)" categoryTitle="Item" categories={["item A, first kind", "item B, second kind", "item C, third kind"]} series={[{ name: "series A", values: [-2, 1, 3] }]} negative="Violated (margin < 0)" labelWidth={210} />
+        <LoadabilityAxis l={{ lambda_c: 2, lambda_s: 3, lambda_ub: 4, resolution: 0.25, grid_step: 0.5, stop_reason: "gallery placeholder" }} />
+        <LoadabilityAxis l={{ lambda_c: null, lambda_s: null, lambda_ub: null, resolution: 0.25, grid_step: 0.5, stop_reason: "gallery placeholder, nothing available" }} record={FAKE_RECORD} />
         <BarChart title="Dot chart on a fitted axis" valueTitle="sample value (count)" categoryTitle="Item" categories={["A", "B", "C"]} series={[{ name: "series A", values: [10.2, 9.8, 10.1] }]} refs={[{ value: 9.9, label: "lower 9.9" }, { value: 10.3, label: "upper 10.3" }]} dots />
       </Demo>
 

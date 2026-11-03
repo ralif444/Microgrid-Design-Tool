@@ -1,8 +1,12 @@
 // KPI selectors (Doc 12 X2, FR-87): values read straight from the payload. Only select (min, max,
 // argmin, argmax) and count; no arithmetic on physical quantities (guideline §1 rule 1).
-import type { M1Payload } from "../api-types";
+import type { M1Payload, M2Payload } from "../api-types";
+import { num } from "./format";
+import type { IconName } from "./Icon";
+import { KIND_WORDS } from "./M2Results";
 
-export type Kpi = { label: string; value: number | null; unit: string; detail?: string };
+// `value` is a payload number, or a payload word (the M2 verdict) shown with `icon`.
+export type Kpi = { label: string; value: number | string | null; unit: string; detail?: string; icon?: IconName };
 
 // The row with the smallest (sign -1: largest) value, or null for an empty list.
 export function pick<R>(rows: R[], get: (r: R) => number, sign: 1 | -1 = 1): R | null {
@@ -23,5 +27,24 @@ export function m1Kpis(p: M1Payload): Kpi[] {
     { label: "Total losses", value: p.total_losses_kw, unit: "kW" },
     { label: "Iterations", value: p.iterations, unit: "count" },
     { label: "Validity indicator ε_X", value: p.epsilon_x_ratio, unit: "ratio", detail: "threshold not yet calibrated" },
+  ];
+}
+
+export function m2Kpis(p: M2Payload): Kpi[] {
+  const tight = pick(p.constraint_margins, (c) => c.normalised_margin);
+  const l = p.loadability;
+  const res = `resolution ${num(l.resolution)}`;
+  return [
+    { label: "Verdict", value: p.verdict, unit: "", icon: p.verdict === "FEASIBLE" ? "feasible" : "misuse" },
+    { label: "Violated constraints", value: p.constraint_margins.filter((c) => c.margin < 0).length, unit: "count" },
+    {
+      label: "Tightest constraint",
+      value: tight?.normalised_margin ?? null,
+      unit: "ratio",
+      detail: tight ? `normalised margin; ${KIND_WORDS[tight.kind] ?? tight.kind}, ${tight.element_id}` : "no evaluated constraint",
+    },
+    { label: "Not evaluated", value: p.not_evaluated.length, unit: "count", detail: "no limit given" },
+    { label: "Constraint loadability λ_c", value: l.lambda_c, unit: "ratio", detail: res },
+    { label: "λ_s", value: l.lambda_s, unit: "ratio", detail: `solution-existence diagnostic, not a stability limit; ${res}` },
   ];
 }

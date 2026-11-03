@@ -1,11 +1,14 @@
 // M2 result parts (Doc 7 §5.1, §6.4): limiting constraints / margins, "not evaluated" list,
 // loadability, SizingCheck in an advisory panel separate from SizingAdvice (FR-25, FR-16, FR-24, FR-27).
+// With `charts` (S-08, Doc 12 X3 FR-88): the margin chart and the loadability axis; the report has none.
 import { Tag } from "@carbon/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getMeta } from "../api-client";
-import type { LimitingConstraint, M2Payload } from "../api-types";
+import type { LimitingConstraint, M2Payload, RunRecord } from "../api-types";
 import { AdvisoryPanel } from "./AdvisoryPanel";
+import { BarChart } from "./charts/BarChart";
+import { LoadabilityAxis } from "./charts/LoadabilityAxis";
 import { DataTable, type DataColumn } from "./DataTable";
 import { num } from "./format";
 import { Icon } from "./Icon";
@@ -100,12 +103,27 @@ const LINE_SIZING: DataColumn<LineSize>[] = [
   { key: "req", header: "Required current", unit: "A", numeric: true, cell: (l) => l.required_current_a },
 ];
 
-export function M2Results({ p }: { p: M2Payload }) {
+export function M2Results({ p, charts }: { p: M2Payload; charts?: { record: RunRecord } }) {
   const l = p.loadability;
   const s = p.sizing_check;
+  // sorted tightest first; sorting only, the margins are the engine's (guideline §1 rule 1)
+  const sorted = [...p.constraint_margins].sort((a, b) => a.normalised_margin - b.normalised_margin);
   return (
     <section aria-label="Constraint check results">
       {p.constraint_margins.length > 0 && <ConstraintTable label="All evaluated margins" rows={p.constraint_margins} />}
+      {charts && sorted.length > 0 && (
+        <BarChart
+          title="Normalised margin per constraint"
+          valueTitle="Normalised margin (ratio)"
+          categoryTitle="Constraint"
+          categories={sorted.map((c) => `${c.element_id}, ${KIND_WORDS[c.kind] ?? c.kind}`)}
+          series={[{ name: "Normalised margin", values: sorted.map((c) => c.normalised_margin) }]}
+          negative="Violated (margin < 0)"
+          labelWidth={210}
+          note={p.not_evaluated.length ? `${p.not_evaluated.length} check(s) without a limit are listed under Not evaluated, not drawn.` : undefined}
+          record={charts.record}
+        />
+      )}
       <h2>Not evaluated</h2>
       {p.not_evaluated.length === 0 ? (
         <p className="all-clear">
@@ -139,6 +157,7 @@ export function M2Results({ p }: { p: M2Payload }) {
         <dt>Stop reason</dt>
         <dd className={styles.text}>{l.stop_reason ?? "none"}</dd>
       </dl>
+      {charts && <LoadabilityAxis l={l} record={charts.record} />}
       <AdvisoryPanel label="Sizing check" tag="Sizing check · from the network" title="Sizing check (advisory, from the network)">
         <DataTable label="Inverter ratings" columns={INV_SIZING} rows={s.per_inverter} rowKey={(i) => i.inverter_id} rowName={(i) => i.inverter_id} />
         <DataTable label="Line currents" columns={LINE_SIZING} rows={s.per_line} rowKey={(x) => x.line_id} rowName={(x) => x.line_id} />

@@ -3,7 +3,7 @@
 .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 1px; margin: 0; padding: 1px; max-width: 64rem; }
 .tile { padding: var(--space-3) var(--space-4); background: var(--cds-layer-01); outline: var(--border-width) solid var(--color-border); }
 .tile dt { font-size: var(--text-xs); color: var(--cds-text-secondary); }
-.value { margin: var(--space-1) 0 0; font-size: var(--text-xl); font-variant-numeric: var(--numeric); }
+.value { display: flex; align-items: center; gap: var(--space-1); margin: var(--space-1) 0 0; font-size: var(--text-xl); font-variant-numeric: var(--numeric); }
 .unit { font-size: var(--text-sm); color: var(--cds-text-secondary); }
 .detail { margin: 0; font-size: var(--text-xs); color: var(--cds-text-secondary); }
 .fake { margin: var(--space-2) 0 0; font-size: var(--text-xs); }
