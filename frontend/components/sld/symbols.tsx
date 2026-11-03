@@ -2,7 +2,7 @@
 // model has: busbar, grid-forming inverter, constant-PQ load, series line, system block. No breaker,
 // switch, transformer, grounding, grid or battery. Colour follows the element state through `color`
 // (CSS module); status is always icon + word, never colour alone (R6). Text uses the §5.1 labels.
-import type { ReactNode } from "react";
+import type { ReactNode, SVGProps } from "react";
 import { Icon, type IconName } from "../Icon";
 import type { SldElement } from "./buildSldModel";
 import { BAR_H, type Attach, type BusBox, type LineRoute } from "./layoutSld";
@@ -73,15 +73,17 @@ function Stack({ x, y, lines, anchor = "start", first = styles.label }: { x: num
 const cls = (el: SldElement, emph: Emph, extra?: string) =>
   [styles.el, el.mark === "violated" || el.mark === "limiting" ? styles.marked : "", emph ? styles[emph] : "", extra ?? ""].filter(Boolean).join(" ");
 
-type Common = { el: SldElement; emph?: Emph; children?: ReactNode };
+/** SLD-4: focus, hover and selection handlers for an element's root group; absent in a static figure. */
+export type Bind = (el: SldElement) => SVGProps<SVGGElement>;
+type Common = { el: SldElement; emph?: Emph; bind?: Bind; children?: ReactNode };
 
-export function BusSymbol({ el, box, emph }: Common & { box: BusBox }) {
+export function BusSymbol({ el, box, emph, bind }: Common & { box: BusBox }) {
   const decos = decorations(el, box.isolated);
   // stack bottom-up from just above the bar: id (and name), then M1 labels, then the state words
   const lines = [el.name ? `${el.id} ${el.name}` : el.id, ...el.tags.slice(1)];
   const top = box.barY - 10 - (lines.length - 1) * LH;
   return (
-    <g className={cls(el, emph)} data-testid={`diagram-bus-${el.id}`} data-isolated={box.isolated}>
+    <g className={cls(el, emph)} {...bind?.(el)} data-testid={`diagram-bus-${el.id}`} data-isolated={box.isolated}>
       <rect x={box.x - 6} y={box.barY - 10} width={box.w + 12} height={20} className={styles.halo} />
       {(box.isolated || el.issues.length > 0) && (
         <rect
@@ -100,7 +102,7 @@ export function BusSymbol({ el, box, emph }: Common & { box: BusBox }) {
 }
 
 /** Square with one diagonal, "=" upper-left (DC), "~" lower-right (AC), stub down to the bar, "GFM" tag. */
-export function InverterSymbol({ el, at, emph }: Common & { at: Attach }) {
+export function InverterSymbol({ el, at, emph, bind }: Common & { at: Attach }) {
   const s = 36;
   const x = at.x - s / 2;
   const y = at.barY - 20 - s;
@@ -108,7 +110,7 @@ export function InverterSymbol({ el, at, emph }: Common & { at: Attach }) {
   const lines = [el.tags[0], ...el.tags.slice(1)];
   const top = y - 8 - (lines.length - 1) * LH;
   return (
-    <g className={cls(el, emph)} data-testid={`diagram-inverter-${el.id}`}>
+    <g className={cls(el, emph)} {...bind?.(el)} data-testid={`diagram-inverter-${el.id}`}>
       <rect x={x - 5} y={y - 5} width={s + 10} height={s + 10} className={styles.halo} />
       {el.issues.length > 0 && <rect x={x - 8} y={y - 8} width={s + 16} height={s + 16} className={styles.issueOutline} />}
       <line x1={at.x} y1={y + s} x2={at.x} y2={at.barY - BAR_H / 2} className={styles.wire} />
@@ -130,11 +132,11 @@ export function InverterSymbol({ el, at, emph }: Common & { at: Attach }) {
 }
 
 /** Line down from the bar ending in a filled arrowhead (12 wide, 14 high), labels under it. */
-export function LoadSymbol({ el, at, emph }: Common & { at: Attach }) {
+export function LoadSymbol({ el, at, emph, bind }: Common & { at: Attach }) {
   const y0 = at.barY + BAR_H / 2;
   const tip = y0 + 30 + 14;
   return (
-    <g className={cls(el, emph)} data-testid={`diagram-load-${el.id}`}>
+    <g className={cls(el, emph)} {...bind?.(el)} data-testid={`diagram-load-${el.id}`}>
       <rect x={at.x - 10} y={y0} width={20} height={tip - y0 + 4} className={styles.halo} />
       {el.issues.length > 0 && <rect x={at.x - 13} y={y0 + 2} width={26} height={tip - y0 + 4} className={styles.issueOutline} />}
       <line x1={at.x} y1={y0} x2={at.x} y2={y0 + 30} className={styles.wire} />
@@ -146,10 +148,10 @@ export function LoadSymbol({ el, at, emph }: Common & { at: Attach }) {
 }
 
 /** Orthogonal conductor between busbars; id (and M1 current) on a pill at the longest segment. */
-export function LineSymbol({ el, route, emph }: Common & { route: LineRoute }) {
+export function LineSymbol({ el, route, emph, bind }: Common & { route: LineRoute }) {
   const pts = route.points.map((p) => `${p.x},${p.y}`).join(" ");
   return (
-    <g className={cls(el, emph)} data-testid={`diagram-line-${el.id}`}>
+    <g className={cls(el, emph)} {...bind?.(el)} data-testid={`diagram-line-${el.id}`}>
       <polyline points={pts} className={styles.lineHalo} />
       <polyline points={pts} className={styles.conductor} />
       <Stack x={route.mid.x} y={route.mid.y + 4} lines={el.tags} anchor="middle" />
@@ -159,11 +161,11 @@ export function LineSymbol({ el, route, emph }: Common & { route: LineRoute }) {
 }
 
 /** Text box, not a symbol: nominal kV (line-to-line) and Hz, the network kind, the M1 system frequency. */
-export function SystemBlock({ el, x, y, w, h, emph }: Common & { x: number; y: number; w: number; h: number }) {
+export function SystemBlock({ el, x, y, w, h, emph, bind }: Common & { x: number; y: number; w: number; h: number }) {
   const [kv, hz, ...res] = el.tags;
   const decos = decorations(el);
   return (
-    <g className={cls(el, emph)} data-testid="diagram-system">
+    <g className={cls(el, emph)} {...bind?.(el)} data-testid="diagram-system">
       <rect x={x} y={y} width={w} height={h} className={styles.block} />
       <text x={x + 10} y={y + 20} className={styles.id}>
         {kv} · {hz}

@@ -1,7 +1,8 @@
 "use client";
 // S-05 Network editor (Doc 7 §6.3): Buses, Lines, Inverters as tables (FR-10, FR-12, FR-13),
 // derived Line totals (display only, D-46 K9), live topology issues (FR-19), read-only diagram
-// (FR-14) and the Bus delete guard (FR-11, in EntityTable). Catalogue entries fill Lines and
+// (FR-14, drawn as the single-line diagram of Doc 12 X8) and the Bus delete guard (FR-11, in
+// EntityTable). Diagram and table rows open the Inspector (FR-90). Catalogue entries fill Lines and
 // Inverters (Doc 12 FR-66, FR-69, FR-70).
 import { useEffect, useState } from "react";
 import type { CatalogRef } from "../../api-types";
@@ -9,8 +10,10 @@ import { block, entryWarnings, fromEntry, refText, useCatalog } from "../../comp
 import { EmptyState } from "../../components/EmptyState";
 import { EntityTable, type Column } from "../../components/EntityTable";
 import { Icon } from "../../components/Icon";
-import { NetworkDiagram } from "../../components/NetworkDiagram";
+import { Inspector, type ElementRef } from "../../components/Inspector";
 import { RequireProject } from "../../components/RequireProject";
+import { SingleLineDiagram } from "../../components/sld/SingleLineDiagram";
+import { useSldModel } from "../../components/sld/useSldModel";
 import { useValidation } from "../../components/useValidation";
 import { useProject, useProjectDispatch } from "../../store";
 import styles from "./network.module.css";
@@ -110,6 +113,14 @@ function Network() {
   const [tab, setTab] = useState<Tab>("Buses");
   const [busId, setBusId] = useState("");
   const [focus, setFocus] = useState<string | null>(null);
+  const [inspect, setInspect] = useState<ElementRef | null>(null);
+  const sld = useSldModel();
+  const TAB_OF = { bus: "Buses", line: "Lines", inverter: "Inverters" } as const;
+  const open = (t: ElementRef) => {
+    setInspect(t);
+    setFocus(t.id);
+    if (t.kind !== "load") setTab(TAB_OF[t.kind]);
+  };
   // D-48 K22: ?focus=<id> from a limiting constraint opens the tab holding that element.
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get("focus");
@@ -164,6 +175,7 @@ function Network() {
                 columns={[{ field: "id", label: "Bus id", kind: "text" }]}
                 issues={issues}
                 focus={focus}
+                onInspect={(id) => open({ kind: "bus", id })}
               />
             )}
           </>
@@ -176,7 +188,7 @@ function Network() {
             >
               + Add line
             </button>
-            <EntityTable collection="lines" entity="Line" label="Lines" columns={LINE_COLUMNS} issues={issues} focus={focus} />
+            <EntityTable collection="lines" entity="Line" label="Lines" columns={LINE_COLUMNS} issues={issues} focus={focus} onInspect={(id) => open({ kind: "line", id })} />
             <CatalogPick collection="lines" />
           </>
         )}
@@ -185,15 +197,16 @@ function Network() {
             <button type="button" onClick={() => dispatch({ type: "rowAdded", collection: "inverters", row: { bus_id: firstBus } })}>
               + Add inverter
             </button>
-            <EntityTable collection="inverters" entity="Inverter" label="Inverters" columns={INVERTER_COLUMNS} issues={issues} focus={focus} />
+            <EntityTable collection="inverters" entity="Inverter" label="Inverters" columns={INVERTER_COLUMNS} issues={issues} focus={focus} onInspect={(id) => open({ kind: "inverter", id })} />
             <CatalogPick collection="inverters" />
           </>
         )}
       </section>
       <details className={styles.diagram}>
         <summary>Diagram (read-only)</summary>
-        <NetworkDiagram design={design} />
+        <SingleLineDiagram drawing={sld.design} details={sld.full} selected={inspect?.id ?? null} onSelect={open} />
       </details>
+      {inspect && <Inspector target={inspect} onClose={() => setInspect(null)} />}
       <h2>Issues</h2>
       {listed.length === 0 ? (
         <p className="all-clear">

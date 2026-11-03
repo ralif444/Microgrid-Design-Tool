@@ -10,7 +10,8 @@ export type SldKind = "system" | "bus" | "inverter" | "load" | "line";
 /** One tooltip line, "label · value unit"; `note` gives the reason for "—" or the check detail. */
 export type SldRow = { label: string; value: string; unit?: string; note?: string };
 /** `empty` replaces the rows when there is no current run for the section. */
-export type SldSection = { title: "Design data" | "Results" | "Checks" | "Issues"; rows: SldRow[]; empty?: string };
+/** "Sizing check" is advisory (Doc 3 §3.9, VISUAL §8), kept apart from the constraint checks. */
+export type SldSection = { title: "Design data" | "Results" | "Checks" | "Sizing check" | "Issues"; rows: SldRow[]; empty?: string };
 /** S-08 rules (Doc 12 §9 #17): violated `margin < 0`, limiting in `result.limiting_constraints`, near via `nearLimit`. */
 export type SldMark = "violated" | "limiting" | "near";
 
@@ -177,7 +178,8 @@ export function buildSldModel({ design, m1 = null, m2 = null, issues = [], margi
   const invEls = inverters.map((i) => {
     const r = m1Inv.get(i.id);
     const s = sizeInv.get(i.id);
-    const c = checks(i.id, m2, marginWarn, s ? [row("Required rating", s.required_rating_kva, "kVA"), row("Headroom", s.headroom_kva, "kVA"), { label: "Rating margin short", value: s.rating_margin_short ? "yes" : "no" }] : []);
+    const c = checks(i.id, m2, marginWarn);
+    const sizing: SldSection[] = s ? [{ title: "Sizing check", rows: [row("Required rating", s.required_rating_kva, "kVA"), row("Headroom", s.headroom_kva, "kVA"), { label: "Rating margin short", value: s.rating_margin_short ? "yes" : "no" }] }] : [];
     const unsetSet = (v: number | null | undefined, label: string, unit: string): SldRow => (fmt(v) === null ? { label, value: "0", unit, note: "not set" } : row(label, v, unit));
     const unsetTau = (v: number | null | undefined, label: string): SldRow => row(label, v, "s", "not set, needed for stability analyses");
     return finish(
@@ -209,6 +211,7 @@ export function buildSldModel({ design, m1 = null, m2 = null, issues = [], margi
         },
         results(r ? [row("P", r.p_kw, "kW"), row("Q", r.q_kvar, "kvar"), row("S", r.s_kva, "kVA"), row("Loading", r.loading_ratio, "ratio")] : null, !!m1),
         c.section,
+        ...sizing,
       ],
     );
   });
@@ -239,7 +242,8 @@ export function buildSldModel({ design, m1 = null, m2 = null, issues = [], margi
   const lineEls = lines.map((l) => {
     const r = m1Line.get(l.id);
     const s = sizeLine.get(l.id);
-    const c = checks(l.id, m2, marginWarn, s ? [row("Required current", s.required_current_a, "A")] : []);
+    const c = checks(l.id, m2, marginWarn);
+    const sizing: SldSection[] = s ? [{ title: "Sizing check", rows: [row("Required current", s.required_current_a, "A")] }] : [];
     const limit: SldRow =
       fmt(l.current_limit_a) !== null
         ? row("Current limit", l.current_limit_a, "A")
@@ -278,6 +282,7 @@ export function buildSldModel({ design, m1 = null, m2 = null, issues = [], margi
           !!m1,
         ),
         c.section,
+        ...sizing,
       ],
     );
   });

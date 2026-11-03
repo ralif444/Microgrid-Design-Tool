@@ -14,7 +14,7 @@ DOCS = [ROOT / "docs" / "02_prd.md", ROOT / "docs" / "12_extensions.md"]
 EXCEPTIONS = {
     "FR-56": "no older Project schema version exists (D-66 K135)",
     **{f"FR-{n}": "UX round X0–X7 not built yet (D-72 K152)" for n in (89, 91, 92)},
-    **{f"FR-{n}": "SLD round X8 not built yet (D-75 K164)" for n in range(96, 99)},
+    **{f"FR-{n}": "SLD round X8 not built yet (D-75 K164)" for n in range(96, 98)},
     **{f"FR-{n}": "B1, B2, P11 postponed until D2 data exist (D-62)" for n in range(73, 80)},
     "NFR-09": "process requirement; evidence is the seam marking in Doc 8 §6",
     "NFR-18": "process requirement; evidence is the gate log",

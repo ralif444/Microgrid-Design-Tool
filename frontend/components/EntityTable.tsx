@@ -22,6 +22,7 @@ export function EntityTable({
   columns,
   issues,
   focus = null,
+  onInspect,
 }: {
   collection: Collection;
   entity: string;
@@ -29,6 +30,8 @@ export function EntityTable({
   columns: Column[];
   issues: ValidationIssue[];
   focus?: string | null;
+  /** FR-90 table path (UX-4, D-79): an "Inspect <id>" button per row opens the Inspector. */
+  onInspect?: (id: string) => void;
 }) {
   const { design } = useProject();
   const [refused, setRefused] = useState<string | null>(null);
@@ -68,6 +71,12 @@ export function EntityTable({
         rowCurrent={(r) => focus !== null && r.id === focus}
         rowErrors={(r) => issues.filter((i) => i.entity === entity && i.id === r.id).map((i) => ({ field: i.field, message: i.message }))}
         actions={(row, k) => (
+          <>
+          {onInspect && row.id && (
+            <button type="button" onClick={() => onInspect(row.id ?? "")}>
+              Inspect {row.id}
+            </button>
+          )}{" "}
           <button
             type="button"
             onClick={() => {
@@ -80,6 +89,7 @@ export function EntityTable({
           >
             Delete {name(row, k)}
           </button>
+          </>
         )}
       />
     </>
