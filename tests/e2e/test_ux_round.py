@@ -2,7 +2,8 @@
 
 FR-93 (the latest result on the current design survives leaving a screen; a design edit hides it),
 FR-86 (a chart figure's "Show data" table lists as many rows as the payload),
-FR-87 (S-07 and S-08 KPI strips), FR-88 (S-07 charts; S-08 margin chart and loadability axis),
+FR-87 (S-07, S-08 and S-13 KPI strips), FR-88 (S-07 charts; S-08 margin chart and loadability
+axis; S-13 eigenvalue plot, participation note),
 FR-90 (Inspector side panel).
 """
 
@@ -125,3 +126,23 @@ def test_fr_87_fr_88_constraint_check_kpis_and_charts(
     data = page.get_by_role("table", name="Loadability along the load scale λ data")
     expect(data).to_contain_text("λ_c")
     expect(data).to_contain_text("—")
+
+
+def test_fr_87_fr_88_small_signal_kpis_and_plot(server: Callable[[str], str], page: Page) -> None:
+    enter_design(page, server("default"), gui_snapshot())
+    _run_m1(page)
+    page.get_by_role("link", name="Small-signal (M4a)").click()
+    page.get_by_label("Damping pass threshold, optional (ratio)").fill("0.05")
+    page.get_by_role("button", name="Run M4a").click()
+    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
+    kpis = page.get_by_role("region", name="Small-signal key figures")
+    expect(kpis).to_contain_text("STABLE")
+    expect(kpis).to_contain_text("Damping check")
+    expect(kpis).to_contain_text("no oscillatory mode")
+    expect(kpis).to_contain_text("FAKE engine: placeholder values, not engine results.")
+    plot = page.get_by_role("img", name="Imaginary part (1/s) against Real part (1/s), 0 points")
+    expect(plot).to_contain_text("No data")
+    figure = page.get_by_role("figure").filter(has_text="Eigenvalues in the complex plane")
+    expect(figure).to_contain_text("FAKE engine: placeholder, not an engine result")
+    expect(page.get_by_text("Participation factors not available")).to_be_visible()
+    expect(page.get_by_test_id("stability-class")).to_contain_text("Stable")

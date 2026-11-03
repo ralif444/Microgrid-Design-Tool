@@ -1,6 +1,6 @@
 // KPI selectors (Doc 12 X2, FR-87): values read straight from the payload. Only select (min, max,
 // argmin, argmax) and count; no arithmetic on physical quantities (guideline §1 rule 1).
-import type { M1Payload, M2Payload } from "../api-types";
+import type { M1Payload, M2Payload, M4aPayload } from "../api-types";
 import { num } from "./format";
 import type { IconName } from "./Icon";
 import { KIND_WORDS } from "./M2Results";
@@ -46,5 +46,21 @@ export function m2Kpis(p: M2Payload): Kpi[] {
     { label: "Not evaluated", value: p.not_evaluated.length, unit: "count", detail: "no limit given" },
     { label: "Constraint loadability λ_c", value: l.lambda_c, unit: "ratio", detail: res },
     { label: "λ_s", value: l.lambda_s, unit: "ratio", detail: `solution-existence diagnostic, not a stability limit; ${res}` },
+  ];
+}
+
+const CLASS_ICON: Record<string, IconName> = { STABLE: "feasible", MARGINAL: "warn", UNSTABLE: "misuse" };
+
+/** S-13 tiles; the damping check only when the run was given a threshold (guideline §4). */
+export function m4aKpis(p: M4aPayload, thresholdGiven: boolean): Kpi[] {
+  const dom = p.dominant_modes[0];
+  return [
+    { label: "Stability class", value: p.stability_class, unit: "", icon: CLASS_ICON[p.stability_class] },
+    { label: "Lowest damping ζ_min", value: p.zeta_min, unit: "ratio", detail: p.zeta_min === null ? "no oscillatory mode" : "of the oscillatory modes" },
+    ...(thresholdGiven
+      ? [{ label: "Damping check", value: p.damping_pass === null || p.damping_pass === undefined ? null : p.damping_pass ? "passes" : "fails", unit: "", detail: p.damping_pass == null ? "not judged: no oscillatory mode" : "against the given threshold" }]
+      : []),
+    { label: "Dominant mode frequency", value: dom?.frequency_hz ?? null, unit: "Hz", detail: dom ? `eigenvalue #${dom.eigenvalue_index}${dom.associated_element_ids.length ? `, ${dom.associated_element_ids.join(", ")}` : ""}` : "no dominant mode" },
+    { label: "Outside definition", value: p.outside_definition ? "yes" : "no", unit: "", detail: p.outside_definition ? "the operating point violates constraints [19]" : undefined },
   ];
 }

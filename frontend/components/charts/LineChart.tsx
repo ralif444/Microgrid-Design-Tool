@@ -15,7 +15,8 @@ const H = 260;
 const M = { l: 64, r: 16, t: 12, b: 44 };
 
 // `marker` may also mark a point without a value; it is then drawn on the x axis (e.g. "–" unavailable).
-export type LineSeries = { name: string; values: (number | null)[]; marker?: (i: number) => Mark | null };
+// `title` gives a point a hover text (e.g. ζ and f of an eigenvalue).
+export type LineSeries = { name: string; values: (number | null)[]; marker?: (i: number) => Mark | null; title?: (i: number) => string };
 
 export const LineChart = memo(function LineChart({
   title,
@@ -106,7 +107,14 @@ export const LineChart = memo(function LineChart({
               {s.marker &&
                 s.values.map((v, i) => {
                   const k = s.marker!(i);
-                  return k && <MarkerShape key={i} m={k.m} filled={k.filled} x={g.sx(x[i])} y={v === null ? H - M.b - 6 : g.sy(v)} color={k.color ?? color} />;
+                  return (
+                    k && (
+                      <g key={i}>
+                        {s.title && <title>{s.title(i)}</title>}
+                        <MarkerShape m={k.m} filled={k.filled} x={g.sx(x[i])} y={v === null ? H - M.b - 6 : g.sy(v)} color={k.color ?? color} r={s.title ? 5 : 4} />
+                      </g>
+                    )
+                  );
                 })}
             </g>
           );

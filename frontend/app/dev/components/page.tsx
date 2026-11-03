@@ -6,6 +6,7 @@ import { Tag } from "@carbon/react";
 import { useState } from "react";
 import type { AnalysisResult, AnalysisType, RunRecord } from "../../../api-types";
 import { BarChart } from "../../../components/charts/BarChart";
+import { GridChart } from "../../../components/charts/GridChart";
 import { LoadabilityAxis } from "../../../components/charts/LoadabilityAxis";
 import { LineChart } from "../../../components/charts/LineChart";
 import { AdvisoryPanel } from "../../../components/AdvisoryPanel";
@@ -294,6 +295,8 @@ export default function ComponentsPage() {
         <BarChart title="Diverging bars with the negative side named" valueTitle="sample value (count)" categoryTitle="Item" categories={["item A, first kind", "item B, second kind", "item C, third kind"]} series={[{ name: "series A", values: [-2, 1, 3] }]} negative="Violated (margin < 0)" labelWidth={210} />
         <LoadabilityAxis l={{ lambda_c: 2, lambda_s: 3, lambda_ub: 4, resolution: 0.25, grid_step: 0.5, stop_reason: "gallery placeholder" }} />
         <LoadabilityAxis l={{ lambda_c: null, lambda_s: null, lambda_ub: null, resolution: 0.25, grid_step: 0.5, stop_reason: "gallery placeholder, nothing available" }} record={FAKE_RECORD} />
+        <LineChart title="Point plane with a highlighted point (hover text)" xTitle="sample x (count)" yTitle="sample y (count)" x={[-3, -2, -2, -1]} line={false} series={[{ name: "series A", values: [0, 4, -4, 0], marker: (i) => (i === 3 ? { m: "diamond", filled: true } : { m: "circle" }), title: (i) => `point ${i}` }]} />
+        <GridChart title="Grid with a value in every cell and row groups" rowTitle="Row" columns={["#0", "#1", "#2"]} rows={[{ label: "row A1", group: "A", values: [0, 0.25, 1] }, { label: "row A2", group: "A", values: [0.5, null, 0] }, { label: "row B1", group: "B", values: [1, 0.75, 0.25] }]} record={FAKE_RECORD} />
         <BarChart title="Dot chart on a fitted axis" valueTitle="sample value (count)" categoryTitle="Item" categories={["A", "B", "C"]} series={[{ name: "series A", values: [10.2, 9.8, 10.1] }]} refs={[{ value: 9.9, label: "lower 9.9" }, { value: 10.3, label: "upper 10.3" }]} dots />
       </Demo>
 
