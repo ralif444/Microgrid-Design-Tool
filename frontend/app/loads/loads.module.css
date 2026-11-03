@@ -1,0 +1,11 @@
+.toolbar { display: flex; align-items: center; gap: var(--space-4); margin-top: var(--space-6); }
+.toolbar h2 { margin: 0; }
+.id { font-weight: var(--weight-medium); }
+.mode { display: inline-flex; gap: var(--space-3); white-space: nowrap; }
+.mode label { display: inline-flex; align-items: center; gap: var(--space-1); }
+.other {
+  max-width: var(--prose-max); margin: var(--space-2) 0 var(--space-4); padding: var(--space-2) var(--space-4) var(--space-2) var(--space-8);
+  background: var(--role-caution-bg); color: var(--role-caution-fg);
+  border-left: var(--banner-edge) solid var(--role-caution-border); border-radius: var(--radius-2);
+}
+.next { margin-top: var(--space-6); }

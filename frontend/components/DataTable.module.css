@@ -2,11 +2,13 @@
 .table { margin: 0; border: var(--border-width) solid var(--color-border); }
 .unit { font-weight: var(--weight-regular); color: var(--color-fg-subtle); }
 .table td input, .table td select { min-height: 1.6rem; }
+.table td > * { vertical-align: middle; } /* inputs, selects and radio groups share one centre line */
 .table td input[type="text"] { width: 7em; }
 .actions { white-space: nowrap; }
-.table tr[data-invalid] > td { background: var(--role-negative-bg); border-bottom-color: transparent; }
+.row[data-invalid] > tr > td { background: var(--role-negative-bg); }
+.row[data-invalid] > tr:first-child > td { border-bottom-color: transparent; }
 .errorRow > td {
-  background: var(--role-negative-bg); color: var(--role-negative-fg); font-size: var(--text-xs);
+  color: var(--role-negative-fg); font-size: var(--text-xs);
   border-bottom: var(--border-width) solid var(--role-negative-border); padding-top: 0;
 }
 .errorRow svg { margin-right: var(--space-1); vertical-align: -2px; }

@@ -2,12 +2,12 @@
 // Data table (Doc 7 P3, §6.3, §8): unit in the column header, text left and numbers right with
 // tabular figures, editable cells (Enter moves down, Escape restores the value the cell had on
 // focus), inline row errors under the row. Presentational: callers own the data and dispatch.
+// Each row and its error line share one <tbody>, so a row's test id covers its messages too.
 import { useRef, type KeyboardEvent, type ReactNode } from "react";
 import styles from "./DataTable.module.css";
 import { num } from "./format";
 import { Icon } from "./Icon";
 
-type Value = string | number | null | undefined;
 type Edit<R> =
   | { kind: "number"; value: (r: R) => number | null | undefined; onChange: (r: R, v: number | null) => void }
   | { kind: "text"; value: (r: R) => string | null | undefined; onChange: (r: R, v: string) => void }
@@ -18,6 +18,7 @@ export type DataColumn<R> = {
   header: string;
   unit?: string;
   numeric?: boolean; // right-aligned, tabular figures, numbers shown to 6 significant digits
+  fields?: string[]; // issue fields shown under this column's header (default: [key])
   cell?: (r: R) => ReactNode;
   edit?: Edit<R>;
 };
@@ -30,7 +31,7 @@ function show(v: ReactNode): ReactNode {
   return typeof v === "number" ? num(v) : v === null || v === undefined ? "—" : v;
 }
 
-// Enter: same column, next data row (skips error rows). Escape: restore the value on focus.
+// Enter: same column, next row. Escape: restore the value the cell had on focus.
 function keys(e: KeyboardEvent<HTMLInputElement | HTMLSelectElement>, restore: () => void) {
   if (e.key === "Escape") {
     e.preventDefault();
@@ -43,56 +44,81 @@ function keys(e: KeyboardEvent<HTMLInputElement | HTMLSelectElement>, restore: (
   const tr = td?.parentElement;
   if (!td || !tr) return;
   const col = Array.prototype.indexOf.call(tr.children, td);
-  let next = tr.nextElementSibling as HTMLElement | null;
-  while (next?.dataset.errorRow) next = next.nextElementSibling as HTMLElement | null;
-  next?.children[col]?.querySelector<HTMLElement>("input, select")?.focus();
+  const next = tr.parentElement?.nextElementSibling?.firstElementChild;
+  next?.children[col]?.querySelector<HTMLElement>("input:not([type=radio]), select")?.focus();
+}
+
+// Editable input for cells; also usable inside a custom `cell` renderer.
+export function CellInput<V extends string | number | null>({
+  label,
+  kind,
+  value,
+  onChange,
+  invalid = false,
+}: {
+  label: string;
+  kind: "number" | "text";
+  value: V | undefined;
+  onChange: (v: V) => void;
+  invalid?: boolean;
+}) {
+  const start = useRef<V | undefined>(undefined);
+  const parse = (s: string, n: number) => (kind === "text" ? s : s === "" ? null : n) as V;
+  return (
+    <input
+      aria-label={label}
+      aria-invalid={invalid || undefined}
+      type={kind}
+      step={kind === "number" ? "any" : undefined}
+      value={value ?? ""}
+      onFocus={() => (start.current = value)}
+      onChange={(e) => onChange(parse(e.target.value, e.target.valueAsNumber))}
+      onKeyDown={(e) => keys(e, () => onChange((start.current ?? (kind === "text" ? "" : null)) as V))}
+    />
+  );
+}
+
+export function CellSelect({
+  label,
+  options,
+  value,
+  onChange,
+  invalid = false,
+}: {
+  label: string;
+  options: [string, string][]; // value, text
+  value: string | null | undefined;
+  onChange: (v: string | null) => void;
+  invalid?: boolean;
+}) {
+  const start = useRef<string | null>(null);
+  return (
+    <select
+      aria-label={label}
+      aria-invalid={invalid || undefined}
+      value={value ?? ""}
+      onFocus={() => (start.current = value ?? null)}
+      onChange={(e) => onChange(e.target.value || null)}
+      onKeyDown={(e) => keys(e, () => onChange(start.current))}
+    >
+      <option value="">(choose)</option>
+      {options.map(([v, t]) => (
+        <option key={v} value={v}>
+          {t}
+        </option>
+      ))}
+    </select>
+  );
 }
 
 function EditCell<R>({ row, edit, name, invalid }: { row: R; edit: Edit<R>; name: string; invalid: boolean }) {
-  const start = useRef<Value>(null);
-  const value = edit.value(row);
-  const remember = () => (start.current = value);
-  const common = {
-    "aria-label": name,
-    "aria-invalid": invalid || undefined,
-    onFocus: remember,
-  };
   if (edit.kind === "select")
     return (
-      <select
-        {...common}
-        value={value ?? ""}
-        onChange={(e) => edit.onChange(row, e.target.value || null)}
-        onKeyDown={(e) => keys(e, () => edit.onChange(row, (start.current as string | null) ?? null))}
-      >
-        <option value="">(choose)</option>
-        {edit.options.map((o) => (
-          <option key={o} value={o}>
-            {o}
-          </option>
-        ))}
-      </select>
+      <CellSelect label={name} options={edit.options.map((o) => [o, o])} value={edit.value(row)} onChange={(v) => edit.onChange(row, v)} invalid={invalid} />
     );
   if (edit.kind === "number")
-    return (
-      <input
-        {...common}
-        type="number"
-        step="any"
-        value={value ?? ""}
-        onChange={(e) => edit.onChange(row, e.target.value === "" ? null : e.target.valueAsNumber)}
-        onKeyDown={(e) => keys(e, () => edit.onChange(row, (start.current as number | null) ?? null))}
-      />
-    );
-  return (
-    <input
-      {...common}
-      type="text"
-      value={value ?? ""}
-      onChange={(e) => edit.onChange(row, e.target.value)}
-      onKeyDown={(e) => keys(e, () => edit.onChange(row, (start.current as string | null) ?? ""))}
-    />
-  );
+    return <CellInput label={name} kind="number" value={edit.value(row) ?? null} onChange={(v: number | null) => edit.onChange(row, v)} invalid={invalid} />;
+  return <CellInput label={name} kind="text" value={edit.value(row) ?? ""} onChange={(v: string) => edit.onChange(row, v)} invalid={invalid} />;
 }
 
 export function DataTable<R>({
@@ -120,6 +146,7 @@ export function DataTable<R>({
 }) {
   if (!rows.length && empty) return <>{empty}</>;
   const span = columns.length + (actions ? 1 : 0);
+  const owner = (field: string | null | undefined) => columns.find((c) => (c.fields ?? [c.key]).includes(field ?? ""));
   return (
     <div className={`table-scroll ${styles.scroll}`} role="region" aria-label={`${label}, scrolls sideways`} tabIndex={0}>
       <table aria-label={label} className={styles.table}>
@@ -139,38 +166,38 @@ export function DataTable<R>({
             )}
           </tr>
         </thead>
-        <tbody>
-          {rows.map((r, k) => {
-            const errors = rowErrors?.(r) ?? [];
-            return [
-              <tr key={rowKey(r, k)} data-testid={rowTestId?.(r, k)} data-invalid={errors.length ? "true" : undefined}>
+        {rows.map((r, k) => {
+          const errors = rowErrors?.(r) ?? [];
+          return (
+            <tbody key={rowKey(r, k)} data-testid={rowTestId?.(r, k)} className={styles.row} data-invalid={errors.length ? "true" : undefined}>
+              <tr>
                 {columns.map((c) => (
                   <td key={c.key} className={c.numeric ? "num" : undefined}>
                     {c.edit ? (
-                      <EditCell row={r} edit={c.edit} name={`${headerText(c)} of ${rowName(r, k)}`} invalid={errors.some((x) => x.field === c.key)} />
+                      <EditCell row={r} edit={c.edit} name={`${headerText(c)} of ${rowName(r, k)}`} invalid={errors.some((x) => owner(x.field) === c)} />
                     ) : (
                       show(c.cell?.(r))
                     )}
                   </td>
                 ))}
                 {actions && <td className={styles.actions}>{actions(r, k)}</td>}
-              </tr>,
-              errors.length > 0 && (
-                <tr key={`${rowKey(r, k)}-errors`} data-error-row="true" className={styles.errorRow}>
+              </tr>
+              {errors.length > 0 && (
+                <tr className={styles.errorRow}>
                   <td colSpan={span} role="alert">
                     <Icon name="warn" size={14} />
                     {errors
                       .map((x) => {
-                        const col = columns.find((c) => c.key === x.field);
+                        const col = owner(x.field);
                         return `${col ? `${col.header}: ` : x.field ? `${x.field}: ` : ""}${x.message}`;
                       })
                       .join(" ")}
                   </td>
                 </tr>
-              ),
-            ];
-          })}
-        </tbody>
+              )}
+            </tbody>
+          );
+        })}
       </table>
     </div>
   );

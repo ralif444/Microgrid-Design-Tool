@@ -73,7 +73,7 @@ tbody tr:hover { background: var(--n-25); }
 caption { text-align: left; font-weight: var(--weight-semibold); font-size: var(--text-md); padding-bottom: var(--space-1); }
 /* 200 % zoom (WP 1.7.2): 64-hex hashes wrap, number inputs keep table rows narrow. */
 td, code { overflow-wrap: anywhere; }
-.table-scroll { max-width: 100%; overflow-x: auto; }
+.table-scroll { position: relative; max-width: 100%; overflow-x: auto; } /* relative: clips its .sr-only children too */
 
 /* Global hooks still used by screens (replaced by components in step 2). */
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
