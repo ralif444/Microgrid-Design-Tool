@@ -8,13 +8,15 @@ S-14 time responses; S-09 tornado per metric; S-11 bars per metric across scenar
 report charts with the result hash, within the A4 printable width),
 FR-89 (crosshair: arrow keys move it, it shows a value with unit, Escape hides it),
 FR-90 (Inspector side panel), FR-91 (glossary toggletip: Enter opens, Escape and an outside click
-close; S-17 About lists the glossary).
+close; S-17 About lists the glossary), FR-92 (a chart's "Download SVG" carries the caption block).
 """
 
 from __future__ import annotations
 
 import re
+import xml.etree.ElementTree as ET
 from collections.abc import Callable
+from pathlib import Path
 
 from flows import enter_design, gui_snapshot
 from playwright.sync_api import Page, expect
@@ -337,3 +339,20 @@ def test_fr_91_glossary_toggletip_and_about(server: Callable[[str], str], page: 
     glossary = page.get_by_role("table", name="Glossary", exact=True)
     expect(glossary.locator("tbody tr")).to_have_count(27)
     expect(glossary).to_contain_text("Naskah Tabel 4.4")
+
+
+def test_fr_92_chart_svg_download_carries_the_caption(
+    server: Callable[[str], str], page: Page
+) -> None:
+    enter_design(page, server("default"), gui_snapshot())
+    _run_m1(page)
+    record = page.get_by_test_id("record-id").inner_text()
+    with page.expect_download() as dl:
+        page.get_by_role("button", name="Download SVG: Inverter loading").click()
+    assert dl.value.suggested_filename == f"inverter-loading-{record}.svg"
+    svg = Path(dl.value.path()).read_text(encoding="utf-8")
+    ET.fromstring(svg)  # well-formed, so it opens on its own
+    assert svg.startswith("<svg") and 'width="560"' in svg
+    assert "Inverter loading" in svg and f"RunRecord {record}" in svg and "Engine FAKE" in svg
+    assert "FAKE ENGINE — not an engine result" in svg
+    assert "class=" not in svg and "var(--" not in svg and "font-size:12px" in svg

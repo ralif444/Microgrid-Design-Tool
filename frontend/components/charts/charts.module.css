@@ -17,6 +17,7 @@
 .meta { margin: var(--space-2) 0 0; font-size: var(--text-xs); color: var(--color-fg-muted); max-width: none; }
 .fake { color: var(--cds-text-primary); }
 .toggle { margin-top: var(--space-2); }
+.toggle + .toggle { margin-left: var(--space-2); }
 @media print {
   .frame { break-inside: avoid; }
   .plot { overflow: visible; }
