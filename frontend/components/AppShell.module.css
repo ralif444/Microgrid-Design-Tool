@@ -1,12 +1,36 @@
-.header { border-bottom: var(--border-width) solid var(--color-border); background: var(--color-surface); padding: var(--space-2) var(--space-6) var(--space-2); }
-.bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); max-width: var(--content-max); margin: 0 auto var(--space-2); }
-.header > nav { max-width: var(--content-max); margin: 0 auto; }
-.brand { font-weight: var(--weight-semibold); color: var(--color-fg); text-decoration: none; white-space: nowrap; }
-.project { color: var(--color-fg-muted); white-space: nowrap; padding-left: var(--space-4); border-left: var(--border-width) solid var(--color-border); }
-.unsaved {
-  margin-left: var(--space-2); padding: 0 var(--space-2); border-radius: var(--radius-pill);
-  font-size: var(--text-xs); color: var(--role-caution-fg); background: var(--role-caution-bg); border: var(--border-width) solid var(--role-caution-border);
+/* Carbon's .cds--header is fixed and one 48 px row; here it stays in the flow and may wrap, so
+   nothing scrolls sideways at 200 % zoom (WP 1.7.2). Navy background, white text (guideline §5). */
+.header:global(.cds--header) { /* doubled class: Carbon's chunk may load after this module */
+  position: relative; inset: auto; z-index: auto;
+  height: auto; min-height: 3rem; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-4);
+  padding: var(--space-1) var(--space-8); box-sizing: border-box;
+  background: var(--mdt-header-bg); border-bottom: none; color: var(--mdt-header-fg);
 }
+.header a, .header :global(.cds--header__name) { color: var(--mdt-header-fg); }
+.header :global(.cds--header__name) { padding: 0; font-weight: var(--weight-semibold); font-size: var(--text-md); letter-spacing: 0; white-space: nowrap; }
+.header :focus-visible, .header :global(.cds--header__name):focus { outline: var(--focus-width) solid var(--mdt-header-focus); outline-offset: var(--focus-offset); border: none; }
+.project {
+  display: inline-flex; align-items: center; white-space: nowrap; font-size: var(--text-md);
+  padding-left: var(--space-4); border-left: var(--border-width) solid var(--mdt-header-rule); color: var(--mdt-header-fg-muted);
+}
+.unsaved { display: inline-flex; align-items: center; margin-left: var(--space-2); }
+.dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--mdt-header-fg); }
 .spacer { flex: 1; }
 .util { font-size: var(--text-sm); white-space: nowrap; }
-@media (max-width: 720px) { .header { padding: var(--space-2) var(--space-4); } .spacer { display: none; } }
+.below { position: relative; }
+.signature { height: 4px; background: var(--mdt-gradient); }
+.strip { background: var(--color-surface); border-bottom: var(--border-width) solid var(--color-border); padding: var(--space-2) var(--space-8); }
+.strip > nav { max-width: var(--content-max); margin: 0 auto; }
+@media (max-width: 720px) {
+  .header, .strip { padding-left: var(--space-4); padding-right: var(--space-4); }
+  .spacer { display: none; }
+}
+/* Save and "Open project file" on navy: outlined in white (Carbon tertiary would be teal on navy). */
+.header button, .header label {
+  min-height: 2rem; padding: 0 var(--space-4); border: var(--border-width) solid var(--mdt-header-fg);
+  background: transparent; color: var(--mdt-header-fg); font-size: var(--text-sm);
+}
+.header button:hover:not(:disabled), .header label:hover { background: var(--mdt-header-hover); }
+.header [role="status"] { color: var(--mdt-header-fg-muted); }
+.header :global(.cds--tag) { margin: 0; }
+@media print { .header:global(.cds--header) { display: none; } } /* Carbon's display: flex beats the global print rule */

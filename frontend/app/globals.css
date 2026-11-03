@@ -1,4 +1,5 @@
-/* Base styles on the design tokens (ADR-011 option A). Local only: no external fonts or CDNs (NFR-03).
+/* Base styles on the design tokens, now bridged to the Carbon theme (ADR-012). Local only: no external
+   fonts or CDNs (NFR-03); Carbon's reset and component styles come first (app/carbon.css).
    Component looks live in components/*.module.css; this sheet holds element defaults and the few
    global hooks screens still use. */
 html { color-scheme: light; }
@@ -8,17 +9,22 @@ body {
   font-size: var(--text-md);
   line-height: var(--leading-normal);
   color: var(--color-fg);
-  background: var(--color-bg);
+  background: var(--color-page);
 }
-main { box-sizing: border-box; max-width: var(--content-max); margin: 0 auto; padding: var(--space-6) var(--space-6) var(--space-12); }
-h1, h2, h3 { line-height: var(--leading-tight); font-weight: var(--weight-semibold); }
+main { box-sizing: border-box; max-width: var(--content-max); margin: 0 auto; padding: var(--space-8) var(--space-8) var(--space-12); }
+h1, h2, h3 { line-height: var(--leading-tight); font-weight: var(--weight-regular); } /* Carbon heading-04/03 are regular */
+h3 { font-weight: var(--weight-semibold); }
 h1 { font-size: var(--text-2xl); margin: 0 0 var(--space-4); }
 h2 { font-size: var(--text-xl); margin: var(--space-8) 0 var(--space-3); }
 h3 { font-size: var(--text-lg); margin: var(--space-6) 0 var(--space-2); }
 p { margin: 0 0 var(--space-3); }
 a { color: var(--color-link); text-underline-offset: 2px; }
 code { font-family: var(--font-mono); font-size: var(--text-xs); }
+strong, b { font-weight: var(--weight-semibold); } /* Carbon's reset sets them to inherit */
 details > summary { cursor: pointer; color: var(--color-fg-muted); }
+/* Carbon's reset removes list markers; content lists keep them (components that need none set it). */
+main ul { list-style: disc; padding-left: var(--space-6); margin: 0 0 var(--space-3); }
+main ol { list-style: decimal; padding-left: var(--space-6); margin: 0 0 var(--space-3); }
 
 /* Visible keyboard focus everywhere (Doc 7 §8); one hue, never a status colour. */
 :focus-visible { outline: var(--focus-width) solid var(--focus-color); outline-offset: var(--focus-offset); }
@@ -63,13 +69,13 @@ fieldset { border: 0; padding: 0; margin: 0; display: inline; }
 
 /* Tables: hairline rows, sunken header, tabular numbers. Text cells left; numeric cells carry
    .num (right-aligned), set per column by DataTable as screens are restyled (ADR-011 step 2). */
-table { border-collapse: collapse; margin: var(--space-2) 0 var(--space-4); font-size: var(--text-sm); }
+table { border-collapse: collapse; margin: var(--space-2) 0 var(--space-4); font-size: var(--text-sm); background: var(--color-surface); }
 th, td { padding: var(--cell-pad-y) var(--cell-pad-x); border-bottom: var(--border-width) solid var(--color-border); text-align: left; vertical-align: middle; }
 th.num, td.num { text-align: right; white-space: nowrap; }
 td { font-variant-numeric: var(--numeric); }
-thead th { background: var(--color-surface-sunken); color: var(--color-fg-muted); font-weight: var(--weight-semibold); border-bottom-color: var(--color-border-strong); }
+thead th { background: var(--cds-layer-accent-01); color: var(--color-fg-muted); font-weight: var(--weight-semibold); border-bottom-color: var(--color-border-strong); }
 th[scope="row"] { text-align: left; font-weight: var(--weight-medium); }
-tbody tr:hover { background: var(--n-25); }
+tbody tr:hover { background: var(--color-surface-hover); }
 caption { text-align: left; font-weight: var(--weight-semibold); font-size: var(--text-md); padding-bottom: var(--space-1); }
 /* 200 % zoom (WP 1.7.2): 64-hex hashes wrap, number inputs keep table rows narrow. */
 td, code { overflow-wrap: anywhere; }
@@ -96,3 +102,4 @@ tr.focus { outline: var(--focus-width) solid var(--focus-color); background: var
   h2 { break-after: avoid; }
   * { print-color-adjust: exact; }
 }
+.cds--tag.cds--tag { border-radius: 0; } /* guideline §5: no pills; doubled class beats Carbon chunk order */

@@ -1,14 +1,18 @@
 "use client";
 // Engine kind badge on every screen (Doc 7 P2): Fake results are never mistaken for real ones.
+// Carbon Tag (guidelines §5): warm-gray for FAKE, cool-gray for REAL, red when the service is not
+// reachable. The text stays "Engine: <kind>" (ADR-012 point 1).
+import { Tag } from "@carbon/react";
 import { useEffect, useState } from "react";
 import { getMeta } from "../api-client";
-import styles from "./ui.module.css";
+
+const TYPE: Record<string, "warm-gray" | "cool-gray" | "red"> = { FAKE: "warm-gray", REAL: "cool-gray", unreachable: "red" };
 
 export function EngineBadgeView({ kind }: { kind: string }) {
   return (
-    <span className={styles.engine} data-kind={kind} data-testid="engine-badge" title="Calculation engine">
+    <Tag type={TYPE[kind] ?? "cool-gray"} size="md" data-kind={kind} data-testid="engine-badge" title="Calculation engine">
       Engine: {kind}
-    </span>
+    </Tag>
   );
 }
 

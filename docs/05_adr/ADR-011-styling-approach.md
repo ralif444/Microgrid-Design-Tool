@@ -1,6 +1,6 @@
 # ADR-011 — Styling approach: design tokens and component styles
 
-- Status: Accepted, option A approved by user 2026-11-03. Proposed the same day; no dependency is added.
+- Status: Accepted, option A approved by user 2026-11-03. Items 1, 4 and 6 superseded by ADR-012 (Carbon) on 2026-11-03.
 - Drivers: D5, D6 (one developer, dependency minimalism); NFR-03 (offline); ADR-002 (static export only); ADR-005 (no dependency without proven need); Doc 7 §1 P2–P4, §5, §8.
 - Inputs: `docs/design/ui_audit_2026-11-03.md` (top 10 problems), `frontend/app/tokens.css` (tokens; drafted as `docs/design/tokens.draft.css`).
 

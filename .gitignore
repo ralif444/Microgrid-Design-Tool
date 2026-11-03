@@ -14,3 +14,4 @@ playwright-report/
 frontend/next-env.d.ts
 frontend/tsconfig.tsbuildinfo
 docs/ref/
+frontend/app/carbon.css

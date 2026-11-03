@@ -1,7 +1,7 @@
-/* Design tokens (ADR-011 option A, approved 2026-11-03). Light theme; print variant at the end.
-   Offline: system font stacks only (NFR-03). Imported once in app/layout.tsx.
-   Contrast ratios (WCAG 2.x formula, computed from these hex values; no formal WCAG claim, Doc 7 §8)
-   are given next to each text colour, against --color-bg (#fff) unless noted. */
+/* App tokens bridged to the Carbon theme (ADR-012, visual guidelines v1 §3–§5). The names stay so the
+   existing component modules keep working; values now come from Carbon's --cds-* custom properties
+   (app/carbon.css) or the guideline. Status roles (--role-*) are reworked in step (b).
+   Contrast ratios below are for the role colours (WCAG 2.x formula), against white. */
 
 :root {
   /* ---- Neutral scale (cool grey) ---- */
@@ -19,16 +19,26 @@
   --n-900: #16191f;   /* body text 17.60:1, 16.28:1 on --n-50 */
 
   /* ---- Semantic surfaces and text ---- */
-  --color-bg:            var(--n-0);
-  --color-surface:       var(--n-0);
-  --color-surface-sunken:var(--n-50);
-  --color-surface-hover: var(--n-100);
-  --color-fg:            var(--n-900);
-  --color-fg-muted:      var(--n-600);
-  --color-fg-subtle:     var(--n-500);  /* smallest allowed text colour */
-  --color-border:        var(--n-200);
-  --color-border-strong: var(--n-400);
-  --color-link:          #1a56a8;       /* 7.14:1 */
+  --color-page:          var(--cds-background);      /* warm page #F4F2EE */
+  --color-bg:            var(--cds-layer-01);        /* white layers: tables, panels, forms */
+  --color-surface:       var(--cds-layer-01);
+  --color-surface-sunken:var(--cds-layer-02);
+  --color-surface-hover: var(--cds-layer-hover-01);
+  --color-fg:            var(--cds-text-primary);    /* navy #0B1F44 */
+  --color-fg-muted:      var(--cds-text-secondary);  /* #4A5468 */
+  --color-fg-subtle:     var(--cds-text-secondary);  /* text-helper #6F6F6F is 4.47:1 on the page bg, too low */
+  --color-border:        var(--cds-border-subtle-01);
+  --color-border-strong: var(--cds-border-strong-01);
+  --color-link:          var(--cds-link-primary);    /* teal #00737D */
+
+  /* ---- App tokens not in Carbon (guideline §3.1, §5) ---- */
+  --mdt-header-bg: #0b1f44;          /* brand navy */
+  --mdt-header-fg: #ffffff;          /* 16:1 on navy */
+  --mdt-header-fg-muted: #d6dbe4;    /* 11.7:1 on navy */
+  --mdt-header-rule: #4a5a7a;         /* divider only, not text */
+  --mdt-header-hover: #1d3461;
+  --mdt-header-focus: #5dc4cc;       /* brand-teal-300, 7.9:1 on navy */
+  --mdt-gradient: linear-gradient(90deg, #0e9aa7, #7ed957); /* signature accent only, never text */
 
   /* ---- Colour ROLES (Doc 7 §5). Each role: fg (icon + word, ≥ 4.5:1 on white and on its tint),
      bg (banner/row tint), border (≥ 3:1 on white). Status is always colour + icon + word. ---- */
@@ -50,15 +60,15 @@
   /* Engine kind badge: FAKE reuses caution (placeholders), REAL uses neutral. */
 
   /* ---- Typography (system stacks only) ---- */
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono", monospace;
+  --font-sans: "IBM Plex Sans", system-ui, "Segoe UI", Arial, sans-serif;   /* self-hosted, @ibm/plex-sans */
+  --font-mono: "IBM Plex Mono", Consolas, monospace;                          /* self-hosted, @ibm/plex-mono */
   --font-numeric: var(--font-sans);           /* with tabular-nums, see .num */
   --text-xs:  0.75rem;   /* 12 px: captions under charts, hash chips */
-  --text-sm:  0.8125rem; /* 13 px: table cells, dense forms */
+  --text-sm:  0.875rem;  /* 14 px: table cells, forms (Carbon body-compact-01) */
   --text-md:  0.875rem;  /* 14 px: body (base) */
-  --text-lg:  1rem;      /* 16 px: section titles (h3), banner message */
-  --text-xl:  1.125rem;  /* 18 px: h2, banner Status word */
-  --text-2xl: 1.375rem;  /* 22 px: h1 screen title */
+  --text-lg:  1rem;      /* 16 px: h3 (Carbon heading-02) */
+  --text-xl:  1.25rem;   /* 20 px: h2 (Carbon heading-03) */
+  --text-2xl: 1.75rem;   /* 28 px: h1 page title (Carbon heading-04) */
   --leading-tight: 1.25;
   --leading-normal: 1.45;
   --weight-regular: 400;
@@ -79,23 +89,23 @@
   --space-12: 3rem;    /* 48 px */
   --cell-pad-y: var(--space-1);
   --cell-pad-x: var(--space-2);
-  --control-height: 1.75rem; /* 28 px dense controls */
-  --content-max: 90rem;      /* 1440 px page cap */
+  --control-height: 2rem;    /* 32 px, Carbon size sm */
+  --content-max: 99rem;      /* 1584 px (guideline §5) */
   --prose-max: 48rem;        /* long sentences (Loadability, notes) */
 
   /* ---- Radii, borders, elevation ---- */
   --radius-0: 0;
-  --radius-1: 2px;   /* inputs, table chips */
-  --radius-2: 4px;   /* buttons, badges, banners */
-  --radius-3: 6px;   /* panels */
-  --radius-pill: 999px;
+  --radius-1: 0;     /* Carbon corners are square (guideline §5) */
+  --radius-2: 0;
+  --radius-3: 0;
+  --radius-pill: 0;  /* no rounded pills */
   --border-width: 1px;
   --border-width-strong: 2px;   /* advisory dashed outline, banner edge */
   --banner-edge: 4px;           /* left edge of status banners */
-  --shadow-1: 0 1px 2px rgb(22 25 31 / 0.08);
+  --shadow-1: none;  /* flat surfaces */
 
   /* ---- Focus ring (visible everywhere, independent of status hues) ---- */
-  --focus-color: #1a56a8;       /* 7.14:1 on white */
+  --focus-color: var(--cds-focus);  /* teal, 5.6:1 on white */
   --focus-width: 2px;
   --focus-offset: 2px;
   --focus-ring: 0 0 0 var(--focus-offset) var(--color-bg), 0 0 0 calc(var(--focus-offset) + var(--focus-width)) var(--focus-color);

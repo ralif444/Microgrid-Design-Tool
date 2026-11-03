@@ -15,7 +15,8 @@ Folder ini berisi sepuluh catatan keputusan arsitektur (ADR) untuk aplikasi web 
 | [ADR-008](ADR-008-engine-port-fake-engine.md) | Engine Port + Fake Engine | Accepted | D1, D2, D3; NFR-07, NFR-08, NFR-10 |
 | [ADR-009](ADR-009-dev-methodology.md) | Development methodology | Accepted | D6; NFR-18 |
 | [ADR-010](ADR-010-stateless-backend.md) | Stateless backend | Accepted, approved by user 2026-10-17 | D2, D5, D6; FR-38, FR-46 |
-| [ADR-011](ADR-011-styling-approach.md) | Styling: design tokens + CSS Modules | Accepted, option A approved by user 2026-11-03 | D5, D6; NFR-03 |
+| [ADR-011](ADR-011-styling-approach.md) | Styling: design tokens + CSS Modules | Accepted 2026-11-03; items 1, 4, 6 superseded by ADR-012 | D5, D6; NFR-03 |
+| [ADR-012](ADR-012-carbon-design-system.md) | Carbon design system, custom light theme | Accepted, option C approved by user 2026-11-03 | Visual guidelines v1 D1–D9; NFR-03 |
 
 ## Self-review
 - Weakest: ADR-002 (Vite margin) and ADR-005 (state library margin) are explicitly weak; ADR-010 shifts size and loss-of-work risk to the browser.

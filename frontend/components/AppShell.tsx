@@ -1,6 +1,8 @@
 "use client";
-// App shell (Doc 7 §2 global elements): brand, Project name with unsaved indicator, Save / Open,
-// Run history and Catalogue, engine kind badge on every screen (P2), pipeline stepper (P1).
+// App shell (Doc 7 §2 global elements; visual guidelines §5): Carbon Header in navy with the wordmark,
+// Project name with unsaved indicator, Run history, Catalogue, Save / Open and the engine kind badge
+// (P2); the 4 px signature gradient bar; the pipeline stepper strip (P1).
+import { Header, HeaderName } from "@carbon/react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useProject } from "../store";
@@ -9,11 +11,12 @@ import { EngineBadge } from "./EngineBadge";
 import { PipelineStepper } from "./PipelineStepper";
 import { ProjectFileMenu } from "./ProjectFileMenu";
 
+// The visible mark is a dot; the text stays for assistive tech and tests.
 export function UnsavedFlag() {
   return (
     <span className={styles.unsaved} title="Unsaved changes">
-      {" "}
-      *unsaved
+      <span aria-hidden="true" className={styles.dot} />
+      <span className="sr-only"> *unsaved</span>
     </span>
   );
 }
@@ -22,29 +25,32 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { project, unsaved } = useProject();
   return (
     <>
-      <header className={styles.header}>
-        <div className={styles.bar}>
-          <Link href="/" className={styles.brand}>
-            Microgrid design tool
-          </Link>
-          {project && (
-            <span data-testid="project-name" className={styles.project}>
-              {project.name}
-              {unsaved && <UnsavedFlag />}
-            </span>
-          )}
-          <span className={styles.spacer} />
-          <Link href="/runs/" className={styles.util}>
-            Run history
-          </Link>
-          <Link href="/catalogue/" className={styles.util}>
-            Catalogue
-          </Link>
-          <ProjectFileMenu />
-          <EngineBadge />
+      <Header aria-label="Microgrid Design Tool" className={styles.header}>
+        <HeaderName as={Link} href="/" prefix="" className={styles.brand}>
+          Microgrid Design Tool
+        </HeaderName>
+        {project && (
+          <span data-testid="project-name" className={styles.project}>
+            {project.name}
+            {unsaved && <UnsavedFlag />}
+          </span>
+        )}
+        <span className={styles.spacer} />
+        <Link href="/runs/" className={styles.util}>
+          Run history
+        </Link>
+        <Link href="/catalogue/" className={styles.util}>
+          Catalogue
+        </Link>
+        <ProjectFileMenu />
+        <EngineBadge />
+      </Header>
+      <div className={`no-print ${styles.below}`}>
+        <div className={styles.signature} aria-hidden="true" />
+        <div className={styles.strip}>
+          <PipelineStepper />
         </div>
-        <PipelineStepper />
-      </header>
+      </div>
       <main>{children}</main>
     </>
   );

@@ -1,11 +1,4 @@
-/* Small shared pieces: engine badge, file menu, advisory panel, empty state, toast. */
-.engine {
-  display: inline-flex; align-items: center; min-height: var(--control-height); padding: 0 var(--space-3); white-space: nowrap;
-  border: var(--border-width) solid var(--role-attention-border); border-radius: var(--radius-2); box-sizing: border-box;
-  background: var(--role-attention-bg); color: var(--role-attention-fg); font-size: var(--text-sm); font-weight: var(--weight-semibold);
-}
-.engine[data-kind="FAKE"] { background: var(--role-caution-bg); color: var(--role-caution-fg); border-color: var(--role-caution-border); }
-.engine[data-kind="unreachable"] { background: var(--role-error-bg); color: var(--role-error-fg); border-color: var(--role-error-border); }
+/* Small shared pieces: file menu, advisory panel, empty state, toast. */
 
 .fileMenu { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
 .fileButton {
