@@ -1,6 +1,7 @@
 // Bus voltage bar chart (Doc 9 D-47 K19): inline SVG, no chart library; the data table next to it
 // carries the same values for screen readers and print.
 import type { M1Payload } from "../api-types";
+import { num } from "./format";
 
 const W = 480;
 const BAR = 28;
@@ -23,7 +24,7 @@ export function VoltageChart({ p }: { p: M1Payload }) {
               </text>
               <rect x={LEFT} y={y} width={x(b.voltage_pu) - LEFT} height={BAR} fill="currentColor" opacity="0.6" />
               <text x={x(b.voltage_pu) + 4} y={y + BAR * 0.7} fontSize="12">
-                {b.voltage_pu}
+                {num(b.voltage_pu)}
               </text>
             </g>
           );

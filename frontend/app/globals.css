@@ -90,6 +90,7 @@ tr.focus { outline: var(--focus-width) solid var(--focus-color); background: var
 /* Print layout (FR-60): hide controls, keep tables and charts whole. */
 @media print {
   header, .no-print { display: none; }
+  .table-scroll { overflow: visible; } /* FR-60: a scroll box would clip the hidden part on paper */
   main { max-width: none; padding: 0; }
   table, figure { break-inside: avoid; }
   h2 { break-after: avoid; }
