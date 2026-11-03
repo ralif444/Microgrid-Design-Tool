@@ -6,11 +6,14 @@
 import { useEffect, useState } from "react";
 import type { CatalogRef } from "../../api-types";
 import { block, entryWarnings, fromEntry, refText, useCatalog } from "../../components/Catalog";
+import { EmptyState } from "../../components/EmptyState";
 import { EntityTable, type Column } from "../../components/EntityTable";
+import { Icon } from "../../components/Icon";
 import { NetworkDiagram } from "../../components/NetworkDiagram";
 import { RequireProject } from "../../components/RequireProject";
 import { useValidation } from "../../components/useValidation";
 import { useProject, useProjectDispatch } from "../../store";
+import styles from "./network.module.css";
 
 const times = (a: unknown, b: unknown) => (typeof a === "number" && typeof b === "number" ? a * b : null);
 
@@ -53,10 +56,11 @@ function CatalogPick({ collection }: { collection: "lines" | "inverters" }) {
   const [note, setNote] = useState<string | null>(null);
   const entry = entries.find((e) => e.id === entryId);
   const ampacity = entry ? block(entry).ampacity_a : null;
-  if (entries.length === 0) return <p>No {kind.toLowerCase()} entries in the Catalogue.</p>;
+  if (entries.length === 0) return <p className={styles.hint}>No {kind.toLowerCase()} entries in the Catalogue.</p>;
   return (
     <form
       aria-label="Choose from catalogue"
+      className={styles.pick}
       onSubmit={(e) => {
         e.preventDefault();
         const check = checks.find((c) => c.entry_id === entryId);
@@ -68,6 +72,7 @@ function CatalogPick({ collection }: { collection: "lines" | "inverters" }) {
         setNote(`${element} filled from ${entryId}.${warnings.length ? ` Warning: ${warnings.join("; ")}.` : ""}`);
       }}
     >
+      <h2>Choose from catalogue</h2>
       <label htmlFor="pick-element">Element</label>{" "}
       <select id="pick-element" value={element} onChange={(e) => setElement(e.target.value)}>
         <option value="">Choose…</option>
@@ -124,18 +129,19 @@ function Network() {
   return (
     <>
       <h1>Network</h1>
-      <div role="tablist" aria-label="Network tables">
+      <div role="tablist" aria-label="Network tables" className={styles.tabs}>
         {(["Buses", "Lines", "Inverters"] as Tab[]).map((t) => (
           <button key={t} type="button" role="tab" aria-selected={tab === t} disabled={!enabled[t]} onClick={() => setTab(t)}>
             {t}
           </button>
         ))}
       </div>
-      {!enabled.Lines && <p>Lines need two buses; inverters need one.</p>}
-      <section role="tabpanel" aria-label={tab}>
+      {!enabled.Lines && <p className={styles.hint}>Lines need two buses; inverters need one.</p>}
+      <section role="tabpanel" aria-label={tab} className={styles.panel}>
         {tab === "Buses" && (
           <>
             <form
+              className={styles.toolbar}
               onSubmit={(e) => {
                 e.preventDefault();
                 dispatch({ type: "rowAdded", collection: "buses", row: { id: busId.trim() } });
@@ -147,7 +153,9 @@ function Network() {
               <button type="submit">Add bus</button>
             </form>
             {busCount === 0 ? (
-              <p>No buses yet. Add a bus to start.</p>
+              <EmptyState title="No buses yet." icon="link">
+                Add a bus to start; lines and inverters connect to buses.
+              </EmptyState>
             ) : (
               <EntityTable
                 collection="buses"
@@ -182,15 +190,18 @@ function Network() {
           </>
         )}
       </section>
-      <details>
+      <details className={styles.diagram}>
         <summary>Diagram (read-only)</summary>
         <NetworkDiagram design={design} />
       </details>
       <h2>Issues</h2>
       {listed.length === 0 ? (
-        <p>No network-level problems found.</p>
+        <p className={styles.ok}>
+          <Icon name="check" />
+          No network-level problems found.
+        </p>
       ) : (
-        <ul aria-label="Network issues">
+        <ul aria-label="Network issues" className={styles.issues}>
           {listed.map((i, k) => (
             <li key={k}>
               {[i.entity, i.id, i.field].filter(Boolean).join(" / ") || "Design"}: {i.message}

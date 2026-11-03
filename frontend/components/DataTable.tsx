@@ -19,6 +19,7 @@ export type DataColumn<R> = {
   unit?: string;
   numeric?: boolean; // right-aligned, tabular figures, numbers shown to 6 significant digits
   fields?: string[]; // issue fields shown under this column's header (default: [key])
+  labelCell?: boolean; // read-only cell named "<header> of <row>" for assistive tech and tests
   cell?: (r: R) => ReactNode;
   edit?: Edit<R>;
 };
@@ -131,6 +132,7 @@ export function DataTable<R>({
   rowErrors,
   actions,
   rowTestId,
+  rowCurrent,
   empty,
 }: {
   label: string;
@@ -142,6 +144,7 @@ export function DataTable<R>({
   rowErrors?: (r: R) => RowError[];
   actions?: (r: R, k: number) => ReactNode;
   rowTestId?: (r: R, k: number) => string;
+  rowCurrent?: (r: R) => boolean; // highlighted row (opened from a link), aria-current
   empty?: ReactNode;
 }) {
   if (!rows.length && empty) return <>{empty}</>;
@@ -170,9 +173,13 @@ export function DataTable<R>({
           const errors = rowErrors?.(r) ?? [];
           return (
             <tbody key={rowKey(r, k)} data-testid={rowTestId?.(r, k)} className={styles.row} data-invalid={errors.length ? "true" : undefined}>
-              <tr>
+              <tr aria-current={rowCurrent?.(r) ? "true" : undefined} className={rowCurrent?.(r) ? styles.current : undefined}>
                 {columns.map((c) => (
-                  <td key={c.key} className={c.numeric ? "num" : undefined}>
+                  <td
+                    key={c.key}
+                    className={c.numeric ? "num" : undefined}
+                    aria-label={c.labelCell ? `${headerText(c)} of ${rowName(r, k)}` : undefined}
+                  >
                     {c.edit ? (
                       <EditCell row={r} edit={c.edit} name={`${headerText(c)} of ${rowName(r, k)}`} invalid={errors.some((x) => owner(x.field) === c)} />
                     ) : (

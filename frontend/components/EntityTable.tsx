@@ -1,9 +1,11 @@
 "use client";
 // Editable entity table for S-05 (Doc 7 §6.3): one row per item, unit in every numeric header
-// and input label (FR-05), inline stage-1 messages per row.
+// and input label (FR-05), inline stage-1 messages per row. Drawn by DataTable (ADR-011).
 import { useState } from "react";
 import type { ValidationIssue } from "../api-types";
 import { busDependents, useProject, useProjectDispatch, type Collection } from "../store";
+import { DataTable, type DataColumn } from "./DataTable";
+import { Toast } from "./Toast";
 
 export type Column =
   | { field: string; label: string; kind: "text" }
@@ -33,107 +35,53 @@ export function EntityTable({
   const dispatch = useProjectDispatch();
   const rows: Row[] = design[collection] ?? [];
   const busIds = (design.buses ?? []).map((b) => b.id ?? "");
-  const head = (c: Column) => ("unit" in c ? `${c.label} (${c.unit})` : c.label);
+  const set = (row: Row, patch: Row) => dispatch({ type: "rowUpdated", collection, id: row.id ?? "", patch });
+  const name = (row: Row, k: number) => row.id || `row ${k + 1}`;
 
-  // WP 1.7.2: wide tables scroll in their own focusable box at 200 % zoom, not the page.
+  const cols: DataColumn<Row>[] = columns.map((c): DataColumn<Row> => {
+    const unit = "unit" in c ? c.unit : undefined;
+    if (c.kind === "derived") return { key: c.label, header: c.label, unit, numeric: unit !== "entry", labelCell: true, cell: c.value };
+    const f = c.field;
+    if (c.kind === "bus")
+      return { key: f, header: c.label, edit: { kind: "select", options: busIds, value: (r) => r[f] as string, onChange: (r, v) => set(r, { [f]: v }) } };
+    if (c.kind === "number")
+      return { key: f, header: c.label, unit, numeric: true, edit: { kind: "number", value: (r) => r[f] as number, onChange: (r, v) => set(r, { [f]: v }) } };
+    // text stays a string ("" allowed) so a cleared id still matches its row
+    return { key: f, header: c.label, edit: { kind: "text", value: (r) => r[f] as string, onChange: (r, v) => set(r, { [f]: v }) } };
+  });
+  if (collection !== "buses") cols.unshift({ key: "id", header: "Id", cell: (r) => <strong>{r.id}</strong> });
+
   return (
     <>
       {refused && (
-        <p role="alert">
-          {refused}{" "}
-          <button type="button" onClick={() => setRefused(null)}>
-            Dismiss
-          </button>
-        </p>
+        <div style={{ maxWidth: "var(--prose-max)" }}>
+          <Toast inline message={refused} onDismiss={() => setRefused(null)} />
+        </div>
       )}
-      <div className="table-scroll" role="region" aria-label={`${label}, scrolls sideways`} tabIndex={0}>
-        <table aria-label={label}>
-          <thead>
-            <tr>
-              {collection !== "buses" && <th>Id</th>}
-              {columns.map((c) => (
-                <th key={c.label}>{head(c)}</th>
-              ))}
-              <th>Actions</th>
-              <th>Problems</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, k) => {
-              const id = row.id ?? "";
-              const set = (patch: Row) => dispatch({ type: "rowUpdated", collection, id, patch });
-              return (
-                // index key keeps focus while a Bus id is being retyped
-                <tr
-                  key={k}
-                  data-testid={`${collection}-${k}`}
-                  aria-current={focus !== null && id === focus ? "true" : undefined}
-                  className={focus !== null && id === focus ? "focus" : undefined}
-                >
-                  {collection !== "buses" && <th scope="row">{id}</th>}
-                  {columns.map((c) => {
-                    const name = `${head(c)} of ${id || `row ${k + 1}`}`;
-                    if (c.kind === "derived") {
-                      const v = c.value(row);
-                      return <td key={c.label} aria-label={name}>{v === null ? "—" : v}</td>;
-                    }
-                    const v = row[c.field] as string | number | null | undefined;
-                    return (
-                      <td key={c.label}>
-                        {c.kind === "bus" ? (
-                          <select aria-label={name} value={v ?? ""} onChange={(e) => set({ [c.field]: e.target.value || null })}>
-                            <option value="">(choose)</option>
-                            {busIds.map((b) => (
-                              <option key={b} value={b}>
-                                {b}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          <input
-                            aria-label={name}
-                            type={c.kind}
-                            step={c.kind === "number" ? "any" : undefined}
-                            value={v ?? ""}
-                            onChange={(e) =>
-                              // text stays a string ("" allowed) so a cleared id still matches its row
-                              set({ [c.field]: c.kind === "text" ? e.target.value : e.target.value === "" ? null : e.target.valueAsNumber })
-                            }
-                          />
-                        )}
-                      </td>
-                    );
-                  })}
-                  <td>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const deps = collection === "buses" ? busDependents(design, id) : [];
-                        // FR-11: refuse and name the dependents; the Bus stays
-                        if (deps.length) return setRefused(`Bus ${id} cannot be deleted: it is used by ${deps.join(", ")}.`);
-                        setRefused(null);
-                        dispatch({ type: "rowRemoved", collection, id });
-                      }}
-                    >
-                      Delete {id || `row ${k + 1}`}
-                    </button>
-                  </td>
-                  <td>
-                    {issues
-                      .filter((i) => i.entity === entity && i.id === row.id)
-                      .map((i, n) => (
-                        <div key={n} role="alert">
-                          {i.field ? `${i.field}: ` : ""}
-                          {i.message}
-                        </div>
-                      ))}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        label={label}
+        columns={cols}
+        rows={rows}
+        rowKey={(_, k) => k} // index key keeps focus while a Bus id is being retyped
+        rowName={name}
+        rowTestId={(_, k) => `${collection}-${k}`}
+        rowCurrent={(r) => focus !== null && r.id === focus}
+        rowErrors={(r) => issues.filter((i) => i.entity === entity && i.id === r.id).map((i) => ({ field: i.field, message: i.message }))}
+        actions={(row, k) => (
+          <button
+            type="button"
+            onClick={() => {
+              const deps = collection === "buses" ? busDependents(design, row.id ?? "") : [];
+              // FR-11: refuse and name the dependents; the Bus stays
+              if (deps.length) return setRefused(`Bus ${row.id} cannot be deleted: it is used by ${deps.join(", ")}.`);
+              setRefused(null);
+              dispatch({ type: "rowRemoved", collection, id: row.id ?? "" });
+            }}
+          >
+            Delete {name(row, k)}
+          </button>
+        )}
+      />
     </>
   );
 }

@@ -30,7 +30,7 @@ export function NetworkDiagram({ design }: { design: ProjectSnapshot }) {
         const b = at.get(l.to_bus_id ?? "")!;
         return (
           <g key={l.id} data-testid={`diagram-line-${l.id}`}>
-            <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#000" strokeWidth={2} />
+            <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="var(--color-fg)" strokeWidth={2} />
             <text x={(a.x + b.x) / 2 + 4} y={(a.y + b.y) / 2 - 4} fontSize={11}>
               {l.id}
             </text>
@@ -42,12 +42,12 @@ export function NetworkDiagram({ design }: { design: ProjectSnapshot }) {
         const alone = isolated.includes(id);
         return (
           <g key={id} data-testid={`diagram-bus-${id}`} data-isolated={alone}>
-            <circle cx={p.x} cy={p.y} r={14} fill="#fff" stroke={alone ? "#c62828" : "#000"} strokeWidth={2} strokeDasharray={alone ? "4 3" : undefined} />
+            <circle cx={p.x} cy={p.y} r={14} fill="var(--color-bg)" stroke={alone ? "var(--role-negative-border)" : "var(--color-fg)"} strokeWidth={2} strokeDasharray={alone ? "4 3" : undefined} />
             <text x={p.x} y={p.y + 4} fontSize={11} textAnchor="middle">
               {id}
             </text>
             {alone && (
-              <text x={p.x} y={p.y + 30} fontSize={11} textAnchor="middle" fill="#c62828">
+              <text x={p.x} y={p.y + 30} fontSize={11} textAnchor="middle" fill="var(--role-negative-fg)">
                 not connected
               </text>
             )}
