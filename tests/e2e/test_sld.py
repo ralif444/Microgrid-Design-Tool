@@ -1,10 +1,13 @@
 """Doc 12 X8 single-line diagram on S-05 (SLD-4, D-79): diagram and table paths to the Inspector
 (FR-90), the keyboard tooltip with units (FR-95) and the "View as table" equivalent (FR-98); the
-results overlay on S-07 and S-08 (SLD-5, D-80, FR-96)."""
+results overlay on S-07 and S-08 (SLD-5, D-80, FR-96); the report figure and its SVG download
+(SLD-6, D-81, FR-97)."""
 
 from __future__ import annotations
 
+import xml.etree.ElementTree as ET
 from collections.abc import Callable
+from pathlib import Path
 
 from flows import enter_design, gui_snapshot
 from playwright.sync_api import Page, expect
@@ -97,3 +100,23 @@ def test_fr_96_m2_overlay_marks_violated_elements(server: Callable[[str], str], 
     ).to_be_visible()
     page.get_by_role("button", name="Inverter INV1 at bus").click()
     expect(page.get_by_role("complementary", name="Inspector: Inverter INV1")).to_be_visible()
+
+
+def test_fr_97_report_figure_and_svg_download(server: Callable[[str], str], page: Page) -> None:
+    enter_design(page, server("default"), gui_snapshot())
+    _run_m1(page)
+    record = page.get_by_test_id("record-id").inner_text()
+    page.get_by_role("link", name="8 Report").click()
+    figure = page.get_by_role("figure", name="Single-line diagram of the analysed design")
+    expect(figure.get_by_test_id("diagram-bus-B1")).to_contain_text("p.u.")
+    caption = figure.get_by_test_id("sld-caption")
+    expect(caption).to_contain_text(f"RunRecord {record}")
+    expect(caption).to_contain_text("FAKE ENGINE")
+    with page.expect_download() as dl:
+        figure.get_by_role("button", name="Download SVG").click()
+    svg = Path(dl.value.path()).read_text(encoding="utf-8")
+    assert svg.startswith("<svg") and 'xmlns="http://www.w3.org/2000/svg"' in svg
+    ET.fromstring(svg)  # well-formed, so it opens on its own
+    assert f"RunRecord {record}" in svg and "Engine FAKE" in svg
+    assert "FAKE ENGINE — not an engine result" in svg
+    assert "class=" not in svg and "var(--" not in svg

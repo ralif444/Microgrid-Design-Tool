@@ -14,6 +14,7 @@ export function SldSvg({
   label = "Single-line diagram",
   bind,
   scale = 1,
+  clip,
 }: {
   model: SldModel;
   layout: SldLayout;
@@ -22,14 +23,17 @@ export function SldSvg({
   bind?: Bind;
   /** Zoom factor of the drawn size; the viewBox stays, so geometry is unchanged. */
   scale?: number;
+  /** Draw only this x range of the layout (a print part of the report figure). */
+  clip?: [number, number];
 }) {
   const at = <T extends { id: string }>(xs: T[]) => new Map(xs.map((x) => [x.id, x]));
   const [bus, inv, load, line] = [at(layout.buses), at(layout.inverters), at(layout.loads), at(layout.lines)];
   const placed = (els: SldElement[], m: Map<string, unknown>) => els.filter((e) => m.has(e.id));
-  const w = layout.width + 2 * PAD;
+  const x = clip ? clip[0] - PAD : -PAD;
+  const w = (clip ? clip[1] - clip[0] : layout.width) + 2 * PAD;
   const h = layout.height + 2 * PAD;
   return (
-    <svg role="group" aria-label={label} width={w * scale} height={h * scale} viewBox={`${-PAD} ${-PAD} ${w} ${h}`}>
+    <svg role="group" aria-label={label} width={w * scale} height={h * scale} viewBox={`${x} ${-PAD} ${w} ${h}`}>
       <SystemBlock el={model.system} {...layout.system} emph={emph.SYSTEM} bind={bind} />
       {/* DOM order is the Tab order of guideline §8: system, buses, inverters, loads, lines */}
       {model.buses.map((e) => (

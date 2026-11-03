@@ -14,6 +14,7 @@ import { M1Results } from "../../components/M1Results";
 import { num } from "../../components/format";
 import { ConstraintTable, KIND_WORDS, M2Results } from "../../components/M2Results";
 import { RequireProject } from "../../components/RequireProject";
+import { SldFigure } from "../../components/sld/SldFigure";
 import { statusIcon, TOKEN_ROLE } from "../../components/StatusBanner";
 import { bannerText } from "../../components/status-text";
 import { useValidation } from "../../components/useValidation";
@@ -164,6 +165,14 @@ function Report() {
           ["Inverters", design.inverters?.length ?? 0, "count"],
         ]}
       />
+
+      {/* FR-97: the design the reported M1 analysed, with that run's results */}
+      {m1 && (
+        <>
+          {outdated(m1)}
+          <SldFigure record={m1} />
+        </>
+      )}
 
       <h2>5 Results and charts</h2>
       {m1p ? (

@@ -75,3 +75,14 @@
 .tipEmpty { margin-bottom: var(--space-2) !important; }
 .unplaced { font-size: var(--text-sm); }
 .tableToggle { margin-top: var(--space-3); }
+
+/* SLD-6: report figure (guideline §7, FR-97) */
+.report { margin: var(--space-4) 0; break-inside: avoid; }
+.report svg { max-width: 100%; height: auto; }
+.reportTitle { font-weight: 600; margin: 0 0 var(--space-2); }
+.caption, .partNote { font-size: var(--text-sm); color: var(--cds-text-secondary); margin: var(--space-2) 0; }
+.printOnly { display: none; }
+@media print {
+  .printOnly { display: block; break-inside: avoid; }
+  .screenOnly { display: none; }
+}

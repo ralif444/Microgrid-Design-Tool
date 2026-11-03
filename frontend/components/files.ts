@@ -1,6 +1,10 @@
 // Browser file helpers: download one JSON document (FR-49), read one chosen file as JSON.
 export function downloadJson(fileName: string, doc: unknown): void {
-  const url = URL.createObjectURL(new Blob([JSON.stringify(doc, null, 2)], { type: "application/json" }));
+  downloadText(fileName, JSON.stringify(doc, null, 2), "application/json");
+}
+
+export function downloadText(fileName: string, text: string, type: string): void {
+  const url = URL.createObjectURL(new Blob([text], { type }));
   const a = document.createElement("a");
   a.href = url;
   a.download = fileName;
