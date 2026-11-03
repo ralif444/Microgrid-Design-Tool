@@ -33,6 +33,13 @@ module.exports = {
       to: { path: "^(store|components|app|api-client)/" },
     },
     {
+      name: "elkjs-only-in-sld",
+      comment: "ADR-013: elkjs is an exception to D-72 K150 scoped to the single-line diagram.",
+      severity: "error",
+      from: { pathNot: "^components/sld/" },
+      to: { path: "node_modules/elkjs/" },
+    },
+    {
       name: "no-circular",
       severity: "error",
       from: {},
