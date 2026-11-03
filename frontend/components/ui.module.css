@@ -47,3 +47,10 @@
 .toast > svg { color: var(--fg); margin-top: 0.15em; }
 .toast p { margin: 0; flex: 1; }
 @media print { .toastArea { display: none; } }
+.fresh {
+  display: inline-flex; align-items: center; gap: var(--space-1); margin: 0; padding: 0 var(--space-2);
+  font-size: var(--text-sm); font-weight: var(--weight-medium); border-radius: var(--radius-2);
+  border: var(--border-width) solid var(--role-info-border); background: var(--role-info-bg); color: var(--role-info-fg);
+}
+.fresh[data-f="current"] { border-color: var(--role-success-border); background: var(--role-success-bg); color: var(--role-success-fg); }
+.fresh[data-f="stale"] { border-color: var(--role-caution-border); background: var(--role-caution-bg); color: var(--role-caution-fg); }

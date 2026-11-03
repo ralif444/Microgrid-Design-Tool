@@ -1,77 +1,79 @@
 // M1 payload with units (FR-23, NFR-05): the groups of Doc 3 §6.2 including ε_X. Placeholder
 // values come from the Fake Engine. Power sharing per Doc 12 P9 (FR-81): advisory, not a constraint.
 import type { M1Payload } from "../api-types";
+import { AdvisoryPanel } from "./AdvisoryPanel";
+import { DataTable, type DataColumn } from "./DataTable";
+
+type Bus = M1Payload["bus_results"][number];
+type Inv = M1Payload["inverter_results"][number];
+type Share = M1Payload["sharing"][number];
+type Line = M1Payload["line_results"][number];
+type Total = [string, number, string];
+
+const n = <R,>(key: string, header: string, unit: string, get: (r: R) => number): DataColumn<R> => ({ key, header, unit, numeric: true, cell: get });
+const id = <R,>(header: string, get: (r: R) => string): DataColumn<R> => ({ key: "id", header, cell: (r) => <strong>{get(r)}</strong> });
+
+const TOTALS: DataColumn<Total>[] = [
+  { key: "q", header: "Quantity", cell: (t) => t[0] },
+  { key: "v", header: "Value", numeric: true, cell: (t) => t[1] },
+  { key: "u", header: "Unit", cell: (t) => t[2] },
+];
+const BUSES: DataColumn<Bus>[] = [
+  id("Bus", (b) => b.bus_id),
+  n("kv", "Voltage", "kV", (b) => b.voltage_kv),
+  n("pu", "Voltage", "p.u.", (b) => b.voltage_pu),
+  n("deg", "Angle", "deg", (b) => b.angle_deg),
+];
+const INVERTERS: DataColumn<Inv>[] = [
+  id("Inverter", (i) => i.inverter_id),
+  n("p", "P", "kW", (i) => i.p_kw),
+  n("q", "Q", "kvar", (i) => i.q_kvar),
+  n("s", "S", "kVA", (i) => i.s_kva),
+  n("l", "Loading", "ratio", (i) => i.loading_ratio),
+];
+const SHARING: DataColumn<Share>[] = [
+  id("Inverter", (s) => s.inverter_id),
+  n("dp", "ΔP", "kW", (s) => s.p_deviation_kw),
+  n("dq", "ΔQ", "kvar", (s) => s.q_deviation_kvar),
+  n("pe", "P error", "pu of rating", (s) => s.p_error_pu),
+  n("qe", "Q error", "pu of rating", (s) => s.q_error_pu),
+  { key: "qv", header: "Q–V droop not rating-proportional", cell: (s) => (s.q_droop_not_rating_proportional ? "yes" : "no") },
+];
+const LINES: DataColumn<Line>[] = [
+  id("Line", (l) => l.line_id),
+  n("pf", "P from", "kW", (l) => l.p_from_kw),
+  n("qf", "Q from", "kvar", (l) => l.q_from_kvar),
+  n("pt", "P to", "kW", (l) => l.p_to_kw),
+  n("qt", "Q to", "kvar", (l) => l.q_to_kvar),
+  n("i", "Current", "A", (l) => l.current_a),
+  n("loss", "Losses", "kW", (l) => l.losses_kw),
+];
 
 export function M1Results({ p }: { p: M1Payload }) {
+  const totals: Total[] = [
+    ["System frequency", p.system_frequency_hz, "Hz"],
+    ["Total load, active", p.total_load_kw, "kW"],
+    ["Total load, reactive", p.total_load_kvar, "kvar"],
+    ["Total losses", p.total_losses_kw, "kW"],
+    ["Iterations", p.iterations, "count"],
+    ["Validity indicator ε_X", p.epsilon_x_ratio, "ratio"],
+  ];
   return (
     <section aria-label="Power flow results">
-      <table aria-label="System totals">
-        <caption>System</caption>
-        <tbody>
-          <tr><th scope="row">System frequency</th><td>{p.system_frequency_hz} Hz</td></tr>
-          <tr><th scope="row">Total load</th><td>{p.total_load_kw} kW, {p.total_load_kvar} kvar</td></tr>
-          <tr><th scope="row">Total losses</th><td>{p.total_losses_kw} kW</td></tr>
-          <tr><th scope="row">Iterations</th><td>{p.iterations}</td></tr>
-          <tr><th scope="row">Validity indicator ε_X</th><td>{p.epsilon_x_ratio} (ratio)</td></tr>
-        </tbody>
-      </table>
-      <table>
-        <caption>Bus voltages</caption>
-        <thead>
-          <tr><th>Bus</th><th>Voltage (kV)</th><th>Voltage (p.u.)</th><th>Angle (deg)</th></tr>
-        </thead>
-        <tbody>
-          {p.bus_results.map((b) => (
-            <tr key={b.bus_id}>
-              <td>{b.bus_id}</td><td>{b.voltage_kv}</td><td>{b.voltage_pu}</td><td>{b.angle_deg}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <table>
-        <caption>Inverter outputs</caption>
-        <thead>
-          <tr><th>Inverter</th><th>P (kW)</th><th>Q (kvar)</th><th>S (kVA)</th><th>Loading (ratio)</th></tr>
-        </thead>
-        <tbody>
-          {p.inverter_results.map((i) => (
-            <tr key={i.inverter_id}>
-              <td>{i.inverter_id}</td><td>{i.p_kw}</td><td>{i.q_kvar}</td><td>{i.s_kva}</td><td>{i.loading_ratio}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <table aria-label="Power sharing">
-        <caption>Power sharing against rating-proportional sharing (advisory, not a constraint)</caption>
-        <thead>
-          <tr><th>Inverter</th><th>ΔP (kW)</th><th>ΔQ (kvar)</th><th>P error (pu of rating)</th><th>Q error (pu of rating)</th><th>Q–V droop not rating-proportional</th></tr>
-        </thead>
-        <tbody>
-          {p.sharing.map((s) => (
-            <tr key={s.inverter_id}>
-              <td>{s.inverter_id}</td><td>{s.p_deviation_kw}</td><td>{s.q_deviation_kvar}</td><td>{s.p_error_pu}</td><td>{s.q_error_pu}</td>
-              <td>{s.q_droop_not_rating_proportional ? "yes" : "no"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <table>
-        <caption>Line flows</caption>
-        <thead>
-          <tr>
-            <th>Line</th><th>P from (kW)</th><th>Q from (kvar)</th><th>P to (kW)</th><th>Q to (kvar)</th>
-            <th>Current (A)</th><th>Losses (kW)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {p.line_results.map((l) => (
-            <tr key={l.line_id}>
-              <td>{l.line_id}</td><td>{l.p_from_kw}</td><td>{l.q_from_kvar}</td><td>{l.p_to_kw}</td><td>{l.q_to_kvar}</td>
-              <td>{l.current_a}</td><td>{l.losses_kw}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <DataTable label="System totals" caption="System" columns={TOTALS} rows={totals} rowKey={(t) => t[0]} rowName={(t) => t[0]} />
+      <DataTable label="Bus voltages" caption="Bus voltages" columns={BUSES} rows={p.bus_results} rowKey={(b) => b.bus_id} rowName={(b) => b.bus_id} />
+      <DataTable
+        label="Inverter outputs"
+        caption="Inverter outputs"
+        columns={INVERTERS}
+        rows={p.inverter_results}
+        rowKey={(i) => i.inverter_id}
+        rowName={(i) => i.inverter_id}
+      />
+      <AdvisoryPanel label="Power sharing advice" title="Power sharing against rating-proportional sharing (advisory, not a constraint)">
+        <DataTable label="Power sharing" columns={SHARING} rows={p.sharing} rowKey={(s) => s.inverter_id} rowName={(s) => s.inverter_id} />
+      </AdvisoryPanel>
+      <DataTable label="Line flows" caption="Line flows" columns={LINES} rows={p.line_results} rowKey={(l) => l.line_id} rowName={(l) => l.line_id} />
     </section>
   );
 }

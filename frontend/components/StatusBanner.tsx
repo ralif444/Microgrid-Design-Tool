@@ -42,7 +42,7 @@ export function StatusBanner({ type, result }: { type: AnalysisType; result: Ana
         <ul aria-label="Issues" className={styles.issues}>
           {issues.map((i, k) => (
             <li key={k}>
-              <span className={styles.where}>{[i.entity, i.id, i.field].filter(Boolean).join(" / ")}</span>: {i.message}
+              <span className={styles.where}>{[i.entity, i.id, i.field].filter(Boolean).join(" / ") || "Design"}</span>: {i.message}
             </li>
           ))}
         </ul>

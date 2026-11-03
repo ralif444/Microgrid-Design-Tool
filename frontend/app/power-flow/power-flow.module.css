@@ -1,0 +1,12 @@
+.head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4); }
+.head h1 { margin: 0; margin-right: auto; }
+.ok { display: flex; align-items: center; gap: var(--space-2); color: var(--role-success-fg); }
+.checking { color: var(--color-fg-muted); }
+.warnings {
+  max-width: var(--prose-max); margin: var(--space-2) 0 var(--space-4); padding: var(--space-2) var(--space-4) var(--space-2) var(--space-8);
+  background: var(--role-caution-bg); color: var(--role-caution-fg);
+  border-left: var(--banner-edge) solid var(--role-caution-border); border-radius: var(--radius-2);
+}
+.note { color: var(--color-fg-muted); font-size: var(--text-sm); }
+.record { color: var(--color-fg-muted); font-size: var(--text-sm); max-width: var(--prose-max); }
+.next { margin-top: var(--space-6); }
