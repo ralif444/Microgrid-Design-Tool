@@ -24,15 +24,14 @@ M4_POINT_METRICS = ["ZETA_MIN", "RE_LAMBDA_DOM", "INDICATORS"]
 
 def inner() -> int:
     from fastapi.testclient import TestClient
+
     from mgapp.config import EngineChoice, Settings
     from mgapp.main import create_app
     from mgapp.services.limits import Limits
 
     # Measurement needs the raw run time, so the budget is lifted here only.
     limits = Limits(time_budget_s=3600.0, sweep_cap=100_000)
-    app = create_app(
-        Settings(engine=EngineChoice.REAL), serve_static=False, limits=limits
-    )
+    app = create_app(Settings(engine=EngineChoice.REAL), serve_static=False, limits=limits)
     c = TestClient(app)
     print(f"engine {c.get('/api/meta').json()['engine']}")
     snap = snapshot("D2")
@@ -47,9 +46,7 @@ def inner() -> int:
         "result_payload": rec["result"]["payload"],
     }  # fmt: skip
 
-    def run(
-        t: str, label: str, scenarios: list | None = None, **params: object
-    ) -> dict:
+    def run(t: str, label: str, scenarios: list | None = None, **params: object) -> dict:
         body = {"project_snapshot": snap, "parameters": params, "solver_config": {},
                 "depends_on": dep}  # fmt: skip
         if scenarios is not None:

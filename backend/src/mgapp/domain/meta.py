@@ -17,6 +17,7 @@ class LimitsInfo(Model):
     scenario_cap: int | None
     m3a_parameter_cap: int | None
     m4b_duration_cap_s: float | None
+    lambda_c_point_cap: int | None
 
 
 class MetaInfo(Model):

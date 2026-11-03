@@ -106,7 +106,7 @@ ReproductionReport = `{outcome (REPRODUCED, DIFFERS), differences[{path, kind (S
 |---|---|---|
 | app_version, schema_version, record_schema_version, api_description_version | string / integer | |
 | engine | {engine_kind, engine_version, engine_git_commit} | From Engine Port `identity()`. |
-| limits | {time_budget_s: 30, sweep_cap: 1000, margin_warn: 0.05, body_limit_mib: 10, scenario_cap: null, m3a_parameter_cap: null, m4b_duration_cap_s: null} | Initial values from manuscript 4.1.3 and 4.3.6; replaced by measurements at WP 1.4.3 (time budget) and 1.7.1 (sweep cap, margin warn, body limit); null = not yet fixed. |
+| limits | {time_budget_s: 30, sweep_cap: 1000, margin_warn: 0.05, body_limit_mib: 10, scenario_cap: null, m3a_parameter_cap: null, m4b_duration_cap_s: 60, lambda_c_point_cap: 50} | Initial values from manuscript 4.1.3 and 4.3.6; time budget measured at WP 1.4.3 (Doc 9 D-54 K80), the others at WP 1.7.1 (Doc 9 D-67, user decision 2026-11-03); null = no limit. `lambda_c_point_cap` limits M3b/M3d points when `point_metrics` holds LAMBDA_C (SWEEP_CAP_EXCEEDED). |
 | indicator_threshold_version | string or null | Null until thresholds are calibrated at stage 1.6. |
 
 ### 3.10 TransportError
@@ -159,7 +159,7 @@ A Status outside the allowed set → UNAVAILABLE / ENGINE_ERROR.
 | 400 | MALFORMED_JSON | Body not parseable (valid JSON that is not a Project/RunRecord → 200 MALFORMED_FILE). |
 | 404 | NOT_FOUND / UNKNOWN_ANALYSIS_TYPE | Unknown route or analysis type. |
 | 405 | METHOD_NOT_ALLOWED | |
-| 413 | PAYLOAD_TOO_LARGE | Body > 10 MiB (initial; reviewed at WP 1.7.1 from the largest test Project request). |
+| 413 | PAYLOAD_TOO_LARGE | Body > 10 MiB (kept at WP 1.7.1, Doc 9 D-67: largest measured request 231 KiB, largest RunRecord 1.6 MiB). |
 | 415 | UNSUPPORTED_MEDIA_TYPE | Not `application/json`. |
 | 500 | INTERNAL_ERROR | App defect outside the engine call. |
 

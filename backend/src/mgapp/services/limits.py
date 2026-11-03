@@ -1,7 +1,7 @@
 """Execution limits (MetaInfo.limits; Doc 6 §3.9, manuscript 4.1.3 and 4.3.6).
 
-Initial values set by the author; replaced by measurement at WP 1.4.3 (time budget) and
-WP 1.7.1 (sweep cap, margin warn, body limit). None = not yet fixed (Doc 9 A-53).
+Initial values set by the author; time budget measured at WP 1.4.3 (D-54 K80), the other
+limits at WP 1.7.1 (D-67). None = no limit.
 """
 
 from __future__ import annotations
@@ -21,7 +21,8 @@ class Limits:
     body_limit_mib: int = 10
     scenario_cap: int | None = None
     m3a_parameter_cap: int | None = None
-    m4b_duration_cap_s: float | None = None
+    m4b_duration_cap_s: float | None = 60.0  # D-67: about 81 KiB of RunRecord per simulated second
+    lambda_c_point_cap: int | None = 50  # D-67: LAMBDA_C costs about 0.38 s per sweep point
 
 
 def _steps(axis: Any) -> int:
@@ -52,6 +53,22 @@ def check_size_limits(
             issue(
                 IssueCode.SWEEP_CAP_EXCEEDED,
                 f"This sweep has too many points ({n}; the limit is {limits.sweep_cap}).",
+            )
+    if (
+        t in (AnalysisType.M3B, AnalysisType.M3D)
+        and limits.lambda_c_point_cap is not None
+        and "LAMBDA_C" in (parameters.get("point_metrics") or [])
+    ):
+        n = (
+            _steps(parameters.get("axis"))
+            if t is AnalysisType.M3B
+            else (_steps(parameters.get("axis_x")) * _steps(parameters.get("axis_y")))
+        )
+        if n > limits.lambda_c_point_cap:
+            issue(
+                IssueCode.SWEEP_CAP_EXCEEDED,
+                f"Loadability at every point is limited to {limits.lambda_c_point_cap} points"
+                f" (this sweep has {n}).",
             )
     if t is AnalysisType.M3A and limits.m3a_parameter_cap is not None:
         paths = parameters.get("parameter_paths") or []

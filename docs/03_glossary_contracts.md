@@ -522,7 +522,7 @@ Versioning: equal → load; older with a chain → migrate forward step by step 
 | # | Item | Tag |
 |---|---|---|
 | 1 | Droop unit conversion in the Real Engine adapter (§1) to be confirmed against the engine package. | CLOSED (Doc 9 D-54 K74) |
-| 2 | Caps: M3a parameter count, M3c SCENARIO_CAP, M4b duration; 413 body limit initial 10 MiB (Doc 6). | [ASSUMPTION] → WP 1.7.1 |
+| 2 | Caps: M3a parameter count, M3c SCENARIO_CAP, M4b duration; 413 body limit initial 10 MiB (Doc 6). | DECIDED at WP 1.7.1 (Doc 9 D-67): M4b 60 s, LAMBDA_C per point 50 points, body 10 MiB; M3a and M3c without cap |
 | 3 | `balance_tolerance_kw` default and whether it belongs to DesignConstraints or solver_config. | CLOSED: no default, stays in DesignConstraints (Doc 9 D-54 K84) |
 | 4 | Settling window and envelope criteria for the transient class (engine side). | → engine design, stage 1.3.5 |
 | 5 | Indicator thresholds (r_τ, κ, r_in, ε_X) calibrated from M5. | → stage 1.6 |

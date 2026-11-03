@@ -35,6 +35,7 @@ def meta(request: Request) -> MetaInfo:
             scenario_cap=lim.scenario_cap,
             m3a_parameter_cap=lim.m3a_parameter_cap,
             m4b_duration_cap_s=lim.m4b_duration_cap_s,
+            lambda_c_point_cap=lim.lambda_c_point_cap,
         ),
         indicator_threshold_version=None,
     )
