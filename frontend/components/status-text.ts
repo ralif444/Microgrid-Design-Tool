@@ -18,8 +18,14 @@ export function bannerText(type: AnalysisType, r: AnalysisResult): BannerText {
             "Power flow completed: an operating point was found. This is not yet a check against your limits.",
           hint: "Run the constraint check (M2).",
         };
-      if (type === "M2")
-        return { role: "success", headline: "The design meets all constraints.", hint: "Explore further analyses or open the report." };
+      if (type === "M2") {
+        // WP 1.7.4: a check without a limit is not satisfied, so "all constraints" would overstate it.
+        const skipped = ((r.payload as { not_evaluated?: unknown[] } | null)?.not_evaluated ?? []).length;
+        const headline = skipped
+          ? `The design meets every evaluated constraint; ${skipped} check(s) had no limit and were not evaluated.`
+          : "The design meets all constraints.";
+        return { role: "success", headline, hint: skipped ? "Enter the missing limits on Constraints, then re-run M2." : "Explore further analyses or open the report." };
+      }
       if (type === "PS") return { role: "success", headline: "Advice produced.", hint: "Accept or skip." }; // Edit deferred (Doc 9 D-45 K5)
       return { role: "success", headline: "Analysis completed.", hint: "Explore further analyses or open the report." };
     case "INFEASIBLE":

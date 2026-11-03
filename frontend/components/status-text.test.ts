@@ -14,3 +14,13 @@ describe("NFR-06 DEPENDENCY_NOT_MET banner per reason (Doc 7 §5, WP 1.7.2)", ()
     expect(bannerText("M2", dep("NOT_FEASIBLE")).hint).toBe("Fix the M1 problem first.");
   });
 });
+
+describe("M2 FEASIBLE headline (WP 1.7.4)", () => {
+  const m2 = (notEvaluated: number) =>
+    ({ status: "FEASIBLE", status_code: "OK", message: "m", payload: { not_evaluated: Array(notEvaluated).fill({}) } }) as unknown as AnalysisResult;
+  it("does not claim every constraint is met when some had no limit", () => {
+    expect(bannerText("M2", m2(0)).headline).toBe("The design meets all constraints.");
+    expect(bannerText("M2", m2(13)).headline).toContain("13 check(s) had no limit");
+    expect(bannerText("M2", m2(13)).headline).not.toContain("all constraints");
+  });
+});
