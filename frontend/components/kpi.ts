@@ -1,6 +1,6 @@
 // KPI selectors (Doc 12 X2, FR-87): values read straight from the payload. Only select (min, max,
 // argmin, argmax) and count; no arithmetic on physical quantities (guideline §1 rule 1).
-import type { M1Payload, M2Payload, M4aPayload, M4bPayload } from "../api-types";
+import type { M1Payload, M2Payload, M3bPayload, M3dPayload, M4aPayload, M4bPayload } from "../api-types";
 import { num } from "./format";
 import type { IconName } from "./Icon";
 import { KIND_WORDS } from "./M2Results";
@@ -74,5 +74,33 @@ export function m4bKpis(p: M4bPayload): Kpi[] {
     { label: "Transient class", value: c ?? "not classified", unit: "", icon: c ? TRANSIENT_ICON[c] : undefined, detail: c ? undefined : (p.class_reason ?? "reason not given") },
     { label: "Settled", value: p.settled === null || p.settled === undefined ? null : p.settled ? "yes" : "no", unit: "", detail: p.settled == null ? "not judged: no settling criteria" : undefined },
     { label: "Largest RoCoF", value: p.max_rocof_hz_per_s, unit: "Hz/s", detail: "descriptive, not a criterion" },
+  ];
+}
+
+const STATUS_ORDER = ["FEASIBLE", "INFEASIBLE", "PHYSICALLY_INADMISSIBLE", "SOLVER_FAILED", "UNAVAILABLE", "INPUT_INVALID"];
+
+// One "Points <Status>" tile per Status that occurs (count only).
+function perStatus(points: { status: string }[]): Kpi[] {
+  return STATUS_ORDER.map((s) => [s, points.filter((p) => p.status === s).length] as const)
+    .filter(([, n]) => n > 0)
+    .map(([s, n]) => ({ label: `Points ${s}`, value: n, unit: "count" }));
+}
+
+/** S-10 tiles (guideline §4): points, first infeasible value, points per Status. */
+export function m3bKpis(p: M3bPayload, axisUnit: string): Kpi[] {
+  const first = p.first_infeasible_value;
+  return [
+    { label: "Points", value: p.points.length, unit: "count" },
+    { label: "First infeasible value", value: first, unit: axisUnit, detail: first === null ? "none in range" : "first grid value not FEASIBLE" },
+    ...perStatus(p.points),
+  ];
+}
+
+/** S-12 tiles (guideline §4): feasible fraction, points, points per Status. */
+export function m3dKpis(p: M3dPayload): Kpi[] {
+  return [
+    { label: "Feasible fraction", value: p.feasible_fraction, unit: "ratio", detail: "share of FEASIBLE points" },
+    { label: "Points", value: p.grid.length, unit: "count" },
+    ...perStatus(p.grid),
   ];
 }

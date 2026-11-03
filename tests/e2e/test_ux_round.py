@@ -2,8 +2,9 @@
 
 FR-93 (the latest result on the current design survives leaving a screen; a design edit hides it),
 FR-86 (a chart figure's "Show data" table lists as many rows as the payload),
-FR-87 (S-07, S-08, S-13 and S-14 KPI strips), FR-88 (S-07 charts; S-08 margin chart and loadability
-axis; S-13 eigenvalue plot, participation note; S-14 time responses),
+FR-87 (S-07, S-08, S-10, S-12, S-13 and S-14 KPI strips), FR-88 (S-07 charts; S-08 margin chart and
+loadability axis; S-10 sweep chart; S-12 status grid; S-13 eigenvalue plot, participation note;
+S-14 time responses),
 FR-89 (crosshair: arrow keys move it, it shows a value with unit, Escape hides it),
 FR-90 (Inspector side panel).
 """
@@ -186,3 +187,56 @@ def test_fr_87_fr_88_fr_89_transient_kpis_and_crosshair(
     page.keyboard.press("Escape")
     expect(readout).to_have_count(0)
     expect(page.get_by_test_id("transient-class")).to_contain_text("Recovered and stable")
+
+
+def test_fr_87_fr_88_fr_89_sweep_and_envelope(server: Callable[[str], str], page: Page) -> None:
+    enter_design(page, server("default"), gui_snapshot())
+    _run_m1(page)
+    page.get_by_role("link", name="Sweep (M3b)").click()
+    page.get_by_label("Parameter", exact=True).select_option("inverters/INV1/rated_kva")
+    page.get_by_label("From (kVA)").fill("5")
+    page.get_by_label("To (kVA)").fill("15")
+    page.get_by_label("Points (count)").fill("3")
+    page.get_by_role("button", name="Run sweep").click()
+    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
+    kpis = page.get_by_role("region", name="Sweep key figures")
+    expect(kpis).to_contain_text("Points FEASIBLE")
+    expect(kpis).to_contain_text("none in range")
+    expect(kpis).to_contain_text("FAKE engine: placeholder values, not engine results.")
+    figure = page.get_by_role("figure", name="Sweep")
+    expect(figure).to_contain_text("FAKE engine: placeholder, not an engine result")
+    figure.get_by_role("img", name="System frequency (Hz) against").focus()
+    readout = figure.get_by_test_id("crosshair")
+    expect(readout).to_contain_text("inverters/INV1/rated_kva 5 kVA")
+    expect(readout).to_contain_text(re.compile(r"System frequency: [0-9.]+ Hz"))
+    page.keyboard.press("End")
+    expect(readout).to_contain_text("inverters/INV1/rated_kva 15 kVA")
+
+    page.get_by_role("link", name="Envelope (M3d)").click()
+    page.get_by_label("X axis: Axis").select_option("LOAD_SCALE")
+    page.get_by_label("X axis: From (factor)").fill("0.5")
+    page.get_by_label("X axis: To (factor)").fill("1.5")
+    page.get_by_label("X axis: Points (count)").fill("2")
+    page.get_by_label("Y axis: Parameter").select_option("inverters/INV1/rated_kva")
+    page.get_by_label("Y axis: From (kVA)").fill("5")
+    page.get_by_label("Y axis: To (kVA)").fill("15")
+    page.get_by_label("Y axis: Points (count)").fill("2")
+    page.get_by_role("button", name="Run envelope").click()
+    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
+    kpis = page.get_by_role("region", name="Envelope key figures")
+    expect(kpis).to_contain_text("Feasible fraction")
+    expect(kpis).to_contain_text("Points FEASIBLE")
+    grid = page.get_by_role("table", name="Envelope grid")
+    expect(grid.locator("td")).to_have_count(4)
+    expect(grid.locator("td")).to_contain_text(["feasible"] * 4)
+    expect(grid.locator('td[tabindex="0"]')).to_have_count(1)  # one tab stop, arrows move
+    grid.locator('td[tabindex="0"]').focus()
+    readout = page.get_by_test_id("envelope-readout")
+    expect(readout).to_contain_text("LOAD_SCALE 0.5 factor")
+    expect(readout).to_contain_text("FEASIBLE; limiting constraint: none")
+    page.keyboard.press("ArrowRight")
+    expect(readout).to_contain_text("LOAD_SCALE 1.5 factor")
+    page.get_by_role("button", name="Show data: Status per point").click()
+    expect(
+        page.get_by_role("table", name="Status per point data").locator("tbody tr")
+    ).to_have_count(4)

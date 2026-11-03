@@ -22,7 +22,7 @@ import { participationRows } from "../../components/participation";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
-import styles from "./small-signal.module.css";
+import styles from "../../components/Further.module.css";
 
 const CLASS_WORDS: Record<string, string> = {
   STABLE: "Stable: every eigenvalue lies in the left half-plane.",

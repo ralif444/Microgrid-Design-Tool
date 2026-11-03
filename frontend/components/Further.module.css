@@ -1,0 +1,26 @@
+/* Further-analysis screens S-10 to S-14 (Carbon step (c), UX-5 to UX-7): page head, settings box, axis or settling boxes, facts. */
+.head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4); }
+.head h1 { margin: 0; margin-right: auto; }
+.form {
+  --field-label: 18rem;
+  display: grid; justify-items: start; gap: var(--space-2); margin: var(--space-4) 0;
+  padding: var(--space-4); max-width: var(--prose-max);
+  background: var(--color-surface-sunken); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-2);
+}
+.form p, .form fieldset { margin: 0; }
+.form button { margin-top: var(--space-2); }
+.source { font-size: var(--text-sm); color: var(--color-fg-muted); }
+.facts { max-width: var(--prose-max); }
+.record { color: var(--color-fg-muted); font-size: var(--text-sm); max-width: var(--prose-max); }
+.settling, .box { display: grid; justify-items: start; gap: var(--space-2); padding: var(--space-3); border: var(--border-width) solid var(--color-border); }
+/* S-12 status grid: icon + word in every cell; the tint only repeats the word (never colour alone) */
+.grid { border-collapse: collapse; font-size: var(--text-sm); }
+.grid caption { text-align: left; font-size: var(--text-xs); color: var(--color-fg-muted); padding-bottom: var(--space-1); }
+.grid th, .grid td { padding: var(--space-1) var(--space-2); border: var(--border-width) solid var(--cds-border-subtle-01); white-space: nowrap; }
+.grid td { text-align: left; }
+.grid td svg { width: 16px; min-width: 0; height: 16px; display: inline-block; vertical-align: -3px; } /* beats the chart rule .plot svg */
+.grid td:focus-visible { outline: 2px solid var(--cds-focus); outline-offset: -2px; }
+.ok { background: var(--role-success-bg); color: var(--role-success-fg); }
+.bad { background: var(--role-negative-bg); color: var(--role-negative-fg); }
+.other { background: var(--role-caution-bg); color: var(--role-caution-fg); }
+.readout { margin: var(--space-2) 0 0; font-size: var(--text-sm); }

@@ -16,7 +16,7 @@ import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
-import styles from "./transient.module.css";
+import styles from "../../components/Further.module.css";
 
 type Settling = { frequency_band_hz?: number | null; voltage_band_kv?: number | null; window_s?: number | null };
 type Sent = { disturbance?: { start_time_s?: number | null }; settling?: Settling };
