@@ -2,15 +2,24 @@
 // S-14 Transient (M4b) (Doc 7 §6.6, Doc 3 §6.9): one disturbance from the four-kind catalogue,
 // simulation end, optional settling criteria without defaults (D-55 K90); time responses with a
 // data table; class in words, or "not set" without settling criteria.
+// UX-6 (Doc 12 X2, X3, X4): KPI strip, time responses with crosshair, start mark and final window.
 import { useState } from "react";
 import type { M4bPayload } from "../../api-types";
+import { LineChart } from "../../components/charts/LineChart";
+import { EmptyState } from "../../components/EmptyState";
 import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
 import { IndicatorPanel } from "../../components/IndicatorPanel";
+import { m4bKpis } from "../../components/kpi";
+import { KpiStrip } from "../../components/KpiStrip";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
-import { LineChart } from "../../components/charts/LineChart";
+import { Toast } from "../../components/Toast";
+import styles from "./transient.module.css";
+
+type Settling = { frequency_band_hz?: number | null; voltage_band_kv?: number | null; window_s?: number | null };
+type Sent = { disturbance?: { start_time_s?: number | null }; settling?: Settling };
 
 type Kind = "LOAD_STEP" | "LOAD_SCALING" | "REFERENCE_STEP" | "INVERTER_OUTAGE";
 type Ref = "P_SETPOINT" | "Q_SETPOINT" | "V_SETPOINT" | "F_SETPOINT";
@@ -47,6 +56,7 @@ function Transient() {
   const [fBand, setFBand] = useState<number | null>(null);
   const [vBand, setVBand] = useState<number | null>(null);
   const [win, setWin] = useState<number | null>(null);
+  const [dismissed, setDismissed] = useState<string | null>(null);
 
   const onLoads = kind === "LOAD_STEP" || kind === "LOAD_SCALING";
   const elements = [
@@ -70,13 +80,32 @@ function Transient() {
 
   const r = resp?.result;
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as M4bPayload) : null;
+  // what the run was asked (RunRecord parameters), not what the form shows now
+  const sent = (resp?.run_record.parameters ?? {}) as Sent;
+  const startS = sent.disturbance?.start_time_s ?? null;
+  const st = sent.settling;
+  const lastT = p?.time_s.length ? p.time_s[p.time_s.length - 1] : null;
+  const band = st?.window_s && lastT !== null ? { to: lastT, span: st.window_s } : undefined;
+  const note = [
+    startS !== null ? `Dashed vertical line: disturbance start at ${fmt(startS)} s.` : null,
+    band
+      ? `Shaded: the final window of ${fmt(st?.window_s)} s of the settling check (bands: frequency ${fmt(st?.frequency_band_hz)} Hz, voltage ${fmt(st?.voltage_band_kv)} kV, judged by the engine around the final value).`
+      : "No settling criteria in this run, so no final window is drawn.",
+    "Focus a chart and use ←/→, Home, End to read exact samples; Escape hides the readout.",
+  ]
+    .filter(Boolean)
+    .join(" ");
   return (
     <>
-      <h1>Transient (M4b)</h1>
-      <M1FreshnessBadge f={fresh} />
+      <div className={styles.head}>
+        <h1>Transient (M4b)</h1>
+        <M1FreshnessBadge f={fresh} />
+      </div>
+      <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
       <form
         aria-label="Transient settings"
+        className={styles.form}
         onSubmit={(e) => {
           e.preventDefault();
           submit();
@@ -121,16 +150,17 @@ function Transient() {
         {kind !== "INVERTER_OUTAGE" && (
           <p>
             <NumberField id="d-mag" label={kind === "LOAD_SCALING" ? "Scaling factor" : "Step size"} unit={magUnit} value={magnitude} onChange={setMagnitude} />
-            {kind === "LOAD_STEP" && (
-              <>
-                {" "}
-                <NumberField id="d-mag-kvar" label="Reactive step, optional" unit="kvar" value={magKvar} onChange={setMagKvar} />
-              </>
-            )}
+          </p>
+        )}
+        {kind === "LOAD_STEP" && (
+          <p>
+            <NumberField id="d-mag-kvar" label="Reactive step, optional" unit="kvar" value={magKvar} onChange={setMagKvar} />
           </p>
         )}
         <p>
-          <NumberField id="d-start" label="Start time" unit="s" value={start} onChange={setStart} />{" "}
+          <NumberField id="d-start" label="Start time" unit="s" value={start} onChange={setStart} />
+        </p>
+        <p>
           <NumberField id="sim-end" label="Simulation end" unit="s" value={end} onChange={setEnd} />
         </p>
         {kind !== "INVERTER_OUTAGE" && (
@@ -141,26 +171,26 @@ function Transient() {
             {!permanent && <NumberField id="d-duration" label="Duration" unit="s" value={duration} onChange={setDuration} />}
           </p>
         )}
-        <fieldset>
+        <fieldset className={styles.settling}>
           <legend>Settling criteria, optional (no defaults; without them no class is set)</legend>
-          <NumberField id="st-f" label="Frequency band" unit="Hz" value={fBand} onChange={setFBand} />{" "}
-          <NumberField id="st-v" label="Voltage band, line-to-line" unit="kV" value={vBand} onChange={setVBand} />{" "}
+          <NumberField id="st-f" label="Frequency band" unit="Hz" value={fBand} onChange={setFBand} />
+          <NumberField id="st-v" label="Voltage band, line-to-line" unit="kV" value={vBand} onChange={setVBand} />
           <NumberField id="st-w" label="Final window" unit="s" value={win} onChange={setWin} />
         </fieldset>
-        <button type="submit" disabled={busy || fresh !== "current"}>
+        <button type="submit" className="primary" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
           {busy ? "Running..." : "Run M4b"}
         </button>
       </form>
-      <M1BlockedNote f={fresh} />
-      {error && <p role="alert">{error}</p>}
+      {error && error !== dismissed && <Toast message={error} onDismiss={() => setDismissed(error)} />}
       {r && <StatusBanner type="M4b" result={r} />}
-      {p && (
+      {p && resp && <KpiStrip label="Transient key figures" kpis={m4bKpis(p)} record={resp.run_record} />}
+      {p && resp && (
         <>
           <h2>Class: {p.transient_class ?? "not set"}</h2>
           <p data-testid="transient-class">
             {p.transient_class ? CLASS_WORDS[p.transient_class] : `No class: ${p.class_reason ?? "reason not given"}.`}
           </p>
-          <ul>
+          <ul className={styles.facts}>
             <li>Settled: {p.settled === null || p.settled === undefined ? "not judged" : p.settled ? "yes" : "no"}</li>
             <li>Largest rate of change of frequency (descriptive): {fmt(p.max_rocof_hz_per_s)} Hz/s</li>
           </ul>
@@ -173,36 +203,26 @@ function Transient() {
               ["Inverter reactive power", "kvar", p.inverter_q_kvar.map((s) => ({ name: s.inverter_id, values: s.values }))],
             ] as const
           ).map(([label, unit, series]) => (
-            <LineChart key={label} title={label} xTitle="time (s)" yTitle={`${label} (${unit})`} x={p.time_s} series={[...series]} record={resp?.run_record ?? null} />
+            <LineChart
+              key={label}
+              title={label}
+              xTitle="time (s)"
+              yTitle={`${label} (${unit})`}
+              x={p.time_s}
+              series={[...series]}
+              crosshair={{ xName: "t", xUnit: "s", unit }}
+              vmarks={startS !== null ? [{ x: startS, label: "start" }] : []}
+              xband={band}
+              note={note}
+              record={resp.run_record}
+            />
           ))}
-          <details>
-            <summary>Data table</summary>
-            <table aria-label="Time responses">
-              <thead>
-                <tr>
-                  <th>Time (s)</th>
-                  <th>Frequency (Hz)</th>
-                  {p.bus_voltage_kv.map((b) => (
-                    <th key={b.bus_id}>{b.bus_id} voltage (kV)</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {p.time_s.map((t, i) => (
-                  <tr key={i}>
-                    <td>{fmt(t)}</td>
-                    <td>{fmt(p.system_frequency_hz[i])}</td>
-                    {p.bus_voltage_kv.map((b) => (
-                      <td key={b.bus_id}>{fmt(b.values[i])}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </details>
+          <p className={styles.record}>
+            RunRecord <code>{resp.run_record.record_id}</code>, engine {resp.run_record.engine_kind ?? "not called"}.
+          </p>
         </>
       )}
-      {!resp && <p>Not run yet.</p>}
+      {!resp && <EmptyState title="Not run yet.">Define a disturbance and run M4b to see the time responses and the transient class.</EmptyState>}
     </>
   );
 }

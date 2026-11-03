@@ -2,13 +2,15 @@
 // Line and point chart (Doc 12 X1, FR-86): one polyline per run of values, so a null is a gap and
 // never interpolated (guideline §1 rule 5); optional markers per point (e.g. shape by Status).
 // Series differ by colour, dash and the legend word. Ticks are rounded for display only.
-import { memo, useMemo } from "react";
+// Opt-in crosshair (Doc 12 X4, FR-89): snaps to the nearest real sample, lists every series there.
+import { memo, useId, useMemo, useState, type KeyboardEvent, type PointerEvent } from "react";
 import type { RunRecord } from "../../api-types";
 import { num } from "../format";
 import { ChartFrame, type LegendItem } from "./ChartFrame";
 import { MarkerShape, Swatch, type Mark } from "./marks";
 import { DASH, DASH_WORD, SERIES } from "./palette";
-import { linearScale, niceDomain, niceTicks, splitAtNulls } from "./scale";
+import styles from "./charts.module.css";
+import { linearScale, nearestIndex, niceDomain, niceTicks, splitAtNulls } from "./scale";
 
 const W = 560;
 const H = 260;
@@ -17,6 +19,12 @@ const M = { l: 64, r: 16, t: 12, b: 44 };
 // `marker` may also mark a point without a value; it is then drawn on the x axis (e.g. "–" unavailable).
 // `title` gives a point a hover text (e.g. ζ and f of an eigenvalue).
 export type LineSeries = { name: string; values: (number | null)[]; marker?: (i: number) => Mark | null; title?: (i: number) => string };
+/** Crosshair readout words: "<xName> <x> <xUnit>", then "<series>: <value> <unit>". */
+export type Crosshair = { xName: string; xUnit: string; unit: string };
+/** A vertical mark at a request value, e.g. the disturbance start. */
+export type VMark = { x: number; label: string };
+/** A shaded x span ending at `to` and `span` wide (drawing geometry only, no number shown). */
+export type XBand = { to: number; span: number };
 
 export const LineChart = memo(function LineChart({
   title,
@@ -28,6 +36,9 @@ export const LineChart = memo(function LineChart({
   legend,
   note,
   record,
+  crosshair,
+  vmarks = [],
+  xband,
 }: {
   title: string;
   xTitle: string; // with unit, e.g. "time (s)"
@@ -38,7 +49,12 @@ export const LineChart = memo(function LineChart({
   legend?: LegendItem[];
   note?: string;
   record?: RunRecord | null;
+  crosshair?: Crosshair;
+  vmarks?: VMark[];
+  xband?: XBand;
 }) {
+  const [at, setAt] = useState<number | null>(null);
+  const readout = useId();
   const g = useMemo(() => {
     const xd = niceDomain(x, 0);
     const yd = niceDomain(series.flatMap((s) => s.values));
@@ -49,6 +65,21 @@ export const LineChart = memo(function LineChart({
       yt: niceTicks(yd),
     };
   }, [x, series]);
+  const cross = crosshair && x.length > 0;
+  const move = (e: KeyboardEvent<SVGSVGElement>) => {
+    const last = x.length - 1;
+    const i = at ?? 0;
+    const next = { ArrowLeft: Math.max(0, i - 1), ArrowRight: Math.min(last, i + 1), Home: 0, End: last }[e.key];
+    if (next !== undefined) {
+      e.preventDefault();
+      setAt(next);
+    } else if (e.key === "Escape") setAt(null);
+  };
+  const point = (e: PointerEvent<SVGSVGElement>) => {
+    const box = e.currentTarget.getBoundingClientRect();
+    setAt(nearestIndex(x.map(g.sx), ((e.clientX - box.left) / box.width) * W));
+  };
+  const band = xband && x.length ? [Math.max(M.l, g.sx(xband.to) - (g.sx(xband.span) - g.sx(0))), g.sx(xband.to)] : null;
   const items = legend ?? series.map((s, k) => ({ name: s.name, word: DASH_WORD[k % DASH.length], swatch: <Swatch color={SERIES[k % SERIES.length]} dash={DASH[k % DASH.length]} /> }));
   return (
     <ChartFrame
@@ -58,7 +89,22 @@ export const LineChart = memo(function LineChart({
       note={note}
       data={{ columns: [xTitle, ...series.map((s) => (series.length > 1 ? `${s.name}, ${yTitle}` : yTitle))], rows: x.map((v, i) => [v, ...series.map((s) => s.values[i] ?? null)]) }}
     >
-      <svg role="img" aria-label={`${yTitle} against ${xTitle}, ${x.length} points`} viewBox={`0 0 ${W} ${H}`} className="chart-svg">
+      <svg
+        role="img"
+        aria-label={`${yTitle} against ${xTitle}, ${x.length} points`}
+        viewBox={`0 0 ${W} ${H}`}
+        className="chart-svg"
+        {...(cross && {
+          tabIndex: 0,
+          "aria-describedby": at === null ? undefined : readout,
+          onPointerMove: point,
+          onPointerLeave: () => setAt(null),
+          onFocus: () => setAt(at ?? 0),
+          onBlur: () => setAt(null),
+          onKeyDown: move,
+        })}
+      >
+        {band && <rect x={band[0]} width={band[1] - band[0]} y={M.t} height={H - M.b - M.t} className="chart-band" />}
         {g.yt.map((t) => (
           <g key={`y${t}`}>
             <line x1={M.l} x2={W - M.r} y1={g.sy(t)} y2={g.sy(t)} className="chart-grid" />
@@ -77,6 +123,14 @@ export const LineChart = memo(function LineChart({
             No data
           </text>
         )}
+        {vmarks.map((v) => (
+          <g key={v.label}>
+            <line x1={g.sx(v.x)} x2={g.sx(v.x)} y1={M.t} y2={H - M.b} className="chart-ref" />
+            <text x={g.sx(v.x) + 4} y={M.t + 12}>
+              {v.label}
+            </text>
+          </g>
+        ))}
         <line x1={M.l} x2={W - M.r} y1={H - M.b} y2={H - M.b} className="chart-axis" />
         <line x1={M.l} x2={M.l} y1={M.t} y2={H - M.b} className="chart-axis" />
         <text x={(M.l + W - M.r) / 2} y={H - 6} textAnchor="middle">
@@ -119,7 +173,28 @@ export const LineChart = memo(function LineChart({
             </g>
           );
         })}
+        {cross && at !== null && (
+          <g className="no-print">
+            <line x1={g.sx(x[at])} x2={g.sx(x[at])} y1={M.t} y2={H - M.b} className="chart-axis" />
+            {series.map((s, k) => {
+              const v = s.values[at];
+              return v === null || v === undefined ? null : <circle key={s.name} cx={g.sx(x[at])} cy={g.sy(v)} r={4} fill="none" stroke={SERIES[k % SERIES.length]} strokeWidth="2" />;
+            })}
+          </g>
+        )}
       </svg>
+      {cross && at !== null && (
+        <div id={readout} data-testid="crosshair" className={`no-print ${styles.readout}`} style={g.sx(x[at]) < W / 2 ? { left: `${(g.sx(x[at]) / W) * 100}%` } : { right: `${100 - (g.sx(x[at]) / W) * 100}%` }}>
+          <strong>
+            {crosshair.xName} {num(x[at])} {crosshair.xUnit}
+          </strong>
+          {series.map((s) => (
+            <span key={s.name}>
+              {s.name}: {s.values[at] === null || s.values[at] === undefined ? "—" : `${num(s.values[at] as number)} ${crosshair.unit}`}
+            </span>
+          ))}
+        </div>
+      )}
     </ChartFrame>
   );
 });

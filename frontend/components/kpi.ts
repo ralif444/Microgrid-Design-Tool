@@ -1,6 +1,6 @@
 // KPI selectors (Doc 12 X2, FR-87): values read straight from the payload. Only select (min, max,
 // argmin, argmax) and count; no arithmetic on physical quantities (guideline §1 rule 1).
-import type { M1Payload, M2Payload, M4aPayload } from "../api-types";
+import type { M1Payload, M2Payload, M4aPayload, M4bPayload } from "../api-types";
 import { num } from "./format";
 import type { IconName } from "./Icon";
 import { KIND_WORDS } from "./M2Results";
@@ -62,5 +62,17 @@ export function m4aKpis(p: M4aPayload, thresholdGiven: boolean): Kpi[] {
       : []),
     { label: "Dominant mode frequency", value: dom?.frequency_hz ?? null, unit: "Hz", detail: dom ? `eigenvalue #${dom.eigenvalue_index}${dom.associated_element_ids.length ? `, ${dom.associated_element_ids.join(", ")}` : ""}` : "no dominant mode" },
     { label: "Outside definition", value: p.outside_definition ? "yes" : "no", unit: "", detail: p.outside_definition ? "the operating point violates constraints [19]" : undefined },
+  ];
+}
+
+const TRANSIENT_ICON: Record<string, IconName> = { RECOVERED_STABLE: "feasible", CRITERIA_VIOLATED: "warn", UNSTABLE: "misuse" };
+
+/** S-14 tiles (guideline §4): class or "not classified" with its reason, settled, max RoCoF. */
+export function m4bKpis(p: M4bPayload): Kpi[] {
+  const c = p.transient_class;
+  return [
+    { label: "Transient class", value: c ?? "not classified", unit: "", icon: c ? TRANSIENT_ICON[c] : undefined, detail: c ? undefined : (p.class_reason ?? "reason not given") },
+    { label: "Settled", value: p.settled === null || p.settled === undefined ? null : p.settled ? "yes" : "no", unit: "", detail: p.settled == null ? "not judged: no settling criteria" : undefined },
+    { label: "Largest RoCoF", value: p.max_rocof_hz_per_s, unit: "Hz/s", detail: "descriptive, not a criterion" },
   ];
 }

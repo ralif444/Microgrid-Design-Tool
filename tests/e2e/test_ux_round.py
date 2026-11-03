@@ -1,14 +1,16 @@
-"""Seam 5: UX and analytics round (Doc 12 X0–X3, X5; Doc 9 D-72).
+"""Seam 5: UX and analytics round (Doc 12 X0–X5; Doc 9 D-72).
 
 FR-93 (the latest result on the current design survives leaving a screen; a design edit hides it),
 FR-86 (a chart figure's "Show data" table lists as many rows as the payload),
-FR-87 (S-07, S-08 and S-13 KPI strips), FR-88 (S-07 charts; S-08 margin chart and loadability
-axis; S-13 eigenvalue plot, participation note),
+FR-87 (S-07, S-08, S-13 and S-14 KPI strips), FR-88 (S-07 charts; S-08 margin chart and loadability
+axis; S-13 eigenvalue plot, participation note; S-14 time responses),
+FR-89 (crosshair: arrow keys move it, it shows a value with unit, Escape hides it),
 FR-90 (Inspector side panel).
 """
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 
 from flows import enter_design, gui_snapshot
@@ -146,3 +148,41 @@ def test_fr_87_fr_88_small_signal_kpis_and_plot(server: Callable[[str], str], pa
     expect(figure).to_contain_text("FAKE engine: placeholder, not an engine result")
     expect(page.get_by_text("Participation factors not available")).to_be_visible()
     expect(page.get_by_test_id("stability-class")).to_contain_text("Stable")
+
+
+def test_fr_87_fr_88_fr_89_transient_kpis_and_crosshair(
+    server: Callable[[str], str], page: Page
+) -> None:
+    enter_design(page, server("default"), gui_snapshot())
+    _run_m1(page)
+    page.get_by_role("link", name="Transient (M4b)").click()
+    page.get_by_label("Element", exact=True).select_option("L1")
+    page.get_by_label("Step size (kW)").fill("1")
+    page.get_by_label("Start time (s)").fill("0.1")
+    page.get_by_label("Simulation end (s)").fill("1")
+    page.get_by_label("Frequency band (Hz)").fill("0.1")
+    page.get_by_label("Voltage band, line-to-line (kV)").fill("0.01")
+    page.get_by_label("Final window (s)").fill("0.5")
+    page.get_by_role("button", name="Run M4b").click()
+    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
+    kpis = page.get_by_role("region", name="Transient key figures")
+    expect(kpis).to_contain_text("RECOVERED_STABLE")
+    expect(kpis).to_contain_text("Largest RoCoF")
+    expect(kpis).to_contain_text("FAKE engine: placeholder values, not engine results.")
+
+    figure = page.get_by_role("figure", name="System frequency")
+    expect(figure).to_contain_text("disturbance start at 0.1 s")
+    expect(figure).to_contain_text("final window of 0.5 s")
+    expect(figure).to_contain_text("FAKE engine: placeholder, not an engine result")
+    chart = figure.get_by_role("img", name="System frequency (Hz) against time (s), 2 points")
+    readout = figure.get_by_test_id("crosshair")
+    chart.focus()
+    expect(readout).to_contain_text("t 0 s")
+    expect(readout).to_contain_text(re.compile(r"system: [0-9.]+ Hz"))
+    page.keyboard.press("ArrowRight")
+    expect(readout).to_contain_text("t 1 s")
+    page.keyboard.press("Home")
+    expect(readout).to_contain_text("t 0 s")
+    page.keyboard.press("Escape")
+    expect(readout).to_have_count(0)
+    expect(page.get_by_test_id("transient-class")).to_contain_text("Recovered and stable")
