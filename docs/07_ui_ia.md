@@ -59,6 +59,25 @@ Global elements on every screen (not separate screens): header (Project name, un
 
 Every Must FR with a UI effect appears in at least one screen. FR-35 applies to all result screens through the Status banner (§5).
 
+### 2.2 UX and analytics additions (Doc 12 X0–X7, D-72)
+
+Presentation only; every value comes from a payload already returned. Tile and chart sources are listed in `docs/UX_ANALYTICS_GUIDELINES.md` §4–§5.
+
+| Screen | KPI strip (FR-87) | Charts (FR-86, FR-88; crosshair FR-89 on line and point charts) | Inspector (FR-90) |
+|---|---|---|---|
+| S-05 | — | — | from table rows and diagram nodes |
+| S-07 | frequency, lowest and highest bus voltage, highest inverter loading, total load, total losses, iterations, ε_X (indicator, threshold not yet calibrated) | bus voltage profile, inverter loading, power sharing (Advice), line loading | from result table rows |
+| S-08 | verdict, violated count, tightest constraint, not-evaluated count, λ_c, λ_s (solution existence, not a stability limit) | margin chart, loadability axis | from constraint rows |
+| S-09 | — | tornado per output metric | — |
+| S-10 | points, first infeasible value, points per Status | chosen metric vs axis value, marker by Status | — |
+| S-11 | — | grouped bars per metric across scenarios | — |
+| S-12 | feasible fraction, points, points per Status | status grid with the word in every cell | — |
+| S-13 | stability class, ζ_min, damping check (only with a threshold), dominant mode frequency, outside definition | eigenvalue plot, participation grid | — |
+| S-14 | transient class (or "not classified" with reason), settled, max RoCoF (descriptive) | frequency, bus voltage, P and Q per inverter vs time | — |
+| S-16 | — | static versions of the S-07, S-08 and run-specific charts, no crosshair | — |
+
+The strip sits under the page head and the Status banner; the inspector is a side panel, not a modal. Every result screen shows the latest RunRecord of its type that matches the current design (FR-93). Domain terms carry a "?" toggletip with Indonesian text (FR-91, §9 #1); S-17 About, built in this round, lists the glossary. Every chart, strip and inspector fed by a FAKE run carries the FAKE marking.
+
 ## 3. Navigation
 ```mermaid
 flowchart TB
@@ -345,7 +364,7 @@ Notation: `[ ]` button/field, `( )` option, `<..>` placeholder. Header and stepp
 |---|---|
 | The open Project: name, description, design data (Buses, Lines, Loads, LoadProfile, Inverters, DesignConstraints), SizingAdvice list with state, Scenarios | Form drafts not yet committed, field-level error messages, sort and filter settings |
 | RunRecords of this Project (including `INPUT_INVALID` ones) | Selected tab, selected row or element, expanded panels |
-| Derived freshness flags: "M1 stale" per design edit, "PS advice stale" | In-progress flag of the current request, last response banner |
+| Derived freshness flags: "M1 stale" per design edit, "PS advice stale" | In-progress flag of the current request; the result shown is the latest matching RunRecord from the store (FR-93, D-72), not a local copy |
 | Unsaved-changes flag and last-saved time | Plot options (chosen metric, selected buses), report section toggles |
 | Engine identity read from the HTTP API (Doc 6, meta) | Wizard-like helpers (paste buffers, import preview) |
 
@@ -389,6 +408,10 @@ DOC 7 COMPLETE
 ## Change log 2026-10-21 (user-approved change proposals from the proposal design checks)
 - C5.1 F3 outcome edge: Status equal and result_hash equal.
 - C5.4 first phase per key flow stated in §4.
+
+## Change log 2026-11-03 (UX and analytics round, D-72)
+- §2.2 added: KPI strip, charts, crosshair and inspector per screen (Doc 12 X0–X7, FR-86 – FR-93); S-17 About built in this round with the glossary.
+- §7: result screens read the latest matching RunRecord from the store instead of holding the last response locally (FR-93).
 
 ## Change log 2026-11-02 (stage 1.5)
 - S-09, S-10, S-11 built (WP 1.5.2); choices recorded in Doc 9 D-56 K95–K99.

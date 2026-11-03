@@ -25,14 +25,14 @@ Pedoman ini membawa lima gagasan antarmuka dari prototipe frontend lama (`microg
 3. **Fake results stay marked.** Every KPI strip, chart caption and inspector panel fed by a FAKE RunRecord carries the existing "Engine: FAKE" marking. A Fake chart must never look like an engine result (CLAUDE.md rule).
 4. **Status is never colour alone.** Colour + icon + word (ADR-012 §7.2). Chart series use a categorical palette that never reuses the status support colours. Series are also told apart by marker shape or dash pattern.
 5. **Missing is not zero.** A `null` value is drawn as a gap (line) or hollow marker (point) and listed as "—" with the payload `reason` where one exists. Never interpolate across a missing point.
-6. **Accessible names are the test contract.** Existing roles, labels and test ids stay exactly the same; the 31 current E2E tests must keep passing unchanged. New elements get their own unique names (watch for substring collisions with `exact=True`, see the S-08 "Sizing check" lesson).
+6. **Accessible names are the test contract.** Existing roles, labels and test ids stay exactly the same; the 30 current E2E tests must keep passing unchanged. New elements get their own unique names (watch for substring collisions with `exact=True`, see the S-08 "Sizing check" lesson).
 7. **Offline, static export, no remote requests.** The external-request guard E2E covers every new screen.
 8. **Out-of-scope terms stay out.** No glossary entry, label or chart for anything on the manuscript's out-of-scope list (GFL, PLL, VSM, virtual impedance, secondary control, unbalance, harmonics, short circuit, protection, …).
 9. **Leave the validity-indicator table alone.** FR-62 forbids classes or styles inside it, and an E2E checks that.
 
 ## 2. Extensions (proposed Doc 12 entries)
 
-IDs and FR numbers are proposals; Claude Code checks they are free before recording them.
+IDs and FR numbers are proposals; Claude Code checks they are free before recording them. Recorded in Doc 12 as **X0–X7** (U1–U4 already name the user groups of Doc 1 §6; Doc 9 D-72).
 
 | ID | Name | Priority | FR (proposed) | Screens |
 |---|---|---|---|---|
