@@ -1,10 +1,11 @@
 "use client";
 // S-16 Report (Doc 7 §6.7; FR-48, FR-58, FR-59, FR-60): built from the latest RunRecord per
 // analysis in the store; validity indicators and the A1–A6 checklist (Doc 12 FR-61, FR-63). Section toggles (Should) are not built yet; printing uses the browser.
+// UX-9 (Doc 12 X3): static versions of the S-07, S-08 and M4a charts; captions add the result hash, no crosshair.
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getMeta } from "../../api-client";
-import type { AnalysisType, M1Payload, M2Payload, MetaInfo, PsPayload, RunRecord } from "../../api-types";
+import type { AnalysisType, M1Payload, M2Payload, M4aPayload, MetaInfo, ProjectSnapshot, PsPayload, RunRecord } from "../../api-types";
 import { AdvisoryPanel } from "../../components/AdvisoryPanel";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
@@ -19,6 +20,8 @@ import { statusIcon, TOKEN_ROLE } from "../../components/StatusBanner";
 import { bannerText } from "../../components/status-text";
 import { useValidation } from "../../components/useValidation";
 import { BarChart } from "../../components/charts/BarChart";
+import { ReportCharts } from "../../components/charts/ChartFrame";
+import { M4aCharts } from "../../components/M4aCharts";
 import { useProject } from "../../store";
 import styles from "./report.module.css";
 
@@ -55,7 +58,8 @@ function Report() {
   const m1 = latest("M1");
   const m2 = latest("M2");
   const ps = latest("PS");
-  const used = [ps, m1, m2, latest("M4a")].filter((r): r is RunRecord => r !== null);
+  const m4a = latest("M4a");
+  const used = [ps, m1, m2, m4a].filter((r): r is RunRecord => r !== null);
 
   if (used.length === 0)
     return (
@@ -84,9 +88,11 @@ function Report() {
   const m1p = m1 && HAS_PAYLOAD.has(m1.result.status) ? (m1.result.payload as unknown as M1Payload) : null;
   const m2p = m2 && HAS_PAYLOAD.has(m2.result.status) ? (m2.result.payload as unknown as M2Payload) : null;
   const psp = ps?.result.status === "FEASIBLE" ? (ps.result.payload as unknown as PsPayload) : null;
+  const m4ap = m4a?.result.status === "FEASIBLE" ? (m4a.result.payload as unknown as M4aPayload) : null;
   const limiting = m2?.result.limiting_constraints ?? [];
 
   return (
+    <ReportCharts.Provider value>
     <article className={`report ${styles.report}`}>
       <div className={`no-print ${styles.controls}`}>
         <button type="button" className="primary" onClick={() => window.print()}>
@@ -148,7 +154,7 @@ function Report() {
       )}
 
       <h2>3 Margins and checks not evaluated</h2>
-      {m2p ? <M2Results p={m2p} /> : <p>No M2 result with margins.</p>}
+      {m2p && m2 ? <M2Results p={m2p} charts={{ record: m2 }} /> : <p>No M2 result with margins.</p>}
 
       <h2>4 Design summary</h2>
       <DataTable
@@ -189,10 +195,19 @@ function Report() {
               record={m1}
             />
           </div>
-          <M1Results p={m1p} />
+          {/* limits as the reported run saw them, so the reference lines match that run */}
+          {m1 && <M1Results p={m1p} charts={{ limits: (m1.snapshot as ProjectSnapshot | null)?.design_constraints, record: m1, voltage: false }} />}
         </>
       ) : (
         <p className={styles.muted}>No power flow (M1) result{m1 ? `: the latest run ended with ${m1.result.status}` : ""}.</p>
+      )}
+
+      {m4ap && m4a && (
+        <>
+          <h3>Small-signal (M4a): class {m4ap.stability_class}</h3>
+          {outdated(m4a)}
+          <M4aCharts p={m4ap} record={m4a} reason={m4a.result.diagnostics?.participation_reason} />
+        </>
       )}
 
       <h2>6 Assumptions</h2>
@@ -244,6 +259,7 @@ function Report() {
         </tbody>
       </table>
     </article>
+    </ReportCharts.Provider>
   );
 }
 

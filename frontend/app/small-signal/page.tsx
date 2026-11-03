@@ -6,10 +6,6 @@ import Link from "next/link";
 import { useState } from "react";
 import type { M4aPayload } from "../../api-types";
 import { tauInSource } from "../../components/Catalog";
-import { GridChart } from "../../components/charts/GridChart";
-import { LineChart } from "../../components/charts/LineChart";
-import { Swatch } from "../../components/charts/marks";
-import { SERIES } from "../../components/charts/palette";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
 import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
@@ -17,8 +13,8 @@ import { IndicatorPanel } from "../../components/IndicatorPanel";
 import { m4aKpis } from "../../components/kpi";
 import { KpiStrip } from "../../components/KpiStrip";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
+import { eigenRows, M4aCharts, type EigRow } from "../../components/M4aCharts";
 import { NumberField } from "../../components/NumberField";
-import { participationRows } from "../../components/participation";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
@@ -49,7 +45,6 @@ const DOMINANT: DataColumn<Dom>[] = [
   },
 ];
 
-type EigRow = { k: number; re: number; im: number; zeta: number | null | undefined; f: number | undefined; dominant: boolean };
 const EIGEN: DataColumn<EigRow>[] = [
   { key: "k", header: "#", cell: (e) => `${e.k}${e.dominant ? " (dominant)" : ""}` },
   { key: "re", header: "Real part", unit: "1/s", numeric: true, cell: (e) => fmt(e.re) },
@@ -66,12 +61,7 @@ function SmallSignal() {
   const [dismissed, setDismissed] = useState<string | null>(null);
   const r = resp?.result;
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as M4aPayload) : null;
-  const dom = new Set(p?.dominant_modes.map((d) => d.eigenvalue_index));
-  const eig: EigRow[] =
-    p?.eigenvalues.map((e, k) => {
-      const m = p.modes.find((x) => x.eigenvalue_index === k);
-      return { k, re: e.real_per_s, im: e.imag_per_s, zeta: m?.damping_ratio, f: m?.frequency_hz, dominant: dom.has(k) };
-    }) ?? [];
+  const eig: EigRow[] = p ? eigenRows(p) : [];
   const thresholdGiven = (resp?.run_record.parameters as { damping_threshold_ratio?: number } | undefined)?.damping_threshold_ratio !== undefined;
   return (
     <>
@@ -125,43 +115,11 @@ function SmallSignal() {
             {p.outside_definition && <li>The operating point violates constraints: outside definition [19].</li>}
           </ul>
           <IndicatorPanel />
-          <LineChart
-            title="Eigenvalues in the complex plane"
-            xTitle="Real part (1/s)"
-            yTitle="Imaginary part (1/s)"
-            x={eig.map((e) => e.re)}
-            line={false}
-            series={[
-              {
-                name: "Eigenvalue",
-                values: eig.map((e) => e.im),
-                marker: (i) => (eig[i].dominant ? { m: "diamond", filled: true } : { m: "circle" }),
-                title: (i) => `#${eig[i].k}: ζ ${fmt(eig[i].zeta)}, f ${fmt(eig[i].f)} Hz${eig[i].dominant ? " (dominant)" : ""}`,
-              },
-            ]}
-            legend={[
-              { name: "Eigenvalue", word: "hollow circle", swatch: <Swatch color={SERIES[0]} marker="circle" /> },
-              { name: "Dominant mode", word: "filled diamond", swatch: <Swatch color={SERIES[0]} marker="diamond" filled /> },
-            ]}
-            note="Hover a point for its damping ratio and frequency; the table below lists every mode. No damping-threshold line is drawn."
-            record={resp.run_record}
-          />
+          <M4aCharts p={p} record={resp.run_record} reason={r?.diagnostics?.participation_reason} />
           {p.dominant_modes.length > 0 && (
             <DataTable label="Dominant modes" caption="Dominant modes" columns={DOMINANT} rows={p.dominant_modes} rowKey={(d) => d.eigenvalue_index} rowName={(d) => `#${d.eigenvalue_index}`} />
           )}
           {eig.length > 0 && <DataTable label="Eigenvalues" caption="Eigenvalues and modes (Eq. 4.20)" columns={EIGEN} rows={eig} rowKey={(e) => e.k} rowName={(e) => `#${e.k}`} />}
-          {p.participation ? (
-            <GridChart
-              title="Participation factors (Eq. 4.21), states × modes"
-              rowTitle="State"
-              columns={p.participation.factors.map((_, k) => `#${k}${dom.has(k) ? " dom." : ""}`)}
-              rows={participationRows(p.participation)}
-              note="Rows are states grouped per inverter (δ, P_f, Q_f); columns are modes. The shade repeats the printed value."
-              record={resp.run_record}
-            />
-          ) : (
-            <p>Participation factors not available: {String(r?.diagnostics?.participation_reason ?? "not reported")}.</p>
-          )}
           <p className={styles.record}>
             RunRecord <code>{resp.run_record.record_id}</code>, engine {resp.run_record.engine_kind ?? "not called"}.
           </p>

@@ -4,7 +4,8 @@ FR-93 (the latest result on the current design survives leaving a screen; a desi
 FR-86 (a chart figure's "Show data" table lists as many rows as the payload),
 FR-87 (S-07, S-08, S-10, S-12, S-13 and S-14 KPI strips), FR-88 (S-07 charts; S-08 margin chart and
 loadability axis; S-10 sweep chart; S-12 status grid; S-13 eigenvalue plot, participation note;
-S-14 time responses; S-09 tornado per metric; S-11 bars per metric across scenarios),
+S-14 time responses; S-09 tornado per metric; S-11 bars per metric across scenarios; static S-16
+report charts with the result hash, within the A4 printable width),
 FR-89 (crosshair: arrow keys move it, it shows a value with unit, Escape hides it),
 FR-90 (Inspector side panel).
 """
@@ -45,7 +46,9 @@ def test_fr_86_show_data_lists_the_payload_rows(server: Callable[[str], str], pa
     page.get_by_role("link", name="8 Report").click()
     title = "Bus voltage magnitude from the latest power flow (M1)"
     expect(page.get_by_role("img", name="Bus voltage (p.u.) bar chart, 2 bars")).to_be_visible()
-    expect(page.get_by_text("FAKE engine: placeholder, not an engine result")).to_be_visible()
+    # scoped to this figure: the report now has more charts, each with the FAKE caption (D-88, user)
+    figure = page.get_by_role("figure", name=title)
+    expect(figure.get_by_text("FAKE engine: placeholder, not an engine result")).to_be_visible()
     show = page.get_by_role("button", name=f"Show data: {title}")
     expect(show).to_have_attribute("aria-expanded", "false")
     show.click()
@@ -272,3 +275,37 @@ def test_fr_88_tornado_and_scenario_bars(server: Callable[[str], str], page: Pag
     data = page.get_by_role("table", name="System frequency per scenario data")
     expect(data.locator("tbody tr")).to_have_count(3)
     expect(data).to_contain_text("Without INV1 (FEASIBLE)")
+
+
+def test_fr_88_report_charts_are_static_and_fit_a4(
+    server: Callable[[str], str], page: Page
+) -> None:
+    enter_design(page, server("m2-infeasible"), gui_snapshot())
+    _run_m1(page)
+    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    _margins(page)
+    page.get_by_role("button", name="Run M2").click()
+    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "INFEASIBLE")
+    page.get_by_role("link", name="Small-signal (M4a)").click()
+    page.get_by_role("button", name="Run M4a").click()
+    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
+    page.get_by_role("link", name="8 Report").click()
+    for name in (
+        "Inverter loading",
+        "Normalised margin per constraint",
+        "Loadability along the load scale λ",
+        "Eigenvalues in the complex plane",
+    ):
+        figure = page.get_by_role("figure", name=name, exact=True)
+        expect(figure).to_contain_text("result hash")
+        expect(figure).to_contain_text("FAKE engine: placeholder, not an engine result")
+    expect(page.get_by_role("figure", name="Bus voltage profile", exact=True)).to_have_count(0)
+    expect(page.locator("article svg[tabindex]")).to_have_count(0)  # no crosshair in the report
+
+    page.set_viewport_size({"width": 718, "height": 1000})  # A4 printable width (FR-60)
+    page.emulate_media(media="print")
+    expect(page.get_by_role("button", name="Show data: Inverter loading")).to_be_hidden()
+    widths = page.locator("article figure").evaluate_all(
+        "els => els.map(e => e.getBoundingClientRect().right)"
+    )
+    assert widths and max(widths) <= 718, widths

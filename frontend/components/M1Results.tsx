@@ -56,7 +56,8 @@ const LINES: DataColumn<Line>[] = [
 const ref = (value: number | null | undefined, label: string): RefLine[] => (value === null || value === undefined ? [] : [{ value, label }]);
 const unset = (refs: RefLine[], what: string) => (refs.length ? undefined : `No ${what} set: not evaluated.`);
 
-export type M1Charts = { limits: DesignConstraints | null | undefined; record: RunRecord };
+// `voltage: false`: the report keeps its own bus-voltage chart, so the profile is not drawn twice.
+export type M1Charts = { limits: DesignConstraints | null | undefined; record: RunRecord; voltage?: false };
 type OnInspect = ((t: ElementRef) => void) | undefined;
 
 // S-07 only: the id cell becomes a button that opens the Inspector (FR-90); the text stays the id
@@ -85,7 +86,7 @@ export function M1Results({ p, charts, onInspect }: { p: M1Payload; charts?: M1C
   return (
     <section aria-label="Power flow results">
       <DataTable label="System totals" caption="System" columns={TOTALS} rows={totals} rowKey={(t) => t[0]} rowName={(t) => t[0]} />
-      {charts && (
+      {charts && charts.voltage !== false && (
         <BarChart
           title="Bus voltage profile"
           valueTitle="Bus voltage (p.u.)"

@@ -2,7 +2,8 @@
 // Figure frame shared by every chart (Doc 12 X1, FR-86): title, the plot, a legend that names the
 // dash or marker (never colour alone), a caption with analysis, RunRecord and engine kind (FAKE
 // marked, CLAUDE.md), and "Show data", which lists the plotted values as a table.
-import { useState, type ReactNode } from "react";
+// Inside `ReportCharts` (S-16, UX-9) the caption also gives the result hash and no crosshair is offered.
+import { createContext, useContext, useState, type ReactNode } from "react";
 import type { RunRecord } from "../../api-types";
 import { DataTable, type DataColumn } from "../DataTable";
 import styles from "./charts.module.css";
@@ -10,6 +11,7 @@ import styles from "./charts.module.css";
 export type Cell = number | string | null;
 export type ChartData = { columns: string[]; rows: Cell[][] };
 export type LegendItem = { name: string; swatch: ReactNode; word?: string };
+export const ReportCharts = createContext(false);
 
 export function ChartFrame({
   title,
@@ -27,6 +29,7 @@ export function ChartFrame({
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const report = useContext(ReportCharts);
   const columns: DataColumn<Cell[]>[] = data.columns.map((header, k) => ({
     key: String(k),
     header,
@@ -51,7 +54,8 @@ export function ChartFrame({
       {note && <p className={styles.meta}>{note}</p>}
       {record && (
         <p className={styles.meta}>
-          {record.analysis_type} · RunRecord {record.record_id} · engine {record.engine_kind ?? "not called"}
+          {record.analysis_type} · RunRecord {record.record_id}
+          {report && <> · result hash <code>{record.result_hash}</code></>} · engine {record.engine_kind ?? "not called"}
           {record.engine_kind === "FAKE" && (
             <strong className={styles.fake}> · FAKE engine: placeholder, not an engine result</strong>
           )}

@@ -1,6 +1,6 @@
 // M2 result parts (Doc 7 §5.1, §6.4): limiting constraints / margins, "not evaluated" list,
 // loadability, SizingCheck in an advisory panel separate from SizingAdvice (FR-25, FR-16, FR-24, FR-27).
-// With `charts` (S-08, Doc 12 X3 FR-88): the margin chart and the loadability axis; the report has none.
+// With `charts` (S-08 and the S-16 report, Doc 12 X3 FR-88): the margin chart and the loadability axis.
 import { Tag } from "@carbon/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";

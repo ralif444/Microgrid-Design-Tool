@@ -3,10 +3,10 @@
 // never interpolated (guideline §1 rule 5); optional markers per point (e.g. shape by Status).
 // Series differ by colour, dash and the legend word. Ticks are rounded for display only.
 // Opt-in crosshair (Doc 12 X4, FR-89): snaps to the nearest real sample, lists every series there.
-import { memo, useId, useMemo, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { memo, useContext, useId, useMemo, useState, type KeyboardEvent, type PointerEvent } from "react";
 import type { RunRecord } from "../../api-types";
 import { num } from "../format";
-import { ChartFrame, type LegendItem } from "./ChartFrame";
+import { ChartFrame, ReportCharts, type LegendItem } from "./ChartFrame";
 import { MarkerShape, Swatch, type Mark } from "./marks";
 import { DASH, DASH_WORD, SERIES } from "./palette";
 import styles from "./charts.module.css";
@@ -55,6 +55,7 @@ export const LineChart = memo(function LineChart({
 }) {
   const [at, setAt] = useState<number | null>(null);
   const readout = useId();
+  const report = useContext(ReportCharts);
   const g = useMemo(() => {
     const xd = niceDomain(x, 0);
     const yd = niceDomain(series.flatMap((s) => s.values));
@@ -65,7 +66,7 @@ export const LineChart = memo(function LineChart({
       yt: niceTicks(yd),
     };
   }, [x, series]);
-  const cross = crosshair && x.length > 0;
+  const cross = crosshair && x.length > 0 && !report; // static in the report (guideline §5)
   const move = (e: KeyboardEvent<SVGSVGElement>) => {
     const last = x.length - 1;
     const i = at ?? 0;
