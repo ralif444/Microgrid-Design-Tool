@@ -1,6 +1,6 @@
 "use client";
 // App shell (Doc 7 §2 global elements; visual guidelines §5): Carbon Header in navy with the wordmark,
-// Project name with unsaved indicator, Run history, Catalogue, Save / Open and the engine kind badge
+// Project name with unsaved indicator, Run history, Catalogue, About (S-17), Save / Open and the engine kind badge
 // (P2); the 4 px signature gradient bar; the pipeline stepper strip (P1).
 import { Header, HeaderName } from "@carbon/react";
 import Link from "next/link";
@@ -41,6 +41,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Link>
         <Link href="/catalogue/" className={styles.util}>
           Catalogue
+        </Link>
+        <Link href="/about/" className={styles.util}>
+          About
         </Link>
         <ProjectFileMenu />
         <EngineBadge />

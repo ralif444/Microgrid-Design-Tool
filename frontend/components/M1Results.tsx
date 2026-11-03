@@ -33,7 +33,7 @@ const INVERTERS: DataColumn<Inv>[] = [
   n("p", "P", "kW", (i) => i.p_kw),
   n("q", "Q", "kvar", (i) => i.q_kvar),
   n("s", "S", "kVA", (i) => i.s_kva),
-  n("l", "Loading", "ratio", (i) => i.loading_ratio),
+  { ...n("l", "Loading", "ratio", (i: Inv) => i.loading_ratio), term: "loading" },
 ];
 const SHARING: DataColumn<Share>[] = [
   id("Inverter", (s) => s.inverter_id),

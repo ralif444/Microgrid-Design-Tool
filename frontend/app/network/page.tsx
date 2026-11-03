@@ -35,8 +35,8 @@ const LINE_COLUMNS: Column[] = [
 const INVERTER_COLUMNS: Column[] = [
   { field: "bus_id", label: "Bus", kind: "bus" },
   { field: "rated_kva", label: "Rating", kind: "number", unit: "kVA" },
-  { field: "frequency_droop_hz_per_kw", label: "P–f droop", kind: "number", unit: "Hz/kW" },
-  { field: "voltage_droop_kv_per_kvar", label: "Q–V droop", kind: "number", unit: "kV/kvar" },
+  { field: "frequency_droop_hz_per_kw", label: "P–f droop", kind: "number", unit: "Hz/kW", term: "mp" },
+  { field: "voltage_droop_kv_per_kvar", label: "Q–V droop", kind: "number", unit: "kV/kvar", term: "nq" },
   { field: "frequency_setpoint_hz", label: "Frequency setpoint", kind: "number", unit: "Hz" },
   { field: "voltage_setpoint_kv", label: "Voltage setpoint, line-to-line", kind: "number", unit: "kV" },
   { field: "p_setpoint_kw", label: "P setpoint, optional", kind: "number", unit: "kW" },

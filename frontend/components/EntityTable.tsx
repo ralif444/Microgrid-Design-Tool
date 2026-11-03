@@ -5,12 +5,13 @@ import { useState } from "react";
 import type { ValidationIssue } from "../api-types";
 import { busDependents, useProject, useProjectDispatch, type Collection } from "../store";
 import { DataTable, type DataColumn } from "./DataTable";
+import type { GlossaryKey } from "./glossary";
 import { Toast } from "./Toast";
 
 export type Column =
   | { field: string; label: string; kind: "text" }
   | { field: string; label: string; kind: "bus" }
-  | { field: string; label: string; kind: "number"; unit: string }
+  | { field: string; label: string; kind: "number"; unit: string; term?: GlossaryKey }
   | { label: string; kind: "derived"; unit: string; value: (row: Row) => number | string | null };
 
 type Row = { id?: string | null; [field: string]: unknown };
@@ -48,7 +49,7 @@ export function EntityTable({
     if (c.kind === "bus")
       return { key: f, header: c.label, edit: { kind: "select", options: busIds, value: (r) => r[f] as string, onChange: (r, v) => set(r, { [f]: v }) } };
     if (c.kind === "number")
-      return { key: f, header: c.label, unit, numeric: true, edit: { kind: "number", value: (r) => r[f] as number, onChange: (r, v) => set(r, { [f]: v }) } };
+      return { key: f, header: c.label, unit, term: c.term, numeric: true, edit: { kind: "number", value: (r) => r[f] as number, onChange: (r, v) => set(r, { [f]: v }) } };
     // text stays a string ("" allowed) so a cleared id still matches its row
     return { key: f, header: c.label, edit: { kind: "text", value: (r) => r[f] as string, onChange: (r, v) => set(r, { [f]: v }) } };
   });

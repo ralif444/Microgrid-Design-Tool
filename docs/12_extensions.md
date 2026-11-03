@@ -270,7 +270,7 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | 6 | X0: read the latest matching RunRecord, no new reducer state (D-72 K151). | DECIDED (user 2026-11-03) |
 | 7 | Participation grid orientation: the payload is `factors[mode][state]` (Doc 3 §6.8); the grid draws states as rows and modes as columns. | DECIDED (from Doc 3, 2026-11-03) |
 | 8 | M4b disturbance start: `parameters.disturbance.start_time_s` (Doc 3 §6.9). | DECIDED (from Doc 3, 2026-11-03) |
-| 9 | Glossary terms with no Doc 3 or manuscript definition: listed at work package UX-10. | OPEN |
+| 9 | Glossary terms with no Doc 3 or manuscript definition: none at UX-10; every term of guideline §7 has a source (D-89). "loading ratio" and the kW, kvar, kVA units are close readings of Eq. (4.10) and subbab 4.2.1, for the owner to confirm. | DECIDED (UX-10, 2026-11-04) |
 | 10 | S-17 About is built in this round, as the home of the glossary (D-72 K151). | DECIDED (user 2026-11-03) |
 | 11 | X8: `elkjs` as an exception to D-72 K150, scoped to the SLD (ADR-013). | DECIDED (user 2026-11-03) |
 | 12 | X8: symbols against IEEE Std 315 / 315A and the thesis wording; until checked the thesis says "single-line diagram conventions". | OPEN (owner, guideline §12 #1) |

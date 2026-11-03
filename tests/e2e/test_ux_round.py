@@ -7,7 +7,8 @@ loadability axis; S-10 sweep chart; S-12 status grid; S-13 eigenvalue plot, part
 S-14 time responses; S-09 tornado per metric; S-11 bars per metric across scenarios; static S-16
 report charts with the result hash, within the A4 printable width),
 FR-89 (crosshair: arrow keys move it, it shows a value with unit, Escape hides it),
-FR-90 (Inspector side panel).
+FR-90 (Inspector side panel), FR-91 (glossary toggletip: Enter opens, Escape and an outside click
+close; S-17 About lists the glossary).
 """
 
 from __future__ import annotations
@@ -309,3 +310,30 @@ def test_fr_88_report_charts_are_static_and_fit_a4(
         "els => els.map(e => e.getBoundingClientRect().right)"
     )
     assert widths and max(widths) <= 718, widths
+
+
+def test_fr_91_glossary_toggletip_and_about(server: Callable[[str], str], page: Page) -> None:
+    enter_design(page, server("default"), gui_snapshot())
+    _run_m1(page)
+    kpis = page.get_by_role("region", name="Power flow key figures")
+    tip = kpis.get_by_role("button", name="Glossary: loading ratio")
+    note = page.get_by_role("note")
+    tip.focus()
+    page.keyboard.press("Enter")
+    expect(tip).to_have_attribute("aria-expanded", "true")
+    expect(note).to_contain_text("Rasio pembebanan inverter")
+    expect(note).to_contain_text("Sumber: Naskah 4.2.4")
+    page.keyboard.press("Escape")
+    expect(note).to_have_count(0)
+    expect(tip).to_be_focused()
+    tip.click()
+    expect(note).to_have_count(1)
+    page.get_by_role("heading", name="Power flow (M1)").click()
+    expect(note).to_have_count(0)
+
+    page.get_by_role("link", name="About", exact=True).click()
+    expect(page.get_by_role("heading", name="About and limits")).to_be_visible()
+    expect(page.get_by_role("table", name="Versions")).to_contain_text("FAKE")
+    glossary = page.get_by_role("table", name="Glossary", exact=True)
+    expect(glossary.locator("tbody tr")).to_have_count(27)
+    expect(glossary).to_contain_text("Naskah Tabel 4.4")

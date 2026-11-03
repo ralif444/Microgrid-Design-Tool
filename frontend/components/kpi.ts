@@ -2,11 +2,12 @@
 // argmin, argmax) and count; no arithmetic on physical quantities (guideline §1 rule 1).
 import type { M1Payload, M2Payload, M3bPayload, M3dPayload, M4aPayload, M4bPayload } from "../api-types";
 import { num } from "./format";
+import type { GlossaryKey } from "./glossary";
 import type { IconName } from "./Icon";
 import { KIND_WORDS } from "./M2Results";
 
 // `value` is a payload number, or a payload word (the M2 verdict) shown with `icon`.
-export type Kpi = { label: string; value: number | string | null; unit: string; detail?: string; icon?: IconName };
+export type Kpi = { label: string; value: number | string | null; unit: string; detail?: string; icon?: IconName; term?: GlossaryKey };
 
 // The row with the smallest (sign -1: largest) value, or null for an empty list.
 export function pick<R>(rows: R[], get: (r: R) => number, sign: 1 | -1 = 1): R | null {
@@ -19,14 +20,14 @@ export function m1Kpis(p: M1Payload): Kpi[] {
   const load = pick(p.inverter_results, (i) => i.loading_ratio, -1);
   return [
     { label: "System frequency", value: p.system_frequency_hz, unit: "Hz" },
-    { label: "Lowest bus voltage", value: lo?.voltage_pu ?? null, unit: "p.u.", detail: lo?.bus_id },
-    { label: "Highest bus voltage", value: hi?.voltage_pu ?? null, unit: "p.u.", detail: hi?.bus_id },
-    { label: "Highest inverter loading", value: load?.loading_ratio ?? null, unit: "ratio", detail: load?.inverter_id },
-    { label: "Total load, active", value: p.total_load_kw, unit: "kW" },
-    { label: "Total load, reactive", value: p.total_load_kvar, unit: "kvar" },
-    { label: "Total losses", value: p.total_losses_kw, unit: "kW" },
+    { label: "Lowest bus voltage", value: lo?.voltage_pu ?? null, unit: "p.u.", term: "pu", detail: lo?.bus_id },
+    { label: "Highest bus voltage", value: hi?.voltage_pu ?? null, unit: "p.u.", term: "pu", detail: hi?.bus_id },
+    { label: "Highest inverter loading", value: load?.loading_ratio ?? null, unit: "ratio", term: "loading", detail: load?.inverter_id },
+    { label: "Total load, active", value: p.total_load_kw, unit: "kW", term: "kw" },
+    { label: "Total load, reactive", value: p.total_load_kvar, unit: "kvar", term: "kvar" },
+    { label: "Total losses", value: p.total_losses_kw, unit: "kW", term: "kw" },
     { label: "Iterations", value: p.iterations, unit: "count" },
-    { label: "Validity indicator ε_X", value: p.epsilon_x_ratio, unit: "ratio", detail: "threshold not yet calibrated" },
+    { label: "Validity indicator ε_X", value: p.epsilon_x_ratio, unit: "ratio", term: "eps_x", detail: "threshold not yet calibrated" },
   ];
 }
 
@@ -35,17 +36,18 @@ export function m2Kpis(p: M2Payload): Kpi[] {
   const l = p.loadability;
   const res = `resolution ${num(l.resolution)}`;
   return [
-    { label: "Verdict", value: p.verdict, unit: "", icon: p.verdict === "FEASIBLE" ? "feasible" : "misuse" },
-    { label: "Violated constraints", value: p.constraint_margins.filter((c) => c.margin < 0).length, unit: "count" },
+    { label: "Verdict", value: p.verdict, unit: "", term: p.verdict, icon: p.verdict === "FEASIBLE" ? "feasible" : "misuse" },
+    { label: "Violated constraints", value: p.constraint_margins.filter((c) => c.margin < 0).length, unit: "count", term: "margin" },
     {
       label: "Tightest constraint",
       value: tight?.normalised_margin ?? null,
       unit: "ratio",
+      term: "nmargin",
       detail: tight ? `normalised margin; ${KIND_WORDS[tight.kind] ?? tight.kind}, ${tight.element_id}` : "no evaluated constraint",
     },
     { label: "Not evaluated", value: p.not_evaluated.length, unit: "count", detail: "no limit given" },
-    { label: "Constraint loadability λ_c", value: l.lambda_c, unit: "ratio", detail: res },
-    { label: "λ_s", value: l.lambda_s, unit: "ratio", detail: `solution-existence diagnostic, not a stability limit; ${res}` },
+    { label: "Constraint loadability λ_c", value: l.lambda_c, unit: "ratio", term: "lambda_c", detail: res },
+    { label: "λ_s", value: l.lambda_s, unit: "ratio", term: "lambda_s", detail: `solution-existence diagnostic, not a stability limit; ${res}` },
   ];
 }
 
@@ -55,8 +57,8 @@ const CLASS_ICON: Record<string, IconName> = { STABLE: "feasible", MARGINAL: "wa
 export function m4aKpis(p: M4aPayload, thresholdGiven: boolean): Kpi[] {
   const dom = p.dominant_modes[0];
   return [
-    { label: "Stability class", value: p.stability_class, unit: "", icon: CLASS_ICON[p.stability_class] },
-    { label: "Lowest damping ζ_min", value: p.zeta_min, unit: "ratio", detail: p.zeta_min === null ? "no oscillatory mode" : "of the oscillatory modes" },
+    { label: "Stability class", value: p.stability_class, unit: "", term: "eigen", icon: CLASS_ICON[p.stability_class] },
+    { label: "Lowest damping ζ_min", value: p.zeta_min, unit: "ratio", term: "zeta", detail: p.zeta_min === null ? "no oscillatory mode" : "of the oscillatory modes" },
     ...(thresholdGiven
       ? [{ label: "Damping check", value: p.damping_pass === null || p.damping_pass === undefined ? null : p.damping_pass ? "passes" : "fails", unit: "", detail: p.damping_pass == null ? "not judged: no oscillatory mode" : "against the given threshold" }]
       : []),
@@ -71,9 +73,9 @@ const TRANSIENT_ICON: Record<string, IconName> = { RECOVERED_STABLE: "feasible",
 export function m4bKpis(p: M4bPayload): Kpi[] {
   const c = p.transient_class;
   return [
-    { label: "Transient class", value: c ?? "not classified", unit: "", icon: c ? TRANSIENT_ICON[c] : undefined, detail: c ? undefined : (p.class_reason ?? "reason not given") },
+    { label: "Transient class", value: c ?? "not classified", unit: "", term: "transient", icon: c ? TRANSIENT_ICON[c] : undefined, detail: c ? undefined : (p.class_reason ?? "reason not given") },
     { label: "Settled", value: p.settled === null || p.settled === undefined ? null : p.settled ? "yes" : "no", unit: "", detail: p.settled == null ? "not judged: no settling criteria" : undefined },
-    { label: "Largest RoCoF", value: p.max_rocof_hz_per_s, unit: "Hz/s", detail: "descriptive, not a criterion" },
+    { label: "Largest RoCoF", value: p.max_rocof_hz_per_s, unit: "Hz/s", term: "rocof", detail: "descriptive, not a criterion" },
   ];
 }
 

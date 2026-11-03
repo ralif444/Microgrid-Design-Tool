@@ -51,6 +51,7 @@ export function ConstraintTable({ label, rows, shortcut = false }: { label: stri
     {
       key: "margin",
       header: "Margin",
+      term: "margin",
       numeric: true,
       cell: (c) =>
         c.margin < 0 ? (

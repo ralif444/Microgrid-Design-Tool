@@ -30,8 +30,8 @@ const yesNo = (b: boolean | null | undefined, none: string) => (b === null || b 
 
 type Dom = M4aPayload["dominant_modes"][number];
 const DOMINANT: DataColumn<Dom>[] = [
-  { key: "k", header: "Eigenvalue", cell: (d) => <strong>#{d.eigenvalue_index}</strong> },
-  { key: "z", header: "Damping ratio", unit: "ratio", numeric: true, cell: (d) => fmt(d.damping_ratio) },
+  { key: "k", header: "Eigenvalue", term: "eigen", cell: (d) => <strong>#{d.eigenvalue_index}</strong> },
+  { key: "z", header: "Damping ratio", term: "zeta", unit: "ratio", numeric: true, cell: (d) => fmt(d.damping_ratio) },
   { key: "f", header: "Frequency", unit: "Hz", numeric: true, cell: (d) => fmt(d.frequency_hz) },
   {
     key: "e",
@@ -49,7 +49,7 @@ const EIGEN: DataColumn<EigRow>[] = [
   { key: "k", header: "#", cell: (e) => `${e.k}${e.dominant ? " (dominant)" : ""}` },
   { key: "re", header: "Real part", unit: "1/s", numeric: true, cell: (e) => fmt(e.re) },
   { key: "im", header: "Imaginary part", unit: "1/s", numeric: true, cell: (e) => fmt(e.im) },
-  { key: "z", header: "Damping ratio", unit: "ratio", numeric: true, cell: (e) => fmt(e.zeta) },
+  { key: "z", header: "Damping ratio", term: "zeta", unit: "ratio", numeric: true, cell: (e) => fmt(e.zeta) },
   { key: "f", header: "Frequency", unit: "Hz", numeric: true, cell: (e) => fmt(e.f) },
 ];
 

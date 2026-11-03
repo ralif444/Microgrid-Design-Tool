@@ -6,7 +6,9 @@
 import { useRef, type KeyboardEvent, type ReactNode } from "react";
 import styles from "./DataTable.module.css";
 import { num } from "./format";
+import { UNIT_TERM, type GlossaryKey } from "./glossary";
 import { Icon } from "./Icon";
+import { Term } from "./Term";
 
 type Edit<R> =
   | { kind: "number"; value: (r: R) => number | null | undefined; onChange: (r: R, v: number | null) => void }
@@ -19,6 +21,7 @@ export type DataColumn<R> = {
   unit?: string;
   numeric?: boolean; // right-aligned, tabular figures, numbers shown to 6 significant digits
   fields?: string[]; // issue fields shown under this column's header (default: [key])
+  term?: GlossaryKey; // glossary toggletip for the header (FR-91); a p.u./kW/kvar/kVA unit gets its own
   labelCell?: boolean; // read-only cell named "<header> of <row>" for assistive tech and tests
   cell?: (r: R) => ReactNode;
   edit?: Edit<R>;
@@ -162,6 +165,8 @@ export function DataTable<R>({
               <th key={c.key} scope="col" className={c.numeric ? "num" : undefined}>
                 {c.header}
                 {c.unit && <span className={styles.unit}> ({c.unit})</span>}
+                {c.term && <Term k={c.term} />}
+                {c.unit && UNIT_TERM[c.unit] && <Term k={UNIT_TERM[c.unit]} />}
               </th>
             ))}
             {actions && (

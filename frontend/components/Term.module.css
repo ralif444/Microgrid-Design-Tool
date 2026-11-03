@@ -1,0 +1,12 @@
+/* Glossary toggletip (Doc 12 X6): 16 px info icon, Carbon high-contrast popover (inverse layer). */
+.term { display: inline-flex; vertical-align: middle; margin-left: var(--space-1); }
+.button { display: inline-flex; padding: 0; border: 0; background: none; color: var(--cds-icon-secondary); cursor: pointer; min-height: 0; }
+.button:hover:not(:disabled) { background: none; color: var(--cds-icon-primary); } /* beats the global button hover */
+.button:focus-visible { outline: 2px solid var(--cds-focus); outline-offset: 1px; }
+.button svg { fill: currentColor; }
+.content {
+  position: fixed; z-index: 9000; width: 18rem; max-width: calc(100vw - 2rem); padding: var(--space-3);
+  background: var(--cds-background-inverse); color: var(--cds-text-inverse);
+  font-size: var(--text-sm); font-weight: var(--weight-regular); line-height: 1.4; text-align: left; white-space: normal;
+}
+.source { display: block; margin-top: var(--space-2); font-size: var(--text-xs); opacity: 0.85; }

@@ -3,6 +3,7 @@
 import type { AnalysisResult, AnalysisType, ValidationIssue } from "../api-types";
 import { Icon, type IconName } from "./Icon";
 import styles from "./StatusBanner.module.css";
+import { Term } from "./Term";
 import { type BannerText, bannerText } from "./status-text";
 
 // status-text roles → token roles (tokens.css, guideline §7.2)
@@ -30,6 +31,7 @@ export function StatusBanner({ type, result }: { type: AnalysisType; result: Ana
       <h2 className={styles.status}>
         <Icon name={statusIcon(result)} size={20} />
         {result.status}
+        <Term k={result.status} />
       </h2>
       <p className={styles.headline}>{t.headline}</p>
       {message && <p className={styles.message}>{message}</p>}

@@ -5,6 +5,7 @@ import { num } from "./format";
 import { Icon } from "./Icon";
 import type { Kpi } from "./kpi";
 import styles from "./KpiStrip.module.css";
+import { Term } from "./Term";
 
 export function KpiStrip({ label, kpis, record }: { label: string; kpis: Kpi[]; record: RunRecord }) {
   return (
@@ -12,7 +13,10 @@ export function KpiStrip({ label, kpis, record }: { label: string; kpis: Kpi[]; 
       <dl className={styles.tiles}>
         {kpis.map((k) => (
           <div key={k.label} className={styles.tile}>
-            <dt>{k.label}</dt>
+            <dt>
+              {k.label}
+              {k.term && <Term k={k.term} />}
+            </dt>
             <dd className={styles.value}>
               {k.icon && <Icon name={k.icon} size={20} />}
               {/* a payload word may break after "_" (RECOVERED_STABLE) without changing its text */}
