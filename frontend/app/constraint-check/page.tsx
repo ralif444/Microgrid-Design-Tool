@@ -3,7 +3,7 @@
 // (D-46 K11), optional storage settings; Run disabled unless the M1 result is current (§3.1).
 import { useState } from "react";
 import { runAnalysis } from "../../api-client";
-import type { AnalysisResponse, M2Payload } from "../../api-types";
+import type { AnalysisResponse, M2Payload, RunRecord } from "../../api-types";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { ConstraintTable, M2Results } from "../../components/M2Results";
 import { NumberField } from "../../components/NumberField";
@@ -27,16 +27,16 @@ const FIELDS: [keyof M2Params, string, string, string][] = [
   ["depth_of_discharge_ratio", "Depth of discharge DoD, optional", "ratio", "any"],
 ];
 
+function lastM2Params(runRecords: RunRecord[]): M2Params {
+  const last = runRecords.findLast((r) => r.analysis_type === "M2")?.parameters as Partial<M2Params> | undefined;
+  return Object.fromEntries(FIELDS.map(([k]) => [k, last?.[k] ?? null])) as M2Params;
+}
+
 function ConstraintCheck() {
   const { design, runRecords } = useProject();
   const dispatch = useProjectDispatch();
-  const [params, setParams] = useState<M2Params>({
-    inverter_margin_ratio: null,
-    line_margin_ratio: null,
-    autonomy_h: null,
-    dc_efficiency_ratio: null,
-    depth_of_discharge_ratio: null,
-  });
+  // K147: start from the user's own last M2 entry (RunRecord), never from a default.
+  const [params, setParams] = useState<M2Params>(() => lastM2Params(runRecords));
   const [busy, setBusy] = useState(false);
   const [resp, setResp] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);

@@ -40,7 +40,7 @@ Open **5 Power flow (M1)**, click **Run M1**. Show:
 
 ## 5. Constraint check M2 (S-08)
 
-Open **6 Constraint check (M2)**, enter m_inv 0.2 and m_line 0.2 on this screen (the margins are entered per run), click **Run M2**. Show:
+Open **6 Constraint check (M2)**, enter m_inv 0.2 and m_line 0.2 on this screen (after a run the screen refills them from the last M2 RunRecord), click **Run M2**. Show:
 - FEASIBLE, with the margin table; frequency lower-limit margin about 0.127 Hz;
 - **Not evaluated**: line currents and power balance have no limit, so they are listed and not counted as satisfied;
 - λ_c 2.034 against λ_s 20.456 ("solution existence, not a stability limit");

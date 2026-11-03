@@ -7,7 +7,7 @@ import { getMeta } from "../../api-client";
 import type { AnalysisType, M1Payload, M2Payload, MetaInfo, PsPayload, RunRecord } from "../../api-types";
 import { IndicatorPanel, indicatorText, useIndicatorRows } from "../../components/IndicatorPanel";
 import { M1Results } from "../../components/M1Results";
-import { ConstraintTable, KIND_WORDS, M2Results } from "../../components/M2Results";
+import { ConstraintTable, KIND_WORDS, M2Results, num } from "../../components/M2Results";
 import { RequireProject } from "../../components/RequireProject";
 import { bannerText } from "../../components/status-text";
 import { useValidation } from "../../components/useValidation";
@@ -96,7 +96,7 @@ function Report() {
           <ul>
             {limiting.map((c, k) => (
               <li key={k}>
-                {KIND_WORDS[c.kind] ?? c.kind} at {c.element_id}: {c.value} {c.unit} against the limit {c.limit} {c.unit}.
+                {KIND_WORDS[c.kind] ?? c.kind} at {c.element_id}: {num(c.value)} {c.unit} against the limit {num(c.limit)} {c.unit}.
               </li>
             ))}
           </ul>

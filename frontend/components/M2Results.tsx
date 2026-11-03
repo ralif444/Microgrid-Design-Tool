@@ -19,7 +19,9 @@ export const KIND_WORDS: Record<string, string> = {
   POWER_BALANCE: "Power balance",
 };
 
-const fmt = (v: number | null | undefined) => (v === null || v === undefined ? "not available" : String(v));
+// K147: 6 significant digits hide unit round-trip noise (49.75000000000001 Hz).
+export const num = (v: number) => Number(v.toPrecision(6));
+const fmt = (v: number | null | undefined) => (v === null || v === undefined ? "not available" : String(num(v)));
 
 // `shortcut`: per-row link to M3a pre-filled for that constraint (Doc 12 FR-84), on S-08 only.
 export function ConstraintTable({ label, rows, shortcut = false }: { label: string; rows: LimitingConstraint[]; shortcut?: boolean }) {
@@ -53,13 +55,13 @@ export function ConstraintTable({ label, rows, shortcut = false }: { label: stri
               )}
             </td>
             <td>
-              {c.value} {c.unit}
+              {num(c.value)} {c.unit}
             </td>
             <td>
-              {c.limit} {c.unit}
+              {num(c.limit)} {c.unit}
             </td>
             <td>
-              {c.margin < 0 ? `Violated by ${-c.margin} ${c.unit}` : `${c.margin} ${c.unit}`}
+              {c.margin < 0 ? `Violated by ${num(-c.margin)} ${c.unit}` : `${num(c.margin)} ${c.unit}`}
               {nearLimit(c, marginWarn) && <strong className="near-limit"> (!) Near limit</strong>}
             </td>
             {shortcut && (
