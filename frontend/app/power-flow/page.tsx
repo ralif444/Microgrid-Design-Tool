@@ -15,6 +15,7 @@ import { KpiStrip } from "../../components/KpiStrip";
 import { M1FreshnessBadge } from "../../components/M1Freshness";
 import { M1Results } from "../../components/M1Results";
 import { RequireProject } from "../../components/RequireProject";
+import { ResultsDiagram } from "../../components/sld/ResultsDiagram";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import { m1Freshness, useValidation } from "../../components/useValidation";
@@ -89,6 +90,7 @@ function PowerFlow() {
         ))}
       {resp && <StatusBanner type="M1" result={resp.result} />}
       {payload && resp && <KpiStrip label="Power flow key figures" kpis={m1Kpis(payload)} record={resp.run_record} />}
+      <ResultsDiagram fresh={fresh} selected={inspect?.id ?? null} onSelect={setInspect} />
       {payload && resp && <M1Results p={payload} charts={{ limits: design.design_constraints, record: resp.run_record }} onInspect={setInspect} />}
       {inspect && <Inspector target={inspect} onClose={() => setInspect(null)} />}
       {payload && <IndicatorPanel />}

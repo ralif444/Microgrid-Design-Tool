@@ -4,7 +4,7 @@
 // `details` (the inspector's rows, §A7). Hover opens the tooltip after 150 ms, focus at once; Escape,
 // blur or leaving closes it. Enter, Space or click calls `onSelect`. Zoom: fit to view by default.
 import { autoUpdate, flip, offset, shift, useFloating } from "@floating-ui/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { DataTable, type DataColumn } from "../DataTable";
 import type { ElementRef } from "../Inspector";
 import { rowText } from "../Inspector";
@@ -66,11 +66,14 @@ export function SingleLineDiagram({
   details,
   selected,
   onSelect,
+  tools,
 }: {
   drawing: SldModel;
   details: SldModel;
   selected: string | null;
   onSelect: (t: ElementRef) => void;
+  /** extra toolbar controls ("Show results" on S-07 and S-08) */
+  tools?: ReactNode;
 }) {
   const { layout, failed } = useSldLayout(drawing);
   const [tip, setTip] = useState<string | null>(null);
@@ -148,6 +151,7 @@ export function SingleLineDiagram({
           Fit to view
         </button>
         <span className={styles.zoom}>{Math.round(scale * 100)} %</span>
+        {tools}
       </div>
       <div ref={box} className={styles.figure}>
         {layout ? <SldSvg model={drawing} layout={layout} emph={emph} bind={bind} scale={scale} /> : <p className={styles.wait}>Laying out the diagram…</p>}

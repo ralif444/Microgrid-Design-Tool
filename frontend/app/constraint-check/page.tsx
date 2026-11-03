@@ -1,6 +1,7 @@
 "use client";
 // S-08 Constraint check (M2) (Doc 7 §6.4): margins m_inv, m_line required without defaults
-// (D-46 K11), optional storage settings; Run disabled unless the M1 result is current (§3.1).
+// (D-46 K11), optional storage settings; Run disabled unless the M1 result is current (§3.1). The
+// single-line diagram carries the M1 labels and M2 marks (Doc 12 FR-96) and opens the Inspector.
 import { useState } from "react";
 import { runAnalysis } from "../../api-client";
 import type { M2Payload, RunRecord } from "../../api-types";
@@ -8,10 +9,12 @@ import Link from "next/link";
 import { EmptyState } from "../../components/EmptyState";
 import { asResponse } from "../../components/Further";
 import { Icon } from "../../components/Icon";
+import { Inspector, type ElementRef } from "../../components/Inspector";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { ConstraintTable, M2Results } from "../../components/M2Results";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
+import { ResultsDiagram } from "../../components/sld/ResultsDiagram";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import { m1Freshness, useValidation } from "../../components/useValidation";
@@ -45,6 +48,7 @@ function ConstraintCheck() {
   const [params, setParams] = useState<M2Params>(() => lastM2Params(runRecords));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [inspect, setInspect] = useState<ElementRef | null>(null);
   const ref = m1Ref(runRecords);
   const report = useValidation(design);
   const fresh = m1Freshness(ref?.snapshot_hash ?? null, report);
@@ -98,6 +102,8 @@ function ConstraintCheck() {
         </p>
       ))}
       {r?.status === "INFEASIBLE" && <ConstraintTable label="Limiting constraints" rows={r.limiting_constraints ?? []} shortcut />}
+      <ResultsDiagram fresh={fresh} checks selected={inspect?.id ?? null} onSelect={setInspect} />
+      {inspect && <Inspector target={inspect} onClose={() => setInspect(null)} />}
       {payload && <M2Results p={payload} />}
       {!resp &&
         fresh === "current" &&

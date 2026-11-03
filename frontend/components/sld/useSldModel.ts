@@ -1,7 +1,8 @@
 "use client";
 // Store side of the SLD model (guideline §4.3, §A5): the current M1 and M2 come from the FR-93 selector
 // (`latestRun` on the current design hash), issues from the live validation, MARGIN_WARN from /api/meta.
-// `design` has no runs (S-05 draws design data only); `full` feeds tooltip, inspector and overlays.
+// `design` has no runs (S-05 draws design data only), `m1` only the M1 overlay (S-07); `full` adds the
+// M2 marks (S-08) and feeds tooltip and inspector. `has` says which current runs exist.
 import { useEffect, useMemo, useState } from "react";
 import { getMeta } from "../../api-client";
 import type { M1Payload, M2Payload } from "../../api-types";
@@ -12,7 +13,9 @@ import { buildSldModel, type SldModel } from "./buildSldModel";
 let marginWarnCache: Promise<number | null> | null = null;
 const marginWarn = () => (marginWarnCache ??= getMeta().then((m) => (m.ok ? m.data.limits.margin_warn : null)));
 
-export function useSldModel(): { design: SldModel; full: SldModel; fake: boolean } {
+export type SldModels = { design: SldModel; m1: SldModel; full: SldModel; fake: boolean; has: { m1: boolean; m2: boolean } };
+
+export function useSldModel(): SldModels {
   const { design, runRecords } = useProject();
   const report = useValidation(design);
   const [warn, setWarn] = useState<number | null>(null);
@@ -30,6 +33,12 @@ export function useSldModel(): { design: SldModel; full: SldModel; fake: boolean
         ? { payload: m2r.result.payload as unknown as M2Payload, limiting: m2r.result.limiting_constraints ?? [] }
         : null;
     const fake = [m1 && m1r, m2 && m2r].some((r) => r && r.engine_kind === "FAKE");
-    return { design: buildSldModel({ design, issues }), full: buildSldModel({ design, m1, m2, issues, marginWarn: warn }), fake };
+    return {
+      design: buildSldModel({ design, issues }),
+      m1: buildSldModel({ design, m1, issues }),
+      full: buildSldModel({ design, m1, m2, issues, marginWarn: warn }),
+      fake,
+      has: { m1: !!m1, m2: !!m2 },
+    };
   }, [design, report, m1r, m2r, warn]);
 }
