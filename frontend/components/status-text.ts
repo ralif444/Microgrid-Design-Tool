@@ -49,7 +49,15 @@ export function bannerText(type: AnalysisType, r: AnalysisResult): BannerText {
         case "TIMEOUT":
           return { role: "attention", headline: "The analysis took longer than the time budget and was stopped.", hint: "Retry, or reduce the problem size. The attempt is kept in Run history." };
         case "DEPENDENCY_NOT_MET":
-          return { role: "attention", headline: "This analysis needs a valid power flow (M1) result.", hint: "Go to Power flow and run M1." };
+          switch (r.diagnostics?.dependency_reason) {
+            case "STALE":
+            case "ALTERED":
+              return { role: "attention", headline: "The power flow result is out of date because the design changed. M1 must be re-run.", hint: "Re-run M1, then retry." };
+            case "NOT_FEASIBLE":
+              return { role: "attention", headline: "The power flow (M1) did not produce a usable result, so this analysis cannot run.", hint: "Fix the M1 problem first." };
+            default:
+              return { role: "attention", headline: "This analysis needs a valid power flow (M1) result, and none is available.", hint: "Go to Power flow and run M1." };
+          }
         case "ENGINE_ERROR":
           return { role: "error", headline: "The calculation engine reported an unexpected error. Your data is unchanged.", hint: "Retry; if it repeats, export the RunRecord and report it." };
         default:

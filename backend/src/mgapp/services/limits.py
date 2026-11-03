@@ -45,14 +45,16 @@ def check_size_limits(
         if n > limits.sweep_cap:
             issue(
                 IssueCode.SWEEP_CAP_EXCEEDED,
-                f"This sweep has too many points ({n}; the limit is {limits.sweep_cap}).",
+                f"This sweep has too many points ({n}; the limit is {limits.sweep_cap}). "
+                "Reduce the range or step count.",
             )
     if t is AnalysisType.M3D:
         n = _steps(parameters.get("axis_x")) * _steps(parameters.get("axis_y"))
         if n > limits.sweep_cap:
             issue(
                 IssueCode.SWEEP_CAP_EXCEEDED,
-                f"This sweep has too many points ({n}; the limit is {limits.sweep_cap}).",
+                f"This sweep has too many points ({n}; the limit is {limits.sweep_cap}). "
+                "Reduce the range or step count.",
             )
     if (
         t in (AnalysisType.M3B, AnalysisType.M3D)
@@ -68,16 +70,24 @@ def check_size_limits(
             issue(
                 IssueCode.SWEEP_CAP_EXCEEDED,
                 f"Loadability at every point is limited to {limits.lambda_c_point_cap} points"
-                f" (this sweep has {n}).",
+                f" (this sweep has {n}). Reduce the step count or leave out loadability per point.",
             )
     if t is AnalysisType.M3A and limits.m3a_parameter_cap is not None:
         paths = parameters.get("parameter_paths") or []
         if isinstance(paths, list) and len(paths) > limits.m3a_parameter_cap:
-            issue(IssueCode.PARAMETER_CAP_EXCEEDED, "Too many parameters selected.")
+            issue(
+                IssueCode.PARAMETER_CAP_EXCEEDED,
+                f"Too many parameters selected ({len(paths)}; the limit is "
+                f"{limits.m3a_parameter_cap}). Select fewer parameters.",
+            )
     if t is AnalysisType.M4B and limits.m4b_duration_cap_s is not None:
         end = parameters.get("simulation_end_s")
         if isinstance(end, int | float) and end > limits.m4b_duration_cap_s:
-            issue(IssueCode.DURATION_CAP_EXCEEDED, "The simulation time is too long.")
+            issue(
+                IssueCode.DURATION_CAP_EXCEEDED,
+                f"The simulation time is too long ({end:g} s; the limit is "
+                f"{limits.m4b_duration_cap_s:g} s). Shorten the simulation end time.",
+            )
     if (
         t is AnalysisType.M3C
         and limits.scenario_cap is not None

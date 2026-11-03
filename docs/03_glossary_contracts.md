@@ -236,9 +236,9 @@ Stage 1 runs in the application service before any engine call and yields `INPUT
 | DISTURBANCE_INVALID | request | M4b disturbance incomplete or inconsistent with its kind | "Complete the disturbance definition." |
 | SWEEP_RANGE_INVALID | field | Range min ≥ max or step count < 2 / not integer | "The sweep range or step count is not valid." |
 | SCENARIO_PATH_INVALID | entity | Override path does not resolve | "This scenario changes something that does not exist." |
-| SWEEP_CAP_EXCEEDED | request | M3b/M3d point count above SWEEP_CAP (initial 1 000) | "This sweep has too many points." |
-| PARAMETER_CAP_EXCEEDED | request | M3a parameter count above cap [ASSUMPTION value] | "Too many parameters selected." |
-| DURATION_CAP_EXCEEDED | request | M4b duration above cap [ASSUMPTION value] | "The simulation time is too long." |
+| SWEEP_CAP_EXCEEDED | request | M3b/M3d point count above SWEEP_CAP (initial 1 000) | "This sweep has too many points (<n>; the limit is <cap>). Reduce the range or step count." (D-68) |
+| PARAMETER_CAP_EXCEEDED | request | M3a parameter count above cap [ASSUMPTION value] | "Too many parameters selected (<n>; the limit is <cap>). Select fewer parameters." (D-68) |
+| DURATION_CAP_EXCEEDED | request | M4b duration above cap [ASSUMPTION value] | "The simulation time is too long (<t> s; the limit is <cap> s). Shorten the simulation end time." (D-68) |
 | SCENARIO_COUNT_INVALID | request | M3c count < 2 or > SCENARIO_CAP | "Compare between 2 and the allowed number of scenarios." |
 | DEPENDS_ON_NOT_ALLOWED | request | depends_on on PS or M1 | "This analysis does not use an earlier result." |
 | MULTIPLE_INVERTERS_ON_BUS | request | Engine-side only (M4a, M4b): two Inverters on one Bus (D-53 K61, D-55 K91) | "Stability analysis allows at most one inverter per bus." |
