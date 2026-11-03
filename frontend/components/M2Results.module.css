@@ -1,12 +1,6 @@
 .violated { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--role-negative-fg); font-weight: var(--weight-semibold); }
 .violated > svg { fill: var(--role-negative-icon); }
 .near { margin: 0 0 0 var(--space-2); vertical-align: middle; }
-.ok { display: flex; align-items: center; gap: var(--space-2); color: var(--role-success-fg); }
-.notEvaluated {
-  max-width: var(--prose-max); margin: var(--space-2) 0 var(--space-4); padding: var(--space-2) var(--space-4) var(--space-2) var(--space-8);
-  background: var(--role-attention-bg); color: var(--role-attention-fg);
-  border-left: var(--banner-edge) solid var(--role-attention-border); border-radius: var(--radius-2);
-}
 .loadability {
   display: grid; grid-template-columns: max-content max-content; width: max-content; max-width: 100%; gap: var(--space-1) var(--space-6);
   margin: var(--space-2) 0 var(--space-6); font-size: var(--text-sm);
@@ -16,3 +10,6 @@
 .loadability dd.text { text-align: left; }
 .qualifier { display: block; font-size: var(--text-xs); color: var(--role-caution-fg); }
 .basis { font-size: var(--text-sm); color: var(--color-fg-muted); max-width: var(--prose-max); margin-bottom: 0; }
+/* the shared problems banner, with the attention edge and icon: limits missing, not a design error */
+.notEvaluated:global(.problems) { border-left-color: var(--role-attention-edge); }
+.notEvaluated:global(.problems) > svg { fill: var(--role-attention-icon); }

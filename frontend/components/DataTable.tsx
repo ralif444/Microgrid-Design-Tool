@@ -133,6 +133,7 @@ export function DataTable<R>({
   actions,
   rowTestId,
   rowCurrent,
+  rowViolated,
   empty,
 }: {
   label: string;
@@ -145,6 +146,7 @@ export function DataTable<R>({
   actions?: (r: R, k: number) => ReactNode;
   rowTestId?: (r: R, k: number) => string;
   rowCurrent?: (r: R) => boolean; // highlighted row (opened from a link), aria-current
+  rowViolated?: (r: R) => boolean; // violated constraint row: orange left edge (guideline §7.3)
   empty?: ReactNode;
 }) {
   if (!rows.length && empty) return <>{empty}</>;
@@ -172,7 +174,7 @@ export function DataTable<R>({
         {rows.map((r, k) => {
           const errors = rowErrors?.(r) ?? [];
           return (
-            <tbody key={rowKey(r, k)} data-testid={rowTestId?.(r, k)} className={styles.row} data-invalid={errors.length ? "true" : undefined}>
+            <tbody key={rowKey(r, k)} data-testid={rowTestId?.(r, k)} className={styles.row} data-invalid={errors.length ? "true" : undefined} data-violated={rowViolated?.(r) ? "true" : undefined}>
               <tr aria-current={rowCurrent?.(r) ? "true" : undefined} className={rowCurrent?.(r) ? styles.current : undefined}>
                 {columns.map((c) => (
                   <td

@@ -91,8 +91,8 @@ function ConstraintCheck() {
       {error && <Toast message={error} onDismiss={() => setError(null)} />}
       {r && <StatusBanner type="M2" result={r} />}
       {notices.map((w, k) => (
-        <p key={k} data-testid="m2-warning" className={styles.warning}>
-          <Icon name="warn" />
+        <p key={k} data-testid="m2-warning" className="problems">
+          <Icon name="warn" size={20} />
           {w.message}
         </p>
       ))}

@@ -81,7 +81,7 @@ export function ConstraintTable({ label, rows, shortcut = false }: { label: stri
           </Link>
         ),
     });
-  return <DataTable label={label} caption={label} columns={columns} rows={rows} rowKey={(_, k) => k} rowName={(c) => c.element_id} />;
+  return <DataTable label={label} caption={label} columns={columns} rows={rows} rowKey={(_, k) => k} rowName={(c) => c.element_id} rowViolated={(c) => c.margin < 0} />;
 }
 
 type InvSize = M2Payload["sizing_check"]["per_inverter"][number];
@@ -108,18 +108,21 @@ export function M2Results({ p }: { p: M2Payload }) {
       {p.constraint_margins.length > 0 && <ConstraintTable label="All evaluated margins" rows={p.constraint_margins} />}
       <h2>Not evaluated</h2>
       {p.not_evaluated.length === 0 ? (
-        <p className={styles.ok}>
-          <Icon name="check" />
+        <p className="all-clear">
+          <Icon name="feasible" />
           Every check had a limit.
         </p>
       ) : (
-        <ul aria-label="Not evaluated" className={styles.notEvaluated}>
-          {p.not_evaluated.map((n, k) => (
-            <li key={k}>
-              {KIND_WORDS[n.kind] ?? n.kind}, {n.element_id}: no limit given; not counted as satisfied.
-            </li>
-          ))}
-        </ul>
+        <div className={`problems ${styles.notEvaluated}`}>
+          <Icon name="info" size={20} />
+          <ul aria-label="Not evaluated">
+            {p.not_evaluated.map((n, k) => (
+              <li key={k}>
+                {KIND_WORDS[n.kind] ?? n.kind}, {n.element_id}: no limit given; not counted as satisfied.
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       <h2>Loadability</h2>
       <dl className={styles.loadability}>

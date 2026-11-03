@@ -7,8 +7,3 @@
   background: var(--color-surface-sunken); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-2);
 }
 .form button { margin-top: var(--space-2); }
-.warning {
-  display: flex; align-items: center; gap: var(--space-2); max-width: var(--prose-max); padding: var(--space-2) var(--space-4);
-  background: var(--role-caution-bg); color: var(--role-caution-fg);
-  border-left: var(--banner-edge) solid var(--role-caution-border); border-radius: var(--radius-2);
-}
