@@ -106,8 +106,8 @@ function Report() {
         </span>
       </p>
       {used.some((r) => r.engine_kind === "FAKE") && (
-        <p role="note" data-testid="fake-note" className={styles.fake}>
-          <Icon name="warn" />
+        <p role="note" data-testid="fake-note" className="problems">
+          <Icon name="warn" size={20} />
           <span>
             <strong>FAKE engine:</strong> These results come from the Fake Engine. They are placeholders, not engineering results.
           </span>
@@ -119,7 +119,7 @@ function Report() {
         <section data-testid="verdict" className={styles.verdict} data-role={TOKEN_ROLE[bannerText("M2", m2.result).role]}>
           <p>
             <strong className={styles.word}>
-              <Icon name={statusIcon(m2.result)} />
+              <Icon name={statusIcon(m2.result)} size={20} />
               {m2.result.status}
             </strong>
             : {bannerText("M2", m2.result).headline}

@@ -1,33 +1,28 @@
 .report { max-width: 64rem; }
 .controls {
   display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);
-  padding: var(--space-2) var(--space-3); background: var(--color-surface-sunken);
-  border: var(--border-width) solid var(--color-border); border-radius: var(--radius-2);
+  padding: var(--space-2) var(--space-3); background: var(--cds-layer-01);
+  border: var(--border-width) solid var(--color-border);
 }
 .controls p { margin: 0; color: var(--color-fg-muted); font-size: var(--text-sm); }
 .title { margin-bottom: var(--space-1); }
 .meta { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); margin: 0 0 var(--space-4); color: var(--color-fg-muted); font-size: var(--text-sm); }
 .meta strong { color: var(--color-fg); font-weight: var(--weight-medium); }
-.fake {
-  display: flex; align-items: center; gap: var(--space-2); max-width: var(--prose-max); padding: var(--space-2) var(--space-4);
-  background: var(--role-caution-bg); color: var(--role-caution-fg);
-  border-left: var(--banner-edge) solid var(--role-caution-border); border-radius: var(--radius-2);
-}
 .report h2 { margin-top: var(--space-8); padding-top: var(--space-3); border-top: var(--border-width) solid var(--color-border); }
 .report section h2 { margin-top: var(--space-6); padding-top: 0; border-top: none; } /* headings inside M2Results */
+/* verdict in the StatusBanner look (§7.2): role colour on the edge and icon only, text in text-primary */
 .verdict {
-  --fg: var(--role-info-fg); --bg: var(--role-info-bg); --edge: var(--role-info-border);
-  max-width: var(--prose-max); padding: var(--space-3) var(--space-4); background: var(--bg);
-  border: var(--border-width) solid var(--edge); border-left: var(--banner-edge) solid var(--edge); border-radius: var(--radius-2);
+  --edge: var(--role-info-edge); --icon: var(--role-info-icon);
+  max-width: var(--prose-max); padding: var(--space-3) var(--space-4); background: var(--cds-layer-01);
+  border: var(--border-width) solid var(--color-border); border-left: var(--banner-edge) solid var(--edge);
 }
-.verdict[data-role="success"] { --fg: var(--role-success-fg); --bg: var(--role-success-bg); --edge: var(--role-success-border); }
-.verdict[data-role="negative"] { --fg: var(--role-negative-fg); --bg: var(--role-negative-bg); --edge: var(--role-negative-border); }
-.verdict[data-role="error"] { --fg: var(--role-error-fg); --bg: var(--role-error-bg); --edge: var(--role-error-border); }
-.verdict[data-role="caution"] { --fg: var(--role-caution-fg); --bg: var(--role-caution-bg); --edge: var(--role-caution-border); }
-.verdict[data-role="attention"] { --fg: var(--role-attention-fg); --bg: var(--role-attention-bg); --edge: var(--role-attention-border); }
+.verdict[data-role="success"] { --edge: var(--role-success-edge); --icon: var(--role-success-icon); }
+.verdict[data-role="negative"] { --edge: var(--role-negative-edge); --icon: var(--role-negative-icon); }
+.verdict[data-role="error"] { --edge: var(--role-error-edge); --icon: var(--role-error-icon); }
+.verdict[data-role="caution"] { --edge: var(--role-caution-edge); --icon: var(--role-caution-icon); }
+.verdict[data-role="attention"] { --edge: var(--role-attention-edge); --icon: var(--role-attention-icon); }
 .verdict p { margin: 0; }
-.word { color: var(--fg); }
-.word svg { vertical-align: -3px; margin-right: var(--space-1); }
+.word svg { vertical-align: -4px; margin-right: var(--space-2); fill: var(--icon); }
 .outdated { display: inline-flex; align-items: center; gap: var(--space-1); margin: var(--space-2) 0; }
 .sentences { max-width: var(--prose-max); }
 .muted { color: var(--color-fg-muted); font-size: var(--text-sm); max-width: var(--prose-max); }
