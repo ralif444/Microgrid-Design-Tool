@@ -3,13 +3,22 @@
 // the Indonesian definition and its source on click or Enter, closes on Escape, outside click or
 // scroll; never on hover. Own component, not Carbon's: its content stays in the DOM while closed and
 // would add text to every header. Fixed position, so a sideways-scrolling table does not clip it.
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { GLOSSARY, type GlossaryKey } from "./glossary";
 import { Icon } from "./Icon";
 import styles from "./Term.module.css";
 
 export function Term({ k }: { k: GlossaryKey }) {
   const e = GLOSSARY[k];
+  return (
+    <Toggletip label={`Glossary: ${e.term}`} lang="id">
+      <strong>{e.term}</strong> {e.short} <span className={styles.source}>Sumber: {e.source}</span>
+    </Toggletip>
+  );
+}
+
+// The same toggletip with any content (example mode, Doc 12 X9); `label` is the button's name.
+export function Toggletip({ label, lang, className, children }: { label: string; lang?: string; className?: string; children: ReactNode }) {
   const id = useId();
   const ref = useRef<HTMLSpanElement>(null);
   const [at, setAt] = useState<{ left: number; top: number } | null>(null);
@@ -27,7 +36,7 @@ export function Term({ k }: { k: GlossaryKey }) {
   return (
     <span
       ref={ref}
-      className={`no-print ${styles.term}`}
+      className={`no-print ${styles.term} ${className ?? ""}`}
       onKeyDown={(ev) => {
         if (at && ev.key === "Escape") {
           ev.stopPropagation();
@@ -39,7 +48,7 @@ export function Term({ k }: { k: GlossaryKey }) {
       <button
         type="button"
         className={styles.button}
-        aria-label={`Glossary: ${e.term}`}
+        aria-label={label}
         aria-expanded={at !== null}
         aria-controls={at ? id : undefined}
         onClick={(ev) => {
@@ -50,8 +59,8 @@ export function Term({ k }: { k: GlossaryKey }) {
         <Icon name="info" size={16} />
       </button>
       {at && (
-        <span id={id} role="note" lang="id" className={styles.content} style={at}>
-          <strong>{e.term}</strong> {e.short} <span className={styles.source}>Sumber: {e.source}</span>
+        <span id={id} role="note" lang={lang} className={styles.content} style={at}>
+          {children}
         </span>
       )}
     </span>

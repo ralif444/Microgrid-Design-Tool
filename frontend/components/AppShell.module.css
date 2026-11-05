@@ -34,3 +34,7 @@
 .header [role="status"] { color: var(--mdt-header-fg-muted); }
 .header :global(.cds--tag) { margin: 0; }
 @media print { .header:global(.cds--header) { display: none; } } /* Carbon's display: flex beats the global print rule */
+/* Example mode (Doc 12 X9): Tag, toggletip icon and Leave button in one group; the icon is white on navy. */
+.example { display: inline-flex; align-items: center; gap: var(--space-2); }
+.header .tip button { min-height: 0; padding: 0; border: 0; color: var(--mdt-header-fg); }
+.header .tip button:hover:not(:disabled) { background: none; color: var(--mdt-header-fg); } /* beats Term .button:hover */

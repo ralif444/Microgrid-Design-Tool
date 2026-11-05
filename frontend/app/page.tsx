@@ -1,11 +1,13 @@
 "use client";
 // S-01 Start (Doc 7 §2): create a new Project (FR-01) or open a Project file (header, D-47 K17),
-// or open an example Project as a new unsaved copy (Doc 12 FR-85).
+// or open an example Project as a new unsaved copy (Doc 12 FR-85), or the guided example D2, which also
+// enters example mode (Doc 12 X9, FR-99); the action is hidden when its settings file is missing or invalid.
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getExample, getMeta, importProject } from "../api-client";
+import { getExample, getExampleSettings, getMeta, importProject } from "../api-client";
 import type { ProjectFile } from "../api-types";
+import { parseExampleSettings, type ExampleSettings } from "../store/example";
 import { NumberField } from "../components/NumberField";
 import { UNSAVED_CONFIRM } from "../components/ProjectFileMenu";
 import { useProject, useProjectDispatch } from "../store";
@@ -27,11 +29,13 @@ export default function Home() {
   const [hz, setHz] = useState<number | null>(50); // default 50, editable (Doc 3 §3.1)
   const [note, setNote] = useState<string | null>(null);
   const [engine, setEngine] = useState<string | null>(null);
+  const [guided, setGuided] = useState<ExampleSettings | null>(null);
   useEffect(() => {
     void getMeta().then((m) => setEngine(m.ok ? m.data.engine.engine_kind : null));
+    void getExampleSettings("guided-d2").then((s) => setGuided(s.ok ? parseExampleSettings(s.data) : null));
   }, []);
 
-  async function openExample(key: string) {
+  async function openExample(key: string, settings?: ExampleSettings) {
     if (unsaved && !window.confirm(UNSAVED_CONFIRM)) return;
     const file = await getExample(key);
     const r = file.ok ? await importProject(file.data) : file;
@@ -43,6 +47,7 @@ export default function Home() {
       id: crypto.randomUUID().replaceAll("-", ""),
       created_at: new Date().toISOString(),
     });
+    if (settings) dispatch({ type: "exampleEntered", settings });
     router.push("/project/");
   }
 
@@ -89,6 +94,14 @@ export default function Home() {
       </form>
       <section aria-label="Example projects">
         <h2>Example projects</h2>
+        {guided && (
+          <div>
+            <button type="button" className="primary" onClick={() => void openExample(guided.project, guided)}>
+              Open guided example (D2)
+            </button>
+            <p>Every screen is pre-filled. Press Run on each step to see the whole pipeline.</p>
+          </div>
+        )}
         <p>Reference designs of the validation plan (prototype values, to be confirmed). Opening one makes a new unsaved copy.</p>
         <ul>
           {EXAMPLES.map(([key, label]) => (

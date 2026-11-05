@@ -34,6 +34,11 @@ export function getExample(name: string): Promise<ApiOutcome<unknown>> {
   return call<unknown>(`/examples/${name}.mgproj.json`);
 }
 
+// Guided-example settings (Doc 12 X9, Doc 7 §2.3); checked by parseExampleSettings after.
+export function getExampleSettings(name: string): Promise<ApiOutcome<unknown>> {
+  return call<unknown>(`/examples/${name}.example.json`);
+}
+
 export function getMeta(): Promise<ApiOutcome<MetaInfo>> {
   return call<MetaInfo>("/api/meta");
 }

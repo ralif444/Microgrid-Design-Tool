@@ -1,0 +1,95 @@
+{
+  "example_settings_version": 1,
+  "id": "guided-d2",
+  "project": "guided-d2",
+  "screens": {
+    "sizing": {
+      "fields": {
+        "inverter_margin_ratio": { "value": 0.2, "source": "Author's study setting, D-92 K230" },
+        "unit_count": { "value": 2, "source": "Author's study setting (the two inverters of D2), D-92 K230" },
+        "redundancy": { "value": 0, "source": "Author's study setting, D-92 K230" }
+      },
+      "needs_value": []
+    },
+    "constraint-check": {
+      "fields": {
+        "inverter_margin_ratio": { "value": 0.2, "source": "Author's study setting (demo script step 5, D-70), D-92 K230" },
+        "line_margin_ratio": { "value": 0.2, "source": "Author's study setting (demo script step 5, D-70), D-92 K230" }
+      },
+      "needs_value": []
+    },
+    "sensitivity": {
+      "fields": {
+        "parameter_paths": {
+          "value": [
+            "inverters/INV1/frequency_droop_hz_per_kw",
+            "inverters/INV1/voltage_droop_kv_per_kvar",
+            "inverters/INV1/rated_kva",
+            "inverters/INV2/frequency_droop_hz_per_kw",
+            "inverters/INV2/voltage_droop_kv_per_kvar",
+            "inverters/INV2/rated_kva"
+          ],
+          "source": "Author's study setting (droop gains and ratings of both inverters), D-92 K230"
+        },
+        "output_metrics": {
+          "value": ["SYSTEM_FREQUENCY", "MIN_BUS_VOLTAGE", "MAX_BUS_VOLTAGE", "MAX_INVERTER_LOADING", "MAX_LINE_CURRENT", "TOTAL_LOSSES"],
+          "source": "Author's study setting (all six metrics of Doc 3 §6.4), D-92 K230"
+        }
+      },
+      "needs_value": ["step_relative"]
+    },
+    "sweep": {
+      "fields": {
+        "axis": {
+          "value": { "kind": "LOAD_SCALE", "range_min": 1.0, "range_max": 4.0 },
+          "source": "Author's study setting (spans D2, D2S and D2H of Doc 13 §4), D-92 K230"
+        },
+        "point_metrics": { "value": ["ZETA_MIN"], "source": "Author's study setting (no LAMBDA_C per point, D-67), D-92 K230" },
+        "include_eigenvalues": { "value": false, "source": "Author's study setting, D-92 K230" }
+      },
+      "needs_value": ["axis.step_count"]
+    },
+    "envelope": {
+      "fields": {
+        "axis_x": {
+          "value": { "kind": "LOAD_SCALE", "range_min": 1.0, "range_max": 4.0 },
+          "source": "Author's study setting (same range as the sweep), D-92 K230"
+        }
+      },
+      "needs_value": ["axis_x.step_count", "axis_y"]
+    },
+    "transient": {
+      "fields": {},
+      "needs_value": ["settling"],
+      "presets": [
+        {
+          "id": "DR-01",
+          "label": "DR-01 load step",
+          "source": "Doc 13 §5 case DR-01; duration read as permanent, D-92 K232",
+          "fields": {
+            "disturbance": { "kind": "LOAD_STEP", "element_id": "L1", "magnitude": 2.5, "magnitude_kvar": 1.0, "start_time_s": 1.0, "duration_s": null },
+            "simulation_end_s": 4.0
+          }
+        },
+        {
+          "id": "TS-02",
+          "label": "TS-02 inverter outage",
+          "source": "Doc 13 §5 case TS-02 (an outage is always permanent, Doc 3 §6.9), D-92 K232",
+          "fields": {
+            "disturbance": { "kind": "INVERTER_OUTAGE", "element_id": "INV2", "start_time_s": 1.0, "duration_s": null },
+            "simulation_end_s": 5.0
+          }
+        },
+        {
+          "id": "DR-02",
+          "label": "DR-02 P* step",
+          "source": "Doc 13 §5 case DR-02; duration read as permanent, D-92 K232",
+          "fields": {
+            "disturbance": { "kind": "REFERENCE_STEP", "element_id": "INV1", "reference": "P_SETPOINT", "magnitude": 2.0, "start_time_s": 1.0, "duration_s": null },
+            "simulation_end_s": 4.0
+          }
+        }
+      ]
+    }
+  }
+}
