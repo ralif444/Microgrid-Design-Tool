@@ -18,7 +18,7 @@ const FIELDS: [keyof DesignConstraints, string, string][] = [
 ];
 
 function Constraints() {
-  const { design } = useProject();
+  const { design, example } = useProject();
   const dispatch = useProjectDispatch();
   const c = design.design_constraints ?? {};
   const issues = (useValidation(design)?.issues ?? []).filter((i) => i.entity === "DesignConstraints");
@@ -26,6 +26,12 @@ function Constraints() {
     <>
       <h1>Design constraints</h1>
       <p>Every limit starts empty. An empty limit is not evaluated and is never counted as satisfied.</p>
+      {example && (
+        <p data-testid="example-constraints">
+          Example mode: these limits come from the guided example&apos;s Project file, as the reference-design study settings of
+          Doc 3 §3.7, not values from a standard. Editing one changes the design like any other edit.
+        </p>
+      )}
       {FIELDS.map(([k, label, unit]) => (
         <p key={k}>
           <NumberField

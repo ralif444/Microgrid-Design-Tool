@@ -7,6 +7,7 @@ import { runAnalysis } from "../../api-client";
 import type { M2Payload, RunRecord } from "../../api-types";
 import Link from "next/link";
 import { EmptyState } from "../../components/EmptyState";
+import { useExampleForm } from "../../components/ExampleForm";
 import { asResponse } from "../../components/Further";
 import { Icon } from "../../components/Icon";
 import { Inspector, type ElementRef } from "../../components/Inspector";
@@ -46,8 +47,10 @@ function lastM2Params(runRecords: RunRecord[]): M2Params {
 function ConstraintCheck() {
   const { design, runRecords } = useProject();
   const dispatch = useProjectDispatch();
-  // K147: start from the user's own last M2 entry (RunRecord), never from a default.
-  const [params, setParams] = useState<M2Params>(() => lastM2Params(runRecords));
+  // K147: start from the user's own last M2 entry (RunRecord), never from a default; in example mode
+  // an empty field takes the guided example's value (Doc 12 X9, D-92 K230).
+  const ex = useExampleForm<M2Params>("constraint-check", lastM2Params(runRecords));
+  const params = ex.values;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [inspect, setInspect] = useState<ElementRef | null>(null);
@@ -89,8 +92,19 @@ function ConstraintCheck() {
         }}
       >
         {FIELDS.map(([k, label, unit, step]) => (
-          <NumberField key={k} id={k} label={label} unit={unit} step={step} value={params[k]} onChange={(v) => setParams({ ...params, [k]: v })} />
+          <NumberField
+            key={k}
+            id={k}
+            label={label}
+            unit={unit}
+            step={step}
+            value={params[k]}
+            onChange={(v) => ex.set(k, v)}
+            adornment={ex.tag(k, label)}
+            note={ex.note(k)}
+          />
         ))}
+        {ex.resetButton}
         <button type="submit" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
           {busy ? "Running..." : "Run M2"}
         </button>

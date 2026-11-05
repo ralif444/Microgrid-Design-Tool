@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { runAnalysis } from "../../api-client";
 import type { AnalysisResponse, PsPayload } from "../../api-types";
 import { catalogHints, useCatalog } from "../../components/Catalog";
+import { useExampleForm } from "../../components/ExampleForm";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
@@ -134,7 +135,9 @@ function CatalogHints({ unitKva }: { unitKva: number }) {
 function Sizing() {
   const { design, sizingAdvice } = useProject();
   const dispatch = useProjectDispatch();
-  const [ps, setPs] = useState<PsParameters>(sizingAdvice.at(-1)?.ps_parameters ?? EMPTY);
+  // Last advice first, then the guided example (Doc 12 X9, D-92 K230), else empty.
+  const ex = useExampleForm<PsParameters>("sizing", sizingAdvice.at(-1)?.ps_parameters ?? EMPTY);
+  const ps = ex.values;
   const [busy, setBusy] = useState(false);
   const [resp, setResp] = useState<AnalysisResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -189,9 +192,19 @@ function Sizing() {
       >
         {FIELDS.map(([k, label, unit, step]) => (
           <p key={k}>
-            <NumberField id={k} label={label} unit={unit} step={step} value={ps[k]} onChange={(v) => setPs({ ...ps, [k]: v })} />
+            <NumberField
+              id={k}
+              label={label}
+              unit={unit}
+              step={step}
+              value={ps[k]}
+              onChange={(v) => ex.set(k, v)}
+              adornment={ex.tag(k, label)}
+              note={ex.note(k)}
+            />
           </p>
         ))}
+        {ex.resetButton}{ex.resetButton && " "}
         <button type="submit" disabled={busy || !hasLoad}>
           {busy ? "Running..." : latest ? "Re-run advice" : "Run advice"}
         </button>

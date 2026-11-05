@@ -1,5 +1,7 @@
 // Numeric input with its unit (Doc 7 P3, FR-05); empty input = null (no defaults).
 // The unit is drawn as a suffix and is also part of the label's accessible name: "Label (unit)".
+// `adornment` sits after the unit and `note` under the input (example mode, Doc 12 X9); both absent = as before.
+import type { ReactNode } from "react";
 import styles from "./NumberField.module.css";
 
 export function NumberField({
@@ -11,6 +13,8 @@ export function NumberField({
   step = "any",
   error,
   disabled,
+  adornment,
+  note,
 }: {
   label: string;
   unit: string;
@@ -20,6 +24,8 @@ export function NumberField({
   step?: string;
   error?: string | null;
   disabled?: boolean;
+  adornment?: ReactNode;
+  note?: ReactNode;
 }) {
   return (
     <span className={styles.field}>
@@ -41,7 +47,9 @@ export function NumberField({
         <span className={styles.unit} aria-hidden="true">
           {unit}
         </span>
+        {adornment}
       </span>
+      {note}
       {error && (
         <span id={`${id}-error`} className={styles.error} role="alert">
           {error}

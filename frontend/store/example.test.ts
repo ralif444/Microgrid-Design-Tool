@@ -4,7 +4,7 @@ import type { ProjectFile } from "../api-types";
 import { initialState, projectReducer, toProjectFile, type ProjectAction, type ProjectState } from "./index";
 import { fromProjectFile } from "./reducer";
 import { sha256Hex } from "./canonical";
-import { parseExampleSettings } from "./example";
+import { initialValue, parseExampleSettings } from "./example";
 
 // Doc 12 X9 FR-99 – FR-101 (D-92): the guided-example settings guard, the store slice, and that the
 // settings never reach the Project file or the snapshot.
@@ -104,5 +104,24 @@ describe("example mode in the store (D-92 K233)", () => {
       { ...initialState, ...fromProjectFile(d2) } as ProjectState,
     );
     expect(await sha256Hex(fromProjectFile(guided).design)).toBe(await sha256Hex(byHand.design));
+  });
+});
+
+describe("initialValue precedence (FR-100, D-92 K233)", () => {
+  const mode = { id: "guided-d2", settings: parseExampleSettings(settingsRaw)! };
+
+  it("takes the last-run refill over the example, the example over empty", () => {
+    expect(initialValue(mode, "constraint-check", "inverter_margin_ratio", 0.3)).toEqual({ value: 0.3, source: null });
+    expect(initialValue(mode, "constraint-check", "inverter_margin_ratio", 0)).toEqual({ value: 0, source: null });
+    expect(initialValue(mode, "constraint-check", "inverter_margin_ratio", null)).toEqual({
+      value: 0.2,
+      source: "Author's study setting (demo script step 5, D-70), D-92 K230",
+    });
+    expect(initialValue(mode, "constraint-check", "autonomy_h", null)).toEqual({ value: null, source: null });
+  });
+
+  it("prefills nothing outside example mode (FR-101)", () => {
+    expect(initialValue(null, "constraint-check", "inverter_margin_ratio", null)).toEqual({ value: null, source: null });
+    expect(initialValue(null, "sizing", "unit_count", 3)).toEqual({ value: 3, source: null });
   });
 });

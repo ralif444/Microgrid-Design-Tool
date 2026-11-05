@@ -116,3 +116,19 @@ export function parseExampleSettings(raw: unknown): ExampleSettings | null {
   }
   return { example_settings_version: 1, id: r.id, project: r.project, screens };
 }
+
+export type ExampleMode = { id: string; settings: ExampleSettings } | null;
+
+// Doc 12 X9 precedence per field (PRD §3 rule 5, D-92 K233): typed > refill from the last run of the
+// screen (K149) > example value > empty. Typed values live in the form, so this gives the initial
+// value; `source` is set only when the value comes from the example.
+export function initialValue(
+  example: ExampleMode,
+  screen: string,
+  field: string,
+  refill: unknown,
+): { value: unknown; source: string | null } {
+  if (refill !== null && refill !== undefined) return { value: refill, source: null };
+  const e = example?.settings.screens[screen]?.fields[field];
+  return e ? { value: e.value, source: e.source } : { value: null, source: null };
+}
