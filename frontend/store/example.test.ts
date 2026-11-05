@@ -21,7 +21,10 @@ describe("guided example settings guard", () => {
   it("accepts the shipped file and keeps every value with a source", () => {
     const s = parseExampleSettings(settingsRaw);
     expect(s).not.toBeNull();
-    expect(Object.keys(s!.screens).sort()).toEqual(["constraint-check", "envelope", "sensitivity", "sizing", "sweep", "transient"]);
+    expect(Object.keys(s!.screens).sort()).toEqual([
+      "constraint-check", "constraints", "envelope", "loads", "network", "power-flow", "report", "scenarios", "sensitivity", "sizing",
+      "small-signal", "sweep", "transient",
+    ]);
     for (const screen of Object.values(s!.screens)) {
       for (const f of Object.values(screen.fields)) expect(f.source.trim()).not.toBe("");
       for (const p of screen.presets) expect(p.source.trim()).not.toBe("");
@@ -29,6 +32,27 @@ describe("guided example settings guard", () => {
     expect(s!.screens.sizing.fields.inverter_margin_ratio.value).toBe(0.2);
     expect(s!.screens.sensitivity.needs_value).toEqual(["step_relative"]);
     expect(s!.screens.transient.presets.map((p) => p.id)).toEqual(["DR-01", "TS-02", "DR-02"]);
+  });
+
+  // FR-102 (D-97 K250): guidance on every screen S-03 – S-16, with a source, and no result numbers.
+  // Identifiers that carry digits (D2, INV1, M1, N−1, λ_c) are allowed; a standalone number is not.
+  it("gives every example screen guidance with a source and no standalone number", () => {
+    const s = parseExampleSettings(settingsRaw)!;
+    for (const [name, screen] of Object.entries(s.screens)) {
+      expect(screen.guidance, name).not.toBeNull();
+      expect(screen.guidance!.source.trim(), name).not.toBe("");
+      expect(screen.guidance!.text, name).not.toMatch(/(?<![\p{L}_−-])\d/u);
+    }
+    expect("load step at 2.5 kW").toMatch(/(?<![\p{L}_−-])\d/u); // the rule does catch a value
+    expect("INV1, D2S, M3a, N−1").not.toMatch(/(?<![\p{L}_−-])\d/u);
+  });
+
+  it("drops guidance without text or source", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const raw = structuredClone(settingsRaw) as { screens: Record<string, { guidance?: unknown }> };
+    raw.screens.loads.guidance = { text: "Some text." };
+    expect(parseExampleSettings(raw)!.screens.loads.guidance).toBeNull();
+    expect(warn).toHaveBeenCalledTimes(1);
   });
 
   it("ignores unknown keys, screens and fields", () => {

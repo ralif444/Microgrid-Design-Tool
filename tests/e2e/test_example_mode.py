@@ -1,4 +1,4 @@
-"""Doc 12 X9 example mode (EX-1, EX-2; D-92 – D-94): entering and leaving the guided example D2.
+"""Doc 12 X9 example mode (EX-1 – EX-5; D-92 – D-97): entering and leaving the guided example D2.
 
 FR-99: S-01 opens the guided example as a new unsaved copy; the header shows "Example mode" and
 "Leave example mode"; leaving keeps the Project. FR-101: a normal Project shows no example mode.
@@ -112,6 +112,8 @@ def test_fr_101_normal_project_forms_stay_empty(server: Callable[[str], str], pa
     page.get_by_role("link", name="6 Constraint check (M2)").click()
     expect(page.get_by_label("Inverter design margin m_inv (ratio)")).to_have_value("")
     expect(_tags(page)).to_have_count(0)
+    expect(page.get_by_test_id("example-guide")).to_have_count(0)
+    expect(page.get_by_test_id("example-next")).to_have_count(0)
 
 
 def test_fr_100_s09_to_s12_prefill_and_run(server: Callable[[str], str], page: Page) -> None:
@@ -266,3 +268,68 @@ def test_fr_101_normal_transient_form_starts_empty(
     expect(page.get_by_label("Example disturbance", exact=True)).to_have_count(0)
     expect(page.get_by_label("Element", exact=True)).to_have_value("")
     expect(page.get_by_label("Start time (s)")).to_have_value("")
+
+
+def test_fr_102_guidance_and_next_links_lead_through_the_pipeline(
+    server: Callable[[str], str], page: Page
+) -> None:
+    base = server("default")
+    page.goto(base + "/")
+    page.get_by_role("button", name="Open guided example (D2)").click()
+    page.wait_for_url("**/project/")
+    page.get_by_role("link", name="1 Loads").click()
+    guide = page.get_by_test_id("example-guide")
+    expect(guide).to_contain_text("Example mode: this screen shows the guided example.")
+    expect(guide).to_contain_text("Results on the Fake Engine are placeholders.")
+    guide.get_by_text("What this step shows").click()
+    expect(guide).to_contain_text("reference design D2")
+    expect(guide).to_contain_text("Source: Doc 13 §4")
+    status = page.get_by_role("status", name="Status")
+    nxt = page.get_by_role("link", name=re.compile(r"^Next: "))
+
+    def go(name: str) -> None:
+        expect(nxt).to_have_text(f"Next: {name}")
+        nxt.click()
+
+    go("Sizing advice")
+    expect(guide).to_contain_text("Press Run.")
+    guide.get_by_text("What this step shows").click()
+    expect(guide).to_contain_text("Do not Accept it here")
+    expect(nxt).to_have_count(0)  # only after a run
+    page.get_by_role("button", name="Run advice").click()
+    go("Network")
+    go("Constraints")
+    go("Power flow (M1)")
+    page.get_by_role("button", name="Run M1").click()
+    go("Constraint check (M2)")
+    page.get_by_role("button", name="Run M2").click()
+    go("Sensitivity (M3a)")
+    page.get_by_label("Step (ratio)").fill(
+        "0.01"
+    )  # test values for the fields the example leaves empty
+    page.get_by_role("button", name="Run M3a").click()
+    go("Sweep (M3b)")
+    page.get_by_label("Points (count)").fill("4")
+    page.get_by_role("button", name="Run sweep").click()
+    go("Scenarios (M3c)")
+    for name in ("D2 base", "D2S load × 2.4", "D2H load × 4.0"):
+        page.get_by_role("region", name=f"Scenario {name}").get_by_role("checkbox").check()
+    page.get_by_role("button", name="Compare").click()
+    go("Envelope (M3d)")
+    page.get_by_label("X axis: Points (count)").fill("2")
+    page.get_by_label("Y axis: Parameter").select_option("inverters/INV1/rated_kva")
+    page.get_by_label("Y axis: From (kVA)").fill("60")
+    page.get_by_label("Y axis: To (kVA)").fill("80")
+    page.get_by_label("Y axis: Points (count)").fill("2")
+    page.get_by_role("button", name="Run envelope").click()
+    go("Small-signal (M4a)")
+    page.get_by_role("button", name="Run M4a").click()
+    go("Transient (M4b)")
+    page.get_by_role("button", name="Run M4b").click()
+    expect(status).to_be_visible()
+    go("Report")
+    expect(page.get_by_test_id("example-report")).to_have_text(
+        "Produced in example mode from the guided example D2."
+    )
+    expect(guide).to_contain_text("this screen shows the guided example")
+    expect(nxt).to_have_count(0)  # the Report is the last step

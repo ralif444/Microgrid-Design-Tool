@@ -2,6 +2,7 @@
 // S-06 Design constraints (Doc 7 §2): no numeric defaults; an empty limit is "not evaluated"
 // (FR-15, FR-16, manuscript 4.2.4).
 import type { DesignConstraints } from "../../api-types";
+import { ExampleGuide, ExampleNext } from "../../components/ExampleForm";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { useValidation } from "../../components/useValidation";
@@ -25,6 +26,7 @@ function Constraints() {
   return (
     <>
       <h1>Design constraints</h1>
+      <ExampleGuide screen="constraints" runnable={false} />
       <p>Every limit starts empty. An empty limit is not evaluated and is never counted as satisfied.</p>
       {example && (
         <p data-testid="example-constraints">
@@ -52,6 +54,7 @@ function Constraints() {
             ))}
         </p>
       ))}
+      <ExampleNext screen="constraints" ready={true} />
     </>
   );
 }

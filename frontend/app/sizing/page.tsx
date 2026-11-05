@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { runAnalysis } from "../../api-client";
 import type { AnalysisResponse, PsPayload } from "../../api-types";
 import { catalogHints, useCatalog } from "../../components/Catalog";
-import { useExampleForm } from "../../components/ExampleForm";
+import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
@@ -183,6 +183,7 @@ function Sizing() {
   return (
     <>
       <h1>Sizing advice (PS)</h1>
+      <ExampleGuide screen="sizing" />
       <form
         aria-label="Sizing advice settings"
         onSubmit={(e) => {
@@ -245,6 +246,7 @@ function Sizing() {
           {latest.state === "ACCEPTED" && <InverterDrafts plan={latest.result.inverter_plan} />}
         </>
       )}
+      <ExampleNext screen="sizing" ready={nextReady(resp?.result.status)} />
     </>
   );
 }

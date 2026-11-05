@@ -5,6 +5,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { M4aPayload } from "../../api-types";
+import { ExampleGuide, ExampleNext, nextReady } from "../../components/ExampleForm";
 import { tauInSource } from "../../components/Catalog";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
@@ -69,6 +70,7 @@ function SmallSignal() {
         <h1>Small-signal (M4a)</h1>
         <M1FreshnessBadge f={fresh} />
       </div>
+      <ExampleGuide screen="small-signal" />
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
       <form
@@ -126,6 +128,7 @@ function SmallSignal() {
         </>
       )}
       {!resp && <EmptyState title="Not run yet.">Run M4a to see the eigenvalues, damping and the stability class.</EmptyState>}
+      <ExampleNext screen="small-signal" ready={nextReady(r?.status)} />
     </>
   );
 }

@@ -7,7 +7,7 @@
 import { useState, type KeyboardEvent } from "react";
 import type { M3dPayload, RunRecord, SweepPoint } from "../../api-types";
 import { axisNeeds, SizeIndicator, useAxis, useSweepCap } from "../../components/AxisForm";
-import { useExampleForm } from "../../components/ExampleForm";
+import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
 import { ChartFrame } from "../../components/charts/ChartFrame";
 import { EmptyState } from "../../components/EmptyState";
 import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
@@ -52,6 +52,7 @@ function Envelope() {
         <h1>Envelope (M3d)</h1>
         <M1FreshnessBadge f={fresh} />
       </div>
+      <ExampleGuide screen="envelope" />
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
       <form
@@ -89,6 +90,7 @@ function Envelope() {
         </>
       )}
       {!resp && <EmptyState title="No envelope run yet.">Choose two axes and run the envelope to see the status of every point.</EmptyState>}
+      <ExampleNext screen="envelope" ready={nextReady(r?.status)} />
     </>
   );
 }

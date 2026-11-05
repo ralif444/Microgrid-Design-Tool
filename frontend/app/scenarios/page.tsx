@@ -6,6 +6,7 @@
 // ranking is implied); the comparison table with the payload deltas follows the charts.
 import { useState } from "react";
 import type { M3cPayload } from "../../api-types";
+import { ExampleGuide, ExampleNext, nextReady } from "../../components/ExampleForm";
 import { BarChart } from "../../components/charts/BarChart";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
@@ -114,6 +115,7 @@ function Scenarios() {
         <h1>Scenarios and comparison (M3c)</h1>
         <M1FreshnessBadge f={fresh} />
       </div>
+      <ExampleGuide screen="scenarios" />
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
       {example && (
@@ -206,6 +208,7 @@ function Scenarios() {
         </>
       )}
       {!resp && <EmptyState title="Not compared yet.">Select two or more Scenarios and compare them, or run the N−1 check.</EmptyState>}
+      <ExampleNext screen="scenarios" ready={nextReady(r?.status)} />
     </>
   );
 }

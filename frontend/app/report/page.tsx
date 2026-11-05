@@ -9,6 +9,7 @@ import type { AnalysisType, M1Payload, M2Payload, M4aPayload, MetaInfo, ProjectS
 import { AdvisoryPanel } from "../../components/AdvisoryPanel";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
+import { ExampleGuide } from "../../components/ExampleForm";
 import { Icon } from "../../components/Icon";
 import { IndicatorPanel, indicatorText, useIndicatorRows } from "../../components/IndicatorPanel";
 import { M1Results } from "../../components/M1Results";
@@ -45,7 +46,7 @@ const SUMMARY: DataColumn<Summary>[] = [
 ];
 
 function Report() {
-  const { project, design, runRecords } = useProject();
+  const { project, design, runRecords, example } = useProject();
   const [meta, setMeta] = useState<MetaInfo | null>(null);
   useEffect(() => {
     void getMeta().then((r) => r.ok && setMeta(r.data));
@@ -65,6 +66,7 @@ function Report() {
     return (
       <>
         <h1>Report</h1>
+        <ExampleGuide screen="report" runnable={false} />
         <EmptyState
           title="No results yet."
           action={
@@ -100,6 +102,7 @@ function Report() {
         </button>
         <p>The print layout hides these controls and the app header.</p>
       </div>
+      <ExampleGuide screen="report" runnable={false} />
       <h1 className={styles.title}>Report: {project?.name}</h1>
       <p className={styles.meta}>
         <span>
@@ -112,6 +115,9 @@ function Report() {
           App <strong>{meta?.app_version ?? "…"}</strong>
         </span>
       </p>
+      {example && (
+        <p data-testid="example-report">Produced in example mode from the guided example D2.</p>
+      )}
       {used.some((r) => r.engine_kind === "FAKE") && (
         <p role="note" data-testid="fake-note" className="problems">
           <Icon name="warn" size={20} />

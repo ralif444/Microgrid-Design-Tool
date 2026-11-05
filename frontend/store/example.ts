@@ -13,10 +13,15 @@ export interface ExamplePreset {
   source: string;
   fields: { disturbance: Record<string, unknown>; simulation_end_s: number };
 }
+export interface ExampleGuidance {
+  text: string;
+  source: string;
+}
 export interface ExampleScreen {
   fields: Record<string, ExampleField>;
   needs_value: string[];
   presets: ExamplePreset[];
+  guidance: ExampleGuidance | null; // "What this step shows" (FR-102)
 }
 export interface ExampleSettings {
   example_settings_version: 1;
@@ -61,6 +66,13 @@ const FIELD_RULES: Record<string, Record<string, Check>> = {
   envelope: { axis_x: axis, axis_y: axis },
   "small-signal": { tau_in_s: (v) => num(v) && v > 0, damping_threshold_ratio: ratio },
   transient: {},
+  // screens with guidance only (FR-102)
+  loads: {},
+  network: {},
+  constraints: {},
+  "power-flow": {},
+  scenarios: {},
+  report: {},
 };
 
 const DISTURBANCE_KINDS = ["LOAD_STEP", "LOAD_SCALING", "REFERENCE_STEP", "INVERTER_OUTAGE"];
@@ -112,7 +124,11 @@ export function parseExampleSettings(raw: unknown): ExampleSettings | null {
       console.warn(`Example settings: a ${name} preset was dropped (fails its rule)`);
       return false;
     }) as ExamplePreset[];
-    screens[name] = { fields, needs_value: needs, presets };
+    const g = src.guidance as Partial<ExampleGuidance> | undefined;
+    const text = (x: unknown): x is string => typeof x === "string" && x.trim() !== "";
+    const guidance = g && text(g.text) && text(g.source) ? { text: g.text, source: g.source } : null;
+    if (src.guidance !== undefined && !guidance) console.warn(`Example settings: ${name} guidance dropped (needs text and source)`);
+    screens[name] = { fields, needs_value: needs, presets, guidance };
   }
   return { example_settings_version: 1, id: r.id, project: r.project, screens };
 }

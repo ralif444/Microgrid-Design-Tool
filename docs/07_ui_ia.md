@@ -85,10 +85,10 @@ Presentation and workflow only (`docs/EXAMPLE_MODE_PRD.md`). Entering: S-01 "Ope
 | Element | Where | Behaviour |
 |---|---|---|
 | Tag "Example mode" + "Leave example mode" | Header, next to the engine badge | Visible only in example mode (FR-99). |
-| Info banner + "What this step shows" | S-03 – S-16 under the page head | Info role, not a status colour; guidance 2–4 sentences, English, no result numbers, with the manuscript section it paraphrases (FR-102). On the Fake Engine it adds "Results on the Fake Engine are placeholders. Start with `MGAPP_ENGINE=REAL` to see engine results." |
+| Info banner + "What this step shows" | S-03 – S-16 under the page head | Info role, not a status colour; guidance 2–4 sentences, English, no result numbers, with the manuscript section it paraphrases (FR-102). On the Fake Engine it adds "Results on the Fake Engine are placeholders. Start with `MGAPP_ENGINE=REAL` to see engine results." Hidden in print; S-16 adds the printed line "Produced in example mode from the guided example D2." (D-97). |
 | "Example" tag | Each prefilled field | Toggletip names the source (FR-100). A field without a confirmed value shows "Not set in the example: enter a value." |
 | "Reset to example values" | Each form screen | Ghost button; re-applies the example layer only. |
-| "Next: <step>" | Under a successful result | Pipeline order (§3); further analyses M3a → M3b → M3c → M3d → M4a → M4b → Report (FR-102). |
+| "Next: <step>" | Under a successful result | Pipeline order (§3); further analyses M3a → M3b → M3c → M3d → M4a → M4b → Report (FR-102). Shown after a FEASIBLE or INFEASIBLE run, and always on S-03, S-05, S-06 (no Run button); none on the Report (D-97 K251). |
 | Example disturbances | S-14 | DR-01 load step, TS-02 inverter outage, DR-02 P* step (Doc 13 §5); choosing one refills the disturbance fields (FR-103). |
 | Read-only notice | S-06 | The study limits of the example come from the Project file. |
 | "Run the whole example" | S-02 | Could, built last (FR-104, D-92 K228). |
@@ -433,6 +433,7 @@ DOC 7 COMPLETE
 ## Change log 2026-11-05 (example mode, D-92)
 - §2 S-10: optional per-point metrics and eigenvalues (user decision at EX-3, D-95 K243).
 - §2.3 added: guided example D2, header Tag, banner, guidance, "Example" tags, reset, Next links, S-14 example disturbances, settings-file schema (Doc 12 X9, FR-99 – FR-104).
+- §2.3: when the Next link shows, banner and Next hidden in print, Report line (EX-5, D-97 K251, K252).
 - §7: UI-state slice `example` and `initialValue` (D-92 K233).
 
 ## Change log 2026-11-03 (SLD round, D-75)

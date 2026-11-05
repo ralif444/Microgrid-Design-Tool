@@ -7,7 +7,7 @@ import { runAnalysis } from "../../api-client";
 import type { M2Payload, RunRecord } from "../../api-types";
 import Link from "next/link";
 import { EmptyState } from "../../components/EmptyState";
-import { useExampleForm } from "../../components/ExampleForm";
+import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
 import { asResponse } from "../../components/Further";
 import { Icon } from "../../components/Icon";
 import { Inspector, type ElementRef } from "../../components/Inspector";
@@ -82,6 +82,7 @@ function ConstraintCheck() {
         <h1>Constraint check (M2)</h1>
         <M1FreshnessBadge f={fresh} />
       </div>
+      <ExampleGuide screen="constraint-check" />
       <M1BlockedNote f={fresh} />
       <form
         aria-label="Constraint check settings"
@@ -132,6 +133,7 @@ function ConstraintCheck() {
         ) : (
           <EmptyState title="Not run yet.">Enter both design margins, then run M2.</EmptyState>
         ))}
+      <ExampleNext screen="constraint-check" ready={nextReady(r?.status)} />
     </>
   );
 }

@@ -7,7 +7,7 @@ import { useState } from "react";
 import type { M4bPayload } from "../../api-types";
 import { LineChart } from "../../components/charts/LineChart";
 import { EmptyState } from "../../components/EmptyState";
-import { ExampleTag, NotSet, useExampleForm } from "../../components/ExampleForm";
+import { ExampleGuide, ExampleNext, ExampleTag, nextReady, NotSet, useExampleForm } from "../../components/ExampleForm";
 import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
 import { IndicatorPanel } from "../../components/IndicatorPanel";
 import { m4bKpis } from "../../components/kpi";
@@ -135,6 +135,7 @@ function Transient() {
         <h1>Transient (M4b)</h1>
         <M1FreshnessBadge f={fresh} />
       </div>
+      <ExampleGuide screen="transient" />
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
       <form
@@ -280,6 +281,7 @@ function Transient() {
         </>
       )}
       {!resp && <EmptyState title="Not run yet.">Define a disturbance and run M4b to see the time responses and the transient class.</EmptyState>}
+      <ExampleNext screen="transient" ready={nextReady(r?.status)} />
     </>
   );
 }

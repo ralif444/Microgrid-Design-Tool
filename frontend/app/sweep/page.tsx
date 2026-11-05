@@ -12,7 +12,7 @@ import { Swatch } from "../../components/charts/marks";
 import { FEAS } from "../../components/charts/palette";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
-import { useExampleForm } from "../../components/ExampleForm";
+import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
 import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
 import { m3bKpis } from "../../components/kpi";
@@ -87,6 +87,7 @@ function Sweep() {
         <h1>Sweep (M3b)</h1>
         <M1FreshnessBadge f={fresh} />
       </div>
+      <ExampleGuide screen="sweep" />
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
       <form
@@ -157,6 +158,7 @@ function Sweep() {
         </>
       )}
       {!resp && <EmptyState title="No sweep run yet.">Choose an axis and run the sweep to see each point&apos;s status and key metrics.</EmptyState>}
+      <ExampleNext screen="sweep" ready={nextReady(r?.status)} />
     </>
   );
 }

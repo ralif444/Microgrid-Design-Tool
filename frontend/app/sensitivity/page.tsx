@@ -9,7 +9,7 @@ import type { M3aPayload, OutputMetric } from "../../api-types";
 import { BarChart } from "../../components/charts/BarChart";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
-import { NotSet, useExampleForm } from "../../components/ExampleForm";
+import { ExampleGuide, ExampleNext, nextReady, NotSet, useExampleForm } from "../../components/ExampleForm";
 import { fmt, InfeasibleNote, METRICS, numericPaths, shortcutPrefill, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
 import { Icon } from "../../components/Icon";
@@ -62,6 +62,7 @@ function Sensitivity() {
         <h1>Sensitivity (M3a)</h1>
         <M1FreshnessBadge f={fresh} />
       </div>
+      <ExampleGuide screen="sensitivity" />
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
       <form
@@ -175,6 +176,7 @@ function Sensitivity() {
         </p>
       )}
       {!resp && <EmptyState title="Not run yet.">Pick parameters, output metrics and a step, then run M3a to rank the parameters by effect.</EmptyState>}
+      <ExampleNext screen="sensitivity" ready={nextReady(r?.status)} />
     </>
   );
 }

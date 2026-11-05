@@ -4,10 +4,16 @@
 // value, the "not set" note for fields the example leaves empty, and "Reset to example values".
 // Outside example mode the hook only returns the refill values, and the screen looks as before.
 import { Tag } from "@carbon/react";
-import { useState, type ReactNode } from "react";
+import Link from "next/link";
+import { useEffect, useState, type ReactNode } from "react";
+import { getMeta } from "../api-client";
+import type { Status } from "../api-types";
 import { useProject } from "../store";
 import { initialValue } from "../store/example";
 import styles from "./ExampleForm.module.css";
+import { Icon } from "./Icon";
+import { FURTHER, STEPS } from "./PipelineStepper";
+import banner from "./StatusBanner.module.css";
 import { Toggletip } from "./Term";
 
 export const NOT_SET = "Not set in the example: enter a value.";
@@ -85,4 +91,61 @@ export function useExampleForm<T extends object>(
       </button>
     ) : null;
   return { values: form.values, set, tag, note, needs, resetButton, inExample: !!s };
+}
+
+// Example banner (Doc 7 §2.3, FR-102): info role, not a status colour; the guidance text and its
+// source in a "What this step shows" disclosure; the Fake Engine line of PRD §3 rule 3.
+export function ExampleGuide({ screen, runnable = true }: { screen: string; runnable?: boolean }) {
+  const { example } = useProject();
+  const [fake, setFake] = useState(false);
+  useEffect(() => {
+    if (example) void getMeta().then((r) => setFake(r.ok && r.data.engine.engine_kind === "FAKE"));
+  }, [example]);
+  if (!example) return null;
+  const g = example.settings.screens[screen]?.guidance;
+  return (
+    <section aria-label="Example guidance" data-testid="example-guide" data-role="info" className={`no-print ${banner.banner}`}>
+      <p className={styles.lead}>
+        <Icon name="info" size={20} />
+        {runnable
+          ? "Example mode: this screen is pre-filled from the guided example. Press Run."
+          : "Example mode: this screen shows the guided example."}
+      </p>
+      {fake && (
+        <p>
+          Results on the Fake Engine are placeholders. Start with <code>MGAPP_ENGINE=REAL</code> to see engine results.
+        </p>
+      )}
+      {g && (
+        <details className={banner.details}>
+          <summary>What this step shows</summary>
+          <p>{g.text}</p>
+          <p className={styles.source}>Source: {g.source}.</p>
+        </details>
+      )}
+    </section>
+  );
+}
+
+// Pipeline order (Doc 7 §3, FR-102): the stepper steps, then M3a → M4b, then the Report.
+const ORDER: [string, string][] = [
+  ...STEPS.filter((s) => s.n !== null && s.href && s.href !== "/report/").map((s) => [s.href!, s.label] as [string, string]),
+  ...FURTHER,
+  ["/report/", "Report"],
+];
+
+export const nextReady = (status: Status | undefined) => status === "FEASIBLE" || status === "INFEASIBLE"; // FR-41
+
+// "Next: <step>" under a result (D-97): after a FEASIBLE or INFEASIBLE run, or always on a screen
+// without a Run button.
+export function ExampleNext({ screen, ready }: { screen: string; ready: boolean }) {
+  const { example } = useProject();
+  const i = ORDER.findIndex(([href]) => href === `/${screen}/`);
+  const next = ORDER[i + 1];
+  if (!example || !ready || i < 0 || !next) return null;
+  return (
+    <p className={`no-print ${styles.next}`} data-testid="example-next">
+      <Link href={next[0]}>Next: {next[1]}</Link>
+    </p>
+  );
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { runAnalysis } from "../../api-client";
 import type { M1Payload } from "../../api-types";
+import { ExampleGuide, ExampleNext, nextReady } from "../../components/ExampleForm";
 import { EmptyState } from "../../components/EmptyState";
 import { asResponse } from "../../components/Further";
 import { Icon } from "../../components/Icon";
@@ -56,6 +57,7 @@ function PowerFlow() {
           {busy ? "Running..." : "Run M1"}
         </button>
       </div>
+      <ExampleGuide screen="power-flow" />
       <h2>Readiness</h2>
       {report === null ? (
         <p className={styles.checking}>Checking the design…</p>
@@ -106,6 +108,7 @@ function PowerFlow() {
           <Link href="/constraint-check/">Continue to the constraint check (M2)</Link>
         </p>
       )}
+      <ExampleNext screen="power-flow" ready={nextReady(resp?.result.status)} />
     </>
   );
 }

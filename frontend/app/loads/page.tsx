@@ -5,6 +5,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { Load, ValidationIssue } from "../../api-types";
+import { ExampleGuide, ExampleNext } from "../../components/ExampleForm";
 import { CellInput, CellSelect, DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
 import { Icon } from "../../components/Icon";
@@ -104,6 +105,7 @@ function Loads() {
   return (
     <>
       <h1>Loads</h1>
+      <ExampleGuide screen="loads" runnable={false} />
       {(design.buses?.length ?? 0) === 0 && (
         <EmptyState title="No buses yet." icon="link" action={<Link href="/network/">Add buses in the network editor</Link>}>
           Loads are placed on buses.
@@ -151,6 +153,7 @@ function Loads() {
         <Link href="/sizing/">Go to sizing advice</Link>
         {loads.length === 0 && " Needs at least one load."}
       </p>
+      <ExampleNext screen="loads" ready={true} />
     </>
   );
 }
