@@ -43,6 +43,7 @@ Dokumen ini memuat sepuluh fitur tambahan yang disepakati setelah seminar propos
 | X6 | Glossary toggletips and the glossary on S-17 | L1 | Could | UX round | FR-91 |
 | X7 | Chart download as SVG with caption metadata | L1 | Could | UX round | FR-92 |
 | X8 | Automatic single-line diagram: symbols, tooltip, result overlay, report figure, SVG export | L1 | Could | SLD round (2026-11-03, after UX-2) | FR-94 – FR-98 |
+| X9 | Guided example mode (design D2): prefilled analysis forms, guidance, example disturbances | L1 | Should (FR-104 Could) | Example round (2026-11-05, after UX-12) | FR-99 – FR-104 |
 
 X0–X7 are the UX and analytics round of `docs/UX_ANALYTICS_GUIDELINES.md` (decisions Q1–Q7 there, Doc 9 D-72). The guideline calls them U0–U7; they are coded X here because U1–U4 already name the user groups (Doc 1 §6, Doc 11). All eight are presentation only: no payload, contract, API or Engine Port change, and the browser computes no engine number (it only selects, counts, sorts, filters and rounds for display).
 
@@ -194,6 +195,19 @@ Source: `docs/SLD_FEATURE_GUIDELINES.md` v2 (§A wins over the rest of that file
 
 ---
 
+### 3.12 X9 — Example mode (guided example D2)
+
+Source: `docs/EXAMPLE_MODE_PRD.md` (its §3 hard rules bind); values and decisions confirmed by the user at EX-0 in Doc 9 D-92. Presentation and workflow only: no equation, state, assumption, payload field, Project-file field, RunRecord field, API or Engine Port change (§1). Rules: every prefilled value names its source (Doc 13 §4/§5, Doc 3 §3.7, or an author's study setting confirmed in D-92); a value without a source stays empty with "Not set in the example: enter a value"; guidance text quotes no result value; the FAKE marking stays; example settings are prefill only and never enter the canonical snapshot, the Project file or a RunRecord beyond the parameters actually sent; precedence per field: typed value > refill from the last RunRecord of that analysis (D-71 K149 pattern) > example value > empty; the example never accepts SizingAdvice and never runs anything without a click.
+
+| ID | Requirement | Priority | Acceptance criteria | Source |
+|---|---|---|---|---|
+| FR-99 | (X9) S-01 shall offer "Open guided example (D2)", which opens `guided-d2.mgproj.json` as a new unsaved copy and enters example mode; the header shows a Tag "Example mode" and a "Leave example mode" button. Leaving, opening another Project, creating a new one or opening a file ends example mode and keeps the Project, its data and its RunRecords. | Should | **E2E:** open, header tag visible; leave, tag gone, Project kept. | PRD §5.1 |
+| FR-100 | (X9) In example mode every screen with an analysis form shall prefill from `guided-d2.example.json` with the precedence above; each prefilled field shows an "Example" tag whose toggletip names its source; a field without a confirmed value stays empty with the note; "Reset to example values" re-applies the example layer only. | Should | Client: precedence helper; every settings entry has a source; type guard (valid, unknown keys ignored, bad value dropped, missing file hides the S-01 action). **E2E:** on the Fake default profile, S-04, S-07, S-08 and S-09 – S-14 each show a result after pressing Run with no typing, except fields left empty in D-92. | PRD §5.2, §5.3, §6 |
+| FR-101 | (X9) Example settings shall never reach the canonical snapshot, the Project file or a RunRecord beyond the parameters actually sent; outside example mode no screen prefills. | Should | Client: the snapshot hash of the guided Project equals the hash of the same design entered by hand. **E2E:** a normal new Project shows empty forms. | PRD §3 rule 4 |
+| FR-102 | (X9) Each example screen shall show the info banner, a "What this step shows" disclosure and, after a run, a "Next: <step>" link in pipeline order (Doc 7 §3; further analyses M3a → M3b → M3c → M3d → M4a → M4b → Report); the guidance text contains no result numbers; S-16 shows "Produced in example mode from the guided example D2" while example mode is on. | Should | Client: guidance strings contain no digits except section and equation numbers in the source line. **E2E:** the Next links lead through the pipeline to S-16. | PRD §5.2, §7 |
+| FR-103 | (X9) S-14 shall offer the example disturbances DR-01, TS-02 and DR-02 of Doc 13 §5 as presets; choosing one refills the disturbance fields. | Should | **E2E:** choosing TS-02 fills INVERTER_OUTAGE on INV2 and Run gives a result. | PRD §6, Doc 13 §5 |
+| FR-104 | (X9) S-02 shall offer "Run the whole example" in example mode: PS → M1 → M2 → M3a → M3b → M3c → M3d → M4a → M4b (first preset) in order with each screen's current values, one normal synchronous request at a time (ADR-007), a progress list (status word + icon), stop at the first result that is not FEASIBLE naming the step, skip steps with an unset required field ("skipped: not set in the example"), then open the Report. | Could | **E2E** (Fake): all steps run in order and the Report opens; on profile `m2-infeasible` it stops at M2 and names it. | PRD §8 |
+
 ## 4. Contract changes (merge into Doc 3 at stage 1.5)
 
 | Item | Change |
@@ -228,6 +242,8 @@ Source: `docs/SLD_FEATURE_GUIDELINES.md` v2 (§A wins over the rest of that file
 | `/dev/sld` | Every SLD symbol and state of guideline §5 (FR-94). |
 | All screens, S-17 About (built in this round) | Glossary toggletips; glossary list on S-17 (FR-91). |
 | `/dev/components` | Every chart and state (FR-86). |
+| S-01, header, S-04, S-06, S-08 – S-14, S-16 | Example mode (X9): "Open guided example (D2)" on S-01 and the header Tag "Example mode" with "Leave example mode" (FR-99); info banner, "What this step shows", "Example" tags, "Reset to example values", "Next:" link (FR-100, FR-102); S-06 notice that the study limits come from the Project file; S-14 example disturbances (FR-103); S-16 example-mode line (FR-102). |
+| S-02 | "Run the whole example" (FR-104, Could, built last). |
 
 ## 6. API changes (merge into Doc 6)
 
@@ -250,6 +266,7 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | FR-83 – FR-85 | E2E | diff_lists_paths; shortcut_prefills_m3a; example_opens_as_copy |
 | FR-94 – FR-98 | Client + E2E | sld_model_verbatim; sld_layout_deterministic_no_overlap_meshed; tooltip_rows_equal_inspector; overlay_hidden_when_stale; violated_word_on_m2_infeasible; report_sld_caption; sld_svg_caption; sld_keyboard_and_table |
 | FR-86 – FR-93 | Client + E2E | scale_ticks_domain_nearest_nulls; kpi_selectors_empty_and_null; latest_matching_run; figure_show_data_row_count; crosshair_arrow_keys; inspector_focus_and_stale; fake_caption_every_chart; glossary_entries_have_source; toggletip_enter_escape; svg_download_caption; report_charts_within_718px |
+| FR-99 – FR-104 | Client + E2E; API (REAL) at EX-7 | example_settings_guard; initial_value_precedence; every_example_entry_has_source; guidance_no_result_numbers; guided_snapshot_hash_equals_hand_entry; example_click_through; leave_example_mode; normal_project_forms_empty; m4b_example_presets; run_whole_example |
 
 ## 8. Core alignment items moved out of this document
 
@@ -280,6 +297,11 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | 16 | X8: SVG export only, no PNG (FR-92 asks for SVG; guideline §12 #6 default). | DECIDED (from FR-92, 2026-11-03) |
 | 17 | X8: source of "Limiting" on S-08. Guideline §A6 says the smallest `normalised_margin` of `constraint_margins`, because `M2Payload` has no `limiting_constraints`. But the M2 *result* carries `limiting_constraints` (Doc 3 §5: non-empty when INFEASIBLE, may list near-limit items when FEASIBLE), and S-08 already shows it as the "Limiting constraints" table. Proposal: "Limiting" = an element in `result.limiting_constraints`; "Violated" = `margin < 0` in `constraint_margins`; "Near limit" = `nearLimit()`. | DECIDED (user approved the SLD-0 draft with this proposal, 2026-11-03) |
 | 18 | X8 priority: Could (FR-14 is Should; the guideline does not set X8's priority). | DECIDED (user approved the SLD-0 draft, 2026-11-03) |
+| 19 | X9: guided example D2 only, no guided D1 (EX-D1). | DECIDED (user 2026-11-05, D-92 K227) |
+| 20 | X9: "Run the whole example" is built, last, only if time allows (EX-D2). | DECIDED (user 2026-11-05, D-92 K228) |
+| 21 | X9: guidance text in English, the UI language (EX-D5); glossary toggletips stay Indonesian (FR-91). | DECIDED (user 2026-11-05, D-92 K229) |
+| 22 | X9: values with no source yet stay empty until the user gives one with a reason: M3a `step_relative`, M3b `step_count`, M3d `axis_y` and both step counts. M4a damping threshold stays empty; M4b settling criteria stay empty and are revisited after one REAL run (EX-D4). | OPEN (owner, D-92 K231) |
+| 23 | X9: the M3c reference is the first scenario (Doc 3 §6.6 default; S-11 has no reference field), so "D2 base" is stored first in the guided Project. | DECIDED (from Doc 3, D-92 K234) |
 
 ## Log
 
@@ -290,3 +312,4 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | 2026-11-02 | Q-22 settled (Doc 9 D-59): Could features with Eq. 12.x after the Should ones; B2 requires η_dc (Eq. 12.7); B3 out of v1; no example catalogue entries. |
 | 2026-11-03 | UX and analytics round added (Doc 9 D-72): X0–X7 with FR-86 – FR-93 (§2, §3.10, §5, §7, §9 points 6–10). |
 | 2026-11-03 | SLD round added (Doc 9 D-75, ADR-013, user-confirmed at SLD-0): X8 with FR-94 – FR-98 (§2, §3.11, §5, §7, §9 points 11–18). |
+| 2026-11-05 | Example round added (Doc 9 D-92, user-confirmed at EX-0): X9 with FR-99 – FR-104 (§2, §3.12, §5, §7, §9 points 19–23). |

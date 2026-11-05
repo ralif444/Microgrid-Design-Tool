@@ -14,6 +14,7 @@ DOCS = [ROOT / "docs" / "02_prd.md", ROOT / "docs" / "12_extensions.md"]
 EXCEPTIONS = {
     "FR-56": "no older Project schema version exists (D-66 K135)",
     **{f"FR-{n}": "B1, B2, P11 postponed until D2 data exist (D-62)" for n in range(73, 80)},
+    **{f"FR-{n}": "example mode X9, tested from EX-1 (D-92 K235)" for n in range(99, 105)},
     "NFR-09": "process requirement; evidence is the seam marking in Doc 8 §6",
     "NFR-18": "process requirement; evidence is the gate log",
 }

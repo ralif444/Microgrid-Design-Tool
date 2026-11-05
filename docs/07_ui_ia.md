@@ -22,7 +22,7 @@ Routes are Next.js static-export paths (file-based routing, ADR-002), no dynamic
 
 | ID | Screen | Route | Purpose | Main FR IDs | Priority |
 |---|---|---|---|---|---|
-| S-01 | Start | `/` | Create a new Project; open a Project file (import: check + forward migration, or reject with message); recent autosave offer. | FR-01, FR-54, FR-55, FR-56, FR-57 | Must (migration notice: Should) |
+| S-01 | Start | `/` | Create a new Project; open a Project file (import: check + forward migration, or reject with message); recent autosave offer; open the guided example (Doc 12 X9). | FR-01, FR-54, FR-55, FR-56, FR-57, FR-99 | Must (migration notice: Should) |
 | S-02 | Project overview | `/project/` | Name and description; pipeline status per step; design readiness checklist; Save Project (export JSON); counts of Buses, Lines, Loads, Inverters, RunRecords. | FR-02, FR-54, FR-55, FR-57 | Must (name/description: Should) |
 | S-03 | Loads (+ LoadProfile) | `/loads/` | Load table (Bus, P, Q or power factor with direction); optional 24-point LoadProfile editor; inline validation. | FR-03, FR-04, FR-05, FR-17, FR-18 | Must (LoadProfile: Should) |
 | S-04 | Sizing advice (PS) | `/sizing/` | Run PS; show SizingAdvice with basis and assumptions; Accept / Edit / Skip; stale-advice notice. | FR-06, FR-07, FR-08, FR-09, FR-27 | Must (pre-fill: Should) |
@@ -35,7 +35,7 @@ Routes are Next.js static-export paths (file-based routing, ADR-002), no dynamic
 | S-11 | Scenarios and comparison (M3c) | `/scenarios/` | Save current design as Scenario; edit overrides; select 2 or more; compare with explicit deltas. | FR-30, FR-31, FR-39, FR-41 | Should |
 | S-12 | Envelope (M3d) | `/envelope/` | Two parameters and ranges; grid of per-point Status; feasible fraction. | FR-32, FR-44 | Could |
 | S-13 | Small-signal (M4a) | `/small-signal/` | Run; eigenvalues, damping, dominant modes, participation (when available) tables; stability class STABLE / MARGINAL / UNSTABLE in words; indicators r_τ, κ, r_in, ε_X with "evaluated" flag and reason, labelled "validity not calibrated" until stage 1.6; optional τ_in and damping threshold inputs. | FR-33, FR-39, FR-41 | Should |
-| S-14 | Transient (M4b) | `/transient/` | Define disturbance from the four-kind catalogue (load step, load scaling on one or all buses, reference step on P*, Q*, V* or ω*, inverter outage; permanent or finite duration); run; frequency, voltage, P and Q time responses; transient class RECOVERED_STABLE / CRITERIA_VIOLATED / UNSTABLE in words; max RoCoF (descriptive). | FR-34, FR-39, FR-41 | Should |
+| S-14 | Transient (M4b) | `/transient/` | Define disturbance from the four-kind catalogue (load step, load scaling on one or all buses, reference step on P*, Q*, V* or ω*, inverter outage; permanent or finite duration); run; frequency, voltage, P and Q time responses; transient class RECOVERED_STABLE / CRITERIA_VIOLATED / UNSTABLE in words; max RoCoF (descriptive). | FR-34, FR-39, FR-41, FR-103 | Should |
 | S-15 | Run history | `/runs/` | RunRecord list (INPUT_INVALID hidden by default); detail; export; import; verify; re-run; reproduction outcome; version comparison. | FR-46..FR-53, FR-57 | Must (version warning: Should) |
 | S-16 | Report | `/report/` | HTML report: verdict, limiting constraints, margins, assumptions, tables, charts, RunRecord hashes; print layout. | FR-48, FR-58, FR-59, FR-60 | Must (print: Should) |
 | S-17 | About and limits | `/about/` | App, schema and engine versions (FAKE or REAL); active limits (`TIME_BUDGET`, `SWEEP_CAP`, `SCENARIO_CAP`); glossary; offline note. | FR-51, NFR-02, NFR-03 | Should [ASSUMPTION] |
@@ -77,6 +77,23 @@ Presentation only; every value comes from a payload already returned. Tile and c
 | S-16 | — | static versions of the S-07, S-08 and run-specific charts, no crosshair | — |
 
 The strip sits under the page head and the Status banner; the inspector is a side panel, not a modal. Every result screen shows the latest RunRecord of its type that matches the current design (FR-93). Domain terms carry a "?" toggletip with Indonesian text (FR-91, §9 #1); S-17 About, built in this round, lists the glossary. Every chart, strip and inspector fed by a FAKE run carries the FAKE marking.
+
+### 2.3 Example mode (Doc 12 X9, D-92)
+
+Presentation and workflow only (`docs/EXAMPLE_MODE_PRD.md`). Entering: S-01 "Open guided example (D2)" opens `frontend/public/examples/guided-d2.mgproj.json` as a new unsaved copy (FR-99). Leaving: the header button "Leave example mode", or opening, creating or importing another Project; the Project and its RunRecords stay. Save writes a normal Project file; the example settings are not saved (stated in the toggletip of the header Tag).
+
+| Element | Where | Behaviour |
+|---|---|---|
+| Tag "Example mode" + "Leave example mode" | Header, next to the engine badge | Visible only in example mode (FR-99). |
+| Info banner + "What this step shows" | S-03 – S-16 under the page head | Info role, not a status colour; guidance 2–4 sentences, English, no result numbers, with the manuscript section it paraphrases (FR-102). On the Fake Engine it adds "Results on the Fake Engine are placeholders. Start with `MGAPP_ENGINE=REAL` to see engine results." |
+| "Example" tag | Each prefilled field | Toggletip names the source (FR-100). A field without a confirmed value shows "Not set in the example: enter a value." |
+| "Reset to example values" | Each form screen | Ghost button; re-applies the example layer only. |
+| "Next: <step>" | Under a successful result | Pipeline order (§3); further analyses M3a → M3b → M3c → M3d → M4a → M4b → Report (FR-102). |
+| Example disturbances | S-14 | DR-01 load step, TS-02 inverter outage, DR-02 P* step (Doc 13 §5); choosing one refills the disturbance fields (FR-103). |
+| Read-only notice | S-06 | The study limits of the example come from the Project file. |
+| "Run the whole example" | S-02 | Could, built last (FR-104, D-92 K228). |
+
+**Settings file** `frontend/public/examples/guided-d2.example.json`, read only by the frontend: `example_settings_version` (1), `project` (path of the Project file), `screens` mapping a screen id to `fields` (field name → {value, source}) and `guidance` ({text, source}), and `presets` for S-14 (id, label, source, disturbance fields). It is validated on load by a hand-written type guard: unknown keys are ignored; a value that fails the field's stage-1 rule or a `parameter_path` that does not resolve (Doc 3 §3.10) is dropped with a console warning and treated as not set; a missing or invalid file hides the S-01 action.
 
 ## 3. Navigation
 ```mermaid
@@ -373,6 +390,7 @@ Notation: `[ ]` button/field, `( )` option, `<..>` placeholder. Header and stepp
 
 - The store exposes actions through a small interface so a library can replace Context + reducer without touching screens (ADR-005, [ASSUMPTION]). No server-state cache (ADR-010); no undo or redo in v1; field-level schema stays in Doc 3.
 - Browser autosave (localStorage) is a convenience only [ASSUMPTION]: written after edits, offered on S-01 as "Restore unsaved work", never treated as a saved Project; wrapped for failure (private mode, quota). It must not replace the export prompt (P7).
+- Example mode (Doc 12 X9, D-92 K233): a UI-state slice `example` (null or {id, settings}) with actions `exampleEntered` and `exampleLeft`; screen forms read their initial value through `initialValue(screen, field)` with the precedence typed > last-RunRecord refill > example > empty. The slice is never part of the Project file, the canonical snapshot or a RunRecord.
 
 ## 8. Accessibility and language
 
@@ -411,6 +429,10 @@ DOC 7 COMPLETE
 ## Change log 2026-10-21 (user-approved change proposals from the proposal design checks)
 - C5.1 F3 outcome edge: Status equal and result_hash equal.
 - C5.4 first phase per key flow stated in §4.
+
+## Change log 2026-11-05 (example mode, D-92)
+- §2.3 added: guided example D2, header Tag, banner, guidance, "Example" tags, reset, Next links, S-14 example disturbances, settings-file schema (Doc 12 X9, FR-99 – FR-104).
+- §7: UI-state slice `example` and `initialValue` (D-92 K233).
 
 ## Change log 2026-11-03 (SLD round, D-75)
 - §6.3: the circle diagram becomes the automatic single-line diagram (Doc 12 X8); overlay on S-07 and S-08, figure on S-16. §9 #4 stays: read-only first; drag-to-edit not in v1.
