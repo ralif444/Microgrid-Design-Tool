@@ -333,3 +333,58 @@ def test_fr_102_guidance_and_next_links_lead_through_the_pipeline(
     )
     expect(guide).to_contain_text("this screen shows the guided example")
     expect(nxt).to_have_count(0)  # the Report is the last step
+
+
+def _analyses(page: Page) -> list[str]:
+    sent: list[str] = []
+    page.on(
+        "request",
+        lambda r: sent.append(r.url.rsplit("/", 1)[1]) if "/api/analyses/" in r.url else None,
+    )
+    return sent
+
+
+def test_fr_104_run_the_whole_example_runs_in_order_and_opens_the_report(
+    server: Callable[[str], str], page: Page
+) -> None:
+    base = server("default")
+    page.goto(base + "/")
+    page.get_by_role("button", name="Open guided example (D2)").click()
+    page.wait_for_url("**/project/")
+    sent = _analyses(page)
+    page.get_by_role("button", name="Run the whole example").click()
+    page.wait_for_url("**/report/")
+    expect(page.get_by_test_id("example-report")).to_be_visible()
+    # M3a, M3b and M3d are skipped: the example leaves a required field unset (D-92 K231)
+    assert sent == ["PS", "M1", "M2", "M3c", "M4a", "M4b"]
+    page.get_by_role("link", name="2 Sizing advice").click()
+    expect(page.get_by_role("button", name="Accept")).to_be_visible()  # proposed, not accepted
+
+
+def test_fr_104_run_the_whole_example_stops_at_the_first_failure(
+    server: Callable[[str], str], page: Page
+) -> None:
+    base = server("m2-infeasible")
+    page.goto(base + "/")
+    page.get_by_role("button", name="Open guided example (D2)").click()
+    page.wait_for_url("**/project/")
+    sent = _analyses(page)
+    page.get_by_role("button", name="Run the whole example").click()
+    expect(page.get_by_test_id("example-run-stopped")).to_have_text(
+        "Stopped at Constraint check (M2). Open that screen to see the result."
+    )
+    progress = page.get_by_test_id("example-run")
+    expect(progress.locator("[data-step=M2]")).to_have_attribute("data-state", "INFEASIBLE")
+    expect(progress.locator("[data-step=M4b]")).to_contain_text("not run")
+    assert sent == ["PS", "M1", "M2"]
+    expect(page).to_have_url(re.compile(r"/project/$"))
+
+
+def test_fr_104_no_whole_example_run_outside_example_mode(
+    server: Callable[[str], str], page: Page
+) -> None:
+    base = server("default")
+    page.goto(base + "/")
+    page.get_by_role("button", name="Open example D2:").click()
+    page.wait_for_url("**/project/")
+    expect(page.get_by_role("button", name="Run the whole example")).to_have_count(0)

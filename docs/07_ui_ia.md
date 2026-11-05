@@ -91,7 +91,7 @@ Presentation and workflow only (`docs/EXAMPLE_MODE_PRD.md`). Entering: S-01 "Ope
 | "Next: <step>" | Under a successful result | Pipeline order (§3); further analyses M3a → M3b → M3c → M3d → M4a → M4b → Report (FR-102). Shown after a FEASIBLE or INFEASIBLE run, and always on S-03, S-05, S-06 (no Run button); none on the Report (D-97 K251). |
 | Example disturbances | S-14 | DR-01 load step, TS-02 inverter outage, DR-02 P* step (Doc 13 §5); choosing one refills the disturbance fields (FR-103). |
 | Read-only notice | S-06 | The study limits of the example come from the Project file. |
-| "Run the whole example" | S-02 | Could, built last (FR-104, D-92 K228). |
+| "Run the whole example" | S-02 | Could, built last (FR-104, D-92 K228). Runs the pipeline in order with each screen's starting values, skips steps the example leaves unset, stops at the first result that is not FEASIBLE, then opens the Report (D-98). |
 
 **Settings file** `frontend/public/examples/guided-d2.example.json`, read only by the frontend: `example_settings_version` (1), `project` (path of the Project file), `screens` mapping a screen id to `fields` (field name → {value, source}) and `guidance` ({text, source}), and `presets` for S-14 (id, label, source, disturbance fields). It is validated on load by a hand-written type guard: unknown keys are ignored; a value that fails the field's stage-1 rule or a `parameter_path` that does not resolve (Doc 3 §3.10) is dropped with a console warning and treated as not set; a missing or invalid file hides the S-01 action.
 
@@ -434,6 +434,7 @@ DOC 7 COMPLETE
 - §2 S-10: optional per-point metrics and eigenvalues (user decision at EX-3, D-95 K243).
 - §2.3 added: guided example D2, header Tag, banner, guidance, "Example" tags, reset, Next links, S-14 example disturbances, settings-file schema (Doc 12 X9, FR-99 – FR-104).
 - §2.3: when the Next link shows, banner and Next hidden in print, Report line (EX-5, D-97 K251, K252).
+- §2.3: "Run the whole example" behaviour (EX-6, D-98).
 - §7: UI-state slice `example` and `initialValue` (D-92 K233).
 
 ## Change log 2026-11-03 (SLD round, D-75)
