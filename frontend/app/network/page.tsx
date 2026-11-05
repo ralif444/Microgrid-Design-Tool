@@ -1,15 +1,22 @@
 "use client";
 // S-05 Network editor (Doc 7 §6.3): Buses, Lines, Inverters as tables (FR-10, FR-12, FR-13),
-// derived Line totals (display only, D-46 K9), live topology issues (FR-19). Diagram (FR-14)
-// and the Bus delete guard (FR-11) are Should, stage 1.5. Catalogue entries fill Lines and
+// derived Line totals (display only, D-46 K9), live topology issues (FR-19), read-only diagram
+// (FR-14, drawn as the single-line diagram of Doc 12 X8) and the Bus delete guard (FR-11, in
+// EntityTable). Diagram and table rows open the Inspector (FR-90). Catalogue entries fill Lines and
 // Inverters (Doc 12 FR-66, FR-69, FR-70).
 import { useEffect, useState } from "react";
 import type { CatalogRef } from "../../api-types";
 import { block, entryWarnings, fromEntry, refText, useCatalog } from "../../components/Catalog";
+import { EmptyState } from "../../components/EmptyState";
 import { EntityTable, type Column } from "../../components/EntityTable";
+import { Icon } from "../../components/Icon";
+import { Inspector, type ElementRef } from "../../components/Inspector";
 import { RequireProject } from "../../components/RequireProject";
+import { SingleLineDiagram } from "../../components/sld/SingleLineDiagram";
+import { useSldModel } from "../../components/sld/useSldModel";
 import { useValidation } from "../../components/useValidation";
 import { useProject, useProjectDispatch } from "../../store";
+import styles from "./network.module.css";
 
 const times = (a: unknown, b: unknown) => (typeof a === "number" && typeof b === "number" ? a * b : null);
 
@@ -28,8 +35,8 @@ const LINE_COLUMNS: Column[] = [
 const INVERTER_COLUMNS: Column[] = [
   { field: "bus_id", label: "Bus", kind: "bus" },
   { field: "rated_kva", label: "Rating", kind: "number", unit: "kVA" },
-  { field: "frequency_droop_hz_per_kw", label: "P–f droop", kind: "number", unit: "Hz/kW" },
-  { field: "voltage_droop_kv_per_kvar", label: "Q–V droop", kind: "number", unit: "kV/kvar" },
+  { field: "frequency_droop_hz_per_kw", label: "P–f droop", kind: "number", unit: "Hz/kW", term: "mp" },
+  { field: "voltage_droop_kv_per_kvar", label: "Q–V droop", kind: "number", unit: "kV/kvar", term: "nq" },
   { field: "frequency_setpoint_hz", label: "Frequency setpoint", kind: "number", unit: "Hz" },
   { field: "voltage_setpoint_kv", label: "Voltage setpoint, line-to-line", kind: "number", unit: "kV" },
   { field: "p_setpoint_kw", label: "P setpoint, optional", kind: "number", unit: "kW" },
@@ -52,10 +59,11 @@ function CatalogPick({ collection }: { collection: "lines" | "inverters" }) {
   const [note, setNote] = useState<string | null>(null);
   const entry = entries.find((e) => e.id === entryId);
   const ampacity = entry ? block(entry).ampacity_a : null;
-  if (entries.length === 0) return <p>No {kind.toLowerCase()} entries in the Catalogue.</p>;
+  if (entries.length === 0) return <p className={styles.hint}>No {kind.toLowerCase()} entries in the Catalogue.</p>;
   return (
     <form
       aria-label="Choose from catalogue"
+      className={styles.pick}
       onSubmit={(e) => {
         e.preventDefault();
         const check = checks.find((c) => c.entry_id === entryId);
@@ -67,6 +75,7 @@ function CatalogPick({ collection }: { collection: "lines" | "inverters" }) {
         setNote(`${element} filled from ${entryId}.${warnings.length ? ` Warning: ${warnings.join("; ")}.` : ""}`);
       }}
     >
+      <h2>Choose from catalogue</h2>
       <label htmlFor="pick-element">Element</label>{" "}
       <select id="pick-element" value={element} onChange={(e) => setElement(e.target.value)}>
         <option value="">Choose…</option>
@@ -104,6 +113,14 @@ function Network() {
   const [tab, setTab] = useState<Tab>("Buses");
   const [busId, setBusId] = useState("");
   const [focus, setFocus] = useState<string | null>(null);
+  const [inspect, setInspect] = useState<ElementRef | null>(null);
+  const sld = useSldModel();
+  const TAB_OF = { bus: "Buses", line: "Lines", inverter: "Inverters" } as const;
+  const open = (t: ElementRef) => {
+    setInspect(t);
+    setFocus(t.id);
+    if (t.kind !== "load") setTab(TAB_OF[t.kind]);
+  };
   // D-48 K22: ?focus=<id> from a limiting constraint opens the tab holding that element.
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get("focus");
@@ -123,18 +140,19 @@ function Network() {
   return (
     <>
       <h1>Network</h1>
-      <div role="tablist" aria-label="Network tables">
+      {!enabled.Lines && <p className={styles.hint}>Lines need two buses; inverters need one.</p>}
+      <div role="tablist" aria-label="Network tables" className={styles.tabs}>
         {(["Buses", "Lines", "Inverters"] as Tab[]).map((t) => (
           <button key={t} type="button" role="tab" aria-selected={tab === t} disabled={!enabled[t]} onClick={() => setTab(t)}>
             {t}
           </button>
         ))}
       </div>
-      {!enabled.Lines && <p>Lines need two buses; inverters need one.</p>}
-      <section role="tabpanel" aria-label={tab}>
+      <section role="tabpanel" aria-label={tab} className={styles.panel}>
         {tab === "Buses" && (
           <>
             <form
+              className={styles.toolbar}
               onSubmit={(e) => {
                 e.preventDefault();
                 dispatch({ type: "rowAdded", collection: "buses", row: { id: busId.trim() } });
@@ -146,7 +164,9 @@ function Network() {
               <button type="submit">Add bus</button>
             </form>
             {busCount === 0 ? (
-              <p>No buses yet. Add a bus to start.</p>
+              <EmptyState title="No buses yet." icon="link">
+                Add a bus to start; lines and inverters connect to buses.
+              </EmptyState>
             ) : (
               <EntityTable
                 collection="buses"
@@ -155,6 +175,7 @@ function Network() {
                 columns={[{ field: "id", label: "Bus id", kind: "text" }]}
                 issues={issues}
                 focus={focus}
+                onInspect={(id) => open({ kind: "bus", id })}
               />
             )}
           </>
@@ -167,7 +188,7 @@ function Network() {
             >
               + Add line
             </button>
-            <EntityTable collection="lines" entity="Line" label="Lines" columns={LINE_COLUMNS} issues={issues} focus={focus} />
+            <EntityTable collection="lines" entity="Line" label="Lines" columns={LINE_COLUMNS} issues={issues} focus={focus} onInspect={(id) => open({ kind: "line", id })} />
             <CatalogPick collection="lines" />
           </>
         )}
@@ -176,22 +197,33 @@ function Network() {
             <button type="button" onClick={() => dispatch({ type: "rowAdded", collection: "inverters", row: { bus_id: firstBus } })}>
               + Add inverter
             </button>
-            <EntityTable collection="inverters" entity="Inverter" label="Inverters" columns={INVERTER_COLUMNS} issues={issues} focus={focus} />
+            <EntityTable collection="inverters" entity="Inverter" label="Inverters" columns={INVERTER_COLUMNS} issues={issues} focus={focus} onInspect={(id) => open({ kind: "inverter", id })} />
             <CatalogPick collection="inverters" />
           </>
         )}
       </section>
+      <details className={styles.diagram}>
+        <summary>Diagram (read-only)</summary>
+        <SingleLineDiagram drawing={sld.design} details={sld.full} selected={inspect?.id ?? null} onSelect={open} />
+      </details>
+      {inspect && <Inspector target={inspect} onClose={() => setInspect(null)} />}
       <h2>Issues</h2>
       {listed.length === 0 ? (
-        <p>No network-level problems found.</p>
+        <p className="all-clear">
+          <Icon name="feasible" />
+          No network-level problems found.
+        </p>
       ) : (
-        <ul aria-label="Network issues">
-          {listed.map((i, k) => (
-            <li key={k}>
-              {[i.entity, i.id, i.field].filter(Boolean).join(" / ") || "Design"}: {i.message}
-            </li>
-          ))}
-        </ul>
+        <div className="problems">
+          <Icon name="list" size={20} />
+          <ul aria-label="Network issues">
+            {listed.map((i, k) => (
+              <li key={k}>
+                {[i.entity, i.id, i.field].filter(Boolean).join(" / ") || "Design"}: {i.message}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </>
   );

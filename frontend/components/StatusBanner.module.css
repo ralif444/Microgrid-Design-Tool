@@ -1,0 +1,26 @@
+/* Styled like Carbon InlineNotification (guideline §7.2): layer-01, 3 px left edge and 20 px icon in
+   the role colour, word and text in text-primary. */
+.banner {
+  --icon: var(--role-info-icon); --edge: var(--role-info-edge);
+  margin: var(--space-4) 0; padding: var(--space-3) var(--space-4);
+  background: var(--cds-layer-01); border: var(--border-width) solid var(--color-border); border-left: var(--banner-edge) solid var(--edge);
+  max-width: 60rem;
+}
+.banner[data-role="success"] { --icon: var(--role-success-icon); --edge: var(--role-success-edge); }
+.banner[data-role="negative"] { --icon: var(--role-negative-icon); --edge: var(--role-negative-edge); }
+.banner[data-role="error"] { --icon: var(--role-error-icon); --edge: var(--role-error-edge); }
+.banner[data-role="caution"] { --icon: var(--role-caution-icon); --edge: var(--role-caution-edge); }
+.banner[data-role="attention"] { --icon: var(--role-attention-icon); --edge: var(--role-attention-edge); }
+/* error rows add a double edge so they differ from negative in grayscale print too */
+.banner[data-role="error"] { border-left-style: double; border-left-width: calc(var(--banner-edge) + 3px); }
+.status { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 var(--space-1); color: var(--color-fg); font-size: var(--text-lg); font-weight: var(--weight-semibold); }
+.status > svg { fill: var(--icon); }
+.headline { font-size: var(--text-md); font-weight: var(--weight-semibold); margin-bottom: var(--space-2); } /* heading-compact-01 */
+.message { color: var(--color-fg-muted); margin-bottom: var(--space-2); }
+.issues { margin: 0 0 var(--space-2); padding-left: var(--space-5); }
+.where { font-family: var(--font-mono); font-size: var(--text-xs); }
+.next { margin-bottom: var(--space-1); }
+.details { font-size: var(--text-sm); }
+.details dl { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-1) var(--space-3); margin: var(--space-2) 0 0; }
+.details dt { color: var(--color-fg-muted); }
+.details dd { margin: 0; }

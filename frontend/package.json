@@ -6,12 +6,20 @@
     "node": ">=26.7.0"
   },
   "scripts": {
+    "css:carbon": "sass --load-path=node_modules --no-source-map --style=compressed --quiet-deps --silence-deprecation=if-function app/carbon.scss app/carbon.css",
+    "prebuild": "npm run css:carbon",
     "build": "next build",
     "typecheck": "tsc --noEmit",
     "depcruise": "depcruise --config .dependency-cruiser.cjs app components store api-client api-types",
     "test": "vitest run"
   },
   "dependencies": {
+    "@carbon/icons-react": "11.91.0",
+    "@carbon/react": "1.119.0",
+    "@floating-ui/react": "0.27.20",
+    "@ibm/plex-mono": "2.5.0",
+    "@ibm/plex-sans": "1.1.0",
+    "elkjs": "0.12.0",
     "next": "16.4.3",
     "react": "19.3.1",
     "react-dom": "19.3.1"
@@ -22,6 +30,7 @@
     "@types/react-dom": "19.3.0",
     "dependency-cruiser": "18.7.0",
     "openapi-typescript": "7.13.0",
+    "sass": "1.107.1",
     "typescript": "5.9.3",
     "vitest": "5.0.5"
   }

@@ -29,9 +29,9 @@ MESSAGES = {
     400: "The request body is not valid JSON.",
     404: "No such API route.",
     405: "This method is not allowed on this route.",
-    413: "The request body is too large.",
+    413: "The request body is too large. Remove old run records or split the study.",
     415: "Send the request as application/json.",
-    500: "Internal error in the application.",
+    500: "Internal error in the application. Retry; report it if it repeats.",
 }
 
 

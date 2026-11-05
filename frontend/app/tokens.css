@@ -1,0 +1,152 @@
+/* App tokens bridged to the Carbon theme (ADR-012, visual guidelines v1 §3–§5). The names stay so the
+   existing component modules keep working; values now come from Carbon's --cds-* custom properties
+   (app/carbon.css) or the guideline. Status roles (--role-*) are reworked in step (b).
+   Contrast ratios below are for the role colours (WCAG 2.x formula), against white. */
+
+:root {
+  /* ---- Neutral scale (cool grey) ---- */
+  --n-0:   #ffffff;
+  --n-25:  #fafbfc;
+  --n-50:  #f5f6f8;   /* sunken surface, table header */
+  --n-100: #eceef2;   /* zebra row, hover */
+  --n-200: #dcdfe5;   /* hairline borders */
+  --n-300: #b9bfc9;
+  --n-400: #8a93a3;   /* strong border, 3.10:1 (non-text UI ≥ 3:1) */
+  --n-500: #5d6574;   /* subtle text 5.87:1, 5.43:1 on --n-50 */
+  --n-600: #4a5261;   /* muted text 7.86:1, 7.27:1 on --n-50 */
+  --n-700: #343a46;
+  --n-800: #232831;
+  --n-900: #16191f;   /* body text 17.60:1, 16.28:1 on --n-50 */
+
+  /* ---- Semantic surfaces and text ---- */
+  --color-page:          var(--cds-background);      /* warm page #F4F2EE */
+  --color-bg:            var(--cds-layer-01);        /* white layers: tables, panels, forms */
+  --color-surface:       var(--cds-layer-01);
+  --color-surface-sunken:var(--cds-layer-02);
+  --color-surface-hover: var(--cds-layer-hover-01);
+  --color-fg:            var(--cds-text-primary);    /* navy #0B1F44 */
+  --color-fg-muted:      var(--cds-text-secondary);  /* #4A5468 */
+  --color-fg-subtle:     var(--cds-text-secondary);  /* text-helper #6F6F6F is 4.47:1 on the page bg, too low */
+  --color-border:        var(--cds-border-subtle-01);
+  --color-border-strong: var(--cds-border-strong-01);
+  --color-link:          var(--cds-link-primary);    /* teal #00737D */
+
+  /* ---- App tokens not in Carbon (guideline §3.1, §5) ---- */
+  --mdt-header-bg: #0b1f44;          /* brand navy */
+  --mdt-header-fg: #ffffff;          /* 16:1 on navy */
+  --mdt-header-fg-muted: #d6dbe4;    /* 11.7:1 on navy */
+  --mdt-header-rule: #4a5a7a;         /* divider only, not text */
+  --mdt-header-hover: #1d3461;
+  --mdt-header-focus: #5dc4cc;       /* brand-teal-300, 7.9:1 on navy */
+  --mdt-gradient: linear-gradient(90deg, #0e9aa7, #7ed957); /* signature accent only, never text */
+
+  /* ---- Colour ROLES (guideline §7.2, ADR-012). Each role: edge (left border, the §7.2 token),
+     icon (banner icon, >= 3:1 on white), fg (coloured text and small icons: Carbon 70 step, >= 7:1 on
+     white, tint and page), bg (tint for chips and rows: Carbon 10 step). Values from @carbon/colors.
+     Status is always colour + icon + word. ---- */
+  /* success: FEASIBLE — CheckmarkFilled */
+  --role-success-edge: var(--cds-support-success); --role-success-icon: var(--cds-support-success); /* 3.35:1 */
+  --role-success-fg: #0e6027;  --role-success-bg: #defbe6;  /* green-70 7.7:1 / green-10 */
+  /* negative: INFEASIBLE, violated constraint rows — Misuse. Icon one step darker than the token
+     (#FF832B is 2.46:1), owner decision 2026-11-03 */
+  --role-negative-edge: var(--cds-support-caution-major); --role-negative-icon: #ba4e00; /* orange-60 5.0:1 */
+  --role-negative-fg: #8a3800; --role-negative-bg: #fff2e8; /* orange-70 7.9:1 / orange-10 */
+  /* error: SOLVER_FAILED, PHYSICALLY_INADMISSIBLE, ENGINE_ERROR, input field errors — own icons */
+  --role-error-edge: var(--cds-support-error); --role-error-icon: var(--cds-support-error); /* 5.0:1 */
+  --role-error-fg: #a2191f;    --role-error-bg: #fff1f1;    /* red-70 7.8:1 / red-10 */
+  /* caution: INPUT_INVALID, SWEEP_CAP_EXCEEDED, Fake note — ListBulleted. Icon one step darker than
+     the token (#F1C21B is 1.68:1), owner decision 2026-11-03 */
+  --role-caution-edge: var(--cds-support-warning); --role-caution-icon: #8e6a00; /* yellow-60 5.0:1 */
+  --role-caution-fg: #684e00;  --role-caution-bg: #fcf4d6;  /* yellow-70 7.8:1 / yellow-10 */
+  /* attention: UNAVAILABLE TIMEOUT / DEPENDENCY_NOT_MET, stale M1 — Time / Link */
+  --role-attention-edge: var(--cds-support-info); --role-attention-icon: var(--cds-support-info); /* 7.8:1 */
+  --role-attention-fg: #0043ce; --role-attention-bg: #edf5ff; /* blue-70 / blue-10 */
+  /* info: UNAVAILABLE NOT_APPLICABLE, notes, "not evaluated" — Information */
+  --role-info-edge: var(--cds-border-strong-01); --role-info-icon: var(--cds-border-strong-01); /* 3.3:1 */
+  --role-info-fg: var(--cds-text-secondary); --role-info-bg: #f4f4f4; /* 6.8:1 on page / gray-10 */
+  /* advisory: SizingAdvice (PS), SizingCheck (M2) — 1 px dashed outline on layer-02, purple Tag (§8) */
+  --role-advisory-edge: var(--cds-border-strong-01); --role-advisory-bg: var(--cds-layer-02);
+  --role-advisory-fg: #6929c4; /* purple-70 7.7:1 */
+  --advisory-border-style: dashed;
+  /* old name kept for the screen modules until step (c) */
+  --role-success-border: var(--role-success-edge); --role-negative-border: var(--role-negative-edge);
+  --role-error-border: var(--role-error-edge); --role-caution-border: var(--role-caution-edge);
+  --role-attention-border: var(--role-attention-edge); --role-info-border: var(--role-info-edge);
+  --role-advisory-border: var(--role-advisory-edge);
+
+  /* ---- Typography (system stacks only) ---- */
+  --font-sans: "IBM Plex Sans", system-ui, "Segoe UI", Arial, sans-serif;   /* self-hosted, @ibm/plex-sans */
+  --font-mono: "IBM Plex Mono", Consolas, monospace;                          /* self-hosted, @ibm/plex-mono */
+  --font-numeric: var(--font-sans);           /* with tabular-nums, see .num */
+  --text-xs:  0.75rem;   /* 12 px: captions under charts, hash chips */
+  --text-sm:  0.875rem;  /* 14 px: table cells, forms (Carbon body-compact-01) */
+  --text-md:  0.875rem;  /* 14 px: body (base) */
+  --text-lg:  1rem;      /* 16 px: h3 (Carbon heading-02) */
+  --text-xl:  1.25rem;   /* 20 px: h2 (Carbon heading-03) */
+  --text-2xl: 1.75rem;   /* 28 px: h1 page title (Carbon heading-04) */
+  --leading-tight: 1.25;
+  --leading-normal: 1.45;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --numeric: tabular-nums lining-nums;        /* font-variant-numeric for every number */
+
+  /* ---- Spacing (4 px base) ---- */
+  --space-0: 0;
+  --space-1: 0.25rem;  /*  4 px */
+  --space-2: 0.5rem;   /*  8 px */
+  --space-3: 0.75rem;  /* 12 px */
+  --space-4: 1rem;     /* 16 px */
+  --space-5: 1.25rem;  /* 20 px */
+  --space-6: 1.5rem;   /* 24 px */
+  --space-8: 2rem;     /* 32 px */
+  --space-10: 2.5rem;  /* 40 px */
+  --space-12: 3rem;    /* 48 px */
+  --cell-pad-y: var(--space-1);
+  --cell-pad-x: var(--space-2);
+  --control-height: 2rem;    /* 32 px, Carbon size sm */
+  --content-max: 99rem;      /* 1584 px (guideline §5) */
+  --prose-max: 48rem;        /* long sentences (Loadability, notes) */
+
+  /* ---- Radii, borders, elevation ---- */
+  --radius-0: 0;
+  --radius-1: 0;     /* Carbon corners are square (guideline §5) */
+  --radius-2: 0;
+  --radius-3: 0;
+  --radius-pill: 0;  /* no rounded pills */
+  --border-width: 1px;
+  --border-width-strong: 2px;   /* advisory dashed outline, banner edge */
+  --banner-edge: 3px;           /* left edge of status banners (guideline §7.2) */
+  --shadow-1: none;  /* flat surfaces */
+
+  /* ---- Focus ring (visible everywhere, independent of status hues) ---- */
+  --focus-color: var(--cds-focus);  /* teal, 5.6:1 on white */
+  --focus-width: 2px;
+  --focus-offset: 2px;
+  --focus-ring: 0 0 0 var(--focus-offset) var(--color-bg), 0 0 0 calc(var(--focus-offset) + var(--focus-width)) var(--focus-color);
+}
+
+/* Print variant (FR-60): grayscale-safe, no tints; roles stay readable by icon + word + border style. */
+@media print {
+  :root {
+    --color-bg: #ffffff;
+    --color-surface-sunken: #ffffff;
+    --color-fg: #000000;
+    --color-fg-muted: #222222;
+    --color-fg-subtle: #333333;
+    --color-border: #777777;
+    --color-border-strong: #000000;
+    --color-link: #000000;
+    --role-success-bg: transparent;  --role-success-fg: #000000;
+    --role-negative-bg: transparent; --role-negative-fg: #000000;
+    --role-error-bg: transparent;    --role-error-fg: #000000;
+    --role-caution-bg: transparent;  --role-caution-fg: #000000;
+    --role-attention-bg: transparent;--role-attention-fg: #000000;
+    --role-info-bg: transparent;     --role-info-fg: #000000;
+    --role-advisory-bg: transparent; --role-advisory-fg: #000000;
+    --text-md: 10pt;
+    --text-sm: 9pt;
+    --text-xs: 8pt;
+    --shadow-1: none;
+  }
+}

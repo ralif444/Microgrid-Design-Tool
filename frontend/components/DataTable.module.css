@@ -1,0 +1,21 @@
+.scroll { margin: var(--space-2) 0 var(--space-4); }
+.table { margin: 0; border: var(--border-width) solid var(--color-border); }
+.unit { font-weight: var(--weight-regular); color: var(--color-fg-subtle); }
+.table td input, .table td select { min-height: 1.6rem; }
+.table td > * { vertical-align: middle; } /* inputs, selects and radio groups share one centre line */
+.table td input[type="text"] { width: 7em; }
+.actions { white-space: nowrap; }
+/* row actions are ghost buttons (guideline §6: secondary actions tertiary or ghost) */
+.actions button { border-color: transparent; }
+.actions button:hover:not(:disabled) { background: var(--cds-layer-hover-01); color: var(--cds-link-primary-hover); }
+.row[data-invalid] > tr > td { background: var(--role-error-bg); }
+.row[data-invalid] > tr:first-child > td { border-bottom-color: transparent; }
+.errorRow > td {
+  color: var(--role-error-fg); font-size: var(--text-xs);
+  border-bottom: var(--border-width) solid var(--role-error-border); padding-top: 0;
+}
+.errorRow svg { margin-right: var(--space-1); vertical-align: -3px; fill: var(--role-error-icon); }
+.current > td { background: var(--role-info-bg); box-shadow: inset 0 2px 0 var(--focus-color), inset 0 -2px 0 var(--focus-color); }
+.current > td:first-child { box-shadow: inset 2px 2px 0 var(--focus-color), inset 0 -2px 0 var(--focus-color); }
+.table td:first-child { white-space: nowrap; } /* ids such as LN1 never break per letter */
+.row[data-violated] > tr > td:first-child { box-shadow: inset var(--banner-edge) 0 0 var(--role-negative-edge); }

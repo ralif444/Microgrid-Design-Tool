@@ -1,0 +1,26 @@
+/* Chart frame (Doc 12 X1, FR-86): Carbon tile look; chart text 12 px (9 pt), never under 8 pt in print. */
+.frame { margin: var(--space-4) 0; padding: var(--space-3) var(--space-4); max-width: 40rem; background: var(--cds-layer-01); border: var(--border-width) solid var(--color-border); }
+.title { font-weight: var(--weight-semibold); margin-bottom: var(--space-2); }
+.plot { overflow-x: auto; position: relative; }
+.plot svg { display: block; width: 100%; min-width: 30rem; height: auto; font-size: 12px; fill: var(--cds-text-primary); }
+.plot :global(.chart-grid) { stroke: var(--cds-border-subtle-01); }
+.plot :global(.chart-axis) { stroke: var(--cds-border-strong-01); }
+.plot :global(.chart-ref) { stroke: var(--cds-text-primary); stroke-dasharray: 4 3; }
+.plot :global(.chart-negative) { fill: var(--role-negative-bg); }
+.plot :global(.chart-negative-word) { fill: var(--role-negative-fg); font-weight: var(--weight-semibold); }
+.plot :global(.chart-cell) { fill: var(--cds-interactive); stroke: var(--cds-border-subtle-01); stroke-opacity: 1; }
+.plot :global(.chart-band) { fill: var(--cds-highlight); stroke: var(--cds-interactive); stroke-width: 1; }
+.readout { position: absolute; top: 0; display: grid; gap: 2px; padding: var(--space-1) var(--space-2); font-size: var(--text-xs); background: var(--cds-layer-02, var(--cds-layer-01)); border: var(--border-width) solid var(--cds-border-strong-01); pointer-events: none; }
+.legend { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); margin: var(--space-2) 0 0; padding: 0; list-style: none; font-size: var(--text-sm); }
+.legend li { display: inline-flex; align-items: center; gap: var(--space-1); }
+.word { color: var(--color-fg-muted); }
+.meta { margin: var(--space-2) 0 0; font-size: var(--text-xs); color: var(--color-fg-muted); max-width: none; }
+.fake { color: var(--cds-text-primary); }
+.toggle { margin-top: var(--space-2); }
+.toggle + .toggle { margin-left: var(--space-2); }
+@media print {
+  .frame { break-inside: avoid; }
+  .plot { overflow: visible; }
+  .plot svg { min-width: 0; }
+  .toggle { display: none; } /* same specificity as the global .no-print, so repeated here */
+}

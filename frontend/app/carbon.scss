@@ -1,0 +1,46 @@
+// Carbon v11 with the custom light theme of the visual guidelines §3.2 (ADR-012).
+// Compiled by the sass CLI to app/carbon.css before every build ("prebuild"; generated, not in git):
+// Turbopack cannot resolve Carbon's relative partials inside node_modules.
+// Fonts: Carbon's own @font-face is off; IBM Plex is served from @ibm/plex-* (layout.tsx), so the
+// build never points at a remote font URL (NFR-03).
+@use 'sass:map';
+@use '@carbon/styles/scss/config' with (
+  $css--font-face: false
+);
+@use '@carbon/styles/scss/themes';
+@use '@carbon/styles/scss/theme' with (
+  $theme: map.merge(
+    themes.$white,
+    (
+      background: #f4f2ee,
+      layer-01: #ffffff,
+      layer-02: #faf9f7,
+      field-01: #ffffff,
+      text-primary: #0b1f44,
+      text-secondary: #4a5468,
+      icon-primary: #0b1f44,
+      interactive: #00737d,
+      button-primary: #00737d,
+      button-primary-hover: #005f67,
+      button-primary-active: #004b52,
+      link-primary: #00737d,
+      link-primary-hover: #005f67,
+      focus: #00737d,
+      border-interactive: #00737d,
+      background-brand: #00737d,
+      layer-selected-01: #e6f2f3,
+      highlight: #e6f2f3,
+    )
+  )
+);
+@use '@carbon/styles'; // same styles @carbon/react ships; its own scss entry did not pass the theme through
+
+// Carbon v11 emits theme tokens only where asked: the whole app uses the custom light theme.
+:root {
+  @include theme.theme();
+  // theme.theme() then emits the Button component tokens from Carbon white (blue) over the map
+  // values above; set them back from the same map (§3.2 values, nothing new).
+  @each $t in (button-primary, button-primary-hover, button-primary-active) {
+    --cds-#{$t}: #{map.get(theme.$theme, $t)};
+  }
+}

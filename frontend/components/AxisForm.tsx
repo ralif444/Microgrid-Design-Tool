@@ -86,8 +86,12 @@ export function useAxis(design: ProjectSnapshot, prefix = ""): AxisInput {
         </p>
       )}
       <p>
-        <NumberField id={id("min")} label={`${prefix}From`} unit={unit} value={lo} onChange={setLo} />{" "}
-        <NumberField id={id("max")} label={`${prefix}To`} unit={unit} value={hi} onChange={setHi} />{" "}
+        <NumberField id={id("min")} label={`${prefix}From`} unit={unit} value={lo} onChange={setLo} />
+      </p>
+      <p>
+        <NumberField id={id("max")} label={`${prefix}To`} unit={unit} value={hi} onChange={setHi} />
+      </p>
+      <p>
         <NumberField id={id("steps")} label={`${prefix}Points`} unit="count" step="1" value={steps} onChange={setSteps} />
       </p>
     </>

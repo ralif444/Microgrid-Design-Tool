@@ -978,6 +978,8 @@ export interface components {
         LimitsInfo: {
             /** Body Limit Mib */
             body_limit_mib: number;
+            /** Lambda C Point Cap */
+            lambda_c_point_cap: number | null;
             /** M3A Parameter Cap */
             m3a_parameter_cap: number | null;
             /** M4B Duration Cap S */

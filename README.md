@@ -19,7 +19,11 @@ python tools/build_frontend.py
 uv run --project backend mgapp
 ```
 Serves the UI and the API from one process on http://127.0.0.1:8000 (loopback only, no authentication). Works offline.
-Startup options (environment): `MGAPP_ENGINE=FAKE|REAL` (default FAKE; REAL from stage 1.4), `MGAPP_PORT` (default 8000), `MGAPP_FAKE_PROFILE` (test profiles: `default`, `m1-solver-failed`, `m1-inadmissible`, `m2-infeasible`, `m4a-indicators`).
+Startup options (environment): `MGAPP_ENGINE=FAKE|REAL` (default FAKE; REAL from stage 1.4), `MGAPP_PORT` (default 8000), `MGAPP_FAKE_PROFILE` (test profiles: `default`, `m1-solver-failed`, `m1-inadmissible`, `m2-infeasible`, `m4a-indicators`, `m2-near-limit`).
+
+For a demonstration with the calculation engine, start with `MGAPP_ENGINE=REAL`; the steps are in `docs/demo_script.md`.
+
+**Windows:** if `python` on `PATH` is another interpreter (for example one bundled with ETAP), run the tools with `uv run --python 3.13 python tools\<name>.py`; in PowerShell set options with `$env:MGAPP_ENGINE = "REAL"` before the start command.
 
 ## Development tasks
 | Task | Command |

@@ -83,7 +83,8 @@ _MESSAGES: dict[Outcome, tuple[Status, StatusCode, str]] = {
     Outcome.NOT_APPLICABLE: (
         Status.UNAVAILABLE,
         StatusCode.NOT_APPLICABLE,
-        "This analysis is not available in the active engine (Fake Engine canned result).",
+        "This analysis is not available in the active engine (Fake Engine canned result). "
+        "Choose another analysis.",
     ),
 }
 

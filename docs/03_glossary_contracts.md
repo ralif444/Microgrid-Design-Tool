@@ -236,9 +236,9 @@ Stage 1 runs in the application service before any engine call and yields `INPUT
 | DISTURBANCE_INVALID | request | M4b disturbance incomplete or inconsistent with its kind | "Complete the disturbance definition." |
 | SWEEP_RANGE_INVALID | field | Range min ≥ max or step count < 2 / not integer | "The sweep range or step count is not valid." |
 | SCENARIO_PATH_INVALID | entity | Override path does not resolve | "This scenario changes something that does not exist." |
-| SWEEP_CAP_EXCEEDED | request | M3b/M3d point count above SWEEP_CAP (initial 1 000) | "This sweep has too many points." |
-| PARAMETER_CAP_EXCEEDED | request | M3a parameter count above cap [ASSUMPTION value] | "Too many parameters selected." |
-| DURATION_CAP_EXCEEDED | request | M4b duration above cap [ASSUMPTION value] | "The simulation time is too long." |
+| SWEEP_CAP_EXCEEDED | request | M3b/M3d point count above SWEEP_CAP (initial 1 000) | "This sweep has too many points (<n>; the limit is <cap>). Reduce the range or step count." (D-68) |
+| PARAMETER_CAP_EXCEEDED | request | M3a parameter count above cap [ASSUMPTION value] | "Too many parameters selected (<n>; the limit is <cap>). Select fewer parameters." (D-68) |
+| DURATION_CAP_EXCEEDED | request | M4b duration above cap [ASSUMPTION value] | "The simulation time is too long (<t> s; the limit is <cap> s). Shorten the simulation end time." (D-68) |
 | SCENARIO_COUNT_INVALID | request | M3c count < 2 or > SCENARIO_CAP | "Compare between 2 and the allowed number of scenarios." |
 | DEPENDS_ON_NOT_ALLOWED | request | depends_on on PS or M1 | "This analysis does not use an earlier result." |
 | MULTIPLE_INVERTERS_ON_BUS | request | Engine-side only (M4a, M4b): two Inverters on one Bus (D-53 K61, D-55 K91) | "Stability analysis allows at most one inverter per bus." |
@@ -522,7 +522,7 @@ Versioning: equal → load; older with a chain → migrate forward step by step 
 | # | Item | Tag |
 |---|---|---|
 | 1 | Droop unit conversion in the Real Engine adapter (§1) to be confirmed against the engine package. | CLOSED (Doc 9 D-54 K74) |
-| 2 | Caps: M3a parameter count, M3c SCENARIO_CAP, M4b duration; 413 body limit initial 10 MiB (Doc 6). | [ASSUMPTION] → WP 1.7.1 |
+| 2 | Caps: M3a parameter count, M3c SCENARIO_CAP, M4b duration; 413 body limit initial 10 MiB (Doc 6). | DECIDED at WP 1.7.1 (Doc 9 D-67): M4b 60 s, LAMBDA_C per point 50 points, body 10 MiB; M3a and M3c without cap |
 | 3 | `balance_tolerance_kw` default and whether it belongs to DesignConstraints or solver_config. | CLOSED: no default, stays in DesignConstraints (Doc 9 D-54 K84) |
 | 4 | Settling window and envelope criteria for the transient class (engine side). | → engine design, stage 1.3.5 |
 | 5 | Indicator thresholds (r_τ, κ, r_in, ε_X) calibrated from M5. | → stage 1.6 |

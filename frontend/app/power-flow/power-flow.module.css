@@ -1,0 +1,6 @@
+.head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4); }
+.head h1 { margin: 0; margin-right: auto; }
+.checking { color: var(--color-fg-muted); }
+.note { color: var(--color-fg-muted); font-size: var(--text-sm); }
+.record { color: var(--color-fg-muted); font-size: var(--text-sm); max-width: var(--prose-max); }
+.next { margin-top: var(--space-6); }

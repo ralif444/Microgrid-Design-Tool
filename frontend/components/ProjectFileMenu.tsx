@@ -7,6 +7,7 @@ import { getMeta, importProject } from "../api-client";
 import type { FileCheckResult, ProjectFile } from "../api-types";
 import { toProjectFile, useProject, useProjectDispatch } from "../store";
 import { downloadJson, NOT_JSON, readJson } from "./files";
+import styles from "./ui.module.css";
 
 export const UNSAVED_CONFIRM = 
   "The open Project has unsaved changes. OK to discard them; Cancel to keep them (then Save first)."; // D-48 K23
@@ -65,14 +66,15 @@ export function ProjectFileMenu() {
   }
 
   return (
-    <span className="file-menu">
+    <span className={styles.fileMenu}>
       {state.project && (
         <button type="button" onClick={() => void save()}>
           Save
         </button>
-      )}{" "}
-      <label>
-        Open project file{" "}
+      )}
+      {/* The native file input stays in the tab order; the label is drawn as a button. */}
+      <label className={styles.fileButton}>
+        Open project file
         <input
           type="file"
           accept=".json,application/json"
@@ -82,7 +84,7 @@ export function ProjectFileMenu() {
           }}
         />
       </label>
-      {note && (typeof note === "string" ? <span role="status" data-testid="file-check">{note}</span> : <FileCheckText fc={note} />)}
+      {note && <span className={styles.fileNote}>{typeof note === "string" ? <span role="status" data-testid="file-check">{note}</span> : <FileCheckText fc={note} />}</span>}
     </span>
   );
 }

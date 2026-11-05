@@ -3,6 +3,7 @@ import type { PsPayload, RunRecord } from "../api-types";
 import {
   adviceInputHash,
   initialState,
+  latestRun,
   m1Ref,
   nextId,
   projectReducer,
@@ -130,6 +131,20 @@ describe("network and constraints", () => {
       result_payload: { id: "b" },
     });
   });
+
+  it("latestRun picks the latest record of a type on the current design (FR-93)", () => {
+    const rec = (id: string, analysis_type: string, hash: string, status = "FEASIBLE") =>
+      ({ record_id: id, analysis_type, snapshot_hash: hash, result: { status } }) as unknown as RunRecord;
+    const runs = [rec("a", "M1", "h1"), rec("b", "M1", "h1", "INPUT_INVALID"), rec("c", "M2", "h1"), rec("d", "M1", "h2")];
+    expect(latestRun(runs, "M1", "h1")?.record_id).toBe("b"); // any Status
+    expect(latestRun(runs, "M1", "h2")?.record_id).toBe("d");
+    expect(latestRun(runs, "M1", "h3")).toBeNull(); // design edited after the runs
+    expect(latestRun(runs, "M1", null)).toBeNull(); // hash not known yet
+    // M3c: its own hash covers the scenarios, so it matches on its M1 reference (Doc 3 §5, §6)
+    const m3c = { ...rec("e", "M3c", "h-with-scenarios"), depends_on: { snapshot_hash: "h1" } } as unknown as RunRecord;
+    expect(latestRun([m3c], "M3c", "h1")?.record_id).toBe("e");
+    expect(latestRun([m3c], "M3c", "h-with-scenarios")).toBeNull();
+  });
 });
 
 describe("Example Project (Doc 12 FR-85)", () => {
@@ -153,5 +168,30 @@ describe("Example Project (Doc 12 FR-85)", () => {
     expect([s.project?.id, s.project?.name, s.project?.created_at, s.unsaved]).toEqual(["new", "Example D2", "t1", true]);
     expect(s.design.nominal_voltage_kv).toBe(0.44);
     expect(JSON.stringify(file)).toBe(before);
+  });
+});
+
+describe("FR-02 name and description; FR-11 Bus delete guard", () => {
+  it("name and description survive save and reopen", async () => {
+    const { toProjectFile } = await import("./projectFile");
+    const s = run([created, { type: "projectUpdated", name: "Renamed", description: "Two-bus test" }]);
+    const file = toProjectFile(s, { schema_version: 1, app_version: "t" }, "t1");
+    const back = run([{ type: "projectLoaded", file }]);
+    expect([back.project?.name, back.project?.description]).toEqual(["Renamed", "Two-bus test"]);
+  });
+
+  it("a Bus still referenced is kept, and its dependents are named", async () => {
+    const { busDependents } = await import("./reducer");
+    const s = run([
+      created,
+      { type: "rowAdded", collection: "buses", row: { id: "B1" } },
+      { type: "rowAdded", collection: "buses", row: { id: "B2" } },
+      { type: "rowAdded", collection: "lines", row: { from_bus_id: "B1", to_bus_id: "B2" } },
+      { type: "rowAdded", collection: "loads", row: { bus_id: "B1" } },
+    ]);
+    expect(busDependents(s.design, "B1")).toEqual(["LN1", "L1"]);
+    expect(run([{ type: "rowRemoved", collection: "buses", id: "B1" }], s).design.buses).toHaveLength(2);
+    const freed = run([{ type: "rowRemoved", collection: "lines", id: "LN1" }, { type: "rowRemoved", collection: "buses", id: "B2" }], s);
+    expect(freed.design.buses?.map((b) => b.id)).toEqual(["B1"]);
   });
 });

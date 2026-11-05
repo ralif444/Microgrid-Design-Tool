@@ -1831,6 +1831,17 @@
             "title": "Body Limit Mib",
             "type": "integer"
           },
+          "lambda_c_point_cap": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lambda C Point Cap"
+          },
           "m3a_parameter_cap": {
             "anyOf": [
               {
@@ -1884,7 +1895,8 @@
           "body_limit_mib",
           "scenario_cap",
           "m3a_parameter_cap",
-          "m4b_duration_cap_s"
+          "m4b_duration_cap_s",
+          "lambda_c_point_cap"
         ],
         "title": "LimitsInfo",
         "type": "object"

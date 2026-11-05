@@ -47,6 +47,7 @@ UNITLESS = {
     "sweep_cap",
     "scenario_cap",
     "m3a_parameter_cap",
+    "lambda_c_point_cap",
     "margin_warn",
     "lambda_c",
     "lambda_s",

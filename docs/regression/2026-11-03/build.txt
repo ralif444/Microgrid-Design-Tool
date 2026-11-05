@@ -1,0 +1,44 @@
+﻿$ (frontend) C:\Program Files\nodejs\npm.CMD run build
+
+> mgapp-frontend@0.1.0 build
+> next build
+
+▲ Next.js 16.4.3 (Turbopack)
+✓ Running next.config.mjs took 44ms
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 1015ms
+  Running TypeScript ...
+  Finished TypeScript in 5.0s ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/19) ...
+  Generating static pages using 11 workers (4/19) 
+  Generating static pages using 11 workers (9/19) 
+  Generating static pages using 11 workers (14/19) 
+✓ Generating static pages using 11 workers (19/19) in 890ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /catalogue
+├ ○ /constraint-check
+├ ○ /constraints
+├ ○ /envelope
+├ ○ /loads
+├ ○ /network
+├ ○ /power-flow
+├ ○ /project
+├ ○ /report
+├ ○ /runs
+├ ○ /scenarios
+├ ○ /sensitivity
+├ ○ /sizing
+├ ○ /small-signal
+├ ○ /sweep
+└ ○ /transient
+
+
+○  (Static)  prerendered as static content
+
+copied C:\Users\Rifky Alif\Documents\Microgrid-Design-Tool\frontend\out -> C:\Users\Rifky Alif\Documents\Microgrid-Design-Tool\backend\src\mgapp\static

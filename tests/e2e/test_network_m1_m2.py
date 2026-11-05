@@ -86,6 +86,9 @@ def test_fr_10_fr_19_fr_15_fr_24_fr_27_fr_40_network_to_m2(
     page.get_by_test_id("load-L1").get_by_label("P of L1 (kW)").fill("5")
     page.get_by_role("link", name="6 Constraint check (M2)").click()
     expect(page.get_by_test_id("m1-freshness")).to_have_text("M1 result: current")
+    # K147: margins come back from the last M2 RunRecord after leaving the screen
+    expect(page.get_by_label("Inverter design margin m_inv (ratio)")).to_have_value("0.2")
+    expect(page.get_by_label("Storage autonomy t_aut, optional (h)")).to_have_value("")
 
 
 def test_fr_25_infeasible_lists_limiting_constraints(

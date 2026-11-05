@@ -1,0 +1,26 @@
+﻿$ (engine) C:\Users\Rifky Alif\.local\bin\uv.EXE run pytest
+.....................................................                    [100%]
+53 passed in 4.27s
+$ (.) C:\Users\Rifky Alif\.local\bin\uv.EXE run --project C:\Users\Rifky Alif\Documents\Microgrid-Design-Tool\backend pytest -c C:\Users\Rifky Alif\Documents\Microgrid-Design-Tool\backend\pyproject.toml --rootdir C:\Users\Rifky Alif\Documents\Microgrid-Design-Tool C:\Users\Rifky Alif\Documents\Microgrid-Design-Tool\tests\static C:\Users\Rifky Alif\Documents\Microgrid-Design-Tool\tests\contract C:\Users\Rifky Alif\Documents\Microgrid-Design-Tool\tests\api C:\Users\Rifky Alif\Documents\Microgrid-Design-Tool\tests\reproducibility C:\Users\Rifky Alif\Documents\Microgrid-Design-Tool\tests\project_file
+........................................................................ [ 16%]
+........................................................................ [ 32%]
+........................................................................ [ 48%]
+........................................................................ [ 65%]
+........................................................................ [ 81%]
+........................................................................ [ 97%]
+.........                                                                [100%]
+441 passed in 41.48s
+$ (frontend) C:\Program Files\nodejs\npm.CMD test -- --passWithNoTests
+
+> mgapp-frontend@0.1.0 test
+> vitest run --passWithNoTests
+
+
+ RUN  v5.0.5 C:/Users/Rifky Alif/Documents/Microgrid-Design-Tool/frontend
+
+
+ Test Files  9 passed (9)
+      Tests  29 passed (29)
+   Start at  07:27:56
+   Duration  599ms (transform 52%, import 33%, worker 7%, tests 7%)
+

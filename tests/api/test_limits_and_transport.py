@@ -5,8 +5,10 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from api.conftest import Api
+from fixtures.designs import two_bus_snapshot
 
-from mgapp.services.limits import Limits
+from mgapp.domain.enums import AnalysisType
+from mgapp.services.limits import Limits, check_size_limits
 
 
 def _sweep(steps: int) -> dict:
@@ -43,6 +45,31 @@ def test_m3d_cap_uses_product_of_steps(api_factory: Callable[..., Api]) -> None:
     ax = _sweep(3)["axis"]
     r = api.run("M3d", depends_on=api.m1_ref(), parameters={"axis_x": ax, "axis_y": ax})["result"]
     assert r["status_code"] == "SWEEP_CAP_EXCEEDED"
+
+
+def test_d67_lambda_c_point_cap(api_factory: Callable[..., Api]) -> None:
+    api = api_factory(limits=Limits(lambda_c_point_cap=5))
+    ref = api.m1_ref()
+    for steps, code in ((6, "SWEEP_CAP_EXCEEDED"), (5, "OK")):
+        params = _sweep(steps) | {"point_metrics": ["LAMBDA_C"]}
+        r = api.run("M3b", depends_on=ref, parameters=params)["result"]
+        assert r["status_code"] == code, r
+    r = api.run("M3b", depends_on=ref, parameters=_sweep(6))["result"]  # no LAMBDA_C, no cap
+    assert r["status_code"] == "OK"
+
+
+def test_d67_m4b_duration_cap_60_s(api: Api) -> None:
+    m4b = {
+        "disturbance": {"kind": "LOAD_STEP", "element_id": "LD1", "magnitude": 1.0,
+                        "start_time_s": 0.1, "duration_s": None},
+        "simulation_end_s": 61.0,
+    }  # fmt: skip
+    ref = api.m1_ref(project_snapshot=two_bus_snapshot())
+    r = api.run("M4b", depends_on=ref, parameters=m4b)["result"]
+    assert r["status_code"] == "DURATION_CAP_EXCEEDED", r
+    # 60 s passes stage 1; not run here: the two-inverter fixture is unstable and slow on REAL.
+    ok = check_size_limits(AnalysisType.M4B, m4b | {"simulation_end_s": 60.0}, 0, Limits())
+    assert ok == []
 
 
 def test_unknown_analysis_type_404_no_runrecord(api: Api) -> None:
@@ -92,5 +119,6 @@ def test_health_and_meta(api: Api) -> None:
         "body_limit_mib": 10,
         "scenario_cap": None,
         "m3a_parameter_cap": None,
-        "m4b_duration_cap_s": None,
+        "m4b_duration_cap_s": 60.0,
+        "lambda_c_point_cap": 50,
     }

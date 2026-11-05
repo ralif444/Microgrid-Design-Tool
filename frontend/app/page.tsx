@@ -3,8 +3,8 @@
 // or open an example Project as a new unsaved copy (Doc 12 FR-85).
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { getExample, importProject } from "../api-client";
+import { useEffect, useState } from "react";
+import { getExample, getMeta, importProject } from "../api-client";
 import type { ProjectFile } from "../api-types";
 import { NumberField } from "../components/NumberField";
 import { UNSAVED_CONFIRM } from "../components/ProjectFileMenu";
@@ -26,6 +26,10 @@ export default function Home() {
   const [kv, setKv] = useState<number | null>(null); // no default (Doc 3 §3.1)
   const [hz, setHz] = useState<number | null>(50); // default 50, editable (Doc 3 §3.1)
   const [note, setNote] = useState<string | null>(null);
+  const [engine, setEngine] = useState<string | null>(null);
+  useEffect(() => {
+    void getMeta().then((m) => setEngine(m.ok ? m.data.engine.engine_kind : null));
+  }, []);
 
   async function openExample(key: string) {
     if (unsaved && !window.confirm(UNSAVED_CONFIRM)) return;
@@ -61,7 +65,7 @@ export default function Home() {
   return (
     <>
       <h1>Microgrid design tool</h1>
-      <p>Stage 1.2: the calculation engine is the Fake Engine; results are placeholders.</p>
+      {engine === "FAKE" && <p>The calculation engine is the Fake Engine; results are placeholders.</p>}
       <p>To continue earlier work, use “Open project file” in the header.</p>
       {project && (
         <p>

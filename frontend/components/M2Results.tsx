@@ -1,9 +1,18 @@
 // M2 result parts (Doc 7 §5.1, §6.4): limiting constraints / margins, "not evaluated" list,
 // loadability, SizingCheck in an advisory panel separate from SizingAdvice (FR-25, FR-16, FR-24, FR-27).
+// With `charts` (S-08 and the S-16 report, Doc 12 X3 FR-88): the margin chart and the loadability axis.
+import { Tag } from "@carbon/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getMeta } from "../api-client";
-import type { LimitingConstraint, M2Payload } from "../api-types";
+import type { LimitingConstraint, M2Payload, RunRecord } from "../api-types";
+import { AdvisoryPanel } from "./AdvisoryPanel";
+import { BarChart } from "./charts/BarChart";
+import { LoadabilityAxis } from "./charts/LoadabilityAxis";
+import { DataTable, type DataColumn } from "./DataTable";
+import { num } from "./format";
+import { Icon } from "./Icon";
+import styles from "./M2Results.module.css";
 
 // FR-26: a satisfied constraint with normalised margin below MARGIN_WARN (Eq. 4.18) is near its limit.
 export const nearLimit = (c: LimitingConstraint, marginWarn: number | null) =>
@@ -19,7 +28,7 @@ export const KIND_WORDS: Record<string, string> = {
   POWER_BALANCE: "Power balance",
 };
 
-const fmt = (v: number | null | undefined) => (v === null || v === undefined ? "not available" : String(v));
+const fmt = (v: number | null | undefined) => (v === null || v === undefined ? "not available" : String(num(v)));
 
 // `shortcut`: per-row link to M3a pre-filled for that constraint (Doc 12 FR-84), on S-08 only.
 export function ConstraintTable({ label, rows, shortcut = false }: { label: string; rows: LimitingConstraint[]; shortcut?: boolean }) {
@@ -27,127 +36,137 @@ export function ConstraintTable({ label, rows, shortcut = false }: { label: stri
   useEffect(() => {
     void getMeta().then((m) => m.ok && setMarginWarn(m.data.limits.margin_warn));
   }, []);
-  return (
-    <table aria-label={label}>
-      <caption>{label}</caption>
-      <thead>
-        <tr>
-          <th>Constraint</th>
-          <th>Element</th>
-          <th>Value</th>
-          <th>Limit</th>
-          <th>Margin</th>
-          {shortcut && <th>Next step</th>}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((c, k) => (
-          <tr key={k}>
-            <td>{KIND_WORDS[c.kind] ?? c.kind}</td>
-            <td>
-              {c.element_id === "SYSTEM" ? (
-                c.element_id
-              ) : (
-                // D-48 K22: open the element's row in S-05
-                <Link href={`/network/?focus=${encodeURIComponent(c.element_id)}`}>{c.element_id}</Link>
-              )}
-            </td>
-            <td>
-              {c.value} {c.unit}
-            </td>
-            <td>
-              {c.limit} {c.unit}
-            </td>
-            <td>
-              {c.margin < 0 ? `Violated by ${-c.margin} ${c.unit}` : `${c.margin} ${c.unit}`}
-              {nearLimit(c, marginWarn) && <strong className="near-limit"> (!) Near limit</strong>}
-            </td>
-            {shortcut && (
-              <td>
-                {c.kind !== "POWER_BALANCE" && (
-                  <Link href={`/sensitivity/?kind=${encodeURIComponent(c.kind)}&element=${encodeURIComponent(c.element_id)}`}>
-                    Most influential parameters for {c.element_id}
-                  </Link>
-                )}
-              </td>
+  // rows mix units (p.u., Hz, A, ratio), so the unit is its own column
+  const columns: DataColumn<LimitingConstraint>[] = [
+    { key: "kind", header: "Constraint", cell: (c) => KIND_WORDS[c.kind] ?? c.kind },
+    {
+      key: "element",
+      header: "Element",
+      // D-48 K22: open the element's row in S-05
+      cell: (c) => (c.element_id === "SYSTEM" ? c.element_id : <Link href={`/network/?focus=${encodeURIComponent(c.element_id)}`}>{c.element_id}</Link>),
+    },
+    { key: "value", header: "Value", numeric: true, cell: (c) => c.value },
+    { key: "limit", header: "Limit", numeric: true, cell: (c) => c.limit },
+    { key: "unit", header: "Unit", cell: (c) => c.unit },
+    {
+      key: "margin",
+      header: "Margin",
+      term: "margin",
+      numeric: true,
+      cell: (c) =>
+        c.margin < 0 ? (
+          <span className={styles.violated}>
+            <Icon name="misuse" size={16} />
+            Violated by {num(-c.margin)} {c.unit}
+          </span>
+        ) : (
+          <>
+            {num(c.margin)} {c.unit}
+            {nearLimit(c, marginWarn) && (
+              <>
+                {" "}
+                <Tag type="warm-gray" size="md" renderIcon={() => <Icon name="warn" />} className={styles.near}>
+                  Near limit
+                </Tag>
+              </>
             )}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
+          </>
+        ),
+    },
+  ];
+  if (shortcut)
+    columns.push({
+      key: "next",
+      header: "Next step",
+      cell: (c) =>
+        c.kind !== "POWER_BALANCE" && (
+          <Link href={`/sensitivity/?kind=${encodeURIComponent(c.kind)}&element=${encodeURIComponent(c.element_id)}`}>
+            Most influential parameters for {c.element_id}
+          </Link>
+        ),
+    });
+  return <DataTable label={label} caption={label} columns={columns} rows={rows} rowKey={(_, k) => k} rowName={(c) => c.element_id} rowViolated={(c) => c.margin < 0} />;
 }
 
-export function M2Results({ p }: { p: M2Payload }) {
+type InvSize = M2Payload["sizing_check"]["per_inverter"][number];
+type LineSize = M2Payload["sizing_check"]["per_line"][number];
+
+const INV_SIZING: DataColumn<InvSize>[] = [
+  { key: "id", header: "Inverter", cell: (i) => <strong>{i.inverter_id}</strong> },
+  { key: "s", header: "S", unit: "kVA", numeric: true, cell: (i) => i.s_kva },
+  { key: "req", header: "Required rating", unit: "kVA", numeric: true, cell: (i) => i.required_rating_kva },
+  { key: "head", header: "Headroom", unit: "kVA", numeric: true, cell: (i) => i.headroom_kva },
+  { key: "short", header: "Rating margin short", cell: (i) => (i.rating_margin_short ? "yes" : "no") },
+];
+const LINE_SIZING: DataColumn<LineSize>[] = [
+  { key: "id", header: "Line", cell: (l) => <strong>{l.line_id}</strong> },
+  { key: "i", header: "Current", unit: "A", numeric: true, cell: (l) => l.current_a },
+  { key: "req", header: "Required current", unit: "A", numeric: true, cell: (l) => l.required_current_a },
+];
+
+export function M2Results({ p, charts }: { p: M2Payload; charts?: { record: RunRecord } }) {
   const l = p.loadability;
   const s = p.sizing_check;
+  // sorted tightest first; sorting only, the margins are the engine's (guideline §1 rule 1)
+  const sorted = [...p.constraint_margins].sort((a, b) => a.normalised_margin - b.normalised_margin);
   return (
     <section aria-label="Constraint check results">
       {p.constraint_margins.length > 0 && <ConstraintTable label="All evaluated margins" rows={p.constraint_margins} />}
+      {charts && sorted.length > 0 && (
+        <BarChart
+          title="Normalised margin per constraint"
+          valueTitle="Normalised margin (ratio)"
+          categoryTitle="Constraint"
+          categories={sorted.map((c) => `${c.element_id}, ${KIND_WORDS[c.kind] ?? c.kind}`)}
+          series={[{ name: "Normalised margin", values: sorted.map((c) => c.normalised_margin) }]}
+          negative="Violated (margin < 0)"
+          labelWidth={210}
+          note={p.not_evaluated.length ? `${p.not_evaluated.length} check(s) without a limit are listed under Not evaluated, not drawn.` : undefined}
+          record={charts.record}
+        />
+      )}
       <h2>Not evaluated</h2>
       {p.not_evaluated.length === 0 ? (
-        <p>Every check had a limit.</p>
+        <p className="all-clear">
+          <Icon name="feasible" />
+          Every check had a limit.
+        </p>
       ) : (
-        <ul aria-label="Not evaluated">
-          {p.not_evaluated.map((n, k) => (
-            <li key={k}>
-              {KIND_WORDS[n.kind] ?? n.kind}, {n.element_id}: no limit given; not counted as satisfied.
-            </li>
-          ))}
-        </ul>
+        <div className={`problems ${styles.notEvaluated}`}>
+          <Icon name="info" size={20} />
+          <ul aria-label="Not evaluated">
+            {p.not_evaluated.map((n, k) => (
+              <li key={k}>
+                {KIND_WORDS[n.kind] ?? n.kind}, {n.element_id}: no limit given; not counted as satisfied.
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
       <h2>Loadability</h2>
-      <p>
-        λ_c (constraint loadability): {fmt(l.lambda_c)}. λ_s: {fmt(l.lambda_s)} (solution existence, not a stability
-        limit). Resolution {fmt(l.resolution)}, grid step {fmt(l.grid_step)}, stop reason {l.stop_reason ?? "none"}.
-      </p>
-      <section className="advice" aria-label="Sizing check">
-        <p className="advice-tag">Sizing check (advisory, from the network)</p>
-        <table aria-label="Sizing check per inverter">
-          <thead>
-            <tr>
-              <th>Inverter</th>
-              <th>S (kVA)</th>
-              <th>Required rating (kVA)</th>
-              <th>Headroom (kVA)</th>
-              <th>Rating margin short</th>
-            </tr>
-          </thead>
-          <tbody>
-            {s.per_inverter.map((i) => (
-              <tr key={i.inverter_id}>
-                <td>{i.inverter_id}</td>
-                <td>{i.s_kva}</td>
-                <td>{i.required_rating_kva}</td>
-                <td>{i.headroom_kva}</td>
-                <td>{i.rating_margin_short ? "yes" : "no"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <table aria-label="Sizing check per line">
-          <thead>
-            <tr>
-              <th>Line</th>
-              <th>Current (A)</th>
-              <th>Required current (A)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {s.per_line.map((ln) => (
-              <tr key={ln.line_id}>
-                <td>{ln.line_id}</td>
-                <td>{ln.current_a}</td>
-                <td>{ln.required_current_a}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <p>
-          {s.storage ? `Storage energy: AC ${s.storage.e_ac_kwh} kWh (stage ${s.storage.stage}). ` : "No storage check. "}
+      <dl className={styles.loadability}>
+        <dt>λ_c (constraint loadability, ratio)</dt>
+        <dd>{fmt(l.lambda_c)}</dd>
+        <dt>
+          λ_s (ratio) <span className={styles.qualifier}>solution existence, not a stability limit</span>
+        </dt>
+        <dd>{fmt(l.lambda_s)}</dd>
+        <dt>Resolution (ratio)</dt>
+        <dd>{fmt(l.resolution)}</dd>
+        <dt>Grid step (ratio)</dt>
+        <dd>{fmt(l.grid_step)}</dd>
+        <dt>Stop reason</dt>
+        <dd className={styles.text}>{l.stop_reason ?? "none"}</dd>
+      </dl>
+      {charts && <LoadabilityAxis l={l} record={charts.record} />}
+      <AdvisoryPanel label="Sizing check" tag="Sizing check · from the network" title="Sizing check (advisory, from the network)">
+        <DataTable label="Inverter ratings" columns={INV_SIZING} rows={s.per_inverter} rowKey={(i) => i.inverter_id} rowName={(i) => i.inverter_id} />
+        <DataTable label="Line currents" columns={LINE_SIZING} rows={s.per_line} rowKey={(x) => x.line_id} rowName={(x) => x.line_id} />
+        <p className={styles.basis}>
+          {s.storage ? `Storage energy: AC ${num(s.storage.e_ac_kwh)} kWh (stage ${s.storage.stage}). ` : "No storage check. "}
           {s.basis} {s.assumptions.join(" ")}
         </p>
-      </section>
+      </AdvisoryPanel>
     </section>
   );
 }
