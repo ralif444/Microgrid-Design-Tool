@@ -23,44 +23,66 @@ export function ExampleTag({ label, source }: { label: string; source: string })
   );
 }
 
-export function useExampleForm<T extends object>(screen: string, refill: T) {
+export function NotSet() {
+  return <span className={styles.note}>{NOT_SET}</span>;
+}
+
+// `resolve` checks an example value against the open Project (Doc 7 §2.3: a parameter_path that does
+// not resolve is dropped with a console warning); return null to drop it. `onReset` resets parts of
+// the screen that live outside this hook (an axis).
+export function useExampleForm<T extends object>(
+  screen: string,
+  refill: T,
+  opts: { resolve?: (field: string, value: unknown) => unknown; onReset?: () => void } = {},
+) {
   const { example } = useProject();
-  const [form, setForm] = useState(() => {
-    const values = { ...refill };
-    const sources: Record<string, string> = {};
-    for (const k of Object.keys(refill)) {
-      const v = initialValue(example, screen, k, (refill as Record<string, unknown>)[k]);
-      (values as Record<string, unknown>)[k] = v.value;
-      if (v.source) sources[k] = v.source;
-    }
-    return { values, sources };
-  });
   const s = example?.settings.screens[screen];
+  const exampleValue = (k: string, v: unknown): unknown => {
+    const r = opts.resolve ? opts.resolve(k, v) : v;
+    if (r === null) console.warn(`Example settings: ${screen}.${k} dropped (does not resolve on this Project)`);
+    return r;
+  };
+  const [form, setForm] = useState(() => {
+    const values = { ...refill } as Record<string, unknown>;
+    const sources: Record<string, string> = {};
+    const dropped: string[] = [];
+    for (const k of Object.keys(refill)) {
+      const v = initialValue(example, screen, k, values[k]);
+      values[k] = v.source ? exampleValue(k, v.value) : v.value;
+      if (v.source && values[k] !== null) sources[k] = v.source;
+      else if (v.source) dropped.push(k);
+    }
+    return { values: values as T, sources, dropped };
+  });
   const set = (k: keyof T & string, v: T[typeof k]) =>
     setForm((f) => {
       const { [k]: _gone, ...sources } = f.sources; // a typed value is no longer the example's
-      return { values: { ...f.values, [k]: v }, sources };
+      return { ...f, values: { ...f.values, [k]: v }, sources };
     });
-  const reset = () =>
+  const reset = () => {
+    opts.onReset?.();
     setForm((f) => {
       const values = { ...f.values } as Record<string, unknown>;
       const sources = { ...f.sources };
       for (const [k, e] of Object.entries(s?.fields ?? {}))
-        if (k in values) {
-          values[k] = e.value;
+        if (k in values && !f.dropped.includes(k)) {
+          values[k] = exampleValue(k, e.value);
           sources[k] = e.source;
         }
-      return { values: values as T, sources };
+      return { ...f, values: values as T, sources };
     });
+  };
+  // the example leaves this field empty (D-92 K231), or its value did not resolve
+  const needs = (k: string) => !!s && (s.needs_value.includes(k) || form.dropped.includes(k));
   const tag = (k: string, label: string): ReactNode =>
     example && form.sources[k] ? <ExampleTag label={label} source={form.sources[k]} /> : undefined;
   const note = (k: string): ReactNode =>
-    s?.needs_value.includes(k) && (form.values as Record<string, unknown>)[k] == null ? <span className={styles.note}>{NOT_SET}</span> : undefined;
+    needs(k) && (form.values as Record<string, unknown>)[k] == null ? <NotSet /> : undefined;
   const resetButton =
     s && Object.keys(s.fields).length > 0 ? (
       <button type="button" className={styles.reset} onClick={reset}>
         Reset to example values
       </button>
     ) : null;
-  return { values: form.values, set, tag, note, resetButton, inExample: !!s };
+  return { values: form.values, set, tag, note, needs, resetButton, inExample: !!s };
 }

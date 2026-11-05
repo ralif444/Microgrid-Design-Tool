@@ -74,6 +74,7 @@ function OverrideEditor({ sc, paths }: { sc: Scenario; paths: string[] }) {
 type Row = (typeof METRICS)[number];
 
 function Scenarios() {
+  const { example } = useProject();
   const { scenarios } = useProject();
   const dispatch = useProjectDispatch();
   const { design, fresh, busy, resp, error, run, m2Infeasible } = useDependentRun("M3c");
@@ -115,6 +116,12 @@ function Scenarios() {
       </div>
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
+      {example && (
+        <p data-testid="example-scenarios">
+          Example mode: the scenarios come from the guided example&apos;s Project file (designs D2S and D2H of Doc 13 §4). The
+          first, D2 base, is the reference of the comparison (Doc 3 §6.6).
+        </p>
+      )}
       <form
         aria-label="New scenario"
         className={styles.form}

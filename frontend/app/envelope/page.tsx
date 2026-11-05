@@ -6,7 +6,8 @@
 // never colour alone); focus or hover a cell to read its limiting constraint. One tab stop, arrows move.
 import { useState, type KeyboardEvent } from "react";
 import type { M3dPayload, RunRecord, SweepPoint } from "../../api-types";
-import { SizeIndicator, useAxis, useSweepCap } from "../../components/AxisForm";
+import { axisNeeds, SizeIndicator, useAxis, useSweepCap } from "../../components/AxisForm";
+import { useExampleForm } from "../../components/ExampleForm";
 import { ChartFrame } from "../../components/charts/ChartFrame";
 import { EmptyState } from "../../components/EmptyState";
 import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
@@ -18,6 +19,7 @@ import { KIND_WORDS } from "../../components/M2Results";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
+import { useProject } from "../../store";
 import { Toast } from "../../components/Toast";
 
 const CELL: Record<string, [IconName, string, string]> = {
@@ -32,8 +34,12 @@ const limiting = (g: SweepPoint) => {
 
 function Envelope() {
   const { design, fresh, busy, resp, error, run, m2Infeasible } = useDependentRun("M3d");
-  const x = useAxis(design, "X axis: ");
-  const y = useAxis(design, "Y axis: ");
+  // Example mode (Doc 12 X9, D-92 K230/K231): X axis from the guided example, Y axis left to the user.
+  const { example } = useProject();
+  const s = example?.settings.screens.envelope;
+  const x = useAxis(design, "X axis: ", s && { ex: s.fields.axis_x ?? null, needs: axisNeeds(s.needs_value, "axis_x") });
+  const y = useAxis(design, "Y axis: ", s && { ex: s.fields.axis_y ?? null, needs: axisNeeds(s.needs_value, "axis_y") });
+  const ex = useExampleForm("envelope", {}, { onReset: () => (x.reset(), y.reset()) });
   const cap = useSweepCap();
   const [dismissed, setDismissed] = useState<string | null>(null);
   const points = x.steps !== null && y.steps !== null ? x.steps * y.steps : null;
@@ -65,6 +71,7 @@ function Envelope() {
           {y.fields}
         </fieldset>
         <SizeIndicator points={points} cap={cap} />
+        {ex.resetButton}
         <button type="submit" className="primary" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
           {busy ? "Running..." : "Run envelope"}
         </button>

@@ -6,12 +6,13 @@
 // the first infeasible value; the points table on DataTable.
 import { useState } from "react";
 import type { KeyMetrics, M3bPayload, RunRecord, SweepPoint } from "../../api-types";
-import { SizeIndicator, useAxis, useSweepCap } from "../../components/AxisForm";
+import { axisNeeds, SizeIndicator, useAxis, useSweepCap } from "../../components/AxisForm";
 import { LineChart } from "../../components/charts/LineChart";
 import { Swatch } from "../../components/charts/marks";
 import { FEAS } from "../../components/charts/palette";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
+import { useExampleForm } from "../../components/ExampleForm";
 import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
 import { m3bKpis } from "../../components/kpi";
@@ -21,6 +22,7 @@ import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
+import { useProject } from "../../store";
 
 type Metric = keyof KeyMetrics;
 // [field, name, unit]; the optional ones appear only when a point carries them (point_metrics)
@@ -38,11 +40,29 @@ const KEY_METRICS: [Metric, string, string][] = [
   ["kappa", "κ dominant-mode speed", "ratio"],
 ];
 const title = ([, name, unit]: (typeof KEY_METRICS)[number]) => `${name} (${unit})`;
+// Per-point metrics of Doc 3 §6.5 (D-95): stability ones run M4a at each admissible point and need tau on
+// every Inverter; nothing ticked and no eigenvalues = the request is the same as before.
+const POINT_METRICS: [PointMetric, string][] = [
+  ["LAMBDA_C", "Constraint loadability λ_c"],
+  ["ZETA_MIN", "Lowest damping ζ_min"],
+  ["RE_LAMBDA_DOM", "Real part of the dominant eigenvalue"],
+  ["INDICATORS", "Validity indicators r_τ and κ"],
+];
+type PointMetric = "LAMBDA_C" | "ZETA_MIN" | "RE_LAMBDA_DOM" | "INDICATORS";
 const OPTIONAL = new Set<Metric>(["max_q_sharing_error_pu", "lambda_c", "zeta_min", "re_lambda_dom_per_s", "r_tau", "kappa"]);
 
 function Sweep() {
   const { design, fresh, busy, resp, error, run, m2Infeasible } = useDependentRun("M3b");
-  const ax = useAxis(design);
+  const { example } = useProject();
+  const s = example?.settings.screens.sweep;
+  const ax = useAxis(design, "", s && { ex: s.fields.axis ?? null, needs: axisNeeds(s.needs_value, "axis") });
+  const ex = useExampleForm<{ point_metrics: PointMetric[] | null; include_eigenvalues: boolean | null }>(
+    "sweep",
+    { point_metrics: null, include_eigenvalues: null },
+    { onReset: ax.reset },
+  );
+  const pointMetrics = ex.values.point_metrics ?? [];
+  const eigenvalues = ex.values.include_eigenvalues ?? false;
   const cap = useSweepCap();
   const [metric, setMetric] = useState<Metric>("system_frequency_hz");
   const [dismissed, setDismissed] = useState<string | null>(null);
@@ -74,11 +94,38 @@ function Sweep() {
         className={styles.form}
         onSubmit={(e) => {
           e.preventDefault();
-          void run({ parameters: { axis: ax.axis } });
+          void run({
+            parameters: {
+              axis: ax.axis,
+              ...(pointMetrics.length ? { point_metrics: pointMetrics } : {}),
+              ...(eigenvalues ? { include_eigenvalues: true } : {}),
+            },
+          });
         }}
       >
         {ax.fields}
+        <fieldset className={styles.box}>
+          <legend>Per-point metrics, optional</legend>
+          {ex.tag("point_metrics", "Per-point metrics")}
+          {POINT_METRICS.map(([m, label]) => (
+            <label key={m}>
+              <input
+                type="checkbox"
+                checked={pointMetrics.includes(m)}
+                onChange={() => ex.set("point_metrics", pointMetrics.includes(m) ? pointMetrics.filter((x) => x !== m) : [...pointMetrics, m])}
+              />{" "}
+              {label}
+            </label>
+          ))}
+          <p>Each ticked metric adds work at every point. The last three run M4a at each admissible point and need τ on every inverter.</p>
+          <label>
+            <input type="checkbox" checked={eigenvalues} onChange={() => ex.set("include_eigenvalues", !eigenvalues)} /> Include the eigenvalues of each point
+          </label>
+          {ex.tag("include_eigenvalues", "Include the eigenvalues of each point")}
+          <p>The eigenvalue list is stored in the RunRecord; this screen does not plot it.</p>
+        </fieldset>
         <SizeIndicator points={ax.steps} cap={cap} />
+        {ex.resetButton}
         <button type="submit" className="primary" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
           {busy ? "Running..." : "Run sweep"}
         </button>
