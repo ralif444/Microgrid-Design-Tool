@@ -79,7 +79,7 @@ export function useExampleForm<T extends object>(
   const note = (k: string): ReactNode =>
     needs(k) && (form.values as Record<string, unknown>)[k] == null ? <NotSet /> : undefined;
   const resetButton =
-    s && Object.keys(s.fields).length > 0 ? (
+    s && (Object.keys(s.fields).length > 0 || s.presets.length > 0) ? (
       <button type="button" className={styles.reset} onClick={reset}>
         Reset to example values
       </button>

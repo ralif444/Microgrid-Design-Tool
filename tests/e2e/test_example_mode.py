@@ -19,6 +19,7 @@ def test_fr_99_guided_example_enters_and_leaves_example_mode(
     base = server("default")
     page.goto(base + "/")
     page.get_by_role("button", name="Open guided example (D2)").click()
+    page.wait_for_url("**/project/")
     expect(page.get_by_test_id("project-name")).to_have_text(
         re.compile(r"^Guided example D2\s*\*unsaved")
     )
@@ -41,10 +42,12 @@ def test_fr_101_other_projects_leave_example_mode(server: Callable[[str], str], 
     base = server("default")
     page.goto(base + "/")
     page.get_by_role("button", name="Open guided example (D2)").click()
+    page.wait_for_url("**/project/")
     expect(page.get_by_test_id("example-mode")).to_be_visible()
     page.get_by_role("link", name="Microgrid Design Tool").click()  # client-side: the store stays
     page.once("dialog", lambda d: d.accept())  # unsaved-changes confirm (K17)
     page.get_by_role("button", name="Open example D2:").click()
+    page.wait_for_url("**/project/")
     expect(page.get_by_test_id("project-name")).to_have_text(re.compile(r"^Example D2"))
     expect(page.get_by_test_id("example-mode")).to_have_count(0)
 
@@ -59,6 +62,7 @@ def test_fr_100_s04_s06_s08_prefill_and_run_without_typing(
     base = server("default")
     page.goto(base + "/")
     page.get_by_role("button", name="Open guided example (D2)").click()
+    page.wait_for_url("**/project/")
     page.get_by_role("link", name="2 Sizing advice").click()
     expect(page.get_by_label("Inverter margin m_inv (ratio)")).to_have_value("0.2")
     expect(page.get_by_label("Number of inverter units n (count)")).to_have_value("2")
@@ -97,6 +101,7 @@ def test_fr_101_normal_project_forms_stay_empty(server: Callable[[str], str], pa
     base = server("default")
     page.goto(base + "/")
     page.get_by_role("button", name="Open example D2:").click()
+    page.wait_for_url("**/project/")
     page.get_by_role("link", name="2 Sizing advice").click()
     expect(page.get_by_label("Inverter margin m_inv (ratio)")).to_have_value("")
     expect(_tags(page)).to_have_count(0)
@@ -189,3 +194,75 @@ def test_fr_101_normal_sweep_sends_no_point_metrics(
     with page.expect_request("**/api/analyses/M3b") as req:
         page.get_by_role("button", name="Run sweep").click()
     assert set(req.value.post_data_json["parameters"]) == {"axis"}
+
+
+def test_fr_103_s13_runs_and_s14_offers_the_doc13_disturbances(
+    server: Callable[[str], str], page: Page
+) -> None:
+    base = server("default")
+    page.goto(base + "/")
+    page.get_by_role("button", name="Open guided example (D2)").click()
+    page.wait_for_url("**/project/")
+    _run_m1(page)
+
+    # S-13: tau_in and the damping threshold stay empty (D-92 K231); Run needs no typing.
+    page.get_by_role("link", name="Small-signal (M4a)", exact=True).click()
+    page.get_by_role("button", name="Run M4a").click()
+    expect(page.get_by_role("status", name="Status")).to_be_visible()
+
+    page.get_by_role("link", name="Transient (M4b)", exact=True).click()
+    preset = page.get_by_label("Example disturbance", exact=True)
+    kind = page.get_by_label("Disturbance", exact=True)
+    expect(preset).to_have_value("DR-01")  # first preset fills the form on arrival
+    expect(kind).to_have_value("LOAD_STEP")
+    expect(page.get_by_label("Element", exact=True)).to_have_value("L1")
+    expect(page.get_by_label("Step size (kW)")).to_have_value("2.5")
+    expect(page.get_by_label("Reactive step, optional (kvar)")).to_have_value("1")
+    expect(page.get_by_label("Start time (s)")).to_have_value("1")
+    expect(page.get_by_label("Simulation end (s)")).to_have_value("4")
+    expect(page.get_by_label("Permanent")).to_be_checked()
+    expect(_tags(page)).to_have_count(1)
+    expect(page.get_by_text("Not set in the example: enter a value.")).to_have_count(1)
+
+    preset.select_option("DR-02")
+    expect(kind).to_have_value("REFERENCE_STEP")
+    expect(page.get_by_label("Reference", exact=True)).to_have_value("P_SETPOINT")
+    expect(page.get_by_label("Element", exact=True)).to_have_value("INV1")
+    expect(page.get_by_label("Step size (kW)")).to_have_value("2")
+
+    preset.select_option("TS-02")
+    expect(kind).to_have_value("INVERTER_OUTAGE")
+    expect(page.get_by_label("Element", exact=True)).to_have_value("INV2")
+    expect(page.get_by_label("Simulation end (s)")).to_have_value("5")
+    with page.expect_request("**/api/analyses/M4b") as req:
+        page.get_by_role("button", name="Run M4b").click()
+    sent = req.value.post_data_json["parameters"]
+    assert sent["disturbance"] == {
+        "kind": "INVERTER_OUTAGE",
+        "element_id": "INV2",
+        "start_time_s": 1,
+        "duration_s": None,
+    }
+    assert sent["simulation_end_s"] == 5 and "settling" not in sent
+    expect(page.get_by_role("status", name="Status")).to_be_visible()
+
+    page.get_by_label("Start time (s)").fill("2")  # an edit makes the values the user's
+    expect(preset).to_have_value("")
+    expect(_tags(page)).to_have_count(0)
+    page.get_by_role("button", name="Reset to example values").click()
+    expect(preset).to_have_value("DR-01")
+    expect(page.get_by_label("Start time (s)")).to_have_value("1")
+
+
+def test_fr_101_normal_transient_form_starts_empty(
+    server: Callable[[str], str], page: Page
+) -> None:
+    base = server("default")
+    page.goto(base + "/")
+    page.get_by_role("button", name="Open example D2:").click()
+    page.wait_for_url("**/project/")
+    _run_m1(page)
+    page.get_by_role("link", name="Transient (M4b)", exact=True).click()
+    expect(page.get_by_label("Example disturbance", exact=True)).to_have_count(0)
+    expect(page.get_by_label("Element", exact=True)).to_have_value("")
+    expect(page.get_by_label("Start time (s)")).to_have_value("")

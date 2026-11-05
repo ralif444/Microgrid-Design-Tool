@@ -49,7 +49,7 @@ export function NumberField({
         </span>
         {adornment}
       </span>
-      {note}
+      {note && <span className={styles.note}>{note}</span>}
       {error && (
         <span id={`${id}-error`} className={styles.error} role="alert">
           {error}
