@@ -29,6 +29,9 @@ class Settings:
     fake_profile: str | None = None
     # Override of TIME_BUDGET in seconds, for tests only (Doc 8 §5). None = MetaInfo value.
     time_budget_s_override: float | None = None
+    # X9 cable and breaker sizing (docs/CABLE_BREAKER_FEATURE_GUIDELINES.md §0): experimental,
+    # off by default until the supervisor approves the scope change (KONFLIK, protection out of scope).
+    feature_cable_sizing: bool = False
 
     @staticmethod
     def from_env(env: dict[str, str] | None = None) -> Settings:
@@ -37,9 +40,11 @@ class Settings:
         port = int(e.get("MGAPP_PORT", str(DEFAULT_PORT)))
         profile = e.get("MGAPP_FAKE_PROFILE") or None
         tb = e.get("MGAPP_TIME_BUDGET_S")
+        cable = e.get("MGAPP_FEATURE_CABLE_SIZING", "").strip().lower() in {"1", "true", "yes", "on"}
         return Settings(
             engine=engine,
             port=port,
             fake_profile=profile,
             time_budget_s_override=float(tb) if tb else None,
+            feature_cable_sizing=cable,
         )
