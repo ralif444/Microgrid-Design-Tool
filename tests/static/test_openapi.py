@@ -20,7 +20,10 @@ API_PATHS = {
     "/api/run-records/verify",
     "/api/run-records/rerun",
     "/api/catalogs/import",
-    *(f"/api/analyses/{t}" for t in ("PS", "M1", "M2", "M3a", "M3b", "M3c", "M3d", "M4a", "M4b")),
+    *(
+        f"/api/analyses/{t}"
+        for t in ("PS", "M1", "M2", "M3a", "M3b", "M3c", "M3d", "M4a", "M4b", "CB")
+    ),
 }
 
 # Unit suffixes of Doc 3 §1 plus derived forms used in payloads.

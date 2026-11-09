@@ -137,7 +137,8 @@
           "M3c",
           "M3d",
           "M4a",
-          "M4b"
+          "M4b",
+          "CB"
         ],
         "title": "AnalysisType",
         "type": "string"
@@ -1624,7 +1625,10 @@
           "SCENARIO_COUNT_INVALID",
           "DEPENDS_ON_NOT_ALLOWED",
           "MULTIPLE_INVERTERS_ON_BUS",
-          "MALFORMED_REQUEST"
+          "MALFORMED_REQUEST",
+          "CABLE_TABLES_INCOMPLETE",
+          "CABLE_TABLES_UNCHECKED",
+          "CABLE_SETTINGS_INVALID"
         ],
         "title": "IssueCode",
         "type": "string"
@@ -4165,7 +4169,10 @@
           "PROFILE_PEAK_ABOVE_LOADS",
           "RATING_MARGIN_SHORT",
           "VALIDITY_NOT_CALIBRATED",
-          "CONSTRAINT_NOT_EVALUATED"
+          "CONSTRAINT_NOT_EVALUATED",
+          "FEATURE_EXPERIMENTAL",
+          "LINE_R_MISMATCH",
+          "DIRECT_BURIAL_NOT_SUPPORTED"
         ],
         "title": "WarningCode",
         "type": "string"
@@ -4179,6 +4186,37 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/analyses/CB": {
+      "post": {
+        "operationId": "analyse_CB",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Run analysis CB",
+        "tags": [
+          "analyses"
+        ]
+      }
+    },
     "/api/analyses/M1": {
       "post": {
         "operationId": "analyse_M1",

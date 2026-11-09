@@ -19,6 +19,7 @@ from mgapp.domain.contract import AnalysisRequest, AnalysisResult
 from mgapp.domain.enums import (
     ALLOWED_STATUS,
     CONSTRAINT_UNIT,
+    ENGINE_TYPES,
     PAYLOAD_NULL,
     PAYLOAD_REQUIRED,
     AnalysisType,
@@ -79,7 +80,7 @@ def run_suite(
     workdir: Path,
     types: list[AnalysisType] | None = None,
 ) -> list[Violation]:
-    types = types or list(AnalysisType)
+    types = types or list(ENGINE_TYPES)
     out: list[Violation] = []
 
     # C8: identity non-empty and stable.

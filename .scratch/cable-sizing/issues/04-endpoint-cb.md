@@ -1,5 +1,5 @@
 # 04 Endpoint POST /api/analyses/CB
-Status: ready-for-agent
+Status: done (2026-11-09)
 Type: task
 Blocked by: 03
 

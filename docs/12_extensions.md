@@ -238,7 +238,7 @@ Source: `docs/CABLE_BREAKER_FEATURE_GUIDELINES.md` (the guideline; its §0 guard
 | M1 payload | New group `sharing`: per Inverter {p_deviation_kw, q_deviation_kvar, q_droop_not_rating_proportional} (FR-81). |
 | M3 metrics | Add `MAX_Q_SHARING_ERROR` (FR-82). |
 | M3b parameter path | Add special path `load_profile_hour` (FR-78). |
-| X10 cable sizing (FR-105 – FR-115) | analysis_type `CB` with `depends_on` an M2 RunRecordRef; Project field `CableSizingSettings` outside the canonical snapshot (FR-106); the `cable_tables.json` schema with `table_set_hash` in the RunRecord parameters (FR-107); stage-1 codes `CABLE_TABLES_INCOMPLETE`, `CABLE_TABLES_UNCHECKED`; warning codes `LINE_R_MISMATCH`, `FEATURE_EXPERIMENTAL`, `DIRECT_BURIAL_NOT_SUPPORTED`; Catalogue kind `BREAKER` (FR-115). |
+| X10 cable sizing (FR-105 – FR-115) | analysis_type `CB` with `depends_on` an M2 RunRecordRef; Project field `CableSizingSettings` outside the canonical snapshot (FR-106); the `cable_tables.json` schema with `table_set_hash` in the RunRecord parameters (FR-107); stage-1 codes `CABLE_TABLES_INCOMPLETE`, `CABLE_TABLES_UNCHECKED`, `CABLE_SETTINGS_INVALID` (D-102 K281); dependency on M2 FEASIBLE or INFEASIBLE, engine fields null, `diagnostics.computed_by = "app"` (ADR-014); warning codes `LINE_R_MISMATCH`, `FEATURE_EXPERIMENTAL`, `DIRECT_BURIAL_NOT_SUPPORTED`; Catalogue kind `BREAKER` (FR-115). |
 | Indicators | Payload groups for r_τ, κ, r_in, ε_X with `evaluated` flag and reason (FR-61); threshold version in MetaInfo (FR-62). Align with the core indicator contract (§8). |
 
 ## 5. UI changes (merge into Doc 7)

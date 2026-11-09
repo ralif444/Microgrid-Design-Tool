@@ -16,6 +16,7 @@ from mgapp.domain.base import Model
 from mgapp.domain.contract import ScenarioSnapshot, ValidationIssue
 from mgapp.domain.entities import ProjectSnapshot
 from mgapp.domain.enums import AnalysisType, IssueCode, IssueLevel
+from mgapp.services.cable_sizing.service import parameter_issues as cable_parameter_issues
 from mgapp.services.canonical import normalise_raw, normalise_snapshot, sha256_hex
 
 ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,32}$")
@@ -51,6 +52,9 @@ MESSAGES: dict[IssueCode, str] = {
     IssueCode.SCENARIO_COUNT_INVALID: "Compare between 2 and the allowed number of scenarios.",
     IssueCode.DEPENDS_ON_NOT_ALLOWED: "This analysis does not use an earlier result.",
     IssueCode.MALFORMED_REQUEST: "The request could not be read.",
+    IssueCode.CABLE_TABLES_INCOMPLETE: "The cable table file is not complete.",
+    IssueCode.CABLE_TABLES_UNCHECKED: "The cable table file is not double-entry checked.",
+    IssueCode.CABLE_SETTINGS_INVALID: "Check the cable sizing settings.",
 }
 
 M4_POINT_METRICS = frozenset({"ZETA_MIN", "RE_LAMBDA_DOM", "INDICATORS"})
@@ -319,6 +323,8 @@ def _parameters(
         )
         if not ok:
             bad(IssueCode.PS_PARAMETER_INVALID)
+    elif t is AnalysisType.CB:
+        c.issues += cable_parameter_issues(p)
     elif t is AnalysisType.M2:
         mi, ml, h = p.get("inverter_margin_ratio"), p.get("line_margin_ratio"), p.get("autonomy_h")
         if not (_is_num(mi) and mi >= 0 and _is_num(ml) and ml >= 0):

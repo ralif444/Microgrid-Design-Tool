@@ -14,7 +14,7 @@ from mgapp.adapters.fake_engine import (
     Outcome,
     ScriptEntry,
 )
-from mgapp.domain.enums import AnalysisType, EngineKind, Status, WarningCode
+from mgapp.domain.enums import ENGINE_TYPES, AnalysisType, EngineKind, Status, WarningCode
 from mgapp.domain.payloads import PAYLOAD_MODEL
 from mgapp.engine_port import EnginePort
 
@@ -38,7 +38,7 @@ def test_identity_is_fake() -> None:
     assert ident.engine_version and ident.engine_git_commit
 
 
-@pytest.mark.parametrize("t", list(AnalysisType))
+@pytest.mark.parametrize("t", list(ENGINE_TYPES))
 def test_default_profile_is_feasible_with_valid_payload(t: AnalysisType) -> None:
     res = FakeEngine().run(request_for(t))
     assert res.status is Status.FEASIBLE
