@@ -206,7 +206,7 @@ function Network() {
       </section>
       <details className={styles.diagram}>
         <summary>Diagram (read-only)</summary>
-        <SingleLineDiagram drawing={sld.design} details={sld.full} selected={inspect?.id ?? null} onSelect={open} />
+        <SingleLineDiagram drawing={sld.design} details={sld.full} selected={inspect?.id ?? null} onSelect={open} breakers={sld.breakers} />
       </details>
       {inspect && <Inspector target={inspect} onClose={() => setInspect(null)} />}
       <h2>Issues</h2>

@@ -362,6 +362,37 @@ export interface components {
          * @enum {string}
          */
         AnalysisType: "PS" | "M1" | "M2" | "M3a" | "M3b" | "M3c" | "M3d" | "M4a" | "M4b" | "CB";
+        /**
+         * BreakerValues
+         * @description X10 Catalogue kind BREAKER (FR-115, D-104 K296); matched on standard and in_a.
+         */
+        BreakerValues: {
+            /**
+             * Class
+             * @default null
+             */
+            class?: ("MCB" | "MCCB") | null;
+            /**
+             * Curve
+             * @default null
+             */
+            curve?: string | null;
+            /**
+             * In A
+             * @default null
+             */
+            in_a?: number | null;
+            /**
+             * Poles
+             * @default null
+             */
+            poles?: number | null;
+            /**
+             * Standard
+             * @default null
+             */
+            standard?: string | null;
+        };
         /** Bus */
         Bus: {
             /**
@@ -415,6 +446,8 @@ export interface components {
         /** CatalogEntry */
         CatalogEntry: {
             /** @default null */
+            breaker?: components["schemas"]["BreakerValues"] | null;
+            /** @default null */
             conductor?: components["schemas"]["ConductorValues"] | null;
             /** Id */
             id: string;
@@ -424,7 +457,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "INVERTER" | "CONDUCTOR";
+            kind: "INVERTER" | "CONDUCTOR" | "BREAKER";
             /**
              * @default {
              *       "document": null,
@@ -498,6 +531,21 @@ export interface components {
              */
             ampacity_conditions?: string | null;
             /**
+             * Cores
+             * @default null
+             */
+            cores?: number | null;
+            /**
+             * Insulation
+             * @default null
+             */
+            insulation?: ("PVC" | "XLPE") | null;
+            /**
+             * Material
+             * @default null
+             */
+            material?: ("CU" | "AL") | null;
+            /**
              * R Ohm Per Km
              * @default null
              */
@@ -512,6 +560,11 @@ export interface components {
              * @default null
              */
             shunt_capacitance_uf_per_km?: number | null;
+            /**
+             * Size Mm2
+             * @default null
+             */
+            size_mm2?: number | null;
             /**
              * X Ohm Per Km
              * @default null

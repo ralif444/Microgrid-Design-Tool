@@ -36,8 +36,9 @@ REQUIRED = {
         "voltage_droop_max_kv_per_kvar",
     ),
     "CONDUCTOR": ("r_ohm_per_km", "x_ohm_per_km"),
+    "BREAKER": ("in_a",),
 }
-OPTIONAL = {"INVERTER": ("tau_in_s",), "CONDUCTOR": ("ampacity_a",)}
+OPTIONAL = {"INVERTER": ("tau_in_s",), "CONDUCTOR": ("ampacity_a",), "BREAKER": ()}
 
 
 class EntryCheck(Model):
@@ -57,9 +58,15 @@ def entry_reasons(e: CatalogEntry) -> list[str]:
     reasons = [
         f"provenance.{f} is missing" for f in PROVENANCE_FIELDS if not getattr(e.provenance, f)
     ]
-    block = e.inverter if e.kind == "INVERTER" else e.conductor
+    block = {"INVERTER": e.inverter, "CONDUCTOR": e.conductor, "BREAKER": e.breaker}[e.kind]
     if block is None:
         return [*reasons, f"{e.kind.lower()} values are missing"]
+    if e.breaker is not None:  # D-104 K296: the match needs the standard and the class
+        reasons += [
+            f"{f} is missing"
+            for f, v in (("standard", e.breaker.standard), ("class", e.breaker.device_class))
+            if not v
+        ]
     for f in REQUIRED[e.kind]:
         if getattr(block, f) is None:
             reasons.append(f"{f} is missing")

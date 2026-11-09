@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from typing import Literal
 
+from pydantic import Field
+
 from mgapp.domain.base import Model
 
 CATALOG_SCHEMA_VERSION = 1
@@ -51,15 +53,31 @@ class ConductorValues(Model):
     ampacity_a: float | None = None
     ampacity_conditions: str | None = None  # reference installation conditions
     shunt_capacitance_uf_per_km: float | None = None  # not used by the model (A4)
+    # X10 cable sizing match only (D-104 K293); an entry without all four never matches
+    material: Literal["CU", "AL"] | None = None
+    insulation: Literal["PVC", "XLPE"] | None = None
+    cores: int | None = Field(default=None, ge=1)
+    size_mm2: float | None = Field(default=None, gt=0)
+
+
+class BreakerValues(Model):
+    """X10 Catalogue kind BREAKER (FR-115, D-104 K296); matched on standard and in_a."""
+
+    standard: str | None = None
+    device_class: Literal["MCB", "MCCB"] | None = Field(default=None, alias="class")
+    in_a: float | None = Field(default=None, gt=0)
+    curve: str | None = None
+    poles: int | None = Field(default=None, ge=1)
 
 
 class CatalogEntry(Model):
     id: str
-    kind: Literal["INVERTER", "CONDUCTOR"]
+    kind: Literal["INVERTER", "CONDUCTOR", "BREAKER"]
     provenance: Provenance = Provenance()
     sources: dict[str, str] = {}  # value field -> page or section in the document (FR-65)
     inverter: InverterValues | None = None
     conductor: ConductorValues | None = None
+    breaker: BreakerValues | None = None
 
 
 class Catalog(Model):

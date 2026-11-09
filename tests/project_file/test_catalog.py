@@ -125,3 +125,65 @@ def test_fr_69_catalog_ref_is_hashed_but_never_reaches_the_engine() -> None:
     assert a["result"]["status"] == b["result"]["status"] == "FEASIBLE"
     assert a["result"]["payload"] == b["result"]["payload"]
     assert a["run_record"]["snapshot_hash"] != b["run_record"]["snapshot_hash"]
+
+
+def breaker(**values: Any) -> dict[str, Any]:
+    return {
+        "id": "B1",
+        "kind": "BREAKER",
+        "provenance": PROV,
+        "sources": {"in_a": "p. 5"},
+        "breaker": {
+            "standard": "S-1",
+            "class": "MCB",
+            "in_a": 20,
+            "curve": "C",
+            "poles": 3,
+            **values,
+        },
+    }
+
+
+def test_fr_115_breaker_entry_roundtrip(client: TestClient) -> None:  # D-104 K296
+    doc = catalog(
+        breaker(),
+        conductor(
+            conductor={
+                "r_ohm_per_km": 0.5,
+                "x_ohm_per_km": 0.3,
+                "material": "CU",
+                "insulation": "PVC",
+                "cores": 3,
+                "size_mm2": 10,
+            }
+        ),
+    )
+    out = _import(client, copy.deepcopy(doc))
+    assert out["file_check"]["accepted"] and out["catalog"] == doc
+    assert [c["usable"] for c in out["entry_checks"]] == [True, True]
+
+
+@pytest.mark.parametrize(
+    ("entry", "reason"),
+    [
+        (breaker(standard=None), "standard is missing"),
+        (breaker(**{"class": None}), "class is missing"),
+        ({**breaker(), "sources": {}}, "sources.in_a (page or section) is missing"),
+    ],
+)
+def test_fr_115_breaker_guard_names_the_gap(
+    client: TestClient, entry: dict[str, Any], reason: str
+) -> None:
+    out = _import(client, catalog(entry))
+    assert reason in out["entry_checks"][0]["reasons"]
+
+
+@pytest.mark.parametrize(
+    "values",
+    [{"material": "Cu"}, {"insulation": "EPR"}, {"cores": 0}, {"size_mm2": -1}],
+)
+def test_fr_115_conductor_match_fields_are_checked(
+    client: TestClient, values: dict[str, Any]
+) -> None:  # D-104 K293
+    doc = catalog(conductor(conductor={"r_ohm_per_km": 0.5, "x_ohm_per_km": 0.3, **values}))
+    assert _import(client, doc)["file_check"]["code"] == "MALFORMED_FILE"

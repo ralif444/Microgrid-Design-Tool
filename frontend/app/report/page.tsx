@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { getMeta } from "../../api-client";
 import type { AnalysisType, M1Payload, M2Payload, M4aPayload, MetaInfo, ProjectSnapshot, PsPayload, RunRecord } from "../../api-types";
 import { AdvisoryPanel } from "../../components/AdvisoryPanel";
+import { CableReportSection } from "../../components/CableReport";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
 import { ExampleGuide } from "../../components/ExampleForm";
@@ -264,6 +265,7 @@ function Report() {
           ))}
         </tbody>
       </table>
+      <CableReportSection current={current} />
     </article>
     </ReportCharts.Provider>
   );

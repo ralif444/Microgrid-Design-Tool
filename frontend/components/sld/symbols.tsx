@@ -1,11 +1,12 @@
 // Single-line diagram symbols as SVG primitives (Doc 12 X8, FR-94; SLD guideline §3, §5). Only what the
-// model has: busbar, grid-forming inverter, constant-PQ load, series line, system block. No breaker,
-// switch, transformer, grounding, grid or battery. Colour follows the element state through `color`
+// model has: busbar, grid-forming inverter, constant-PQ load, series line, system block. No switch,
+// transformer, grounding, grid or battery; a breaker only as an X10 sizing result (D-104 K295). Colour follows the element state through `color`
 // (CSS module); status is always icon + word, never colour alone (R6). Text uses the §5.1 labels.
 import type { ReactNode, SVGProps } from "react";
 import { Icon, type IconName } from "../Icon";
 import type { SldElement } from "./buildSldModel";
-import { BAR_H, type Attach, type BusBox, type LineRoute } from "./layoutSld";
+import type { BreakerMark } from "../cable";
+import { BAR_H, type Attach, type BusBox, type LineRoute, type Pt } from "./layoutSld";
 import styles from "./sld.module.css";
 
 /** Static stand-in for hover/focus and selection, for the gallery and the report (SLD-4 adds the live ones). */
@@ -160,6 +161,16 @@ export function LineSymbol({ el, route, emph, bind }: Common & { route: LineRout
   );
 }
 
+/** X10 sizing result (FR-113, D-104 K295): outlined 10 x 10 square centred on the conductor at `at`, no label. */
+export function BreakerSymbol({ mark, at, props }: { mark: BreakerMark; at: Pt; props?: SVGProps<SVGGElement> }) {
+  return (
+    <g className={styles.el} {...props} data-testid={`diagram-breaker-${mark.id}`}>
+      <rect x={at.x - 8} y={at.y - 8} width={16} height={16} className={styles.halo} />
+      <rect x={at.x - 5} y={at.y - 5} width={10} height={10} className={styles.box} />
+    </g>
+  );
+}
+
 /** Text box, not a symbol: nominal kV (line-to-line) and Hz, the network kind, the M1 system frequency. */
 export function SystemBlock({ el, x, y, w, h, emph, bind }: Common & { x: number; y: number; w: number; h: number }) {
   const [kv, hz, ...res] = el.tags;
@@ -184,7 +195,7 @@ export function SystemBlock({ el, x, y, w, h, emph, bind }: Common & { x: number
 }
 
 /** HTML legend strip under the diagram (guideline §3): each symbol with its name. */
-export function SldLegend() {
+export function SldLegend({ breakers = false }: { breakers?: boolean }) {
   const item = (name: string, svg: ReactNode) => (
     <li key={name}>
       <svg width={44} height={36} viewBox="0 0 44 36" aria-hidden="true" focusable="false">
@@ -211,6 +222,14 @@ export function SldLegend() {
         </>,
       )}
       {item("Line (series R–X)", <line x1={2} y1={18} x2={42} y2={18} className={styles.conductor} />)}
+      {breakers &&
+        item(
+          "Circuit breaker (sizing result)",
+          <>
+            <line x1={2} y1={18} x2={42} y2={18} className={styles.conductor} />
+            <rect x={17} y={13} width={10} height={10} className={styles.box} />
+          </>,
+        )}
     </ul>
   );
 }

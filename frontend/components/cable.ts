@@ -157,3 +157,55 @@ export function useCableSizingFlag(): boolean | null {
   }, []);
   return on;
 }
+
+// The session CB run on the design now in the store (K291), or null; FEASIBLE runs only.
+export function currentCb(current: string | null): { record: RunRecord; payload: CbPayload } | null {
+  const rec = session.record;
+  if (!rec || current === null || rec.snapshot_hash !== current || rec.result.status !== "FEASIBLE") return null;
+  return { record: rec, payload: rec.result.payload as unknown as CbPayload };
+}
+
+// FR-113: one breaker per sized element; no symbol for an element that could not be sized.
+export type BreakerMark = { id: string; kind: "line" | "inverter"; cls: string; in_a: number; size_mm2: number; iz_a: number };
+export function breakerMarks(p: CbPayload | null): BreakerMark[] {
+  return (p?.elements ?? []).flatMap((e) =>
+    e.outcome === "SIZED" && e.cable && e.device.in_a !== null
+      ? [{ id: e.element_id, kind: e.element_kind === "LINE" ? "line" : "inverter", cls: e.device.class, in_a: e.device.in_a, size_mm2: e.cable.size_mm2, iz_a: e.cable.iz_a }]
+      : [],
+  );
+}
+
+// FR-115 catalogue match, a check only (D11, D-104 K293 – K296), over usable entries:
+// the smallest conductor at or above the chosen size with the same material and insulation, and
+// cores 1 for single-core or at least 3 for multicore cables (3 loaded conductors, guideline §2.2);
+// a breaker of the same standard and I_n.
+type Entry = {
+  id: string;
+  kind: string;
+  conductor?: { material?: string | null; insulation?: string | null; cores?: number | null; size_mm2?: number | null; ampacity_a?: number | null; ampacity_conditions?: string | null } | null;
+  breaker?: { standard?: string | null; in_a?: number | null } | null;
+};
+export type CatalogueMatch = { cable: Entry | null; breaker: Entry | null };
+export function catalogueMatch(e: CbElement, construction: string | null, entries: Entry[], usable: Set<string>): CatalogueMatch {
+  const c = e.cable;
+  const ok = entries.filter((x) => usable.has(x.id));
+  const cores = (n: number | null | undefined) => typeof n === "number" && (construction === "SINGLE_CORE" ? n === 1 : n >= 3);
+  const cable = c
+    ? (ok
+        .filter((x) => x.kind === "CONDUCTOR" && x.conductor?.material === c.conductor && x.conductor.insulation === c.insulation && cores(x.conductor.cores))
+        .filter((x) => typeof x.conductor?.size_mm2 === "number" && x.conductor.size_mm2 >= c.size_mm2)
+        .sort((a, b) => a.conductor!.size_mm2! - b.conductor!.size_mm2! || (a.id < b.id ? -1 : 1))[0] ?? null)
+    : null;
+  const breaker =
+    e.device.in_a === null ? null : (ok.find((x) => x.kind === "BREAKER" && x.breaker?.standard === e.device.standard && x.breaker.in_a === e.device.in_a) ?? null);
+  return { cable, breaker };
+}
+
+export function matchText(m: CatalogueMatch): string {
+  const c = m.cable?.conductor;
+  const cable = m.cable
+    ? `cable ${m.cable.id} (${c?.size_mm2} mm²${c?.ampacity_a != null ? `, datasheet ${c.ampacity_a} A${c.ampacity_conditions ? ` at ${c.ampacity_conditions}` : ""}` : ""})`
+    : "no catalogue cable";
+  const breaker = m.breaker ? `breaker ${m.breaker.id}` : "no catalogue breaker";
+  return `${cable}; ${breaker}. A check only.`;
+}

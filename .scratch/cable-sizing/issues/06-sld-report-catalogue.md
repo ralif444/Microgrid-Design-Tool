@@ -1,5 +1,5 @@
 # 06 SLD breaker symbols, report section, BREAKER catalogue kind
-Status: ready-for-agent
+Status: done (2026-11-09)
 Type: task
 Blocked by: 05
 

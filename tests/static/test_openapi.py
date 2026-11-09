@@ -29,13 +29,15 @@ API_PATHS = {
 # Unit suffixes of Doc 3 §1 plus derived forms used in payloads.
 UNIT_SUFFIX = re.compile(
     r"_(kw|kvar|kva|kv|ohm|ohm_per_km|km|a|hz|hz_per_kw|kv_per_kvar|deg|s|kwh|h|pu|ratio|"
-    r"per_s|hz_per_s|w|mib|v|uf_per_km)$"
+    r"per_s|hz_per_s|w|mib|v|uf_per_km|mm2)$"
 )
 # Numeric fields without a unit, by Doc 3 definition (counts, indices, versions, unitless
 # margins and indicators, axis values whose unit is given by the axis, and LimitingConstraint
 # fields whose unit is in the sibling `unit` field).
 UNITLESS = {
     "unit_count",
+    "cores",  # count, X10 catalogue (D-104)
+    "poles",  # count, X10 catalogue (D-104)
     "redundancy",
     "iterations",
     "hour",

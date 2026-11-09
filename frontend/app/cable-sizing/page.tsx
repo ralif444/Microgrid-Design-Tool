@@ -5,6 +5,7 @@
 // the results table, rows that expand to the factors with their table and page. Advice only.
 import { useState } from "react";
 import { runAnalysis } from "../../api-client";
+import { useCatalog } from "../../components/Catalog";
 import { EmptyState } from "../../components/EmptyState";
 import { SOLVER } from "../../components/Further";
 import { Icon } from "../../components/Icon";
@@ -16,6 +17,8 @@ import { Toast } from "../../components/Toast";
 import { useValidation } from "../../components/useValidation";
 import {
   arrangements,
+  catalogueMatch,
+  matchText,
   CONDUCTORS,
   CONSTRUCTIONS,
   factorSources,
@@ -85,7 +88,7 @@ const Check = ({ ok }: { ok: boolean | undefined }) =>
     </span>
   );
 
-function Row({ e, open, toggle, tables, construction }: { e: CbElement; open: boolean; toggle: () => void; tables: unknown; construction: string | null }) {
+function Row({ e, open, toggle, tables, construction, match }: { e: CbElement; open: boolean; toggle: () => void; tables: unknown; construction: string | null; match: string }) {
   const o = OUTCOME[e.outcome];
   const c = e.cable;
   const src = c ? factorSources(tables, c, construction) : null;
@@ -178,7 +181,7 @@ function Row({ e, open, toggle, tables, construction }: { e: CbElement; open: bo
                 </>
               )}
               <dt>Catalogue match</dt>
-              <dd>Not checked yet: the Catalogue kind BREAKER and the cable match come in a later step (FR-115).</dd>
+              <dd>{match}</dd>
               {e.notes.length > 0 && (
                 <>
                   <dt>Notes</dt>
@@ -204,6 +207,8 @@ function CableSizing() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<Set<string>>(new Set());
+  const { catalog, checks } = useCatalog();
+  const usable = new Set(checks.filter((c) => c.usable).map((c) => c.entry_id));
   const rec = s.record && current !== null && s.record.snapshot_hash === current ? s.record : null;
   const r = rec?.result;
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as CbPayload) : null;
@@ -354,6 +359,7 @@ function CableSizing() {
                     open={open.has(e.element_id)}
                     tables={sentTables}
                     construction={sentConstruction}
+                    match={e.outcome === "SIZED" ? matchText(catalogueMatch(e, sentConstruction, catalog.entries, usable)) : "Not checked: the element was not sized."}
                     toggle={() =>
                       setOpen((o) => {
                         const n = new Set(o);

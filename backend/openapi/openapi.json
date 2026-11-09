@@ -143,6 +143,80 @@
         "title": "AnalysisType",
         "type": "string"
       },
+      "BreakerValues": {
+        "additionalProperties": false,
+        "description": "X10 Catalogue kind BREAKER (FR-115, D-104 K296); matched on standard and in_a.",
+        "properties": {
+          "class": {
+            "anyOf": [
+              {
+                "enum": [
+                  "MCB",
+                  "MCCB"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Class"
+          },
+          "curve": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Curve"
+          },
+          "in_a": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "In A"
+          },
+          "poles": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Poles"
+          },
+          "standard": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Standard"
+          }
+        },
+        "title": "BreakerValues",
+        "type": "object"
+      },
       "Bus": {
         "additionalProperties": false,
         "properties": {
@@ -279,6 +353,17 @@
       "CatalogEntry": {
         "additionalProperties": false,
         "properties": {
+          "breaker": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BreakerValues"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
           "conductor": {
             "anyOf": [
               {
@@ -308,7 +393,8 @@
           "kind": {
             "enum": [
               "INVERTER",
-              "CONDUCTOR"
+              "CONDUCTOR",
+              "BREAKER"
             ],
             "title": "Kind",
             "type": "string"
@@ -453,6 +539,51 @@
             "default": null,
             "title": "Ampacity Conditions"
           },
+          "cores": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cores"
+          },
+          "insulation": {
+            "anyOf": [
+              {
+                "enum": [
+                  "PVC",
+                  "XLPE"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Insulation"
+          },
+          "material": {
+            "anyOf": [
+              {
+                "enum": [
+                  "CU",
+                  "AL"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Material"
+          },
           "r_ohm_per_km": {
             "anyOf": [
               {
@@ -488,6 +619,19 @@
             ],
             "default": null,
             "title": "Shunt Capacitance Uf Per Km"
+          },
+          "size_mm2": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Size Mm2"
           },
           "x_ohm_per_km": {
             "anyOf": [
