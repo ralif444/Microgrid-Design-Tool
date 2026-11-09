@@ -1,5 +1,5 @@
 # 03 Sizing method IEC60364_OVERLOAD_PUIL2011
-Status: ready-for-agent
+Status: done (2026-11-09)
 Type: task
 Blocked by: 02
 

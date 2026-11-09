@@ -84,7 +84,7 @@ Lookup rules [DESIGN CHOICE]:
 
 ### 3.3 Selection algorithm (per element)
 1. Device class from $I_B$ (D6). Let $\mathcal{I}$ be that class's rated-current series and $k_2$ its factor (D7).
-2. $I_n = \min\{ I \in \mathcal{I} : I \ge I_B \}$. If the set is empty, the outcome is `NO_DEVICE_FITS`. If the result exceeds 63 A while the class is MCB, switch to the MCCB class and repeat from step 1.
+2. $I_n = \min\{ I \in \mathcal{I} : I \ge I_B \}$. If the set is empty, the outcome is `NO_DEVICE_FITS`. If the result exceeds 63 A while the class is MCB, switch to the MCCB class and repeat from step 1. *Note (user decision 2026-11-09, Doc 9 D-101 K273): an empty MCB set also switches to MCCB; `NO_DEVICE_FITS` only when the MCCB set is empty too.*
 3. $I_2 = k_2 I_n$.
 4. $S = \min\{ S \in \mathcal{S} : I_Z(S) \ge I_n \ \wedge\ I_2 \le 1{,}45\, I_Z(S) \}$ over the size list $\mathcal{S}$ (Cu 1,5–300 mm², Al 2,5–300 mm², PUIL Tabel 7.1-1 ∩ the KHA table range). Equivalently, $I_Z(S) \ge I_n \max(1, k_2/1{,}45)$ **[DERIVED]**. If no size fits, the outcome is `NO_SIZE_FITS`. Parallel conductors (PUIL 4-43 Lampiran A) are not supported in v1.
 5. Report both conditions explicitly, even when (CB.2) is satisfied automatically ($k_2 \le 1{,}45$).

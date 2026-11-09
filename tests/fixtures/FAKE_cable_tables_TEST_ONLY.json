@@ -8,7 +8,7 @@
     "entered_on": "2026-11-08",
     "double_entry_checked": true
   },
-  "sizes_mm2": {"CU": [10, 20, 50], "AL": [10, 20, 50]},
+  "sizes_mm2": {"CU": [10, 20, 50, 100], "AL": [10, 20, 50, 100]},
   "r20_ohm_per_km": {
     "source": {"table": "FAKE", "page": "0"},
     "CU": {"10": 2, "20": 1, "50": 0.5},
@@ -22,20 +22,40 @@
       "loaded_conductors": 3,
       "conductor": "CU",
       "method": "B1",
-      "values_a": {"10": 100, "20": 200, "50": null}
+      "values_a": {"10": 100, "20": 200, "50": 300, "100": null}
+    },
+    {
+      "table": "FAKE-1",
+      "page": "0",
+      "insulation": "XLPE",
+      "loaded_conductors": 3,
+      "conductor": "AL",
+      "method": "D_DUCT",
+      "values_a": {"10": 100, "20": 200, "50": 300, "100": 400}
     }
   ],
   "k_theta_air": {"table": "FAKE-2", "page": "0", "ref_c": 30, "PVC": {"30": 1, "40": 0.5}, "XLPE": {"30": 1, "40": 0.5}},
-  "k_theta_ground": {"table": "FAKE-3", "page": "0", "ref_c": 20, "PVC": {"20": 1}, "XLPE": {"20": 1}},
-  "k_rho": {"table": "FAKE-4", "page": "0", "ref_k_m_per_w": 2, "values": {"2": 1}},
-  "k_group": {"FAKE-5": {"page": "0", "rows": {"BUNCHED": {"1": 1, "2": 0.5}}}},
+  "k_theta_ground": {"table": "FAKE-3", "page": "0", "ref_c": 20, "PVC": {"20": 1, "30": 0.5}, "XLPE": {"20": 1, "30": 0.5}},
+  "k_rho": {"table": "FAKE-4", "page": "0", "ref_k_m_per_w": 2, "values": {"1": 2, "2": 1}},
+  "k_group": {
+    "A.52-17": {
+      "page": "0",
+      "rows": {
+        "BUNCHED": {"1": 1, "2": 0.5},
+        "SINGLE_LAYER_WALL": {"1": 1, "2": 0.5},
+        "UNDER_CEILING": {"1": 1, "2": 0.5}
+      }
+    },
+    "A.52-19A": {"page": "0", "rows": {"DUCT_TOUCHING": {"1": 1, "2": 0.5}}},
+    "A.52-19B": {"page": "0", "rows": {"DUCT_TOUCHING": {"1": 1, "2": 0.5}}}
+  },
   "device_classes": [
     {
       "class": "MCB",
       "standard": "FAKE MCB standard",
       "k2": 1,
       "k2_source": "FAKE",
-      "in_series_a": [10, 20, 50],
+      "in_series_a": [10, 20, 40, 80],
       "in_series_source": "FAKE",
       "max_in_a": 50
     },
