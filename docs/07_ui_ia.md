@@ -39,6 +39,7 @@ Routes are Next.js static-export paths (file-based routing, ADR-002), no dynamic
 | S-15 | Run history | `/runs/` | RunRecord list (INPUT_INVALID hidden by default); detail; export; import; verify; re-run; reproduction outcome; version comparison. | FR-46..FR-53, FR-57 | Must (version warning: Should) |
 | S-16 | Report | `/report/` | HTML report: verdict, limiting constraints, margins, assumptions, tables, charts, RunRecord hashes; print layout. | FR-48, FR-58, FR-59, FR-60 | Must (print: Should) |
 | S-17 | About and limits | `/about/` | App, schema and engine versions (FAKE or REAL); active limits (`TIME_BUDGET`, `SWEEP_CAP`, `SCENARIO_CAP`); glossary; offline note. | FR-51, NFR-02, NFR-03 | Should [ASSUMPTION] |
+| S-19 | Cable and breaker sizing (experimental, Doc 12 X10) | `/cable-sizing/` | Installation settings with per-element overrides; Run; fixed islanded caveat; results table per Line and Inverter feeder with expandable factor rows. Hidden when `feature_cable_sizing` is off. | FR-105, FR-106, FR-112 | Could |
 
 Global elements on every screen (not separate screens): header (Project name, unsaved indicator, Save and Open buttons, engine kind badge), pipeline stepper (§3), a status toast area for transport errors (HTTP 4xx or 5xx, "cannot reach the local service").
 
@@ -95,6 +96,10 @@ Presentation and workflow only (`docs/EXAMPLE_MODE_PRD.md`). Entering: S-01 "Ope
 
 **Settings file** `frontend/public/examples/guided-d2.example.json`, read only by the frontend: `example_settings_version` (1), `project` (path of the Project file), `screens` mapping a screen id to `fields` (field name → {value, source}) and `guidance` ({text, source}), and `presets` for S-14 (id, label, source, disturbance fields). It is validated on load by a hand-written type guard: unknown keys are ignored; a value that fails the field's stage-1 rule or a `parameter_path` that does not resolve (Doc 3 §3.10) is dropped with a console warning and treated as not set; a missing or invalid file hides the S-01 action.
 
+### 2.4 Cable and breaker sizing (Doc 12 X10, D-100)
+
+S-19 exists only when the feature flag `feature_cable_sizing` is on (FR-105); it sits under Further analyses, after M2. Layout per `docs/CABLE_BREAKER_FEATURE_GUIDELINES.md` §6: settings panel (Project defaults) → Run → Status banner → the fixed caveat "Grid-forming inverters limit their fault current. A breaker sized here for overload may not trip on a fault in islanded operation. Fault protection is not assessed by this tool." → results table; a row expands to the factors, the table and page used for each factor, and the catalogue match (FR-112). Outcomes use Carbon support colours with icon and word, never brand colours. After a current run the single-line diagram shows a breaker symbol on each sized Line and Inverter feeder (FR-113); S-16 adds the section "Cable and overload sizing (experimental)" (FR-114); S-18 gains the entry kind `BREAKER` (FR-115).
+
 ## 3. Navigation
 ```mermaid
 flowchart TB
@@ -114,6 +119,7 @@ flowchart TB
     SIDE --> S12["S-12 Envelope M3d"]
     SIDE --> S13["S-13 Small-signal M4a"]
     SIDE --> S14["S-14 Transient M4b"]
+    S08 -. "valid M2, flag on" .-> S19["S-19 Cable and breaker sizing"]
     S08 --> S16["S-16 Report"]
     SIDE --> S16
     S16 --> S15["S-15 Run history"]
@@ -136,6 +142,7 @@ Stepper steps: 1 Loads, 2 Sizing advice (optional, can be skipped), 3 Network, 4
 | S-08 Run M2 | A valid M1 exists for the current design (M1 Status `FEASIBLE`, design not edited since). | Disabled button; panel "Run power flow (M1) first" or, if edited, the stale banner below. The HTTP API (Doc 6) still enforces the dependency (FR-38). |
 | S-09..S-14 Run | A valid M1 exists (as for M2). M2 verdict not required; an `INFEASIBLE` design is allowed. | Disabled button; same M1 message. `INFEASIBLE` M2 shows an info note "This design violates constraints; further analyses are still allowed" (FR-41). |
 | S-10, S-12 Run | Valid M1 and requested point count within `SWEEP_CAP`. | Size indicator turns to error; request still sendable, result is `INPUT_INVALID` / `SWEEP_CAP_EXCEEDED` (F4). |
+| S-19 Run (flag on) | A valid M2 exists for the current design (Status FEASIBLE or INFEASIBLE, design not edited since). | Disabled button; "Run the constraint check (M2) first" or the stale banner. The API returns `UNAVAILABLE / DEPENDENCY_NOT_MET` (FR-111). |
 | S-11 Compare / S-15 Re-run | 2 or more Scenarios selected (up to `SCENARIO_CAP` [ASSUMPTION]) / a RunRecord with verified hash. | "Select two or more Scenarios." / Re-run hidden after failed verification (FR-50). |
 | S-16 Report | At least one RunRecord with a result exists. | Empty state "No results yet. Run M1 and M2 first." |
 
@@ -429,6 +436,9 @@ DOC 7 COMPLETE
 ## Change log 2026-10-21 (user-approved change proposals from the proposal design checks)
 - C5.1 F3 outcome edge: Status equal and result_hash equal.
 - C5.4 first phase per key flow stated in §4.
+
+## Change log 2026-11-09 (cable round X10-0, D-100, user-confirmed 2026-11-09)
+- §2 S-19, §2.4, §3 diagram and §3.1 gating row added (Doc 12 X10, FR-105 – FR-115), behind the feature flag.
 
 ## Change log 2026-11-05 (example mode, D-92)
 - §2 S-10: optional per-point metrics and eigenvalues (user decision at EX-3, D-95 K243).

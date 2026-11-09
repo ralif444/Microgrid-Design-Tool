@@ -1,5 +1,5 @@
 # 02 Table file: schema, loader, validator
-Status: ready-for-agent
+Status: done (ba61359)
 Type: task
 Blocked by: 01
 

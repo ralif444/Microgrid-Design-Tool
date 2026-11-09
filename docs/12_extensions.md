@@ -44,6 +44,7 @@ Dokumen ini memuat sepuluh fitur tambahan yang disepakati setelah seminar propos
 | X7 | Chart download as SVG with caption metadata | L1 | Could | UX round | FR-92 |
 | X8 | Automatic single-line diagram: symbols, tooltip, result overlay, report figure, SVG export | L1 | Could | SLD round (2026-11-03, after UX-2) | FR-94 – FR-98 |
 | X9 | Guided example mode (design D2): prefilled analysis forms, guidance, example disturbances | L1 | Should (FR-104 Could) | Example round (2026-11-05, after UX-12) | FR-99 – FR-104 |
+| X10 | Cable and overload-protection sizing (experimental, behind a feature flag) | L2 | Could | Cable round (2026-11-08, after gate 1.4) | FR-105 – FR-115 |
 
 X0–X7 are the UX and analytics round of `docs/UX_ANALYTICS_GUIDELINES.md` (decisions Q1–Q7 there, Doc 9 D-72). The guideline calls them U0–U7; they are coded X here because U1–U4 already name the user groups (Doc 1 §6, Doc 11). All eight are presentation only: no payload, contract, API or Engine Port change, and the browser computes no engine number (it only selects, counts, sorts, filters and rounds for display).
 
@@ -208,6 +209,24 @@ Source: `docs/EXAMPLE_MODE_PRD.md` (its §3 hard rules bind); values and decisio
 | FR-103 | (X9) S-14 shall offer the example disturbances DR-01, TS-02 and DR-02 of Doc 13 §5 as presets; choosing one refills the disturbance fields. | Should | **E2E:** choosing TS-02 fills INVERTER_OUTAGE on INV2 and Run gives a result. | PRD §6, Doc 13 §5 |
 | FR-104 | (X9) S-02 shall offer "Run the whole example" in example mode: PS → M1 → M2 → M3a → M3b → M3c → M3d → M4a → M4b (first preset) in order with each screen's current values, one normal synchronous request at a time (ADR-007), a progress list (status word + icon), stop at the first result that is not FEASIBLE naming the step, skip steps with an unset required field ("skipped: not set in the example"), then open the Report. | Could | **E2E** (Fake): all steps run in order and the Report opens; on profile `m2-infeasible` it stops at M2 and names it. | PRD §8 |
 
+### 3.13 X10 — Cable and overload-protection sizing (experimental)
+
+Source: `docs/CABLE_BREAKER_FEATURE_GUIDELINES.md` (the guideline; its §0 guardrails bind, its equations CB.1 – CB.5 and its [DERIVED] / [DESIGN CHOICE] labels are cited, not repeated here); ids and decisions in Doc 9 D-100. **KONFLIK:** the manuscript lists protection as out of scope, so X10 waits for supervisor approval before it enters the thesis (Doc 9 K-07); until then it is built behind `Settings.feature_cable_sizing` (env `MGAPP_FEATURE_CABLE_SIZING`), off by default. Technical baseline PUIL 2011 (SNI 0225:2011), with the PUIL 2020 legal-edition KONFLIK in Doc 9 K-08. Level L2: an app-side Python service (`backend/src/mgapp/services/cable_sizing/`) computes the result from the M2 line currents and the inverter ratings; it never calls the Engine Port and adds no equation, state or assumption to the engine model (§1). One-shot advice only: nothing is written back into the design. It is not a protection or coordination study: no short-circuit, breaking-capacity, selectivity, earthing, neutral or PE checks. The app ships no standard table values and no vendor data; the user transcribes the tables into `cable_tables.json` (guideline §4), and tests use a fictitious table file.
+
+| ID | Requirement | Priority | Acceptance criteria | Source |
+|---|---|---|---|---|
+| FR-105 | (X10) With `feature_cable_sizing` off (the default), a CB request shall return `UNAVAILABLE / NOT_APPLICABLE` and S-19 shall be hidden; every other screen, payload and contract behaves as without X10. | Could | **Contract:** flag_off_returns_not_applicable. **E2E:** screen_hidden_when_flag_off. | Guideline §0 |
+| FR-106 | (X10) The Project shall hold one set of installation settings (`CableSizingSettings`: method B1, A1, C or D_DUCT; conductor; insulation; ambient temperature; soil resistivity for D; grouping count and arrangement; cable construction) with per-element overrides, as design data for this feature only, outside the canonical snapshot used by M1–M4. Loaded conductors are always 3 (balanced three-phase, A6). Direct burial is not offered (`DIRECT_BURIAL_NOT_SUPPORTED`). | Could | **Contract:** the M1–M4 snapshot hash is unchanged by settings edits. | Guideline §2.2, D5, D9 |
+| FR-107 | (X10) The server shall load and validate the user-filled table file `cable_tables.json` (schema of guideline §4): an empty rated-current series or a missing ampacity table for the selected method gives `INPUT_INVALID` with `CABLE_TABLES_INCOMPLETE`; `double_entry_checked: false` gives `INPUT_INVALID` with `CABLE_TABLES_UNCHECKED`; the SHA-256 of the canonical table file (Doc 3 §7 rules) is stored as `table_set_hash` in the RunRecord parameters. | Could | **Unit:** unchecked and incomplete tables give their codes; table_hash_changes_on_edit. **Contract:** unchecked_tables_input_invalid. | Guideline §4 |
+| FR-108 | (X10) Method `IEC60364_OVERLOAD_PUIL2011` shall size every Line ($I_B$ = M2 `sizing_check.per_line[].required_current_a`, base design only) and every Inverter output feeder ($I_B$ = rated current, guideline D2) by guideline §3.1 – §3.3: device class by the configurable 63 A threshold (D6), $I_n$ the smallest series value ≥ $I_B$, $I_2 = k_2 I_n$ with $k_2$ and its source from the table file, then the smallest size meeting (CB.1) and (CB.2) with $I_Z$ from (CB.3); no interpolation, next more severe tabulated value, blank cell = gap; per-element outcome SIZED, NO_DEVICE_FITS, NO_SIZE_FITS, OUT_OF_TABLE or TABLE_GAP. | Could | **Unit:** lookup_next_more_severe_value; blank_cell_is_gap_not_zero; cb1_cb2_both_reported; mcb_to_mccb_switch_above_63a; no_device_fits; no_size_fits. Hand cases H1–H5 exact (size and $I_n$; $I_Z$ to 0.01 A). | Guideline §3.1 – §3.3 |
+| FR-109 | (X10) Each sized element shall report the margins $I_n - I_B$, $I_Z - I_n$ and $1.45 I_Z - I_2$, and each Line the resistance check (CB.4), (CB.5) with warning `LINE_R_MISMATCH` above the 10 % threshold; Inverter feeders get no R check. | Could | **Unit:** r_correction_cu_al. Hand case H6. | Guideline §3.4, §3.5, D3 |
+| FR-110 | (X10) A method registry shall map `method_id` to an implementation (`validate`, `size`); every result names its `method_id`; v1 registers one method. | Could | **Unit:** the registry returns the v1 method by id. | Guideline §5.1, D13 |
+| FR-111 | (X10) `POST /api/analyses/CB` shall run through the existing pipeline (stage-1 validation, canonicalise and hash, dependency check, RunRecord) with `depends_on` an M2 RunRecordRef (FEASIBLE or INFEASIBLE, three-part check of Doc 3 §5.4); missing or stale gives `UNAVAILABLE / DEPENDENCY_NOT_MET`. The service computes the result itself: engine fields null, `diagnostics.computed_by` = `"app"`. Allowed Status FEASIBLE, INPUT_INVALID, UNAVAILABLE; a per-element outcome does not change the request status. Payload and warnings per guideline §5.3, with `FEATURE_EXPERIMENTAL` on every result while approval is pending. | Could | **Contract:** depends_on_m2_missing_or_stale; engine_fields_null; per_element_outcome_does_not_change_status. | Guideline §5.2, §5.3 |
+| FR-112 | (X10) S-19 "Cable and breaker sizing" (`/cable-sizing/`, under Further analyses, enabled only with a valid M2) shall show the settings panel, Run, the status banner, the fixed islanded caveat of guideline §0 above the results table (one row per element with $I_B$, device class and $I_n$, size, $I_Z$, both conditions as icon + word, outcome, R warning), and an expandable row with the factors, the table and page of each factor and the catalogue match; outcomes use Carbon support colours with icon and word; glossary toggletips for KHA / $I_Z$, $I_B$, $I_n$, $I_2$, $k_θ$, $k_ρ$, $k_g$. | Could | **E2E:** run_shows_caveat. | Guideline §6 |
+| FR-113 | (X10) After a current CB run the single-line diagram shall draw a breaker symbol on each sized Line and Inverter feeder, with no extra label; the hover card shows $I_n$, class, size and $I_Z$; no symbol for unsized elements. | Could | **E2E:** sld_shows_breaker_symbols_after_run. | Guideline §6, D12 |
+| FR-114 | (X10) S-16 shall include the section "Cable and overload sizing (experimental)": the results table, method id, table-set id with `table_set_hash`, the caveat and the KONFLIK note on the PUIL edition. | Could | **E2E:** the report section names the method id and the table-set hash. | Guideline §6, D12 |
+| FR-115 | (X10) The Catalogue shall gain the entry kind `BREAKER` {standard, class, in_a, curve, poles, provenance}; each element lists the nearest catalogue cable at or above the chosen size with the same conductor, insulation and cores (datasheet ampacity and conditions shown as a check only) and a breaker of the same standard and $I_n$ if one exists. The UL-based breaker CSV is never used for $I_n$ steps. | Could | **Catalogue file:** BREAKER entry roundtrip. **Unit:** catalogue match picks the nearest larger cable. | Guideline §6, D11 |
+
 ## 4. Contract changes (merge into Doc 3 at stage 1.5)
 
 | Item | Change |
@@ -219,6 +238,7 @@ Source: `docs/EXAMPLE_MODE_PRD.md` (its §3 hard rules bind); values and decisio
 | M1 payload | New group `sharing`: per Inverter {p_deviation_kw, q_deviation_kvar, q_droop_not_rating_proportional} (FR-81). |
 | M3 metrics | Add `MAX_Q_SHARING_ERROR` (FR-82). |
 | M3b parameter path | Add special path `load_profile_hour` (FR-78). |
+| X10 cable sizing (FR-105 – FR-115) | analysis_type `CB` with `depends_on` an M2 RunRecordRef; Project field `CableSizingSettings` outside the canonical snapshot (FR-106); the `cable_tables.json` schema with `table_set_hash` in the RunRecord parameters (FR-107); stage-1 codes `CABLE_TABLES_INCOMPLETE`, `CABLE_TABLES_UNCHECKED`; warning codes `LINE_R_MISMATCH`, `FEATURE_EXPERIMENTAL`, `DIRECT_BURIAL_NOT_SUPPORTED`; Catalogue kind `BREAKER` (FR-115). |
 | Indicators | Payload groups for r_τ, κ, r_in, ε_X with `evaluated` flag and reason (FR-61); threshold version in MetaInfo (FR-62). Align with the core indicator contract (§8). |
 
 ## 5. UI changes (merge into Doc 7)
@@ -244,6 +264,8 @@ Source: `docs/EXAMPLE_MODE_PRD.md` (its §3 hard rules bind); values and decisio
 | `/dev/components` | Every chart and state (FR-86). |
 | S-01, header, S-04, S-06, S-08 – S-14, S-16 | Example mode (X9): "Open guided example (D2)" on S-01 and the header Tag "Example mode" with "Leave example mode" (FR-99); info banner, "What this step shows", "Example" tags, "Reset to example values", "Next:" link (FR-100, FR-102); S-06 notice that the study limits come from the Project file; S-14 example disturbances (FR-103); S-16 example-mode line (FR-102). |
 | S-02 | "Run the whole example" (FR-104, Could, built last). |
+| S-19 Cable and breaker sizing (new, `/cable-sizing/`, flag only) | Settings, Run, caveat, results table with expandable factor rows (FR-112). |
+| S-05, S-07, S-08 (SLD), S-16, S-18 | Breaker symbols after a current CB run (FR-113); report section (FR-114); Catalogue kind `BREAKER` (FR-115). |
 
 ## 6. API changes (merge into Doc 6)
 
@@ -251,7 +273,7 @@ Source: `docs/EXAMPLE_MODE_PRD.md` (its §3 hard rules bind); values and decisio
 |---|---|---|---|
 | 16 | POST | `/api/catalogs/import` | Check a Catalogue file's content: `schema_version`, forward migration, rejection, entry validation (provenance, grid-forming guard). HTTP 200 with a FileCheckResult wrapper; no RunRecord. |
 
-Catalogue export is a client-side download, like Project export. No other endpoint is added: P12 reuses M3c, P11 reuses M3b, P3 and P7 are client-side.
+Catalogue export is a client-side download, like Project export. No other endpoint is added: P12 reuses M3c, P11 reuses M3b, P3 and P7 are client-side. X10 adds no path: it is the analysis type `CB` on the existing `POST /api/analyses/{type}` route, with engine fields null (FR-111).
 
 ## 7. Test additions (merge into Doc 8)
 
@@ -267,6 +289,7 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | FR-94 – FR-98 | Client + E2E | sld_model_verbatim; sld_layout_deterministic_no_overlap_meshed; tooltip_rows_equal_inspector; overlay_hidden_when_stale; violated_word_on_m2_infeasible; report_sld_caption; sld_svg_caption; sld_keyboard_and_table |
 | FR-86 – FR-93 | Client + E2E | scale_ticks_domain_nearest_nulls; kpi_selectors_empty_and_null; latest_matching_run; figure_show_data_row_count; crosshair_arrow_keys; inspector_focus_and_stale; fake_caption_every_chart; glossary_entries_have_source; toggletip_enter_escape; svg_download_caption; report_charts_within_718px |
 | FR-99 – FR-104 | Client + E2E; API (REAL) at EX-7 | example_settings_guard; initial_value_precedence; every_example_entry_has_source; guidance_no_result_numbers; guided_snapshot_hash_equals_hand_entry; example_click_through; leave_example_mode; normal_project_forms_empty; m4b_example_presets; run_whole_example |
+| FR-105 – FR-115 | Unit + Contract (API, Fake M2) + E2E | lookup_next_more_severe_value; blank_cell_is_gap_not_zero; cb1_cb2_both_reported; mcb_to_mccb_switch_above_63a; no_device_fits; no_size_fits; r_correction_cu_al; table_hash_changes_on_edit; flag_off_returns_not_applicable; depends_on_m2_missing_or_stale; unchecked_tables_input_invalid; engine_fields_null; per_element_outcome_does_not_change_status; screen_hidden_when_flag_off; run_shows_caveat; sld_shows_breaker_symbols_after_run; hand cases H1–H6 (guideline §7) |
 
 ## 8. Core alignment items moved out of this document
 
@@ -302,6 +325,15 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | 21 | X9: guidance text in English, the UI language (EX-D5); glossary toggletips stay Indonesian (FR-91). | DECIDED (user 2026-11-05, D-92 K229) |
 | 22 | X9: values with no source yet stay empty until the user gives one with a reason: M3a `step_relative`, M3b `step_count`, M3d `axis_y` and both step counts. M4a damping threshold stays empty; M4b settling criteria stay empty and are revisited after one REAL run (EX-D4). | OPEN (owner, D-92 K231) |
 | 23 | X9: the M3c reference is the first scenario (Doc 3 §6.6 default; S-11 has no reference field), so "D2 base" is stored first in the guided Project. | DECIDED (from Doc 3, D-92 K234) |
+| 24 | X10: protection is out of the manuscript scope; X10 enters the thesis only with supervisor approval and stays behind the feature flag until then. | KONFLIK (supervisor approval pending, D-100 K258, Doc 9 K-07) |
+| 25 | X10: technical baseline PUIL 2011 (the edition the user holds) while Permen ESDM 7/2021 lists PUIL 2020 as mandatory; migrate when PUIL 2020 is obtained. | KONFLIK (open, D-100 K259, Doc 9 K-08) |
+| 26 | X10: form of (CB.3) assumed from PUIL 523.2 and A.52.2; confirm the wording against 523.2 before it enters Bab III. | OPEN (owner, D-100 K260) |
+| 27 | X10: MCB/MCCB threshold 63 A, configurable (guideline D6). | DECIDED (user 2026-11-08, D-100 K261) |
+| 28 | X10: table lookup without interpolation, next more severe tabulated value, blank cell = gap (guideline §3.2), and the 10 % R threshold at the maximum conductor temperature (§3.5) are design choices without a standard behind them. | DESIGN CHOICE (guideline, D-100 K262, K263) |
+| 29 | X10: worst-scenario $I_B$ deferred, because M3c returns no per-line currents (a contract change); direct burial and parallel conductors not in v1. | DECIDED (guideline D1, D9, §3.3) |
+| 30 | X10: no table values in the repo; the filled table file stays out of the public repo (`data/private/`, git-ignored) because PUIL is copyrighted. | DECIDED (guideline §0) |
+| 31 | X10: verification by hand cases H1–H6 (exact match) and validation of the $I_B$ input chain against PSIM line currents; no ETAP or other cable-sizing software comparison. | DECIDED (user 2026-11-08, D-100 K266) |
+| 32 | X10: no ADR written at X10-0; ADR-014 is reserved for the app-side computation placement if the user asks for one. | OPEN (user) |
 
 ## Log
 
@@ -313,3 +345,4 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | 2026-11-03 | UX and analytics round added (Doc 9 D-72): X0–X7 with FR-86 – FR-93 (§2, §3.10, §5, §7, §9 points 6–10). |
 | 2026-11-03 | SLD round added (Doc 9 D-75, ADR-013, user-confirmed at SLD-0): X8 with FR-94 – FR-98 (§2, §3.11, §5, §7, §9 points 11–18). |
 | 2026-11-05 | Example round added (Doc 9 D-92, user-confirmed at EX-0): X9 with FR-99 – FR-104 (§2, §3.12, §5, §7, §9 points 19–23). |
+| 2026-11-09 | Cable round X10-0 drafted (Doc 9 D-100, user-confirmed 2026-11-09): X10 with FR-105 – FR-115 (§2, §3.13, §4, §5, §6, §7, §9 points 24–32). |

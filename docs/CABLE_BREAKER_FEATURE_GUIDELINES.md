@@ -195,7 +195,7 @@ Warnings: `LINE_R_MISMATCH` (per line), `DIRECT_BURIAL_NOT_SUPPORTED`, `FEATURE_
 | E2E | screen_hidden_when_flag_off; run_shows_caveat; sld_shows_breaker_symbols_after_run |
 
 ## 8. Doc-set and thesis updates
-- **Doc 12:** new extension **X10** "Cable and overload-protection sizing" (level L2, Could), FR numbers from **FR-105** (FR-86 – FR-104 are taken by X0–X9; X9 is example mode). Gate 1.4 has passed in the repo, so a real M2 exists. Add the `BREAKER` catalogue kind. Follow the repo's round pattern: a docs-only gate first (X9-0, like SLD-0), with new FRs listed as seam-6 exceptions until tested.
+- **Doc 12:** new extension **X10** "Cable and overload-protection sizing" (level L2, Could), FR numbers from **FR-105** (FR-86 – FR-104 are taken by X0–X9; X9 is example mode). Gate 1.4 has passed in the repo, so a real M2 exists. Add the `BREAKER` catalogue kind. Follow the repo's round pattern: a docs-only gate first (X10-0, like SLD-0), with new FRs listed as seam-6 exceptions until tested.
 - **Doc 9 register:**
   - KONFLIK "protection out of scope".
   - KONFLIK "PUIL 2011 baseline vs Permen ESDM 7/2021 (PUIL 2020)".
