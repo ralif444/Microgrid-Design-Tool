@@ -1,0 +1,22 @@
+/* S-19 Cable and breaker sizing (Doc 12 X10): caveat box, outcome tags, factor rows. */
+.caveat {
+  max-width: var(--prose-max); margin: var(--space-4) 0 var(--space-2); padding: var(--space-3) var(--space-4);
+  border-left: var(--banner-edge) solid var(--role-caution-edge); background: var(--role-caution-bg); color: var(--color-fg);
+}
+.caveat svg, .tag svg { vertical-align: -3px; margin-right: var(--space-1); }
+.caveat svg { fill: var(--role-caution-icon); }
+.experimental { max-width: var(--prose-max); font-size: var(--text-sm); color: var(--color-fg-muted); }
+.file { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+.fake { font-weight: var(--weight-semibold); color: var(--role-caution-fg); }
+.tag { display: inline-block; padding: 0 var(--space-2); white-space: nowrap; }
+.tag[data-role="success"] { background: var(--role-success-bg); color: var(--role-success-fg); }
+.tag[data-role="success"] svg { fill: var(--role-success-icon); }
+.tag[data-role="negative"] { background: var(--role-negative-bg); color: var(--role-negative-fg); }
+.tag[data-role="negative"] svg { fill: var(--role-negative-icon); }
+.tag[data-role="caution"] { background: var(--role-caution-bg); color: var(--role-caution-fg); }
+.tag[data-role="caution"] svg { fill: var(--role-caution-icon); }
+.factors > td { background: var(--color-surface-sunken); }
+.factors dl { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-1) var(--space-4); margin: 0; max-width: var(--prose-max); }
+.factors dt { font-weight: var(--weight-semibold); }
+.factors dd { margin: 0; white-space: normal; }
+.th { white-space: nowrap; }

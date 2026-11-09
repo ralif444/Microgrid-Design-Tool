@@ -879,6 +879,21 @@
         "title": "EntryCheck",
         "type": "object"
       },
+      "FeaturesInfo": {
+        "additionalProperties": false,
+        "description": "Startup feature flags the frontend needs (D-103 K286).",
+        "properties": {
+          "cable_sizing": {
+            "title": "Cable Sizing",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "cable_sizing"
+        ],
+        "title": "FeaturesInfo",
+        "type": "object"
+      },
       "FileCheckCode": {
         "enum": [
           "OK",
@@ -2664,6 +2679,9 @@
           "engine": {
             "$ref": "#/components/schemas/EngineIdentity"
           },
+          "features": {
+            "$ref": "#/components/schemas/FeaturesInfo"
+          },
           "indicator_threshold_version": {
             "anyOf": [
               {
@@ -2694,7 +2712,8 @@
           "api_description_version",
           "engine",
           "limits",
-          "indicator_threshold_version"
+          "indicator_threshold_version",
+          "features"
         ],
         "title": "MetaInfo",
         "type": "object"

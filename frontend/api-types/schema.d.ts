@@ -652,6 +652,14 @@ export interface components {
             usable: boolean;
         };
         /**
+         * FeaturesInfo
+         * @description Startup feature flags the frontend needs (D-103 K286).
+         */
+        FeaturesInfo: {
+            /** Cable Sizing */
+            cable_sizing: boolean;
+        };
+        /**
          * FileCheckCode
          * @enum {string}
          */
@@ -1256,6 +1264,7 @@ export interface components {
             /** App Version */
             app_version: string;
             engine: components["schemas"]["EngineIdentity"];
+            features: components["schemas"]["FeaturesInfo"];
             /** Indicator Threshold Version */
             indicator_threshold_version: string | null;
             limits: components["schemas"]["LimitsInfo"];

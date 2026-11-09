@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Request
 
 from mgapp import __version__
-from mgapp.domain.meta import PROJECT_SCHEMA_VERSION, HealthInfo, LimitsInfo, MetaInfo
+from mgapp.domain.meta import PROJECT_SCHEMA_VERSION, FeaturesInfo, HealthInfo, LimitsInfo, MetaInfo
 from mgapp.domain.run_record import RECORD_SCHEMA_VERSION
 from mgapp.services.pipeline import Pipeline
 
@@ -38,4 +38,5 @@ def meta(request: Request) -> MetaInfo:
             lambda_c_point_cap=lim.lambda_c_point_cap,
         ),
         indicator_threshold_version=None,
+        features=FeaturesInfo(cable_sizing=pipeline.cable_sizing_enabled),
     )

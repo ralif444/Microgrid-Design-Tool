@@ -26,6 +26,8 @@ export function bannerText(type: AnalysisType, r: AnalysisResult): BannerText {
           : "The design meets all constraints.";
         return { role: "success", headline, hint: skipped ? "Enter the missing limits on Constraints, then re-run M2." : "Explore further analyses or open the report." };
       }
+      if (type === "CB")
+        return { role: "success", headline: "Sizing completed: advice for the overload rating and the conductor size only.", hint: "Check each element's outcome; open a row for its factors." };
       if (type === "PS") return { role: "success", headline: "Advice produced.", hint: "Accept or skip." }; // Edit deferred (Doc 9 D-45 K5)
       return { role: "success", headline: "Analysis completed.", hint: "Explore further analyses or open the report." };
     case "INFEASIBLE":
@@ -55,6 +57,8 @@ export function bannerText(type: AnalysisType, r: AnalysisResult): BannerText {
         case "TIMEOUT":
           return { role: "attention", headline: "The analysis took longer than the time budget and was stopped.", hint: "Retry, or reduce the problem size. The attempt is kept in Run history." };
         case "DEPENDENCY_NOT_MET":
+          if (type === "CB")
+            return { role: "attention", headline: "Cable sizing needs a current constraint check (M2) result, and none is available.", hint: "Re-run M1 and M2 on this design, then retry." };
           switch (r.diagnostics?.dependency_reason) {
             case "STALE":
             case "ALTERED":

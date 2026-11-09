@@ -26,16 +26,18 @@ def _free_port() -> int:
 
 
 @pytest.fixture(scope="session")
-def server() -> Iterator[Callable[[str], str]]:
+def server() -> Iterator[Callable[..., str]]:
     if not STATIC_INDEX.exists():
         pytest.fail("frontend build missing: run python tools/build_frontend.py")
-    procs: dict[str, tuple[subprocess.Popen[bytes], str]] = {}
+    procs: dict[tuple[str, tuple[tuple[str, str], ...]], tuple[subprocess.Popen[bytes], str]] = {}
 
-    def start(profile: str = "default") -> str:
-        if profile in procs:
-            return procs[profile][1]
+    # `env` adds startup variables such as MGAPP_FEATURE_CABLE_SIZING (D-103 K288).
+    def start(profile: str = "default", env: dict[str, str] | None = None) -> str:
+        key = (profile, tuple(sorted((env or {}).items())))
+        if key in procs:
+            return procs[key][1]
         port = _free_port()
-        env = {**os.environ, "MGAPP_PORT": str(port), "MGAPP_FAKE_PROFILE": profile}
+        env = {**os.environ, **(env or {}), "MGAPP_PORT": str(port), "MGAPP_FAKE_PROFILE": profile}
         proc = subprocess.Popen([uv(), "run", "mgapp"], cwd=BACKEND, env=env)
         url = f"http://127.0.0.1:{port}"
         for _ in range(100):
@@ -47,7 +49,7 @@ def server() -> Iterator[Callable[[str], str]]:
         else:
             proc.kill()
             pytest.fail("server did not start")
-        procs[profile] = (proc, url)
+        procs[key] = (proc, url)
         return url
 
     yield start

@@ -107,6 +107,12 @@ def test_fr_105_flag_off_returns_not_applicable() -> None:
     _engine_fields_null(resp)
 
 
+@pytest.mark.parametrize("enabled", [False, True])
+def test_fr_105_meta_reports_the_flag(enabled: bool) -> None:  # D-103 K286
+    meta = Cb(enabled=enabled).client.get("/api/meta").json()
+    assert meta["features"] == {"cable_sizing": enabled}
+
+
 def test_fr_111_engine_fields_null_and_computed_by_app(cb: Cb) -> None:
     ref = cb.m2_ref()
     n = len(cb.engine.call_log)

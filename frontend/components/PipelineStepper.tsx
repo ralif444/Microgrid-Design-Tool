@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 import type { ValidationReport } from "../api-types";
 import type { ProjectState } from "../store";
 import { m1Ref, useProject } from "../store";
+import { useCableSizingFlag } from "./cable";
 import { Icon } from "./Icon";
 import styles from "./PipelineStepper.module.css";
 import { m1Freshness, useValidation } from "./useValidation";
@@ -36,6 +37,9 @@ export const FURTHER: [string, string][] = [
   ["/transient/", "Transient (M4b)"],
 ];
 
+// S-19 (Doc 12 X10) joins the list only when /api/meta reports the flag (FR-105, D-103 K286).
+export const CABLE_SIZING: [string, string] = ["/cable-sizing/", "Cable and breaker sizing"];
+
 const FURTHER_TYPES = new Set(["M3a", "M3b", "M3c", "M3d", "M4a", "M4b"]);
 
 // One state per STEPS entry; report is the live stage-1 check of the design now in the store.
@@ -62,8 +66,19 @@ export function stepStates(
   ];
 }
 
-export function PipelineStepperView({ states, path, m1Missing = false }: { states: StepState[]; path: string; m1Missing?: boolean }) {
-  const inFurther = FURTHER.some(([h]) => path.startsWith(h));
+export function PipelineStepperView({
+  states,
+  path,
+  m1Missing = false,
+  cableSizing = false,
+}: {
+  states: StepState[];
+  path: string;
+  m1Missing?: boolean;
+  cableSizing?: boolean;
+}) {
+  const further = cableSizing ? [...FURTHER, CABLE_SIZING] : FURTHER;
+  const inFurther = further.some(([h]) => path.startsWith(h));
   return (
     <nav aria-label="Pipeline" className={styles.nav}>
       <ol className={styles.steps}>
@@ -113,7 +128,7 @@ export function PipelineStepperView({ states, path, m1Missing = false }: { state
         })}
       </ol>
       <ul className={styles.further} aria-label="Further analyses">
-        {FURTHER.map(([h, label]) => (
+        {further.map(([h, label]) => (
           <li key={h}>
             <Link href={h} aria-current={path.startsWith(h) ? "page" : undefined}>
               {label}
@@ -131,5 +146,6 @@ export function PipelineStepper() {
   const path = usePathname() ?? "/";
   const states = state.project ? stepStates(state, report) : STEPS.map(() => "todo" as StepState);
   const m1Missing = !m1Ref(state.runRecords);
-  return <PipelineStepperView states={states} path={path} m1Missing={m1Missing} />;
+  const cableSizing = useCableSizingFlag() === true;
+  return <PipelineStepperView states={states} path={path} m1Missing={m1Missing} cableSizing={cableSizing} />;
 }

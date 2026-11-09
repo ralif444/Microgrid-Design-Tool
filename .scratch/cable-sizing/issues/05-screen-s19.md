@@ -1,5 +1,5 @@
 # 05 Screen S-19 Cable and breaker sizing
-Status: ready-for-agent
+Status: done (2026-11-09)
 Type: task
 Blocked by: 04
 
