@@ -15,6 +15,6 @@ frontend/next-env.d.ts
 frontend/tsconfig.tsbuildinfo
 docs/ref/
 frontend/app/carbon.css
-# X9 cable sizing: user-transcribed PUIL/IEC tables are copyrighted; never commit them.
+# X10 cable sizing: user-transcribed PUIL/IEC tables are copyrighted; never commit them.
 data/private/*
 !data/private/README.md

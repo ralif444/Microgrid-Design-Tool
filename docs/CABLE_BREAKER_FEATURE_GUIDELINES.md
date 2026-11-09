@@ -195,7 +195,7 @@ Warnings: `LINE_R_MISMATCH` (per line), `DIRECT_BURIAL_NOT_SUPPORTED`, `FEATURE_
 | E2E | screen_hidden_when_flag_off; run_shows_caveat; sld_shows_breaker_symbols_after_run |
 
 ## 8. Doc-set and thesis updates
-- **Doc 12:** new extension **X9** "Cable and overload-protection sizing" (level L2, Could), FR numbers from **FR-99** (FR-86 – FR-98 are taken by X0–X8). Gate 1.4 has passed in the repo, so a real M2 exists. Add the `BREAKER` catalogue kind. Follow the repo's round pattern: a docs-only gate first (X9-0, like SLD-0), with new FRs listed as seam-6 exceptions until tested.
+- **Doc 12:** new extension **X10** "Cable and overload-protection sizing" (level L2, Could), FR numbers from **FR-105** (FR-86 – FR-104 are taken by X0–X9; X9 is example mode). Gate 1.4 has passed in the repo, so a real M2 exists. Add the `BREAKER` catalogue kind. Follow the repo's round pattern: a docs-only gate first (X9-0, like SLD-0), with new FRs listed as seam-6 exceptions until tested.
 - **Doc 9 register:**
   - KONFLIK "protection out of scope".
   - KONFLIK "PUIL 2011 baseline vs Permen ESDM 7/2021 (PUIL 2020)".
@@ -225,7 +225,7 @@ Warnings: `LINE_R_MISMATCH` (per line), `DIRECT_BURIAL_NOT_SUPPORTED`, `FEATURE_
 ```
 Read CABLE_BREAKER_FEATURE_GUIDELINES.md fully, then docs 03, 06, 07 and 12 of the repo doc set.
 Implement the cable and breaker sizing feature exactly as specified, behind Settings.feature_cable_sizing (off by default). Tickets: .scratch/cable-sizing/issues/. One round per ticket, each with its gate_log entry:
-0. Round X9-0 (docs only, gate_log entry): Doc 12 X9 with FR-99 onward, Doc 9 entries of §8, Doc 7 S-19, Doc 11 rows; seam-6 exceptions for the new FRs.
+0. Round X10-0 (docs only, gate_log entry): Doc 12 X10 with FR-105 onward, Doc 9 entries of §8, Doc 7 S-19, Doc 11 rows; seam-6 exceptions for the new FRs.
 1. backend/src/mgapp/services/cable_sizing/: method registry, method IEC60364_OVERLOAD_PUIL2011 (§3), table-file loader and validator (§4).
 2. POST /api/analyses/CB through the existing pipeline, depends_on = M2, engine fields null (§5).
 3. Screen S-19, SLD breaker symbols, report section, BREAKER catalogue kind (§6).
@@ -239,5 +239,5 @@ Stop and ask if any rule here conflicts with docs 03/06/07/12.
 | Task | Model | Retries/escalation | Orchestrator fixes |
 |---|---|---|---|
 | Guideline drafted from user decisions + SUMBER-PUIL + Docs 03/06/07/12 | Opus inline | — | k2 for IEC 60947-2 set from Schneider FAQ FA369327 (verified 2026-11-07); worst-scenario I_B deferred (no per-line currents in M3c) |
-| 2026-11-08 repo setup | Opus inline | — | Paths matched to the repo (backend/src/mgapp), extension code X9, FR from FR-99, flag added to config.py, tickets in .scratch/cable-sizing/ |
+| 2026-11-08 repo setup | Opus inline | — | Paths matched to the repo (backend/src/mgapp), extension code X10, FR from FR-105 (renumbered 2026-11-08 by the user: X9 and FR-99 – FR-104 are example mode), flag added to config.py, tickets in .scratch/cable-sizing/ |
 | 2026-11-08 revision | Opus inline | — | ETAP comparison replaced by PSIM input-chain validation + hand verification (user: PSIM/Simulink only); 63 A threshold and FR ≥ 86 confirmed |

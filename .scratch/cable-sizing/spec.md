@@ -1,4 +1,4 @@
-# Spec: X9 cable and overload-protection sizing
+# Spec: X10 cable and overload-protection sizing
 
 Full specification: `docs/CABLE_BREAKER_FEATURE_GUIDELINES.md` (the guideline wins over this summary).
 
