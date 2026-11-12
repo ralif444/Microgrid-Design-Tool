@@ -10,7 +10,7 @@ What changed
   - Rule chain: the outputs equal the equations applied to the powers the tool used, within 1e-9. Outcomes, the depletion clock hour and λ per hour must match exactly.
 - The B1 counts of V1, V2 stay in the client test `frontend/components/battery.test.ts`. Its E_nom is the same PS value checked here on the Real Engine.
 - E2E `test_fr_120_…` ends with the 200 % zoom check (640 px CSS viewport). S-20 and the report show no sideways page scroll, and the Otonomi toggletip stays inside the viewport.
-- `.scratch/bess/cases_table.py` prints the comparison table below (framework §4 step 5). It is local only and not committed.
+- `.scratch/bess/cases_table.py` prints the comparison table below (framework §4 step 5). It is committed with the golden script and its baseline (2026-11-12).
 
 Comparison (framework §4 step 5; tool values from `mgengine` on this branch, one run of 2026-11-12)
 
