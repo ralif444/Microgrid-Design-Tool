@@ -65,7 +65,7 @@ flowchart TB
 
 Stateless backend (ADR-010): every analysis request carries snapshot, `parameters`, `solver_config`, and for dependent analyses `depends_on` (RunRecordRef, Doc 3 §5.1); M3c carries `scenarios`. Consequence (manuscript 4.3.1): larger bodies and possible loss of work on a closed tab, mitigated by export prompts and autosave.
 
-## 4. C4 Level 3 — Sixteen components of the local process (Gambar 4.4b)
+## 4. C4 Level 3 — Components of the local process: the sixteen of Gambar 4.4b plus the X10 cable sizing service
 ```mermaid
 flowchart TB
     SPA["SPA"]
@@ -86,6 +86,7 @@ flowchart TB
         FAKE["14 Fake Engine"]
         REAL["15 Real Engine adapter (1.4)"]
         DOM["16 Domain schemas"]
+        CAB["17 Cable sizing service (X10, flag)"]
         ROOT["Composition root (wiring only)"]
     end
     SPA --> STATIC
@@ -102,6 +103,8 @@ flowchart TB
     PIPE --> CANON
     PIPE --> DEP
     PIPE --> GUARD
+    PIPE --> CAB
+    CAB --> VAL
     PIPE --> RR
     RR --> CANON
     DEP --> CANON
@@ -111,7 +114,7 @@ flowchart TB
     REAL --> PORT
     ROOT -. "selects FAKE or REAL at startup" .-> PORT
 ```
-`A --> B` means A depends on B; the adapters depend on (implement) the port. Domain schemas are depended on by every component (edges omitted). The composition root is wiring, not a request-time component, and is not counted among the sixteen. [ASSUMPTION: the manuscript figure is an image; the list above is reconstructed from Doc 4 (2026-10-21) plus the size-limit step of manuscript 4.3.3, and the count of sixteen matches the manuscript text. Verify against Gambar 4.4b when the figure is redrawn.]
+`A --> B` means A depends on B; the adapters depend on (implement) the port. Domain schemas are depended on by every component (edges omitted). The composition root is wiring, not a request-time component, and is not counted among the sixteen. Component 17 (X10, ADR-014) is an extension behind `feature_cable_sizing` and not part of the manuscript figure. [ASSUMPTION: the manuscript figure is an image; the list above is reconstructed from Doc 4 (2026-10-21) plus the size-limit step of manuscript 4.3.3, and the count of sixteen matches the manuscript text. Verify against Gambar 4.4b when the figure is redrawn.]
 
 | # | Component | Responsibility | Depends on | Must not depend on |
 |---|---|---|---|---|
@@ -294,4 +297,4 @@ Trigger thresholds are the author's initial values and are re-checked at WP 1.7.
 |---|---|
 | 2026-10-17 – 10-21 | Drafted; J1–J7, K1–K6; C5.1, C5.10, C5.12 (re-run orchestrator). |
 | 2026-11-01 | Aligned with the manuscript (Doc 14 D2, D3): sixteen components incl. size-limit check and re-run orchestrator; only the execution guard imports the Engine Port; seven port rules (Tabel D.1); allowed Status sets of 4.3.2 replace the ◇ table; contract suite with defective Fake profile; `ENGINE_KIND_FAKE` decided; import-linter and dependency-cruiser decided; timeout mechanism decided for 1.1; Tabel 4.11 margins and triggers; stages 1.1–1.7 replace P0–P4; one start command named. |
-| 2026-11-09 | ADR-014 (D-102): every *engine* calculation goes through the Engine Port; component 17 (cable sizing service) computes analysis type CB in the app, called by the pipeline in place of the execution guard; decision row added. |
+| 2026-11-09 | Section 4 title and diagram list component 17 (cable sizing service) next to the sixteen of Gambar 4.4b. ADR-014 (D-102): every *engine* calculation goes through the Engine Port; component 17 (cable sizing service) computes analysis type CB in the app, called by the pipeline in place of the execution guard; decision row added. |
