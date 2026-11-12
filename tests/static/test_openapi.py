@@ -22,7 +22,7 @@ API_PATHS = {
     "/api/catalogs/import",
     *(
         f"/api/analyses/{t}"
-        for t in ("PS", "M1", "M2", "M3a", "M3b", "M3c", "M3d", "M4a", "M4b", "CB")
+        for t in ("PS", "M1", "M2", "M3a", "M3b", "M3c", "M3d", "M4a", "M4b", "CB", "BA")
     ),
 }
 
@@ -38,6 +38,8 @@ UNITLESS = {
     "unit_count",
     "cores",  # count, X10 catalogue (D-104)
     "poles",  # count, X10 catalogue (D-104)
+    "series_count",  # count, battery bank (D-108)
+    "parallel_count",  # count, battery bank (D-108)
     "redundancy",
     "iterations",
     "hour",

@@ -1,0 +1,14 @@
+/* S-20 Battery adequacy (Doc 12 B2): caveat box and outcome tags (orange for Short, grey for Not evaluated). */
+.caveat {
+  max-width: var(--prose-max); margin: var(--space-4) 0 var(--space-2); padding: var(--space-3) var(--space-4);
+  border-left: var(--banner-edge) solid var(--role-caution-edge); background: var(--role-caution-bg); color: var(--color-fg);
+}
+.caveat svg, .tag svg { vertical-align: -3px; margin-right: var(--space-1); }
+.caveat svg { fill: var(--role-caution-icon); }
+.tag { display: inline-block; padding: 0 var(--space-2); white-space: nowrap; }
+.tag[data-role="success"] { background: var(--role-success-bg); color: var(--role-success-fg); }
+.tag[data-role="success"] svg { fill: var(--role-success-icon); }
+.tag[data-role="negative"] { background: var(--role-negative-bg); color: var(--role-negative-fg); }
+.tag[data-role="negative"] svg { fill: var(--role-negative-icon); }
+.tag[data-role="neutral"] { background: var(--color-surface-sunken); color: var(--color-fg-muted); }
+.tag[data-role="neutral"] svg { fill: var(--color-fg-muted); }

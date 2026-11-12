@@ -28,6 +28,8 @@ export function bannerText(type: AnalysisType, r: AnalysisResult): BannerText {
       }
       if (type === "CB")
         return { role: "success", headline: "Sizing completed: advice for the overload rating and the conductor size only.", hint: "Check each element's outcome; open a row for its factors." };
+      if (type === "BA")
+        return { role: "success", headline: "Battery check completed: advice on the discharge power of each bank.", hint: "Check each bank's outcome and reason." };
       if (type === "PS") return { role: "success", headline: "Advice produced.", hint: "Accept or skip." }; // Edit deferred (Doc 9 D-45 K5)
       return { role: "success", headline: "Analysis completed.", hint: "Explore further analyses or open the report." };
     case "INFEASIBLE":

@@ -138,10 +138,249 @@
           "M3d",
           "M4a",
           "M4b",
-          "CB"
+          "CB",
+          "BA"
         ],
         "title": "AnalysisType",
         "type": "string"
+      },
+      "BankModule": {
+        "additionalProperties": false,
+        "description": "Values copied from a BATTERY_MODULE entry with its catalog_ref (FR-69 pattern).",
+        "properties": {
+          "c_rate_per_h": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "C Rate Per H"
+          },
+          "catalog_ref": {
+            "$ref": "#/components/schemas/CatalogRef"
+          },
+          "discharge_power_kw": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Discharge Power Kw"
+          },
+          "energy_kwh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Energy Kwh"
+          },
+          "voltage_max_v": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Voltage Max V"
+          },
+          "voltage_min_v": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Voltage Min V"
+          }
+        },
+        "required": [
+          "catalog_ref"
+        ],
+        "title": "BankModule",
+        "type": "object"
+      },
+      "BatteryBank": {
+        "additionalProperties": false,
+        "properties": {
+          "dc_efficiency_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Dc Efficiency Ratio"
+          },
+          "depth_of_discharge_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Depth Of Discharge Ratio"
+          },
+          "initial_soc_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Initial Soc Ratio"
+          },
+          "inverter_id": {
+            "title": "Inverter Id",
+            "type": "string"
+          },
+          "module": {
+            "$ref": "#/components/schemas/BankModule"
+          },
+          "parallel_count": {
+            "title": "Parallel Count",
+            "type": "integer"
+          },
+          "series_count": {
+            "title": "Series Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "inverter_id",
+          "module",
+          "series_count",
+          "parallel_count"
+        ],
+        "title": "BatteryBank",
+        "type": "object"
+      },
+      "BatteryModuleValues": {
+        "additionalProperties": false,
+        "description": "Battery round kind BATTERY_MODULE (FR-73, D-106 K308); used by B1 and B2 only, never by\nthe network model (A2).",
+        "properties": {
+          "c_rate_per_h": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "C Rate Per H"
+          },
+          "discharge_power_kw": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Discharge Power Kw"
+          },
+          "energy_kwh": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Energy Kwh"
+          },
+          "nominal_voltage_v": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Nominal Voltage V"
+          },
+          "recommended_dod_ratio": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 1,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Recommended Dod Ratio"
+          },
+          "voltage_max_v": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Voltage Max V"
+          },
+          "voltage_min_v": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Voltage Min V"
+          }
+        },
+        "title": "BatteryModuleValues",
+        "type": "object"
       },
       "BreakerValues": {
         "additionalProperties": false,
@@ -353,6 +592,17 @@
       "CatalogEntry": {
         "additionalProperties": false,
         "properties": {
+          "battery_module": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BatteryModuleValues"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
           "breaker": {
             "anyOf": [
               {
@@ -394,7 +644,8 @@
             "enum": [
               "INVERTER",
               "CONDUCTOR",
-              "BREAKER"
+              "BREAKER",
+              "BATTERY_MODULE"
             ],
             "title": "Kind",
             "type": "string"
@@ -1787,7 +2038,8 @@
           "MALFORMED_REQUEST",
           "CABLE_TABLES_INCOMPLETE",
           "CABLE_TABLES_UNCHECKED",
-          "CABLE_SETTINGS_INVALID"
+          "CABLE_SETTINGS_INVALID",
+          "BATTERY_BANK_INVALID"
         ],
         "title": "IssueCode",
         "type": "string"
@@ -2976,6 +3228,14 @@
             "title": "App Version",
             "type": "string"
           },
+          "battery_banks": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/BatteryBank"
+            },
+            "title": "Battery Banks",
+            "type": "array"
+          },
           "buses": {
             "items": {
               "$ref": "#/components/schemas/Bus"
@@ -4143,6 +4403,21 @@
         "additionalProperties": false,
         "description": "Body of POST /api/projects/validate (Doc 6 §3.4).",
         "properties": {
+          "battery_banks": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/BatteryBank"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Battery Banks"
+          },
           "parameters": {
             "anyOf": [
               {
@@ -4335,6 +4610,7 @@
           "CONSTRAINT_NOT_EVALUATED",
           "FEATURE_EXPERIMENTAL",
           "LINE_R_MISMATCH",
+          "BATTERY_POWER_SHORT",
           "DIRECT_BURIAL_NOT_SUPPORTED"
         ],
         "title": "WarningCode",
@@ -4349,6 +4625,37 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/analyses/BA": {
+      "post": {
+        "operationId": "analyse_BA",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Run analysis BA",
+        "tags": [
+          "analyses"
+        ]
+      }
+    },
     "/api/analyses/CB": {
       "post": {
         "operationId": "analyse_CB",

@@ -5,6 +5,23 @@
  */
 
 export interface paths {
+    "/api/analyses/BA": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run analysis BA */
+        post: operations["analyse_BA"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analyses/CB": {
         parameters: {
             query?: never;
@@ -361,7 +378,106 @@ export interface components {
          * AnalysisType
          * @enum {string}
          */
-        AnalysisType: "PS" | "M1" | "M2" | "M3a" | "M3b" | "M3c" | "M3d" | "M4a" | "M4b" | "CB";
+        AnalysisType: "PS" | "M1" | "M2" | "M3a" | "M3b" | "M3c" | "M3d" | "M4a" | "M4b" | "CB" | "BA";
+        /**
+         * BankModule
+         * @description Values copied from a BATTERY_MODULE entry with its catalog_ref (FR-69 pattern).
+         */
+        BankModule: {
+            /**
+             * C Rate Per H
+             * @default null
+             */
+            c_rate_per_h?: number | null;
+            catalog_ref: components["schemas"]["CatalogRef"];
+            /**
+             * Discharge Power Kw
+             * @default null
+             */
+            discharge_power_kw?: number | null;
+            /**
+             * Energy Kwh
+             * @default null
+             */
+            energy_kwh?: number | null;
+            /**
+             * Voltage Max V
+             * @default null
+             */
+            voltage_max_v?: number | null;
+            /**
+             * Voltage Min V
+             * @default null
+             */
+            voltage_min_v?: number | null;
+        };
+        /** BatteryBank */
+        BatteryBank: {
+            /**
+             * Dc Efficiency Ratio
+             * @default null
+             */
+            dc_efficiency_ratio?: number | null;
+            /**
+             * Depth Of Discharge Ratio
+             * @default null
+             */
+            depth_of_discharge_ratio?: number | null;
+            /**
+             * Initial Soc Ratio
+             * @default null
+             */
+            initial_soc_ratio?: number | null;
+            /** Inverter Id */
+            inverter_id: string;
+            module: components["schemas"]["BankModule"];
+            /** Parallel Count */
+            parallel_count: number;
+            /** Series Count */
+            series_count: number;
+        };
+        /**
+         * BatteryModuleValues
+         * @description Battery round kind BATTERY_MODULE (FR-73, D-106 K308); used by B1 and B2 only, never by
+         *     the network model (A2).
+         */
+        BatteryModuleValues: {
+            /**
+             * C Rate Per H
+             * @default null
+             */
+            c_rate_per_h?: number | null;
+            /**
+             * Discharge Power Kw
+             * @default null
+             */
+            discharge_power_kw?: number | null;
+            /**
+             * Energy Kwh
+             * @default null
+             */
+            energy_kwh?: number | null;
+            /**
+             * Nominal Voltage V
+             * @default null
+             */
+            nominal_voltage_v?: number | null;
+            /**
+             * Recommended Dod Ratio
+             * @default null
+             */
+            recommended_dod_ratio?: number | null;
+            /**
+             * Voltage Max V
+             * @default null
+             */
+            voltage_max_v?: number | null;
+            /**
+             * Voltage Min V
+             * @default null
+             */
+            voltage_min_v?: number | null;
+        };
         /**
          * BreakerValues
          * @description X10 Catalogue kind BREAKER (FR-115, D-104 K296); matched on standard and in_a.
@@ -446,6 +562,8 @@ export interface components {
         /** CatalogEntry */
         CatalogEntry: {
             /** @default null */
+            battery_module?: components["schemas"]["BatteryModuleValues"] | null;
+            /** @default null */
             breaker?: components["schemas"]["BreakerValues"] | null;
             /** @default null */
             conductor?: components["schemas"]["ConductorValues"] | null;
@@ -457,7 +575,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "INVERTER" | "CONDUCTOR" | "BREAKER";
+            kind: "INVERTER" | "CONDUCTOR" | "BREAKER" | "BATTERY_MODULE";
             /**
              * @default {
              *       "document": null,
@@ -984,7 +1102,7 @@ export interface components {
          * @description Stage-1 validation codes (Doc 3 §4).
          * @enum {string}
          */
-        IssueCode: "NEGATIVE_POWER" | "EMPTY_REQUIRED" | "NOT_POSITIVE" | "PF_OUT_OF_RANGE" | "PF_DIRECTION_MISSING" | "LOAD_Q_AMBIGUOUS" | "BAND_INVERTED" | "LOADING_LIMIT_RANGE" | "DUPLICATE_ID" | "ID_FORMAT" | "DANGLING_BUS_REF" | "SELF_LOOP_LINE" | "DUPLICATE_LINE" | "ISOLATED_BUS" | "DISCONNECTED_NETWORK" | "NO_INVERTER" | "NO_LOAD" | "PROFILE_LENGTH" | "PROFILE_HOUR" | "PS_PARAMETER_INVALID" | "SIZING_MARGIN_INVALID" | "TAU_MISSING_FOR_M4" | "SENSITIVITY_STEP_INVALID" | "DISTURBANCE_INVALID" | "SWEEP_RANGE_INVALID" | "SCENARIO_PATH_INVALID" | "SWEEP_CAP_EXCEEDED" | "PARAMETER_CAP_EXCEEDED" | "DURATION_CAP_EXCEEDED" | "SCENARIO_COUNT_INVALID" | "DEPENDS_ON_NOT_ALLOWED" | "MULTIPLE_INVERTERS_ON_BUS" | "MALFORMED_REQUEST" | "CABLE_TABLES_INCOMPLETE" | "CABLE_TABLES_UNCHECKED" | "CABLE_SETTINGS_INVALID";
+        IssueCode: "NEGATIVE_POWER" | "EMPTY_REQUIRED" | "NOT_POSITIVE" | "PF_OUT_OF_RANGE" | "PF_DIRECTION_MISSING" | "LOAD_Q_AMBIGUOUS" | "BAND_INVERTED" | "LOADING_LIMIT_RANGE" | "DUPLICATE_ID" | "ID_FORMAT" | "DANGLING_BUS_REF" | "SELF_LOOP_LINE" | "DUPLICATE_LINE" | "ISOLATED_BUS" | "DISCONNECTED_NETWORK" | "NO_INVERTER" | "NO_LOAD" | "PROFILE_LENGTH" | "PROFILE_HOUR" | "PS_PARAMETER_INVALID" | "SIZING_MARGIN_INVALID" | "TAU_MISSING_FOR_M4" | "SENSITIVITY_STEP_INVALID" | "DISTURBANCE_INVALID" | "SWEEP_RANGE_INVALID" | "SCENARIO_PATH_INVALID" | "SWEEP_CAP_EXCEEDED" | "PARAMETER_CAP_EXCEEDED" | "DURATION_CAP_EXCEEDED" | "SCENARIO_COUNT_INVALID" | "DEPENDS_ON_NOT_ALLOWED" | "MULTIPLE_INVERTERS_ON_BUS" | "MALFORMED_REQUEST" | "CABLE_TABLES_INCOMPLETE" | "CABLE_TABLES_UNCHECKED" | "CABLE_SETTINGS_INVALID" | "BATTERY_BANK_INVALID";
         /**
          * IssueLevel
          * @enum {string}
@@ -1370,6 +1488,11 @@ export interface components {
         ProjectFile: {
             /** App Version */
             app_version: string;
+            /**
+             * Battery Banks
+             * @default []
+             */
+            battery_banks?: components["schemas"]["BatteryBank"][];
             /** Buses */
             buses: components["schemas"]["Bus"][];
             design_constraints: components["schemas"]["DesignConstraints"];
@@ -1793,6 +1916,11 @@ export interface components {
          */
         ValidateRequest: {
             /**
+             * Battery Banks
+             * @default null
+             */
+            battery_banks?: components["schemas"]["BatteryBank"][] | null;
+            /**
              * Parameters
              * @default null
              */
@@ -1862,7 +1990,7 @@ export interface components {
          * WarningCode
          * @enum {string}
          */
-        WarningCode: "ENGINE_KIND_FAKE" | "ENGINE_VERSION_MISMATCH" | "PROFILE_PEAK_ABOVE_LOADS" | "RATING_MARGIN_SHORT" | "VALIDITY_NOT_CALIBRATED" | "CONSTRAINT_NOT_EVALUATED" | "FEATURE_EXPERIMENTAL" | "LINE_R_MISMATCH" | "DIRECT_BURIAL_NOT_SUPPORTED";
+        WarningCode: "ENGINE_KIND_FAKE" | "ENGINE_VERSION_MISMATCH" | "PROFILE_PEAK_ABOVE_LOADS" | "RATING_MARGIN_SHORT" | "VALIDITY_NOT_CALIBRATED" | "CONSTRAINT_NOT_EVALUATED" | "FEATURE_EXPERIMENTAL" | "LINE_R_MISMATCH" | "BATTERY_POWER_SHORT" | "DIRECT_BURIAL_NOT_SUPPORTED";
     };
     responses: never;
     parameters: never;
@@ -1872,6 +2000,30 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    analyse_BA: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnalysisRequestBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalysisResponse"];
+                };
+            };
+        };
+    };
     analyse_CB: {
         parameters: {
             query?: never;

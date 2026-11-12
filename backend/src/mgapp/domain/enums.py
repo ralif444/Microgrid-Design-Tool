@@ -16,10 +16,12 @@ class AnalysisType(StrEnum):
     M4A = "M4a"
     M4B = "M4b"
     CB = "CB"  # app-side cable sizing (ADR-014, D-102); never sent to the engine
+    BA = "BA"  # app-side battery adequacy (ADR-015, D-109); calls M1 through the guard only
 
 
-ENGINE_TYPES = tuple(t for t in AnalysisType if t is not AnalysisType.CB)
-"""Types the Engine Port serves; CB is computed by the app (ADR-014)."""
+APP_TYPES = frozenset({AnalysisType.CB, AnalysisType.BA})
+ENGINE_TYPES = tuple(t for t in AnalysisType if t not in APP_TYPES)
+"""Types the Engine Port serves; CB and BA are computed by the app (ADR-014, ADR-015)."""
 
 DEPENDENT_TYPES = frozenset(
     {
@@ -31,6 +33,7 @@ DEPENDENT_TYPES = frozenset(
         AnalysisType.M4A,
         AnalysisType.M4B,
         AnalysisType.CB,
+        AnalysisType.BA,
     }
 )
 """Types that need a valid RunRecordRef in `depends_on`: M1, or M2 for CB (Doc 3 §5.4, D-102)."""
@@ -61,6 +64,7 @@ ALLOWED_STATUS: dict[AnalysisType, frozenset[Status]] = {
     AnalysisType.M4A: _ALWAYS | _M4,
     AnalysisType.M4B: _ALWAYS | _M4,
     AnalysisType.CB: _ALWAYS | {Status.FEASIBLE},
+    AnalysisType.BA: _ALWAYS | {Status.FEASIBLE},
 }
 """Allowed Status per analysis type (manuscript 4.3.2, Doc 3 §5.4)."""
 
@@ -159,6 +163,7 @@ class IssueCode(StrEnum):
     CABLE_TABLES_INCOMPLETE = "CABLE_TABLES_INCOMPLETE"  # CB (D-100 K264)
     CABLE_TABLES_UNCHECKED = "CABLE_TABLES_UNCHECKED"  # CB (D-100 K264)
     CABLE_SETTINGS_INVALID = "CABLE_SETTINGS_INVALID"  # CB (D-102 K281)
+    BATTERY_BANK_INVALID = "BATTERY_BANK_INVALID"  # battery round (D-106 K308, D-108)
 
 
 class IssueLevel(StrEnum):
@@ -177,6 +182,7 @@ class WarningCode(StrEnum):
     CONSTRAINT_NOT_EVALUATED = "CONSTRAINT_NOT_EVALUATED"
     FEATURE_EXPERIMENTAL = "FEATURE_EXPERIMENTAL"  # every CB result (D-100 K264)
     LINE_R_MISMATCH = "LINE_R_MISMATCH"  # CB (CB.5)
+    BATTERY_POWER_SHORT = "BATTERY_POWER_SHORT"  # BA, per short bank (D-106 K308)
     DIRECT_BURIAL_NOT_SUPPORTED = (
         "DIRECT_BURIAL_NOT_SUPPORTED"  # reserved, not emitted (D-102 K283)
     )

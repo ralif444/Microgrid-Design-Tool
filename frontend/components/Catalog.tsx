@@ -6,8 +6,9 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { importCatalog } from "../api-client";
 import type { Catalog, CatalogEntry, CatalogRef, EntryCheck } from "../api-types";
 
-// "x10": used only by the X10 cable sizing match (D-104 K293, K296), shown only with the flag on
-type Use = "model" | "text" | "A2" | "A4" | "x10";
+// "x10": used only by the X10 cable sizing match (D-104 K293, K296), shown only with the flag on;
+// "bess": used only by the battery advice B1/B2 (D-106), never by the network model, with a source.
+type Use = "model" | "text" | "A2" | "A4" | "x10" | "bess";
 export type EntryField = [key: string, label: string, unit: string | null, use: Use];
 
 // FR-67, FR-68: fields not used by the model carry the A2 / A4 label.
@@ -47,11 +48,20 @@ export const ENTRY_FIELDS: Record<CatalogEntry["kind"], EntryField[]> = {
     ["curve", "Trip curve", null, "x10"],
     ["poles", "Poles", "count", "x10"],
   ],
+  BATTERY_MODULE: [
+    ["energy_kwh", "Nominal energy", "kWh", "bess"],
+    ["nominal_voltage_v", "Nominal DC voltage, optional", "V", "bess"],
+    ["voltage_min_v", "Minimum DC voltage", "V", "bess"],
+    ["voltage_max_v", "Maximum DC voltage", "V", "bess"],
+    ["discharge_power_kw", "Continuous discharge power", "kW", "bess"],
+    ["c_rate_per_h", "C-rate", "1/h", "bess"],
+    ["recommended_dod_ratio", "Recommended depth of discharge, optional", "ratio", "bess"],
+  ],
 };
 
 // Fields chosen from a list (contract enums, D-104).
 export const ENTRY_OPTIONS: Record<string, string[]> = { material: ["CU", "AL"], insulation: ["PVC", "XLPE"], class: ["MCB", "MCCB"] };
-export const BLOCK_KEY = { INVERTER: "inverter", CONDUCTOR: "conductor", BREAKER: "breaker" } as const;
+export const BLOCK_KEY = { INVERTER: "inverter", CONDUCTOR: "conductor", BREAKER: "breaker", BATTERY_MODULE: "battery_module" } as const;
 
 export const block = (e: CatalogEntry): Record<string, unknown> => (e[BLOCK_KEY[e.kind]] ?? {}) as Record<string, unknown>;
 

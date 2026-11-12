@@ -2,11 +2,13 @@
 
 Fixed order: request model → stage-1 validation → size limits → canonicalise + hash →
 dependency check → guarded engine call → RunRecord. Every path ends in a RunRecord.
-CB (cable sizing) replaces the engine call with the app-side service (ADR-014).
+CB (cable sizing) and BA (battery adequacy) replace the engine call with an app-side service,
+looked up in one map (ADR-014, ADR-015 Q5).
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 from pydantic import ValidationError
@@ -31,6 +33,7 @@ from mgapp.domain.enums import (
     StatusCode,
 )
 from mgapp.domain.run_record import AnalysisResponse
+from mgapp.services.battery.service import compute as compute_battery
 from mgapp.services.cable_sizing.service import compute as compute_cable_sizing
 from mgapp.services.canonical import (
     normalise_raw,
@@ -40,7 +43,7 @@ from mgapp.services.canonical import (
     snapshot_hash,
 )
 from mgapp.services.dependency import check_dependency
-from mgapp.services.guard import ExecutionGuard
+from mgapp.services.guard import ExecutionGuard, GuardedOutcome
 from mgapp.services.limits import Limits, check_size_limits
 from mgapp.services.run_record import RunRecordService
 from mgapp.services.validation import MESSAGES, validate_request
@@ -82,6 +85,17 @@ MSG_CB_OFF = (
     "MGAPP_FEATURE_CABLE_SIZING=1 to use it."
 )
 MSG_CB_FAILED = "The cable sizing service failed ({exc}). Check the table file and settings."
+MSG_BA_FAILED = "The battery adequacy service failed ({exc}). Check the battery banks."
+# App-side analyses (ADR-014, ADR-015 Q5): service and failure message; both run after step 4.
+# Each service gets (snapshot, parameters, depends_on, run_m1, budget_s) and returns the result
+# with the engine identity (None when it made no engine call, ADR-015 Q1).
+APP_SERVICES: dict[AnalysisType, tuple[Callable[..., tuple[AnalysisResult, Any]], str]] = {
+    AnalysisType.CB: (
+        lambda s, p, d, _run, _budget: (compute_cable_sizing(s, p, d), None),
+        MSG_CB_FAILED,
+    ),
+    AnalysisType.BA: (compute_battery, MSG_BA_FAILED),
+}
 
 
 class Pipeline:
@@ -208,17 +222,34 @@ class Pipeline:
                     _unavailable(StatusCode.DEPENDENCY_NOT_MET, failure.message, failure.reason),
                     None,
                 )
-        # 5. CB: app-side service instead of the engine (ADR-014); no TIME_BUDGET (D-102 K285)
-        if t is AnalysisType.CB:
+        # 5. app-side service instead of the engine (ADR-014, ADR-015); CB has no TIME_BUDGET
+        # (D-102 K285); BA sends its hour M1 requests through the guard under one budget (Q2)
+        if t in APP_SERVICES:
+            compute, failed = APP_SERVICES[t]
             assert body.depends_on is not None  # checked in step 4
+
+            def run_m1(s: ProjectSnapshot) -> GuardedOutcome:
+                return self._guard.run(
+                    AnalysisRequest(
+                        analysis_type=AnalysisType.M1,
+                        project_snapshot=s,
+                        parameters={},
+                        solver_config=body.solver_config,
+                    )
+                )
+
             try:
-                result = compute_cable_sizing(
-                    ProjectSnapshot.model_validate(snapshot), body.parameters, body.depends_on
+                result, ident = compute(
+                    ProjectSnapshot.model_validate(snapshot),
+                    body.parameters,
+                    body.depends_on,
+                    run_m1,
+                    self._guard.time_budget_s,
                 )
             except Exception as exc:  # noqa: BLE001 - any service failure is reported, never raised
-                result = _unavailable(StatusCode.ENGINE_ERROR, MSG_CB_FAILED.format(exc=exc))
+                result, ident = _unavailable(StatusCode.ENGINE_ERROR, failed.format(exc=exc)), None
                 result.diagnostics["computed_by"] = "app"
-            return record(result, None)
+            return record(result, ident)
         # 5. guarded engine call
         request = AnalysisRequest(
             analysis_type=t,

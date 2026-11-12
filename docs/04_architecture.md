@@ -65,7 +65,7 @@ flowchart TB
 
 Stateless backend (ADR-010): every analysis request carries snapshot, `parameters`, `solver_config`, and for dependent analyses `depends_on` (RunRecordRef, Doc 3 §5.1); M3c carries `scenarios`. Consequence (manuscript 4.3.1): larger bodies and possible loss of work on a closed tab, mitigated by export prompts and autosave.
 
-## 4. C4 Level 3 — Components of the local process: the sixteen of Gambar 4.4b plus the X10 cable sizing service
+## 4. C4 Level 3 — Components of the local process: the sixteen of Gambar 4.4b plus the X10 cable sizing service and the battery service
 ```mermaid
 flowchart TB
     SPA["SPA"]
@@ -87,6 +87,7 @@ flowchart TB
         REAL["15 Real Engine adapter (1.4)"]
         DOM["16 Domain schemas"]
         CAB["17 Cable sizing service (X10, flag)"]
+        BAT["18 Battery service (B2, B3)"]
         ROOT["Composition root (wiring only)"]
     end
     SPA --> STATIC
@@ -105,6 +106,8 @@ flowchart TB
     PIPE --> GUARD
     PIPE --> CAB
     CAB --> VAL
+    PIPE --> BAT
+    BAT --> VAL
     PIPE --> RR
     RR --> CANON
     DEP --> CANON
@@ -114,7 +117,7 @@ flowchart TB
     REAL --> PORT
     ROOT -. "selects FAKE or REAL at startup" .-> PORT
 ```
-`A --> B` means A depends on B; the adapters depend on (implement) the port. Domain schemas are depended on by every component (edges omitted). The composition root is wiring, not a request-time component, and is not counted among the sixteen. Component 17 (X10, ADR-014) is an extension behind `feature_cable_sizing` and not part of the manuscript figure. [ASSUMPTION: the manuscript figure is an image; the list above is reconstructed from Doc 4 (2026-10-21) plus the size-limit step of manuscript 4.3.3, and the count of sixteen matches the manuscript text. Verify against Gambar 4.4b when the figure is redrawn.]
+`A --> B` means A depends on B; the adapters depend on (implement) the port. Domain schemas are depended on by every component (edges omitted). The composition root is wiring, not a request-time component, and is not counted among the sixteen. Component 17 (X10, ADR-014) is an extension behind `feature_cable_sizing` and not part of the manuscript figure; component 18 (battery service, ADR-015) is an extension without a flag, also not part of the figure. [ASSUMPTION: the manuscript figure is an image; the list above is reconstructed from Doc 4 (2026-10-21) plus the size-limit step of manuscript 4.3.3, and the count of sixteen matches the manuscript text. Verify against Gambar 4.4b when the figure is redrawn.]
 
 | # | Component | Responsibility | Depends on | Must not depend on |
 |---|---|---|---|---|
@@ -135,6 +138,7 @@ flowchart TB
 | 15 | Real Engine adapter | Engine package behind the port; unit conversion; version/commit/kind. Stage 1.4. | 13, 16, engine package | services, api, 14 |
 | 16 | Domain schemas | Doc 3 entities, enums, request/result/RunRecord shapes; source of OpenAPI. | nothing in the app | — |
 | 17 | Cable sizing service (X10, ADR-014) | App-side computation of analysis type CB behind `feature_cable_sizing`: stage-1 checks of settings and table file, method registry, `IEC60364_OVERLOAD_PUIL2011`. The pipeline calls it in place of the execution guard after the M2 dependency check; no TIME_BUDGET; RunRecord engine fields null, `diagnostics.computed_by = "app"`. | 5, 16 | 13, adapters, engine package |
+| 18 | Battery service (Doc 12 B2, B3; ADR-015) | App-side computation of analysis type BA: stage-1 checks of `parameters` {banks, start_hour}, the B2 power part from the `depends_on` M1 payload (Eq. 12.6 – 12.8). The pipeline calls it in place of the execution guard after the M1 dependency check, through the app-analysis map {CB, BA} (ADR-015 Q5). The autonomy part (B3, Eq. 12.14 – 12.18) sends up to 24 hour M1 requests through component 9, never through the Engine Port directly (import-linter contract "among services only the execution guard imports the Engine Port"), under one overall TIME_BUDGET checked between calls; RunRecord engine fields are the guard's identity when `engine_calls` > 0, else null; `diagnostics.computed_by = "app"`. | 5, 9, 16 | 13, adapters, engine package |
 
 Report assembly is client-side (print to PDF, FR-60).
 
@@ -279,6 +283,7 @@ Router → re-run orchestrator → RunRecord service verifies (schema, both hash
 | Execution model | Synchronous with time budget and sweep cap | Async queue, background thread with polling | Not thin; revisit if engine time measured at WP 1.4.3 exceeds 30 s | 007 |
 | Engine boundary | Engine Port, Fake Engine first | Direct calls, function mocks | Not thin; revisit if stage 1.4 shows gaps in canned results | 008 |
 | App-side analysis CB | Pipeline branch to the cable sizing service | Second Engine Port adapter, separate endpoint without RunRecord | Revisit if a second app-side analysis is proposed or the supervisor rejects X10 | 014 |
+| App-side analysis BA | Pipeline step 5 looks the service up in one app-analysis map {CB, BA}; the battery service calls the execution guard for engine work | Browser computes B3 from 24 M1 calls; separate engine analysis type | Revisit if a third app-side analysis is proposed or the guard's time budget proves too short for 24 hour calls | 015 |
 | Methodology | Iterative-incremental with stage gates | Waterfall, V-model, Scrum | Not thin; revisit if a second developer joins | 009 |
 | Stateless backend | Server without state | In-memory sessions, file workspace | Not thin; revisit if request bodies exceed the 10 MiB limit | 010 |
 
@@ -298,3 +303,5 @@ Trigger thresholds are the author's initial values and are re-checked at WP 1.7.
 | 2026-10-17 – 10-21 | Drafted; J1–J7, K1–K6; C5.1, C5.10, C5.12 (re-run orchestrator). |
 | 2026-11-01 | Aligned with the manuscript (Doc 14 D2, D3): sixteen components incl. size-limit check and re-run orchestrator; only the execution guard imports the Engine Port; seven port rules (Tabel D.1); allowed Status sets of 4.3.2 replace the ◇ table; contract suite with defective Fake profile; `ENGINE_KIND_FAKE` decided; import-linter and dependency-cruiser decided; timeout mechanism decided for 1.1; Tabel 4.11 margins and triggers; stages 1.1–1.7 replace P0–P4; one start command named. |
 | 2026-11-09 | Section 4 title and diagram list component 17 (cable sizing service) next to the sixteen of Gambar 4.4b. ADR-014 (D-102): every *engine* calculation goes through the Engine Port; component 17 (cable sizing service) computes analysis type CB in the app, called by the pipeline in place of the execution guard; decision row added. |
+| 2026-11-12 | Component 18 (battery service, ADR-015, D-109) added to the section 4 title, diagram and table; pipeline step 5 uses the app-analysis map {CB, BA}; decision row added (BESS-3). |
+| 2026-11-12 | Component 18 depends on the execution guard for the B3 hour calls (BESS-4, D-110). |

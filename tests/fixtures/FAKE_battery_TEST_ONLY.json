@@ -1,0 +1,25 @@
+{
+  "TEST_ONLY": "Fictitious test data for the battery rounds (docs/BESS_VERIFICATION_FRAMEWORK.md §2). Not a design value, not a datasheet, not a thesis source.",
+  "design": "frontend/public/examples/d2.mgproj.json",
+  "modules": {
+    "MOD-T1": {"energy_kwh": 5, "voltage_min_v": 44.8, "voltage_max_v": 57.6, "discharge_power_kw": 2.5, "c_rate_per_h": null, "recommended_dod_ratio": 0.8},
+    "MOD-T2": {"energy_kwh": 5, "voltage_min_v": 44.8, "voltage_max_v": 57.6, "discharge_power_kw": null, "c_rate_per_h": 0.2, "recommended_dod_ratio": 0.8}
+  },
+  "dc_windows_v": {"W-A": [350, 800], "W-B": [400, 440]},
+  "profile_pf_t_kw": [10, 10, 10, 10, 10, 10, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 25, 25, 25, 25, 10, 10],
+  "settings": {"dc_efficiency_ratio": 0.95, "depth_of_discharge_ratio": 0.8, "initial_soc_ratio": 1.0, "start_hour": 0, "autonomy_h": 4},
+  "m1_powers_3_0": [
+    {"lambda": 0.4, "INV1": 6.158042, "INV2": 3.848776, "frequency_hz": 49.950996},
+    {"lambda": 0.6, "INV1": 9.240264, "INV2": 5.775165, "frequency_hz": 49.926468},
+    {"lambda": 1.0, "INV1": 15.411294, "INV2": 9.632059, "frequency_hz": 49.877361}
+  ],
+  "cases": {
+    "V1": {"window": "W-A", "module": "MOD-T1", "e_ac_kwh": 100, "e_dc_kwh": 105.2632, "e_nom_kwh": 131.5789, "series": [8, 9, 10, 11, 12, 13], "module_count": 27, "parallel_count": 4, "installed_count": 32, "installed_kwh": 160, "extra_kwh": 28.4211, "verdict": "fit"},
+    "V2": {"window": "W-B", "module": "MOD-T1", "series": [], "module_count": 27, "verdict": "no-fit"},
+    "V3": {"inverter_id": "INV1", "module": "MOD-T1", "series_count": 8, "parallel_count": 2, "capability_kw": 40, "capability_source": "discharge_power", "dc_side_power_kw": 16.2224, "margin_kw": 23.7776, "outcome": "OK"},
+    "V4": {"inverter_id": "INV2", "module": "MOD-T2", "series_count": 8, "parallel_count": 1, "capability_kw": 8, "capability_source": "c_rate", "dc_side_power_kw": 10.1390, "margin_kw": -2.1390, "outcome": "SHORT"},
+    "V5": {"inverter_id": "INV2", "module": "MOD-T1", "series_count": 8, "parallel_count": 2, "usable_energy_kwh": 60.8, "cum_kwh_at_11": 57.7436, "autonomy_h": 12.5292, "depletion_clock_hour": 12, "soc_at_11": 0.2402, "outcome": "DEPLETED"},
+    "V6": {"inverter_id": "INV1", "module": "MOD-T1", "series_count": 8, "parallel_count": 8, "usable_energy_kwh": 243.2, "cum_kwh_at_23": 221.7927, "end_soc_ratio": 0.2704, "outcome": "NOT_DEPLETED"}
+  },
+  "tolerance": "Printed values are rounded to 4 decimals, so the regression compares within 5e-5 of them; the rule chain is also compared exactly (1e-9) against the formulas applied to the returned powers (framework §4 step 4)."
+}

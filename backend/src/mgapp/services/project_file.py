@@ -13,6 +13,7 @@ from typing import Any, Literal
 from pydantic import ValidationError
 
 from mgapp.domain.base import Model
+from mgapp.domain.battery import BatteryBank
 from mgapp.domain.entities import Bus, DesignConstraints, Inverter, Line, Load, LoadProfile
 from mgapp.domain.meta import PROJECT_SCHEMA_VERSION
 from mgapp.services.file_check import (
@@ -66,6 +67,8 @@ class ProjectFile(Model):
     sizing_advice: list[SizingAdviceItem]
     scenarios: list[Any]
     run_records: list[Any]  # checked one by one (check_record)
+    # Optional, omitted when empty; outside the snapshot (D-106 K304, K306)
+    battery_banks: list[BatteryBank] = []
 
 
 class ImportResponse(Model):
@@ -121,5 +124,8 @@ def import_project(raw: Any) -> ImportResponse:
         ),
         project={**raw, "run_records": kept},
         migrated_from_version=None,
-        validation=validate_raw({"project_snapshot": snapshot}),
+        validation=validate_raw(
+            {"project_snapshot": snapshot}
+            | ({"battery_banks": raw["battery_banks"]} if "battery_banks" in raw else {})
+        ),
     )

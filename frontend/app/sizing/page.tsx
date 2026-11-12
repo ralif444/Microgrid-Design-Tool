@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { AnalysisResponse, PsPayload } from "../../api-types";
+import { moduleHint } from "../../components/battery";
 import { catalogHints, useCatalog } from "../../components/Catalog";
 import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
 import { NumberField } from "../../components/NumberField";
@@ -86,6 +87,7 @@ function AdvicePanel({ a }: { a: SizingAdvice }) {
       </table>
       <p data-testid="advice-state">State: {a.state}</p>
       <CatalogHints unitKva={plan.unit_rating_kva} />
+      <ModuleHint eNomKwh={p.storage_energy?.e_nom_kwh ?? null} />
     </section>
   );
 }
@@ -127,6 +129,69 @@ function CatalogHints({ unitKva }: { unitKva: number }) {
         Usable catalogue inverter entries rated at least {unitKva} kVA (hint only):{" "}
         {fits.length === 0 ? "none" : fits.map((e) => `${e.id} (${e.inverter?.rated_kva} kVA)`).join(", ")}
       </p>
+    </section>
+  );
+}
+
+// Doc 12 FR-74 (Eq. 12.3 – 12.5, D-107): per chosen module entry and inverter DC window; a hint
+// computed here and never stored, the advice values above are unchanged. Shown only when the
+// Catalogue holds a usable battery module.
+function ModuleHint({ eNomKwh }: { eNomKwh: number | null }) {
+  const { catalog, checks } = useCatalog();
+  const [modId, setModId] = useState("");
+  const [invId, setInvId] = useState("");
+  const [ns, setNs] = useState<number | null>(null);
+  const usable = (id: string) => checks.some((c) => c.entry_id === id && c.usable);
+  const modules = catalog.entries.filter((e) => e.kind === "BATTERY_MODULE" && usable(e.id));
+  const inverters = catalog.entries.filter((e) => e.kind === "INVERTER");
+  if (modules.length === 0) return null;
+  const mod = modules.find((e) => e.id === modId) ?? modules[0];
+  const inv = inverters.find((e) => e.id === invId)?.inverter;
+  const h = moduleHint(eNomKwh, mod.battery_module ?? {}, { min: inv?.dc_voltage_min_v, max: inv?.dc_voltage_max_v }, ns);
+  const kwh = (v: number) => `${Number(v.toFixed(4))} kWh`;
+  return (
+    <section aria-label="Battery module hint">
+      <p>Battery module hint (hint only; the advice values above do not change):</p>
+      <p>
+        <label htmlFor="hint-module">Module entry</label>{" "}
+        <select id="hint-module" value={mod.id} onChange={(x) => setModId(x.target.value)}>
+          {modules.map((e) => (
+            <option key={e.id} value={e.id}>
+              {e.id} ({e.battery_module?.energy_kwh} kWh)
+            </option>
+          ))}
+        </select>{" "}
+        <label htmlFor="hint-inverter">DC window from inverter entry</label>{" "}
+        <select id="hint-inverter" value={invId} onChange={(x) => setInvId(x.target.value)}>
+          <option value="">(none)</option>
+          {inverters.map((e) => (
+            <option key={e.id} value={e.id}>
+              {e.id} ({e.inverter?.dc_voltage_min_v ?? "—"}–{e.inverter?.dc_voltage_max_v ?? "—"} V)
+            </option>
+          ))}
+        </select>
+      </p>
+      {h.verdict === "not evaluated" ? (
+        <p data-testid="module-hint">Not evaluated: {h.reason}.</p>
+      ) : (
+        <p data-testid="module-hint">
+          Verdict: {h.verdict}
+          {h.verdict === "unknown" && " (DC window or module voltage limits missing)"}. Modules needed {h.moduleCount}
+          {h.verdict === "fit" && (
+            <>
+              ; admissible series counts {h.series[0]}–{h.series.at(-1)};{" "}
+              <label htmlFor="hint-ns">series count</label>{" "}
+              <select id="hint-ns" value={h.ns ?? ""} onChange={(x) => setNs(Number(x.target.value))}>
+                {h.series.map((n) => (
+                  <option key={n}>{n}</option>
+                ))}
+              </select>{" "}
+              × {h.np} in parallel = {h.installedCount} modules, installed {kwh(h.installedKwh!)}, extra {kwh(h.extraKwh!)}
+            </>
+          )}
+          .
+        </p>
+      )}
     </section>
   );
 }

@@ -125,3 +125,21 @@ def test_fr_20_all_violations_in_one_response(api: Api) -> None:
     rep = _validate(api, {"project_snapshot": snap})
     assert {("NEGATIVE_POWER", "LD1", "p_kw"), ("EMPTY_REQUIRED", "LD2", "p_kw")} <= _issues(rep)
     assert all(i["message"] for i in rep["issues"])
+
+
+def test_m3c_scenario_of_another_design_is_input_invalid(api: Api) -> None:
+    """D-112: a scenario must hold the base lines; an extra line was an ENGINE_ERROR on REAL
+    and FEASIBLE on FAKE. A removed inverter (N−1, FR-80) stays allowed."""
+    other = two_bus_snapshot()
+    other["buses"].append({"id": "B3"})
+    other["lines"].append(dict(other["lines"][0], id="L2", from_bus_id="B2", to_bus_id="B3"))
+    scen = [
+        {"scenario_id": "S1", "label": "base", "project_snapshot": two_bus_snapshot()},
+        {"scenario_id": "S2", "label": "other", "project_snapshot": other},
+    ]
+    r = api.run("M3c", scenarios=scen)["result"]
+    assert r["status"] == "INPUT_INVALID"
+    assert [(i["code"], i["entity"], i["id"]) for i in r["diagnostics"]["issues"]] == [
+        ("SCENARIO_PATH_INVALID", "Scenario S2: Line", "L2"),
+    ]
+    assert api.engine.call_log == []  # type: ignore[attr-defined]

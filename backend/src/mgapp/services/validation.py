@@ -13,9 +13,12 @@ from typing import Any, TypeGuard
 from pydantic import ValidationError
 
 from mgapp.domain.base import FiniteJson, Model
+from mgapp.domain.battery import BatteryBank
 from mgapp.domain.contract import ScenarioSnapshot, ValidationIssue
 from mgapp.domain.entities import ProjectSnapshot
 from mgapp.domain.enums import M4_POINT_METRICS, AnalysisType, IssueCode, IssueLevel
+from mgapp.services.battery import bank_issues
+from mgapp.services.battery.service import parameter_issues as battery_parameter_issues
 from mgapp.services.cable_sizing.service import parameter_issues as cable_parameter_issues
 from mgapp.services.canonical import (
     normalise_raw,
@@ -60,6 +63,7 @@ MESSAGES: dict[IssueCode, str] = {
     IssueCode.CABLE_TABLES_INCOMPLETE: "The cable table file is not complete.",
     IssueCode.CABLE_TABLES_UNCHECKED: "The cable table file is not double-entry checked.",
     IssueCode.CABLE_SETTINGS_INVALID: "Check the cable sizing settings.",
+    IssueCode.BATTERY_BANK_INVALID: "Check the battery bank.",
 }
 
 DISTURBANCE_KINDS = frozenset({"LOAD_STEP", "LOAD_SCALING", "REFERENCE_STEP", "INVERTER_OUTAGE"})
@@ -329,6 +333,8 @@ def _parameters(
             bad(IssueCode.PS_PARAMETER_INVALID)
     elif t is AnalysisType.CB:
         c.issues += cable_parameter_issues(p)
+    elif t is AnalysisType.BA:
+        c.issues += battery_parameter_issues(p, s)
     elif t is AnalysisType.M2:
         mi, ml, h = p.get("inverter_margin_ratio"), p.get("line_margin_ratio"), p.get("autonomy_h")
         if not (_is_num(mi) and mi >= 0 and _is_num(ml) and ml >= 0):
@@ -426,10 +432,22 @@ def validate_request(
         c.add(IssueCode.DEPENDS_ON_NOT_ALLOWED, IssueLevel.REQUEST, None, None, "depends_on")
     _parameters(c, t, parameters, snapshot, len(scenarios or []))
     for sc in scenarios or []:
-        for issue in validate_request(AnalysisType.M1, sc.project_snapshot, {}, False, None):
+        found = validate_request(AnalysisType.M1, sc.project_snapshot, {}, False, None)
+        for issue in found + _scenario_elements(snapshot, sc.project_snapshot):
             c.issues.append(
                 issue.model_copy(update={"entity": f"Scenario {sc.scenario_id}: {issue.entity}"})
             )
+    return c.issues
+
+
+def _scenario_elements(base: ProjectSnapshot, scen: ProjectSnapshot) -> list[ValidationIssue]:
+    """An M3c scenario holds exactly the base lines (D-112): the engine applies the base per-line
+    current limits to every scenario. Loads and inverters may differ (N−1 removes one, FR-80)."""
+    c = _Collector()
+    for id_ in sorted(
+        {ln.id for ln in base.lines if ln.id} ^ {ln.id for ln in scen.lines if ln.id}
+    ):
+        c.add(IssueCode.SCENARIO_PATH_INVALID, IssueLevel.ENTITY, "Line", id_)
     return c.issues
 
 
@@ -439,6 +457,8 @@ class ValidateRequest(Model):
     project_snapshot: ProjectSnapshot
     target_analysis_type: AnalysisType | None = None  # null = M1 rules
     parameters: FiniteJson | None = None  # null = no request-level checks
+    # Outside the snapshot (D-106 K304); null = not checked, so the report is as before (D-108).
+    battery_banks: list[BatteryBank] | None = None
 
 
 class ValidationReport(Model):
@@ -465,6 +485,8 @@ def validate_raw(raw: Any) -> ValidationReport:
     issues = validate_request(t, req.project_snapshot, req.parameters or {}, False, None)
     if req.parameters is None:
         issues = [i for i in issues if i.level is not IssueLevel.REQUEST]
+    if req.battery_banks is not None:
+        issues += bank_issues(req.battery_banks, (i.id for i in req.project_snapshot.inverters))
     return ValidationReport(
         valid=not issues,
         issues=issues,

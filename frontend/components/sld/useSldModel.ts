@@ -17,7 +17,7 @@ const marginWarn = () => (marginWarnCache ??= getMeta().then((m) => (m.ok ? m.da
 export type SldModels = { design: SldModel; m1: SldModel; full: SldModel; fake: boolean; has: { m1: boolean; m2: boolean }; breakers: BreakerMark[] };
 
 export function useSldModel(): SldModels {
-  const { design, runRecords } = useProject();
+  const { design, runRecords, batteryBanks } = useProject();
   const report = useValidation(design);
   const [warn, setWarn] = useState<number | null>(null);
   useEffect(() => {
@@ -38,12 +38,12 @@ export function useSldModel(): SldModels {
         : null;
     const fake = [m1 && m1r, m2 && m2r].some((r) => r && r.engine_kind === "FAKE");
     return {
-      design: buildSldModel({ design, issues }),
-      m1: buildSldModel({ design, m1, issues }),
-      full: buildSldModel({ design, m1, m2, issues, marginWarn: warn }),
+      design: buildSldModel({ design, issues, banks: batteryBanks }),
+      m1: buildSldModel({ design, m1, issues, banks: batteryBanks }),
+      full: buildSldModel({ design, m1, m2, issues, marginWarn: warn, banks: batteryBanks }),
       fake,
       has: { m1: !!m1, m2: !!m2 },
       breakers: breakerMarks(cb?.payload ?? null),
     };
-  }, [design, report, m1r, m2r, warn, cb?.record]);
+  }, [design, report, m1r, m2r, warn, cb?.record, batteryBanks]);
 }

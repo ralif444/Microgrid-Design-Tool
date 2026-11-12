@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { getMeta, importCatalog } from "../../api-client";
 import type { CatalogEntry, FileCheckResult } from "../../api-types";
+import { NO_POWER_WARNING, noPowerCapability } from "../../components/battery";
 import { useCableSizingFlag } from "../../components/cable";
 import { block, BLOCK_KEY, ENTRY_FIELDS, ENTRY_OPTIONS, useCatalog } from "../../components/Catalog";
 import { downloadJson, NOT_JSON, readJson } from "../../components/files";
@@ -18,7 +19,12 @@ const PROVENANCE: [keyof NonNullable<CatalogEntry["provenance"]>, string][] = [
   ["document", "Datasheet title or document id"],
   ["revision", "Revision or date"],
 ];
-const UNUSED = { A2: "not used by the model (A2)", A4: "not used by the model (A4)", x10: "used only for the cable sizing match (experimental)" } as const;
+const UNUSED = {
+  A2: "not used by the model (A2)",
+  A4: "not used by the model (A4)",
+  x10: "used only for the cable sizing match (experimental)",
+  bess: "used only by the battery advice, not by the network model (A2)",
+} as const;
 
 function EntryEditor({ e, onChange, x10 }: { e: CatalogEntry; onChange: (e: CatalogEntry) => void; x10: boolean }) {
   const b = block(e);
@@ -55,10 +61,11 @@ function EntryEditor({ e, onChange, x10 }: { e: CatalogEntry; onChange: (e: Cata
             ) : unit === null
               ? text(`val-${k}`, label, b[k] as string | null, (v) => setValue(k, v))
               : <NumberField id={`val-${k}`} label={label} unit={unit} value={b[k] as number | null} onChange={(v) => setValue(k, v)} />}
-            {use === "model" && unit !== null && <> {text(`src-${k}`, `${label}: page or section`, e.sources?.[k], (v) => setSource(k, v ?? ""))}</>}
-            {(use === "A2" || use === "A4" || use === "x10") && <em> {UNUSED[use]}</em>}
+            {(use === "model" || use === "bess") && unit !== null && <> {text(`src-${k}`, `${label}: page or section`, e.sources?.[k], (v) => setSource(k, v ?? ""))}</>}
+            {(use === "A2" || use === "A4" || use === "x10" || use === "bess") && <em> {UNUSED[use]}</em>}
           </p>
         ))}
+        {noPowerCapability(e) && <p role="note">{NO_POWER_WARNING}</p>}
         {e.kind === "INVERTER" && (
           <p>
             <label>
@@ -128,6 +135,9 @@ export default function CataloguePage() {
         </button>{" "}
         <button type="button" onClick={() => add("CONDUCTOR")}>
           + Add conductor entry
+        </button>{" "}
+        <button type="button" onClick={() => add("BATTERY_MODULE")}>
+          + Add battery module entry
         </button>
         {x10 && (
           <>
@@ -157,9 +167,12 @@ export default function CataloguePage() {
               return (
                 <tr key={e.id} aria-current={e.id === selected ? "true" : undefined}>
                   <th scope="row">{e.id}</th>
-                  <td>{e.kind.toLowerCase()}</td>
+                  <td>{e.kind.toLowerCase().replace("_", " ")}</td>
                   <td>{[e.provenance?.manufacturer, e.provenance?.model].filter(Boolean).join(" ") || "—"}</td>
-                  <td>{!c ? "checking…" : c.usable ? "usable" : `information only: ${c.reasons.join("; ")}`}</td>
+                  <td>
+                    {!c ? "checking…" : c.usable ? "usable" : `information only: ${c.reasons.join("; ")}`}
+                    {noPowerCapability(e) && ` (${NO_POWER_WARNING})`}
+                  </td>
                   <td>
                     <button type="button" onClick={() => setSelected(e.id)}>
                       Edit {e.id}
@@ -177,7 +190,7 @@ export default function CataloguePage() {
       {sel && (
         <>
           <h2>
-            Entry {sel.id} ({sel.kind.toLowerCase()})
+            Entry {sel.id} ({sel.kind.toLowerCase().replace("_", " ")})
           </h2>
           <EntryEditor e={sel} x10={x10} onChange={(n) => setCatalog({ ...catalog, entries: entries.map((x) => (x.id === sel.id ? n : x)) })} />
         </>

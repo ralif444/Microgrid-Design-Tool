@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import { getMeta } from "../../api-client";
 import type { AnalysisType, M1Payload, M2Payload, M4aPayload, MetaInfo, ProjectSnapshot, PsPayload, RunRecord } from "../../api-types";
 import { AdvisoryPanel } from "../../components/AdvisoryPanel";
+import { BatteryReportSection, useCurrentBa } from "../../components/BatteryResults";
+import { currentCb, useCableSizingFlag } from "../../components/cable";
 import { CableReportSection } from "../../components/CableReport";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
@@ -54,6 +56,8 @@ function Report() {
   }, []);
   const current = useValidation(design)?.snapshot_hash ?? null;
   const indicators = useIndicatorRows();
+  const ba = useCurrentBa(current);
+  const cbShown = useCableSizingFlag() === true && currentCb(current) !== null;
 
   const latest = (t: AnalysisType) =>
     runRecords.findLast((r) => r.analysis_type === t && r.result.status !== "INPUT_INVALID") ?? null;
@@ -243,7 +247,7 @@ function Report() {
               <tr key={n}>
                 <th scope="row">{n}</th>
                 <td lang="id">{text}</td>
-                <td>{handling}</td>
+                <td>{n === "A2" && ba ? `${handling}; battery not modelled, see the battery adequacy section` : handling}</td>
                 <td>{rows.map((i) => `${i.label.split(" ")[0]}: ${indicatorText(i)}`).join("; ")}</td>
                 <td>{[...new Set(rows.flatMap((i) => (i.record ? [i.record.result_hash] : [])))].map((h) => <code key={h}>{h}</code>)}</td>
               </tr>
@@ -266,6 +270,7 @@ function Report() {
         </tbody>
       </table>
       <CableReportSection current={current} />
+      {ba && <BatteryReportSection record={ba} n={cbShown ? 9 : 8} />}
     </article>
     </ReportCharts.Provider>
   );

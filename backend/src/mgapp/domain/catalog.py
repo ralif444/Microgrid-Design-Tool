@@ -70,14 +70,28 @@ class BreakerValues(Model):
     poles: int | None = Field(default=None, ge=1)
 
 
+class BatteryModuleValues(Model):
+    """Battery round kind BATTERY_MODULE (FR-73, D-106 K308); used by B1 and B2 only, never by
+    the network model (A2)."""
+
+    energy_kwh: float | None = Field(default=None, gt=0)
+    nominal_voltage_v: float | None = Field(default=None, gt=0)
+    voltage_min_v: float | None = Field(default=None, gt=0)
+    voltage_max_v: float | None = Field(default=None, gt=0)
+    discharge_power_kw: float | None = Field(default=None, gt=0)  # continuous, per module
+    c_rate_per_h: float | None = Field(default=None, gt=0)
+    recommended_dod_ratio: float | None = Field(default=None, gt=0, le=1)
+
+
 class CatalogEntry(Model):
     id: str
-    kind: Literal["INVERTER", "CONDUCTOR", "BREAKER"]
+    kind: Literal["INVERTER", "CONDUCTOR", "BREAKER", "BATTERY_MODULE"]
     provenance: Provenance = Provenance()
     sources: dict[str, str] = {}  # value field -> page or section in the document (FR-65)
     inverter: InverterValues | None = None
     conductor: ConductorValues | None = None
     breaker: BreakerValues | None = None
+    battery_module: BatteryModuleValues | None = None
 
 
 class Catalog(Model):
