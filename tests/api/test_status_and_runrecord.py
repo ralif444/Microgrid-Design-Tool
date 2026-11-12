@@ -11,10 +11,10 @@ import pytest
 from api.conftest import RUN_RECORD_FIELDS, Api
 
 from mgapp.adapters.fake_engine import Outcome, ScriptEntry
-from mgapp.domain.enums import AnalysisType
+from mgapp.domain.enums import ENGINE_TYPES, AnalysisType
 from mgapp.services.limits import Limits
 
-ALL_TYPES = [t.value for t in AnalysisType]
+ALL_TYPES = [t.value for t in ENGINE_TYPES]  # CB: tests/api/test_cable_sizing.py
 
 
 def assert_record(resp: dict, *, engine_called: bool) -> dict:

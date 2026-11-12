@@ -12,11 +12,17 @@ from typing import Any, TypeGuard
 
 from pydantic import ValidationError
 
-from mgapp.domain.base import Model
+from mgapp.domain.base import FiniteJson, Model
 from mgapp.domain.contract import ScenarioSnapshot, ValidationIssue
 from mgapp.domain.entities import ProjectSnapshot
-from mgapp.domain.enums import AnalysisType, IssueCode, IssueLevel
-from mgapp.services.canonical import normalise_raw, normalise_snapshot, sha256_hex
+from mgapp.domain.enums import M4_POINT_METRICS, AnalysisType, IssueCode, IssueLevel
+from mgapp.services.cable_sizing.service import parameter_issues as cable_parameter_issues
+from mgapp.services.canonical import (
+    normalise_raw,
+    normalise_snapshot,
+    safe_sha256_hex,
+    sha256_hex,
+)
 
 ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,32}$")
 
@@ -51,9 +57,11 @@ MESSAGES: dict[IssueCode, str] = {
     IssueCode.SCENARIO_COUNT_INVALID: "Compare between 2 and the allowed number of scenarios.",
     IssueCode.DEPENDS_ON_NOT_ALLOWED: "This analysis does not use an earlier result.",
     IssueCode.MALFORMED_REQUEST: "The request could not be read.",
+    IssueCode.CABLE_TABLES_INCOMPLETE: "The cable table file is not complete.",
+    IssueCode.CABLE_TABLES_UNCHECKED: "The cable table file is not double-entry checked.",
+    IssueCode.CABLE_SETTINGS_INVALID: "Check the cable sizing settings.",
 }
 
-M4_POINT_METRICS = frozenset({"ZETA_MIN", "RE_LAMBDA_DOM", "INDICATORS"})
 DISTURBANCE_KINDS = frozenset({"LOAD_STEP", "LOAD_SCALING", "REFERENCE_STEP", "INVERTER_OUTAGE"})
 REFERENCES = frozenset({"P_SETPOINT", "Q_SETPOINT", "V_SETPOINT", "F_SETPOINT"})
 SETTLING_FIELDS = ("frequency_band_hz", "voltage_band_kv", "window_s")
@@ -319,6 +327,8 @@ def _parameters(
         )
         if not ok:
             bad(IssueCode.PS_PARAMETER_INVALID)
+    elif t is AnalysisType.CB:
+        c.issues += cable_parameter_issues(p)
     elif t is AnalysisType.M2:
         mi, ml, h = p.get("inverter_margin_ratio"), p.get("line_margin_ratio"), p.get("autonomy_h")
         if not (_is_num(mi) and mi >= 0 and _is_num(ml) and ml >= 0):
@@ -428,7 +438,7 @@ class ValidateRequest(Model):
 
     project_snapshot: ProjectSnapshot
     target_analysis_type: AnalysisType | None = None  # null = M1 rules
-    parameters: dict[str, Any] | None = None  # null = no request-level checks
+    parameters: FiniteJson | None = None  # null = no request-level checks
 
 
 class ValidationReport(Model):
@@ -445,16 +455,12 @@ def validate_raw(raw: Any) -> ValidationReport:
         req = ValidateRequest.model_validate(raw)
     except ValidationError:
         snap = normalise_raw(raw.get("project_snapshot") if isinstance(raw, dict) else None)
-        try:
-            h = sha256_hex(snap)
-        except ValueError:
-            h = sha256_hex(None)
         issue = ValidationIssue(
             code=IssueCode.MALFORMED_REQUEST,
             level=IssueLevel.REQUEST,
             message=MESSAGES[IssueCode.MALFORMED_REQUEST],
         )
-        return ValidationReport(valid=False, issues=[issue], snapshot_hash=h)
+        return ValidationReport(valid=False, issues=[issue], snapshot_hash=safe_sha256_hex(snap))
     t = req.target_analysis_type or AnalysisType.M1
     issues = validate_request(t, req.project_snapshot, req.parameters or {}, False, None)
     if req.parameters is None:

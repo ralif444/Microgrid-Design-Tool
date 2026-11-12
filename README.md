@@ -29,7 +29,7 @@ For a demonstration with the calculation engine, start with `MGAPP_ENGINE=REAL`;
 | Task | Command |
 |---|---|
 | Static checks (lint, types, import rules) | `python tools/check.py` |
-| Tests per seam | `python tools/test.py [static contract api reproducibility project_file client e2e]` (e2e needs the frontend build and `playwright install chromium` once) |
+| Tests per seam | `python tools/test.py [engine static contract api reproducibility project_file client e2e]` (e2e needs the frontend build and `playwright install chromium` once) |
 | Generate OpenAPI and TS types | `python tools/gen.py` (`--check` to verify) |
 
 If Node.js is not on `PATH`, set `MGAPP_NODE_DIR` to its `bin` directory.

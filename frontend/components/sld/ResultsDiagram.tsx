@@ -53,6 +53,7 @@ export function ResultsDiagram({
         details={sld.full}
         selected={selected}
         onSelect={onSelect}
+        breakers={sld.breakers}
         tools={
           <button type="button" aria-pressed={show} onClick={() => setShow(!show)}>
             Show results

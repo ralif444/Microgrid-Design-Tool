@@ -4,8 +4,10 @@
 // `details` (the inspector's rows, §A7). Hover opens the tooltip after 150 ms, focus at once; Escape,
 // blur or leaving closes it. Enter, Space or click calls `onSelect`. Zoom: fit to view by default.
 import { autoUpdate, flip, offset, shift, useFloating } from "@floating-ui/react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FocusEvent, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
 import { DataTable, type DataColumn } from "../DataTable";
+import type { BreakerMark } from "../cable";
+import { fmt } from "../Further";
 import type { ElementRef } from "../Inspector";
 import { rowText } from "../Inspector";
 import type { SldElement, SldModel, SldSection } from "./buildSldModel";
@@ -67,6 +69,7 @@ export function SingleLineDiagram({
   selected,
   onSelect,
   tools,
+  breakers = [],
 }: {
   drawing: SldModel;
   details: SldModel;
@@ -74,6 +77,8 @@ export function SingleLineDiagram({
   onSelect: (t: ElementRef) => void;
   /** extra toolbar controls ("Show results" on S-07 and S-08) */
   tools?: ReactNode;
+  /** X10 breaker symbols after a current CB run (FR-113, D-104 K295) */
+  breakers?: BreakerMark[];
 }) {
   const { layout, failed } = useSldLayout(drawing);
   const [tip, setTip] = useState<string | null>(null);
@@ -133,6 +138,24 @@ export function SingleLineDiagram({
     };
   };
 
+  const bindBreaker = (m: BreakerMark) => {
+    const k = `breaker:${m.id}`;
+    return {
+      tabIndex: 0,
+      role: "img",
+      "aria-label": `Breaker ${m.id}: ${m.cls}, I_n ${fmt(m.in_a)} A, cable ${fmt(m.size_mm2)} mm², I_Z ${fmt(m.iz_a)} A`,
+      "aria-describedby": tip === k ? "sld-tooltip" : undefined,
+      onMouseEnter: (e: MouseEvent<SVGGElement>) => show(k, e.currentTarget, 150),
+      onMouseLeave: hide,
+      onFocus: (e: FocusEvent<SVGGElement>) => show(k, e.currentTarget, 0),
+      onBlur: hide,
+      onKeyDown: (e: KeyboardEvent<SVGGElement>) => {
+        if (e.key === "Escape") hide();
+      },
+    };
+  };
+  const tipBreaker = breakers.find((m) => `breaker:${m.id}` === tip);
+
   if (drawing.buses.length === 0) return <p>No buses yet. Add a bus to start.</p>;
   if (failed) return <p>Diagram could not be drawn; the tables still work.</p>;
   const emph: Record<string, Emph> = selected ? { [selected]: "selected" } : {};
@@ -154,15 +177,27 @@ export function SingleLineDiagram({
         {tools}
       </div>
       <div ref={box} className={styles.figure}>
-        {layout ? <SldSvg model={drawing} layout={layout} emph={emph} bind={bind} scale={scale} /> : <p className={styles.wait}>Laying out the diagram…</p>}
+        {layout ? <SldSvg model={drawing} layout={layout} emph={emph} bind={bind} scale={scale} breakers={breakers} bindBreaker={bindBreaker} /> : <p className={styles.wait}>Laying out the diagram…</p>}
       </div>
+      {tipBreaker && (
+        <div ref={refs.setFloating} id="sld-tooltip" role="tooltip" className={styles.tooltip} style={floatingStyles}>
+          <p className={styles.tipHead}>Breaker {tipBreaker.id} (sizing result)</p>
+          <ul>
+            <li>Class · {tipBreaker.cls}</li>
+            <li>I_n · {fmt(tipBreaker.in_a)} A</li>
+            <li>Cable size · {fmt(tipBreaker.size_mm2)} mm²</li>
+            <li>I_Z · {fmt(tipBreaker.iz_a)} A</li>
+          </ul>
+          <p className={styles.tipEmpty}>Overload sizing advice only (experimental). Details on Cable and breaker sizing.</p>
+        </div>
+      )}
       {tipEl && (
         <div ref={refs.setFloating} id="sld-tooltip" role="tooltip" className={styles.tooltip} style={floatingStyles}>
           <Tooltip el={tipEl} />
         </div>
       )}
       {layout && layout.unplaced.length > 0 && <p className={styles.unplaced}>Not drawn (a Bus it needs is missing, or both ends are one Bus): {layout.unplaced.join(", ")}.</p>}
-      <SldLegend />
+      <SldLegend breakers={breakers.length > 0} />
       <button type="button" className={`no-print ${styles.tableToggle}`} aria-expanded={table} onClick={() => setTable(!table)}>
         View as table
       </button>

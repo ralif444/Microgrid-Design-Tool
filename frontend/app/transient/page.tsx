@@ -7,6 +7,7 @@ import { useState } from "react";
 import type { M4bPayload } from "../../api-types";
 import { LineChart } from "../../components/charts/LineChart";
 import { EmptyState } from "../../components/EmptyState";
+import { ExampleGuide, ExampleNext, ExampleTag, nextReady, NotSet, useExampleForm } from "../../components/ExampleForm";
 import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
 import { IndicatorPanel } from "../../components/IndicatorPanel";
 import { m4bKpis } from "../../components/kpi";
@@ -17,6 +18,8 @@ import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import styles from "../../components/Further.module.css";
+import { useProject } from "../../store";
+import type { ExamplePreset } from "../../store/example";
 
 type Settling = { frequency_band_hz?: number | null; voltage_band_kv?: number | null; window_s?: number | null };
 type Sent = { disturbance?: { start_time_s?: number | null }; settling?: Settling };
@@ -43,20 +46,50 @@ const CLASS_WORDS: Record<string, string> = {
 };
 
 function Transient() {
-  const { design, fresh, busy, resp, error, run, m2Infeasible } = useDependentRun("M4b");
-  const [kind, setKind] = useState<Kind>("LOAD_STEP");
-  const [element, setElement] = useState("");
-  const [reference, setReference] = useState<Ref>("P_SETPOINT");
-  const [magnitude, setMagnitude] = useState<number | null>(null);
-  const [magKvar, setMagKvar] = useState<number | null>(null);
-  const [start, setStart] = useState<number | null>(null);
-  const [permanent, setPermanent] = useState(true);
-  const [duration, setDuration] = useState<number | null>(null);
-  const [end, setEnd] = useState<number | null>(null);
+  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M4b");
+  // Example mode (Doc 12 X9 FR-103, D-92 K232): the Doc 13 §5 disturbances DR-01, TS-02, DR-02 as presets;
+  // the first fills the form on arrival, choosing one refills it, any edit makes the values the user's.
+  const { example } = useProject();
+  const presets = example?.settings.screens.transient?.presets ?? [];
+  const d0 = presets[0]?.fields.disturbance as Record<string, unknown> | undefined;
+  const ex = useExampleForm("transient", {}, { onReset: () => presets[0] && apply(presets[0]) });
+  const [preset, setPreset] = useState(presets[0]?.id ?? "");
+  const [kind, setKindRaw] = useState<Kind>((d0?.kind as Kind) ?? "LOAD_STEP");
+  const [element, setElementRaw] = useState((d0?.element_id as string) ?? "");
+  const [reference, setReferenceRaw] = useState<Ref>((d0?.reference as Ref) ?? "P_SETPOINT");
+  const [magnitude, setMagnitudeRaw] = useState<number | null>((d0?.magnitude as number) ?? null);
+  const [magKvar, setMagKvarRaw] = useState<number | null>((d0?.magnitude_kvar as number) ?? null);
+  const [start, setStartRaw] = useState<number | null>((d0?.start_time_s as number) ?? null);
+  const [permanent, setPermanentRaw] = useState(d0 ? d0.duration_s === null : true);
+  const [duration, setDurationRaw] = useState<number | null>((d0?.duration_s as number) ?? null);
+  const [end, setEndRaw] = useState<number | null>(presets[0]?.fields.simulation_end_s ?? null);
+  const own =
+    <V,>(f: (v: V) => void) =>
+    (v: V) => {
+      f(v);
+      setPreset("");
+    };
+  const [setKind, setElement, setReference, setMagnitude, setMagKvar, setStart, setPermanent, setDuration, setEnd] = [
+    own(setKindRaw), own(setElementRaw), own(setReferenceRaw), own(setMagnitudeRaw), own(setMagKvarRaw),
+    own(setStartRaw), own(setPermanentRaw), own(setDurationRaw), own(setEndRaw),
+  ];
+  function apply(pr: ExamplePreset) {
+    const d = pr.fields.disturbance;
+    setKindRaw(d.kind as Kind);
+    setElementRaw((d.element_id as string) ?? "");
+    setReferenceRaw((d.reference as Ref) ?? "P_SETPOINT");
+    setMagnitudeRaw((d.magnitude as number) ?? null);
+    setMagKvarRaw((d.magnitude_kvar as number) ?? null);
+    setStartRaw((d.start_time_s as number) ?? null);
+    setPermanentRaw(d.duration_s === null || d.duration_s === undefined);
+    setDurationRaw((d.duration_s as number) ?? null);
+    setEndRaw(pr.fields.simulation_end_s);
+    setPreset(pr.id);
+  }
+  const chosen = presets.find((x) => x.id === preset);
   const [fBand, setFBand] = useState<number | null>(null);
   const [vBand, setVBand] = useState<number | null>(null);
   const [win, setWin] = useState<number | null>(null);
-  const [dismissed, setDismissed] = useState<string | null>(null);
 
   const onLoads = kind === "LOAD_STEP" || kind === "LOAD_SCALING";
   const elements = [
@@ -101,6 +134,7 @@ function Transient() {
         <h1>Transient (M4b)</h1>
         <M1FreshnessBadge f={fresh} />
       </div>
+      <ExampleGuide screen="transient" />
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
       <form
@@ -111,6 +145,27 @@ function Transient() {
           submit();
         }}
       >
+        {presets.length > 0 && (
+          <p>
+            <label htmlFor="d-preset">Example disturbance</label>{" "}
+            <select
+              id="d-preset"
+              value={preset}
+              onChange={(e) => {
+                const pr = presets.find((x) => x.id === e.target.value);
+                if (pr) apply(pr);
+              }}
+            >
+              {presets.map((x) => (
+                <option key={x.id} value={x.id}>
+                  {x.label}
+                </option>
+              ))}
+              <option value="">Your own values</option>
+            </select>
+            {chosen && <ExampleTag label="Example disturbance" source={chosen.source} />}
+          </p>
+        )}
         <p>
           <label htmlFor="d-kind">Disturbance</label>{" "}
           <select
@@ -173,15 +228,17 @@ function Transient() {
         )}
         <fieldset className={styles.settling}>
           <legend>Settling criteria, optional (no defaults; without them no class is set)</legend>
+          {ex.needs("settling") && fBand === null && vBand === null && win === null && <NotSet />}
           <NumberField id="st-f" label="Frequency band" unit="Hz" value={fBand} onChange={setFBand} />
           <NumberField id="st-v" label="Voltage band, line-to-line" unit="kV" value={vBand} onChange={setVBand} />
           <NumberField id="st-w" label="Final window" unit="s" value={win} onChange={setWin} />
         </fieldset>
+        {presets.length > 0 && ex.resetButton}
         <button type="submit" className="primary" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
           {busy ? "Running..." : "Run M4b"}
         </button>
       </form>
-      {error && error !== dismissed && <Toast message={error} onDismiss={() => setDismissed(error)} />}
+      {error && <Toast message={error} onDismiss={clearError} />}
       {r && <StatusBanner type="M4b" result={r} />}
       {p && resp && <KpiStrip label="Transient key figures" kpis={m4bKpis(p)} record={resp.run_record} />}
       {p && resp && (
@@ -223,6 +280,7 @@ function Transient() {
         </>
       )}
       {!resp && <EmptyState title="Not run yet.">Define a disturbance and run M4b to see the time responses and the transient class.</EmptyState>}
+      <ExampleNext screen="transient" ready={nextReady(r?.status)} />
     </>
   );
 }

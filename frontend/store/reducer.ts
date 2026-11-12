@@ -7,6 +7,7 @@ import type {
   RunRecord,
   RunRecordRef,
 } from "../api-types";
+import type { ExampleSettings } from "./example";
 import { sha256Hex } from "./canonical";
 
 export interface ProjectMeta {
@@ -57,6 +58,8 @@ export interface ProjectState {
   scenarios: Scenario[];
   runRecords: RunRecord[];
   unsaved: boolean;
+  // Example mode (Doc 12 X9, D-92 K233): UI state only, never in the Project file or a snapshot.
+  example: { id: string; settings: ExampleSettings } | null;
 }
 
 export type ProjectAction =
@@ -90,6 +93,9 @@ export type ProjectAction =
   // Example Project (Doc 12 FR-85): a new unsaved copy with its own id; the example stays as is.
   | { type: "exampleOpened"; file: ProjectFile; id: string; created_at: string }
   | { type: "projectSaved"; modified_at: string }
+  // Example mode (D-92 K233): opening, creating or loading any Project leaves it (FR-99).
+  | { type: "exampleEntered"; settings: ExampleSettings }
+  | { type: "exampleLeft" }
   | { type: "runRecordImported"; record: RunRecord };
 
 const emptyDesign = (): ProjectSnapshot => ({
@@ -110,6 +116,7 @@ export const initialState: ProjectState = {
   scenarios: [],
   runRecords: [],
   unsaved: false,
+  example: null,
 };
 
 export type Collection = "buses" | "lines" | "loads" | "inverters";
@@ -213,11 +220,11 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
     case "scenarioRemoved":
       return { ...state, scenarios: state.scenarios.filter((x) => x.id !== action.id), unsaved: true };
     case "projectLoaded":
-      return { ...fromProjectFile(action.file), unsaved: false };
+      return { ...fromProjectFile(action.file), unsaved: false, example: null };
     case "exampleOpened": {
       const loaded = fromProjectFile(action.file);
       const { id, created_at } = action;
-      return { ...loaded, project: loaded.project && { ...loaded.project, id, created_at, modified_at: created_at }, unsaved: true };
+      return { ...loaded, project: loaded.project && { ...loaded.project, id, created_at, modified_at: created_at }, unsaved: true, example: null };
     }
     case "projectSaved":
       return state.project
@@ -225,6 +232,10 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
         : state;
     case "runRecordImported":
       return { ...state, runRecords: [...state.runRecords, action.record], unsaved: true };
+    case "exampleEntered":
+      return state.project ? { ...state, example: { id: action.settings.id, settings: action.settings } } : state;
+    case "exampleLeft":
+      return { ...state, example: null };
   }
 }
 
@@ -258,7 +269,7 @@ export function m1Ref(runRecords: RunRecord[]): RunRecordRef | null {
 }
 
 // The inverse of toProjectFile (projectFile.ts) for a file the server accepted (Doc 6 §3.6).
-export function fromProjectFile(f: ProjectFile): Omit<ProjectState, "unsaved"> {
+export function fromProjectFile(f: ProjectFile): Omit<ProjectState, "unsaved" | "example"> {
   const { nominal_voltage_kv, nominal_frequency_hz, ...meta } = f.project;
   return {
     project: { ...meta, description: meta.description ?? null },

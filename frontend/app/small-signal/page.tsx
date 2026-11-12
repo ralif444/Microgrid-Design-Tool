@@ -5,6 +5,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { M4aPayload } from "../../api-types";
+import { ExampleGuide, ExampleNext, nextReady } from "../../components/ExampleForm";
 import { tauInSource } from "../../components/Catalog";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
@@ -54,11 +55,10 @@ const EIGEN: DataColumn<EigRow>[] = [
 ];
 
 function SmallSignal() {
-  const { design, fresh, busy, resp, error, run, m2Infeasible } = useDependentRun("M4a");
+  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M4a");
   const { from, conflict } = tauInSource(design.inverters ?? []);
   const [tauIn, setTauIn] = useState<number | null>(from?.tau_in_s ?? null);
   const [threshold, setThreshold] = useState<number | null>(null);
-  const [dismissed, setDismissed] = useState<string | null>(null);
   const r = resp?.result;
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as M4aPayload) : null;
   const eig: EigRow[] = p ? eigenRows(p) : [];
@@ -69,6 +69,7 @@ function SmallSignal() {
         <h1>Small-signal (M4a)</h1>
         <M1FreshnessBadge f={fresh} />
       </div>
+      <ExampleGuide screen="small-signal" />
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
       <form
@@ -102,7 +103,7 @@ function SmallSignal() {
           {busy ? "Running..." : "Run M4a"}
         </button>
       </form>
-      {error && error !== dismissed && <Toast message={error} onDismiss={() => setDismissed(error)} />}
+      {error && <Toast message={error} onDismiss={clearError} />}
       {r && <StatusBanner type="M4a" result={r} />}
       {p && resp && <KpiStrip label="Small-signal key figures" kpis={m4aKpis(p, thresholdGiven)} record={resp.run_record} />}
       {p && resp && (
@@ -126,6 +127,7 @@ function SmallSignal() {
         </>
       )}
       {!resp && <EmptyState title="Not run yet.">Run M4a to see the eigenvalues, damping and the stability class.</EmptyState>}
+      <ExampleNext screen="small-signal" ready={nextReady(r?.status)} />
     </>
   );
 }

@@ -7,13 +7,14 @@ import { useEffect, useMemo, useState } from "react";
 import { getMeta } from "../../api-client";
 import type { M1Payload, M2Payload } from "../../api-types";
 import { latestRun, useProject } from "../../store";
+import { breakerMarks, currentCb, useCableSizingFlag, type BreakerMark } from "../cable";
 import { useValidation } from "../useValidation";
 import { buildSldModel, type SldModel } from "./buildSldModel";
 
 let marginWarnCache: Promise<number | null> | null = null;
 const marginWarn = () => (marginWarnCache ??= getMeta().then((m) => (m.ok ? m.data.limits.margin_warn : null)));
 
-export type SldModels = { design: SldModel; m1: SldModel; full: SldModel; fake: boolean; has: { m1: boolean; m2: boolean } };
+export type SldModels = { design: SldModel; m1: SldModel; full: SldModel; fake: boolean; has: { m1: boolean; m2: boolean }; breakers: BreakerMark[] };
 
 export function useSldModel(): SldModels {
   const { design, runRecords } = useProject();
@@ -25,6 +26,9 @@ export function useSldModel(): SldModels {
   const current = report?.snapshot_hash ?? null;
   const m1r = latestRun(runRecords, "M1", current);
   const m2r = latestRun(runRecords, "M2", current);
+  // X10 (FR-113, K291): the session CB run on this design, only while the flag is on
+  const flag = useCableSizingFlag() === true;
+  const cb = flag ? currentCb(current) : null;
   return useMemo(() => {
     const issues = report?.issues ?? [];
     const m1 = m1r?.result.status === "FEASIBLE" ? (m1r.result.payload as unknown as M1Payload) : null;
@@ -39,6 +43,7 @@ export function useSldModel(): SldModels {
       full: buildSldModel({ design, m1, m2, issues, marginWarn: warn }),
       fake,
       has: { m1: !!m1, m2: !!m2 },
+      breakers: breakerMarks(cb?.payload ?? null),
     };
-  }, [design, report, m1r, m2r, warn]);
+  }, [design, report, m1r, m2r, warn, cb?.record]);
 }

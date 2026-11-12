@@ -71,7 +71,10 @@ def create_app(
         redoc_url=None,
     )
     app.state.pipeline = Pipeline(
-        ExecutionGuard(engine, limits.time_budget_s), records or RunRecordService(), limits
+        ExecutionGuard(engine, limits.time_budget_s),
+        records or RunRecordService(),
+        limits,
+        cable_sizing_enabled=settings.feature_cable_sizing,
     )
     error_mapper.install(app)
     app.include_router(health_meta.router)

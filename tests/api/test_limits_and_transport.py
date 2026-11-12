@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 
+import pytest
 from api.conftest import Api
 from fixtures.designs import two_bus_snapshot
 
@@ -93,6 +95,53 @@ def test_malformed_json_400(api: Api) -> None:
         "/api/analyses/M1", content=b"{not json", headers={"content-type": "application/json"}
     )
     assert (r.status_code, r.json()["code"]) == (400, "MALFORMED_JSON")
+
+
+def test_json_nested_too_deep_400(api: Api) -> None:
+    """A body too deeply nested to decode is a transport error, not a 500."""
+    raw = "[" * 100_000 + "]" * 100_000
+    r = api.client.post(
+        "/api/analyses/M1", content=raw, headers={"content-type": "application/json"}
+    )
+    assert r.status_code == 400
+    assert r.json()["code"] == "MALFORMED_JSON"
+
+
+@pytest.mark.parametrize("bad", ["NaN", "Infinity", "-Infinity", "1e999", "1" + "0" * 400])
+def test_non_finite_parameter_is_malformed_request_zero_calls(api: Api, bad: str) -> None:
+    """Doc 3 §1: numbers are finite; `parameters` follows the rule the snapshot already has."""
+    body = json.dumps(api.body("PS")).replace(
+        '"inverter_margin_ratio": 0.2', f'"inverter_margin_ratio": {bad}'
+    )
+    assert bad in body
+    r = api.client.post(
+        "/api/analyses/PS", content=body, headers={"content-type": "application/json"}
+    )
+    assert r.status_code == 200, r.text
+    res = r.json()
+    assert (res["result"]["status"], res["result"]["status_code"]) == (
+        "INPUT_INVALID",
+        "MALFORMED_REQUEST",
+    )
+    assert res["run_record"]["engine_kind"] is None  # engine not called
+    assert len(api.engine.call_log) == 0  # type: ignore[attr-defined]
+
+
+def test_non_finite_parameter_in_validate_is_reported(api: Api) -> None:
+    body = json.dumps(
+        {
+            "project_snapshot": two_bus_snapshot(),
+            "target_analysis_type": "PS",
+            "parameters": {"x": 1},
+        }
+    ).replace('"x": 1', '"x": NaN')
+    r = api.client.post(
+        "/api/projects/validate", content=body, headers={"content-type": "application/json"}
+    )
+    assert r.status_code == 200
+    rep = r.json()
+    assert rep["valid"] is False
+    assert [i["code"] for i in rep["issues"]] == ["MALFORMED_REQUEST"]
 
 
 def test_wrong_media_type_415(api: Api) -> None:

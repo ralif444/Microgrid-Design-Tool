@@ -20,6 +20,12 @@ class LimitsInfo(Model):
     lambda_c_point_cap: int | None
 
 
+class FeaturesInfo(Model):
+    """Startup feature flags the frontend needs (D-103 K286)."""
+
+    cable_sizing: bool
+
+
 class MetaInfo(Model):
     app_version: str
     schema_version: int
@@ -28,6 +34,7 @@ class MetaInfo(Model):
     engine: EngineIdentity
     limits: LimitsInfo
     indicator_threshold_version: str | None
+    features: FeaturesInfo
 
 
 class HealthInfo(Model):

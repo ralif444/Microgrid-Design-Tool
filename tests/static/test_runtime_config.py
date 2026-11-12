@@ -22,3 +22,17 @@ def test_engine_selected_from_env() -> None:
 def test_unknown_engine_refused() -> None:
     with pytest.raises(ValueError):
         Settings.from_env({"MGAPP_ENGINE": "MAYBE"})
+
+
+def test_feature_cable_sizing_off_by_default() -> None:
+    assert Settings.from_env({}).feature_cable_sizing is False
+
+
+@pytest.mark.parametrize("value", ["1", "true", "TRUE", "yes", "on"])
+def test_feature_cable_sizing_enabled_from_env(value: str) -> None:
+    assert Settings.from_env({"MGAPP_FEATURE_CABLE_SIZING": value}).feature_cable_sizing is True
+
+
+@pytest.mark.parametrize("value", ["", "0", "false", "no"])
+def test_feature_cable_sizing_stays_off(value: str) -> None:
+    assert Settings.from_env({"MGAPP_FEATURE_CABLE_SIZING": value}).feature_cable_sizing is False

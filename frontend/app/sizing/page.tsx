@@ -3,12 +3,13 @@
 // advisory panel (P4), Accept or Skip (FR-08; Edit deferred, Doc 9 D-45 K5), stale notice.
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { runAnalysis } from "../../api-client";
 import type { AnalysisResponse, PsPayload } from "../../api-types";
 import { catalogHints, useCatalog } from "../../components/Catalog";
+import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
+import { SOLVER, useAnalysisCall } from "../../components/useAnalysisCall";
 import {
   adviceInputHash,
   useProject,
@@ -17,7 +18,6 @@ import {
   type SizingAdvice,
 } from "../../store";
 
-const SOLVER = { mismatch_tolerance_w: 0.001, max_iterations: 50, initial_guess: "DEFAULT" as const }; // ignored by PS
 
 const EMPTY: PsParameters = {
   inverter_margin_ratio: null,
@@ -134,10 +134,11 @@ function CatalogHints({ unitKva }: { unitKva: number }) {
 function Sizing() {
   const { design, sizingAdvice } = useProject();
   const dispatch = useProjectDispatch();
-  const [ps, setPs] = useState<PsParameters>(sizingAdvice.at(-1)?.ps_parameters ?? EMPTY);
-  const [busy, setBusy] = useState(false);
+  // Last advice first, then the guided example (Doc 12 X9, D-92 K230), else empty.
+  const ex = useExampleForm<PsParameters>("sizing", sizingAdvice.at(-1)?.ps_parameters ?? EMPTY);
+  const ps = ex.values;
+  const { busy, error, call } = useAnalysisCall();
   const [resp, setResp] = useState<AnalysisResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [stale, setStale] = useState(false);
   const latest = sizingAdvice.at(-1);
   const hasLoad = (design.loads?.length ?? 0) > 0;
@@ -148,29 +149,23 @@ function Sizing() {
   }, [design, ps, latest]);
 
   async function run() {
-    setError(null);
-    setBusy(true);
     // Optional parameters are sent only when entered; required ones are sent as entered so
     // stage 1 can name what is missing (PS_PARAMETER_INVALID).
     const parameters = Object.fromEntries(Object.entries(ps).filter(([, v]) => v !== null));
-    const out = await runAnalysis("PS", { project_snapshot: design, parameters, solver_config: SOLVER });
-    setBusy(false);
-    if (!out.ok) {
-      setError(out.message);
-      return;
-    }
-    setResp(out.data);
-    dispatch({ type: "runRecordAdded", record: out.data.run_record });
-    if (out.data.result.status === "FEASIBLE") {
+    const data = await call("PS", { project_snapshot: design, parameters, solver_config: SOLVER }); // PS ignores the solver settings
+    if (!data) return;
+    setResp(data);
+    dispatch({ type: "runRecordAdded", record: data.run_record });
+    if (data.result.status === "FEASIBLE") {
       dispatch({
         type: "adviceAdded",
         advice: {
-          id: out.data.run_record.record_id,
-          created_at: out.data.run_record.created_at,
+          id: data.run_record.record_id,
+          created_at: data.run_record.created_at,
           input_hash: await adviceInputHash(design, ps),
           ps_parameters: ps,
           state: "PROPOSED",
-          result: out.data.result.payload as unknown as PsPayload,
+          result: data.result.payload as unknown as PsPayload,
         },
       });
     }
@@ -180,6 +175,7 @@ function Sizing() {
   return (
     <>
       <h1>Sizing advice (PS)</h1>
+      <ExampleGuide screen="sizing" />
       <form
         aria-label="Sizing advice settings"
         onSubmit={(e) => {
@@ -189,9 +185,19 @@ function Sizing() {
       >
         {FIELDS.map(([k, label, unit, step]) => (
           <p key={k}>
-            <NumberField id={k} label={label} unit={unit} step={step} value={ps[k]} onChange={(v) => setPs({ ...ps, [k]: v })} />
+            <NumberField
+              id={k}
+              label={label}
+              unit={unit}
+              step={step}
+              value={ps[k]}
+              onChange={(v) => ex.set(k, v)}
+              adornment={ex.tag(k, label)}
+              note={ex.note(k)}
+            />
           </p>
         ))}
+        {ex.resetButton}{ex.resetButton && " "}
         <button type="submit" disabled={busy || !hasLoad}>
           {busy ? "Running..." : latest ? "Re-run advice" : "Run advice"}
         </button>
@@ -232,6 +238,7 @@ function Sizing() {
           {latest.state === "ACCEPTED" && <InverterDrafts plan={latest.result.inverter_plan} />}
         </>
       )}
+      <ExampleNext screen="sizing" ready={nextReady(resp?.result.status)} />
     </>
   );
 }

@@ -15,7 +15,11 @@ class AnalysisType(StrEnum):
     M3D = "M3d"
     M4A = "M4a"
     M4B = "M4b"
+    CB = "CB"  # app-side cable sizing (ADR-014, D-102); never sent to the engine
 
+
+ENGINE_TYPES = tuple(t for t in AnalysisType if t is not AnalysisType.CB)
+"""Types the Engine Port serves; CB is computed by the app (ADR-014)."""
 
 DEPENDENT_TYPES = frozenset(
     {
@@ -26,9 +30,10 @@ DEPENDENT_TYPES = frozenset(
         AnalysisType.M3D,
         AnalysisType.M4A,
         AnalysisType.M4B,
+        AnalysisType.CB,
     }
 )
-"""Types that need a valid M1 RunRecordRef in `depends_on` (Doc 3 §5.4)."""
+"""Types that need a valid RunRecordRef in `depends_on`: M1, or M2 for CB (Doc 3 §5.4, D-102)."""
 
 
 class Status(StrEnum):
@@ -55,6 +60,7 @@ ALLOWED_STATUS: dict[AnalysisType, frozenset[Status]] = {
     AnalysisType.M3D: _ALWAYS | _M3,
     AnalysisType.M4A: _ALWAYS | _M4,
     AnalysisType.M4B: _ALWAYS | _M4,
+    AnalysisType.CB: _ALWAYS | {Status.FEASIBLE},
 }
 """Allowed Status per analysis type (manuscript 4.3.2, Doc 3 §5.4)."""
 
@@ -150,6 +156,9 @@ class IssueCode(StrEnum):
     DEPENDS_ON_NOT_ALLOWED = "DEPENDS_ON_NOT_ALLOWED"
     MULTIPLE_INVERTERS_ON_BUS = "MULTIPLE_INVERTERS_ON_BUS"  # engine-side, M4 (D-55 K91)
     MALFORMED_REQUEST = "MALFORMED_REQUEST"
+    CABLE_TABLES_INCOMPLETE = "CABLE_TABLES_INCOMPLETE"  # CB (D-100 K264)
+    CABLE_TABLES_UNCHECKED = "CABLE_TABLES_UNCHECKED"  # CB (D-100 K264)
+    CABLE_SETTINGS_INVALID = "CABLE_SETTINGS_INVALID"  # CB (D-102 K281)
 
 
 class IssueLevel(StrEnum):
@@ -166,6 +175,15 @@ class WarningCode(StrEnum):
     RATING_MARGIN_SHORT = "RATING_MARGIN_SHORT"
     VALIDITY_NOT_CALIBRATED = "VALIDITY_NOT_CALIBRATED"
     CONSTRAINT_NOT_EVALUATED = "CONSTRAINT_NOT_EVALUATED"
+    FEATURE_EXPERIMENTAL = "FEATURE_EXPERIMENTAL"  # every CB result (D-100 K264)
+    LINE_R_MISMATCH = "LINE_R_MISMATCH"  # CB (CB.5)
+    DIRECT_BURIAL_NOT_SUPPORTED = (
+        "DIRECT_BURIAL_NOT_SUPPORTED"  # reserved, not emitted (D-102 K283)
+    )
+
+
+M4_POINT_METRICS = frozenset({"ZETA_MIN", "RE_LAMBDA_DOM", "INDICATORS"})
+"""Sweep point metrics that need the M4a model, hence τ_p and τ_q (Doc 3 §6.5, D-53)."""
 
 
 class InitialGuess(StrEnum):

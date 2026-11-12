@@ -18,6 +18,7 @@ Folder ini berisi sepuluh catatan keputusan arsitektur (ADR) untuk aplikasi web 
 | [ADR-011](ADR-011-styling-approach.md) | Styling: design tokens + CSS Modules | Accepted 2026-11-03; items 1, 4, 6 superseded by ADR-012 | D5, D6; NFR-03 |
 | [ADR-012](ADR-012-carbon-design-system.md) | Carbon design system, custom light theme | Accepted, option C approved by user 2026-11-03 | Visual guidelines v1 D1–D9; NFR-03 |
 | [ADR-013](ADR-013-sld-layout.md) | Single-line diagram layout (elkjs) and dependencies | Accepted, option A approved by user 2026-11-03 | SLD guideline v2; FR-14, FR-94 – FR-98; NFR-03 |
+| [ADR-014](ADR-014-app-side-cable-sizing.md) | App-side computation of the cable sizing analysis (CB) | Accepted, option A approved by user 2026-11-09 | Cable guideline §0, §5; Doc 12 X10 (FR-105, FR-107, FR-111); D-100 |
 
 ## Self-review
 - Weakest: ADR-002 (Vite margin) and ADR-005 (state library margin) are explicitly weak; ADR-010 shifts size and loss-of-work risk to the browser.

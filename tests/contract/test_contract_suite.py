@@ -15,7 +15,7 @@ from contract.suite import run_suite
 from mgapp.adapters.fake_engine import FakeEngine, Outcome, ScriptEntry
 from mgapp.adapters.fake_engine.defective import Defect, DefectiveFakeEngine
 from mgapp.adapters.real_engine import RealEngine
-from mgapp.domain.enums import ALLOWED_STATUS, AnalysisType, Status
+from mgapp.domain.enums import ALLOWED_STATUS, ENGINE_TYPES, AnalysisType, Status
 from mgapp.engine_port import EnginePort
 
 # Adapters under test (NFR-08); REAL added at WP 1.4.2.
@@ -37,7 +37,7 @@ def test_nfr_08_adapter_passes_contract_suite(name: str, tmp_path: Path) -> None
 
 
 ALLOWED_SCRIPTS = [
-    (t, o) for t in AnalysisType for o in Outcome if OUTCOME_STATUS[o] in ALLOWED_STATUS[t]
+    (t, o) for t in ENGINE_TYPES for o in Outcome if OUTCOME_STATUS[o] in ALLOWED_STATUS[t]
 ]
 
 

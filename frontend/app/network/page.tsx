@@ -6,6 +6,7 @@
 // Inverters (Doc 12 FR-66, FR-69, FR-70).
 import { useEffect, useState } from "react";
 import type { CatalogRef } from "../../api-types";
+import { ExampleGuide, ExampleNext } from "../../components/ExampleForm";
 import { block, entryWarnings, fromEntry, refText, useCatalog } from "../../components/Catalog";
 import { EmptyState } from "../../components/EmptyState";
 import { EntityTable, type Column } from "../../components/EntityTable";
@@ -140,6 +141,7 @@ function Network() {
   return (
     <>
       <h1>Network</h1>
+      <ExampleGuide screen="network" runnable={false} />
       {!enabled.Lines && <p className={styles.hint}>Lines need two buses; inverters need one.</p>}
       <div role="tablist" aria-label="Network tables" className={styles.tabs}>
         {(["Buses", "Lines", "Inverters"] as Tab[]).map((t) => (
@@ -204,7 +206,7 @@ function Network() {
       </section>
       <details className={styles.diagram}>
         <summary>Diagram (read-only)</summary>
-        <SingleLineDiagram drawing={sld.design} details={sld.full} selected={inspect?.id ?? null} onSelect={open} />
+        <SingleLineDiagram drawing={sld.design} details={sld.full} selected={inspect?.id ?? null} onSelect={open} breakers={sld.breakers} />
       </details>
       {inspect && <Inspector target={inspect} onClose={() => setInspect(null)} />}
       <h2>Issues</h2>
@@ -225,6 +227,7 @@ function Network() {
           </ul>
         </div>
       )}
+      <ExampleNext screen="network" ready={true} />
     </>
   );
 }

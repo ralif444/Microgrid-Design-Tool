@@ -9,6 +9,7 @@ import type { M3aPayload, OutputMetric } from "../../api-types";
 import { BarChart } from "../../components/charts/BarChart";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
+import { ExampleGuide, ExampleNext, nextReady, NotSet, useExampleForm } from "../../components/ExampleForm";
 import { fmt, InfeasibleNote, METRICS, numericPaths, shortcutPrefill, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
 import { Icon } from "../../components/Icon";
@@ -22,12 +23,26 @@ type Sens = M3aPayload["sensitivities"][number];
 const FLAG = "status differs between the two sides";
 
 function Sensitivity() {
-  const { design, fresh, busy, resp, error, run, m2Infeasible } = useDependentRun("M3a");
-  const [paths, setPaths] = useState<string[]>([]);
-  const [metrics, setMetrics] = useState<OutputMetric[]>([]);
+  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M3a");
+  // Example mode (Doc 12 X9, D-92 K230): paths and metrics from the guided example; a path that does not
+  // resolve on this Project is dropped (Doc 7 §2.3). The step stays the user's (D-92 K231).
+  const ex = useExampleForm<{ parameter_paths: string[] | null; output_metrics: OutputMetric[] | null }>(
+    "sensitivity",
+    { parameter_paths: null, output_metrics: null },
+    {
+      resolve: (k, v) => {
+        if (k !== "parameter_paths") return v;
+        const ok = (v as string[]).filter((pp) => numericPaths(design).includes(pp));
+        return ok.length ? ok : null;
+      },
+    },
+  );
+  const paths = ex.values.parameter_paths ?? [];
+  const metrics = ex.values.output_metrics ?? [];
+  const setPaths = (v: string[]) => ex.set("parameter_paths", v);
+  const setMetrics = (v: OutputMetric[]) => ex.set("output_metrics", v);
   const [stepKind, setStepKind] = useState<"step_relative" | "step_absolute">("step_relative");
   const [step, setStep] = useState<number | null>(null);
-  const [dismissed, setDismissed] = useState<string | null>(null);
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     const pre = shortcutPrefill(design, q.get("kind") ?? "", q.get("element") ?? "");
@@ -46,6 +61,7 @@ function Sensitivity() {
         <h1>Sensitivity (M3a)</h1>
         <M1FreshnessBadge f={fresh} />
       </div>
+      <ExampleGuide screen="sensitivity" />
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
       <form
@@ -58,6 +74,7 @@ function Sensitivity() {
       >
         <fieldset className={styles.box}>
           <legend>Parameters</legend>
+          {ex.tag("parameter_paths", "Parameters")}
           {numericPaths(design).map((pp) => (
             <label key={pp}>
               <input type="checkbox" checked={paths.includes(pp)} onChange={() => setPaths(toggle(paths, pp))} /> {pp}
@@ -66,6 +83,7 @@ function Sensitivity() {
         </fieldset>
         <fieldset className={styles.box}>
           <legend>Output metrics</legend>
+          {ex.tag("output_metrics", "Output metrics")}
           {METRICS.map(([m, label, unit]) => (
             <label key={m}>
               <input type="checkbox" checked={metrics.includes(m)} onChange={() => setMetrics(toggle(metrics, m))} /> {label} ({unit})
@@ -80,14 +98,22 @@ function Sensitivity() {
           <label>
             <input type="radio" checked={stepKind === "step_absolute"} onChange={() => setStepKind("step_absolute")} /> absolute, in the parameter unit
           </label>
-          <NumberField id="step" label="Step" unit={stepKind === "step_relative" ? "ratio" : "parameter unit"} value={step} onChange={setStep} />
+          <NumberField
+            id="step"
+            label="Step"
+            unit={stepKind === "step_relative" ? "ratio" : "parameter unit"}
+            value={step}
+            onChange={setStep}
+            note={ex.needs("step_relative") && step === null ? <NotSet /> : undefined}
+          />
         </fieldset>
         {paths.length === 0 && <p>Pick at least one parameter.</p>}
+        {ex.resetButton}
         <button type="submit" className="primary" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
           {busy ? "Running..." : "Run M3a"}
         </button>
       </form>
-      {error && error !== dismissed && <Toast message={error} onDismiss={() => setDismissed(error)} />}
+      {error && <Toast message={error} onDismiss={clearError} />}
       {r && <StatusBanner type="M3a" result={r} />}
       {p &&
         resp &&
@@ -149,6 +175,7 @@ function Sensitivity() {
         </p>
       )}
       {!resp && <EmptyState title="Not run yet.">Pick parameters, output metrics and a step, then run M3a to rank the parameters by effect.</EmptyState>}
+      <ExampleNext screen="sensitivity" ready={nextReady(r?.status)} />
     </>
   );
 }

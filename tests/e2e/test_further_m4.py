@@ -59,3 +59,22 @@ def test_fr_33_fr_34_stability_screens(server: Callable[[str], str], page: Page)
     page.get_by_label("Disturbance", exact=True).select_option("REFERENCE_STEP")
     page.get_by_label("Reference", exact=True).select_option("V_SETPOINT")
     expect(page.get_by_label("Step size (kV)")).to_be_visible()  # unit follows the reference
+
+
+def test_transport_error_toast_returns_after_dismissal(
+    server: Callable[[str], str], page: Page
+) -> None:
+    """A transport failure that repeats shows its toast again after the first was dismissed."""
+    enter_design(page, server("default"), gui_snapshot())
+    _run_m1(page)
+    page.get_by_role("link", name="Small-signal (M4a)").click()
+    page.route(
+        "**/api/analyses/M4a",
+        lambda r: r.fulfill(status=500, content_type="application/json", body="{}"),
+    )
+    toast = page.get_by_role("alert").filter(has_text="The local service did not answer correctly")
+    for _ in range(2):
+        page.get_by_role("button", name="Run M4a").click()
+        expect(toast).to_be_visible()
+        toast.get_by_role("button").click()
+        expect(toast).to_be_hidden()

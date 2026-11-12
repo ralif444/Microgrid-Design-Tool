@@ -3,8 +3,8 @@
 // but never blocks it (Doc 7 P6): a run with problems returns INPUT_INVALID listing all issues.
 import Link from "next/link";
 import { useState } from "react";
-import { runAnalysis } from "../../api-client";
 import type { M1Payload } from "../../api-types";
+import { ExampleGuide, ExampleNext, nextReady } from "../../components/ExampleForm";
 import { EmptyState } from "../../components/EmptyState";
 import { asResponse } from "../../components/Further";
 import { Icon } from "../../components/Icon";
@@ -18,32 +18,23 @@ import { RequireProject } from "../../components/RequireProject";
 import { ResultsDiagram } from "../../components/sld/ResultsDiagram";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
+import { SOLVER, useAnalysisCall } from "../../components/useAnalysisCall";
 import { m1Freshness, useValidation } from "../../components/useValidation";
 import { latestRun, m1Ref, useProject, useProjectDispatch } from "../../store";
 import styles from "./power-flow.module.css";
 
-const SOLVER = { mismatch_tolerance_w: 0.001, max_iterations: 50, initial_guess: "DEFAULT" as const };
-
 function PowerFlow() {
   const { design, runRecords } = useProject();
   const dispatch = useProjectDispatch();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { busy, error, setError, call } = useAnalysisCall();
   const [inspect, setInspect] = useState<ElementRef | null>(null);
   const report = useValidation(design);
   const resp = asResponse(latestRun(runRecords, "M1", report?.snapshot_hash ?? null));
   const fresh = m1Freshness(m1Ref(runRecords)?.snapshot_hash ?? null, report);
 
   async function run() {
-    setError(null);
-    setBusy(true);
-    const out = await runAnalysis("M1", { project_snapshot: design, parameters: {}, solver_config: SOLVER });
-    setBusy(false);
-    if (!out.ok) {
-      setError(out.message);
-      return;
-    }
-    dispatch({ type: "runRecordAdded", record: out.data.run_record });
+    const data = await call("M1", { project_snapshot: design, parameters: {}, solver_config: SOLVER });
+    if (data) dispatch({ type: "runRecordAdded", record: data.run_record });
   }
 
   const payload = resp?.result.status === "FEASIBLE" ? (resp.result.payload as unknown as M1Payload) : null;
@@ -56,6 +47,7 @@ function PowerFlow() {
           {busy ? "Running..." : "Run M1"}
         </button>
       </div>
+      <ExampleGuide screen="power-flow" />
       <h2>Readiness</h2>
       {report === null ? (
         <p className={styles.checking}>Checking the design…</p>
@@ -106,6 +98,7 @@ function PowerFlow() {
           <Link href="/constraint-check/">Continue to the constraint check (M2)</Link>
         </p>
       )}
+      <ExampleNext screen="power-flow" ready={nextReady(resp?.result.status)} />
     </>
   );
 }

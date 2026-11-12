@@ -99,6 +99,13 @@ class AnalysisResult(Model):
     diagnostics: dict[str, Any] = {}
 
 
+# Message of every UNAVAILABLE / ENGINE_ERROR result, from the guard or an adapter (Doc 6 §5.1).
+MSG_ENGINE_ERROR = (
+    "The calculation engine failed unexpectedly (internal error, not a solver result). "
+    "Run again; if it repeats, report the RunRecord."
+)
+
+
 class EngineIdentity(Model):
     engine_kind: EngineKind
     engine_version: str

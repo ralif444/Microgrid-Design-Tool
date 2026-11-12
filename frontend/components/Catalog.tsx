@@ -6,7 +6,8 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { importCatalog } from "../api-client";
 import type { Catalog, CatalogEntry, CatalogRef, EntryCheck } from "../api-types";
 
-type Use = "model" | "text" | "A2" | "A4";
+// "x10": used only by the X10 cable sizing match (D-104 K293, K296), shown only with the flag on
+type Use = "model" | "text" | "A2" | "A4" | "x10";
 export type EntryField = [key: string, label: string, unit: string | null, use: Use];
 
 // FR-67, FR-68: fields not used by the model carry the A2 / A4 label.
@@ -34,11 +35,25 @@ export const ENTRY_FIELDS: Record<CatalogEntry["kind"], EntryField[]> = {
     ["ampacity_a", "Current-carrying capacity", "A", "model"],
     ["ampacity_conditions", "Reference installation conditions", null, "text"],
     ["shunt_capacitance_uf_per_km", "Shunt capacitance", "µF/km", "A4"],
+    ["material", "Conductor material", null, "x10"],
+    ["insulation", "Insulation", null, "x10"],
+    ["cores", "Number of cores", "count", "x10"],
+    ["size_mm2", "Cross-section", "mm²", "x10"],
+  ],
+  BREAKER: [
+    ["standard", "Product standard", null, "x10"],
+    ["class", "Device class", null, "x10"],
+    ["in_a", "Rated current I_n", "A", "model"],
+    ["curve", "Trip curve", null, "x10"],
+    ["poles", "Poles", "count", "x10"],
   ],
 };
 
-export const block = (e: CatalogEntry): Record<string, unknown> =>
-  ((e.kind === "INVERTER" ? e.inverter : e.conductor) ?? {}) as Record<string, unknown>;
+// Fields chosen from a list (contract enums, D-104).
+export const ENTRY_OPTIONS: Record<string, string[]> = { material: ["CU", "AL"], insulation: ["PVC", "XLPE"], class: ["MCB", "MCCB"] };
+export const BLOCK_KEY = { INVERTER: "inverter", CONDUCTOR: "conductor", BREAKER: "breaker" } as const;
+
+export const block = (e: CatalogEntry): Record<string, unknown> => (e[BLOCK_KEY[e.kind]] ?? {}) as Record<string, unknown>;
 
 export const emptyCatalog = (): Catalog => ({ schema_version: 1, app_version: "", entries: [] });
 

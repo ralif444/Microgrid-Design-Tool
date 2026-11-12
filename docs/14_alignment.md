@@ -83,6 +83,8 @@ Dokumen ini mendaftar semua perbedaan yang diketahui antara dokumen teknis (Doc 
 | D10 | _agent_rules_docset.md | Addendum C (no equations) cancelled; Addendum A sources updated. | — | APPLIED |
 | D11 | 07 / 03 / 06 | Merge of Doc 12 extensions (FR-61–FR-85, S-18, endpoint 16). | Doc 12 | PENDING-1.5 |
 | D12 | Prototype `App.zip` | Validation package (cases, designs, tolerance policy, PSIM guide) is reusable prior art for stage 1.6; app code is reference only. | 4.3.8 | NO CHANGE (noted in Doc 13) |
+| D13 | 12 extensions | X10 cable and overload-protection sizing (Doc 12 §3.13) adds a protection-related feature, while the manuscript lists protection as out of scope. | out-of-scope list | KONFLIK (supervisor approval pending; behind a feature flag, off by default; Doc 9 K-07, D-100 K258) |
+| D14 | 12 extensions | X10 uses PUIL 2011 as its technical baseline, while Permen ESDM 7/2021 lists PUIL 2020. | — | KONFLIK (open; Doc 9 K-08, D-100 K259) |
 
 ## Log
 
@@ -90,3 +92,4 @@ Dokumen ini mendaftar semua perbedaan yang diketahui antara dokumen teknis (Doc 
 |---|---|
 | 2026-11-01 | Created; Doc 02, 03, 06, CLAUDE.md and agent rules aligned in the same session. |
 | 2026-11-01 | Paket 0 of stage 1.1 (repo): D2, D3, D5, D6, D7 and B7 applied in the repository copies of Doc 04, 05_adr, 08, 09, 10. |
+| 2026-11-09 | D13 and D14 added (cable round X10-0, Doc 9 D-100). |

@@ -5,7 +5,8 @@
 import { useState } from "react";
 import { getMeta, importCatalog } from "../../api-client";
 import type { CatalogEntry, FileCheckResult } from "../../api-types";
-import { block, ENTRY_FIELDS, useCatalog } from "../../components/Catalog";
+import { useCableSizingFlag } from "../../components/cable";
+import { block, BLOCK_KEY, ENTRY_FIELDS, ENTRY_OPTIONS, useCatalog } from "../../components/Catalog";
 import { downloadJson, NOT_JSON, readJson } from "../../components/files";
 import { NumberField } from "../../components/NumberField";
 import { FileCheckText } from "../../components/ProjectFileMenu";
@@ -17,12 +18,12 @@ const PROVENANCE: [keyof NonNullable<CatalogEntry["provenance"]>, string][] = [
   ["document", "Datasheet title or document id"],
   ["revision", "Revision or date"],
 ];
-const UNUSED = { A2: "not used by the model (A2)", A4: "not used by the model (A4)" } as const;
+const UNUSED = { A2: "not used by the model (A2)", A4: "not used by the model (A4)", x10: "used only for the cable sizing match (experimental)" } as const;
 
-function EntryEditor({ e, onChange }: { e: CatalogEntry; onChange: (e: CatalogEntry) => void }) {
+function EntryEditor({ e, onChange, x10 }: { e: CatalogEntry; onChange: (e: CatalogEntry) => void; x10: boolean }) {
   const b = block(e);
   const setValue = (k: string, v: unknown) =>
-    onChange({ ...e, [e.kind === "INVERTER" ? "inverter" : "conductor"]: { ...b, [k]: v } });
+    onChange({ ...e, [BLOCK_KEY[e.kind]]: { ...b, [k]: v } });
   const setSource = (k: string, v: string) => onChange({ ...e, sources: { ...e.sources, [k]: v } });
   const text = (id: string, label: string, value: string | null | undefined, set: (v: string | null) => void) => (
     <>
@@ -39,13 +40,23 @@ function EntryEditor({ e, onChange }: { e: CatalogEntry; onChange: (e: CatalogEn
       </fieldset>
       <fieldset>
         <legend>Values</legend>
-        {ENTRY_FIELDS[e.kind].map(([k, label, unit, use]) => (
+        {ENTRY_FIELDS[e.kind].filter(([, , , use]) => x10 || use !== "x10").map(([k, label, unit, use]) => (
           <p key={k}>
-            {unit === null
+            {ENTRY_OPTIONS[k] ? (
+              <>
+                <label htmlFor={`val-${k}`}>{label}</label>{" "}
+                <select id={`val-${k}`} value={(b[k] as string | null) ?? ""} onChange={(x) => setValue(k, x.target.value || null)}>
+                  <option value="">(choose)</option>
+                  {ENTRY_OPTIONS[k].map((o) => (
+                    <option key={o}>{o}</option>
+                  ))}
+                </select>
+              </>
+            ) : unit === null
               ? text(`val-${k}`, label, b[k] as string | null, (v) => setValue(k, v))
               : <NumberField id={`val-${k}`} label={label} unit={unit} value={b[k] as number | null} onChange={(v) => setValue(k, v)} />}
             {use === "model" && unit !== null && <> {text(`src-${k}`, `${label}: page or section`, e.sources?.[k], (v) => setSource(k, v ?? ""))}</>}
-            {(use === "A2" || use === "A4") && <em> {UNUSED[use]}</em>}
+            {(use === "A2" || use === "A4" || use === "x10") && <em> {UNUSED[use]}</em>}
           </p>
         ))}
         {e.kind === "INVERTER" && (
@@ -70,10 +81,11 @@ export default function CataloguePage() {
   const [note, setNote] = useState<FileCheckResult | string | null>(null);
   const entries = catalog.entries;
   const sel = entries.find((e) => e.id === selected) ?? null;
+  const x10 = useCableSizingFlag() === true; // FR-105: nothing of X10 while the flag is off
 
   function add(kind: CatalogEntry["kind"]) {
     const id = nextId("E", entries);
-    setCatalog({ ...catalog, entries: [...entries, { id, kind, provenance: {}, sources: {}, [kind === "INVERTER" ? "inverter" : "conductor"]: {} }] });
+    setCatalog({ ...catalog, entries: [...entries, { id, kind, provenance: {}, sources: {}, [BLOCK_KEY[kind]]: {} }] });
     setSelected(id);
   }
 
@@ -117,6 +129,14 @@ export default function CataloguePage() {
         <button type="button" onClick={() => add("CONDUCTOR")}>
           + Add conductor entry
         </button>
+        {x10 && (
+          <>
+            {" "}
+            <button type="button" onClick={() => add("BREAKER")}>
+              + Add breaker entry
+            </button>
+          </>
+        )}
       </p>
       {entries.length === 0 ? (
         <p>The Catalogue is empty.</p>
@@ -159,7 +179,7 @@ export default function CataloguePage() {
           <h2>
             Entry {sel.id} ({sel.kind.toLowerCase()})
           </h2>
-          <EntryEditor e={sel} onChange={(n) => setCatalog({ ...catalog, entries: entries.map((x) => (x.id === sel.id ? n : x)) })} />
+          <EntryEditor e={sel} x10={x10} onChange={(n) => setCatalog({ ...catalog, entries: entries.map((x) => (x.id === sel.id ? n : x)) })} />
         </>
       )}
     </>

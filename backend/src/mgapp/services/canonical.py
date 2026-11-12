@@ -99,6 +99,19 @@ def sha256_hex(value: Any) -> str:
     return hashlib.sha256(canonical_json(value).encode("utf-8")).hexdigest()
 
 
+def safe_sha256_hex(value: Any) -> str:
+    """`sha256_hex`, or the hash of null for a value that cannot be canonicalised."""
+    try:
+        return sha256_hex(value)
+    except ValueError:
+        return sha256_hex(None)
+
+
+def snapshot_hash(snapshot: Any, scenarios: list[Any] | None) -> str:
+    """RunRecord.snapshot_hash (Doc 3 §7): the snapshot alone, or with its scenarios (M3c)."""
+    return sha256_hex({"snapshot": snapshot, "scenarios": scenarios} if scenarios else snapshot)
+
+
 def _drop_none(v: Any) -> Any:
     if isinstance(v, dict):
         return {k: _drop_none(x) for k, x in v.items() if x is not None}

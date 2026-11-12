@@ -9,3 +9,4 @@
   background: var(--cds-field-01); color: var(--color-fg-muted); font-size: var(--text-xs); white-space: nowrap;
 }
 .error { grid-column: 2; color: var(--role-error-fg); font-size: var(--text-xs); }
+.note { grid-column: 2; } /* example-mode note under the input (Doc 12 X9) */

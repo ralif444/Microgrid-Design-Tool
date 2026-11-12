@@ -2,6 +2,7 @@
 // S-06 Design constraints (Doc 7 §2): no numeric defaults; an empty limit is "not evaluated"
 // (FR-15, FR-16, manuscript 4.2.4).
 import type { DesignConstraints } from "../../api-types";
+import { ExampleGuide, ExampleNext } from "../../components/ExampleForm";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { useValidation } from "../../components/useValidation";
@@ -18,14 +19,21 @@ const FIELDS: [keyof DesignConstraints, string, string][] = [
 ];
 
 function Constraints() {
-  const { design } = useProject();
+  const { design, example } = useProject();
   const dispatch = useProjectDispatch();
   const c = design.design_constraints ?? {};
   const issues = (useValidation(design)?.issues ?? []).filter((i) => i.entity === "DesignConstraints");
   return (
     <>
       <h1>Design constraints</h1>
+      <ExampleGuide screen="constraints" runnable={false} />
       <p>Every limit starts empty. An empty limit is not evaluated and is never counted as satisfied.</p>
+      {example && (
+        <p data-testid="example-constraints">
+          Example mode: these limits come from the guided example&apos;s Project file, as the reference-design study settings of
+          Doc 3 §3.7, not values from a standard. Editing one changes the design like any other edit.
+        </p>
+      )}
       {FIELDS.map(([k, label, unit]) => (
         <p key={k}>
           <NumberField
@@ -46,6 +54,7 @@ function Constraints() {
             ))}
         </p>
       ))}
+      <ExampleNext screen="constraints" ready={true} />
     </>
   );
 }

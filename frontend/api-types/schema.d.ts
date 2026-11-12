@@ -5,6 +5,23 @@
  */
 
 export interface paths {
+    "/api/analyses/CB": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run analysis CB */
+        post: operations["analyse_CB"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analyses/M1": {
         parameters: {
             query?: never;
@@ -344,7 +361,38 @@ export interface components {
          * AnalysisType
          * @enum {string}
          */
-        AnalysisType: "PS" | "M1" | "M2" | "M3a" | "M3b" | "M3c" | "M3d" | "M4a" | "M4b";
+        AnalysisType: "PS" | "M1" | "M2" | "M3a" | "M3b" | "M3c" | "M3d" | "M4a" | "M4b" | "CB";
+        /**
+         * BreakerValues
+         * @description X10 Catalogue kind BREAKER (FR-115, D-104 K296); matched on standard and in_a.
+         */
+        BreakerValues: {
+            /**
+             * Class
+             * @default null
+             */
+            class?: ("MCB" | "MCCB") | null;
+            /**
+             * Curve
+             * @default null
+             */
+            curve?: string | null;
+            /**
+             * In A
+             * @default null
+             */
+            in_a?: number | null;
+            /**
+             * Poles
+             * @default null
+             */
+            poles?: number | null;
+            /**
+             * Standard
+             * @default null
+             */
+            standard?: string | null;
+        };
         /** Bus */
         Bus: {
             /**
@@ -398,6 +446,8 @@ export interface components {
         /** CatalogEntry */
         CatalogEntry: {
             /** @default null */
+            breaker?: components["schemas"]["BreakerValues"] | null;
+            /** @default null */
             conductor?: components["schemas"]["ConductorValues"] | null;
             /** Id */
             id: string;
@@ -407,7 +457,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "INVERTER" | "CONDUCTOR";
+            kind: "INVERTER" | "CONDUCTOR" | "BREAKER";
             /**
              * @default {
              *       "document": null,
@@ -481,6 +531,21 @@ export interface components {
              */
             ampacity_conditions?: string | null;
             /**
+             * Cores
+             * @default null
+             */
+            cores?: number | null;
+            /**
+             * Insulation
+             * @default null
+             */
+            insulation?: ("PVC" | "XLPE") | null;
+            /**
+             * Material
+             * @default null
+             */
+            material?: ("CU" | "AL") | null;
+            /**
              * R Ohm Per Km
              * @default null
              */
@@ -495,6 +560,11 @@ export interface components {
              * @default null
              */
             shunt_capacitance_uf_per_km?: number | null;
+            /**
+             * Size Mm2
+             * @default null
+             */
+            size_mm2?: number | null;
             /**
              * X Ohm Per Km
              * @default null
@@ -633,6 +703,14 @@ export interface components {
             reasons: string[];
             /** Usable */
             usable: boolean;
+        };
+        /**
+         * FeaturesInfo
+         * @description Startup feature flags the frontend needs (D-103 K286).
+         */
+        FeaturesInfo: {
+            /** Cable Sizing */
+            cable_sizing: boolean;
         };
         /**
          * FileCheckCode
@@ -906,7 +984,7 @@ export interface components {
          * @description Stage-1 validation codes (Doc 3 §4).
          * @enum {string}
          */
-        IssueCode: "NEGATIVE_POWER" | "EMPTY_REQUIRED" | "NOT_POSITIVE" | "PF_OUT_OF_RANGE" | "PF_DIRECTION_MISSING" | "LOAD_Q_AMBIGUOUS" | "BAND_INVERTED" | "LOADING_LIMIT_RANGE" | "DUPLICATE_ID" | "ID_FORMAT" | "DANGLING_BUS_REF" | "SELF_LOOP_LINE" | "DUPLICATE_LINE" | "ISOLATED_BUS" | "DISCONNECTED_NETWORK" | "NO_INVERTER" | "NO_LOAD" | "PROFILE_LENGTH" | "PROFILE_HOUR" | "PS_PARAMETER_INVALID" | "SIZING_MARGIN_INVALID" | "TAU_MISSING_FOR_M4" | "SENSITIVITY_STEP_INVALID" | "DISTURBANCE_INVALID" | "SWEEP_RANGE_INVALID" | "SCENARIO_PATH_INVALID" | "SWEEP_CAP_EXCEEDED" | "PARAMETER_CAP_EXCEEDED" | "DURATION_CAP_EXCEEDED" | "SCENARIO_COUNT_INVALID" | "DEPENDS_ON_NOT_ALLOWED" | "MULTIPLE_INVERTERS_ON_BUS" | "MALFORMED_REQUEST";
+        IssueCode: "NEGATIVE_POWER" | "EMPTY_REQUIRED" | "NOT_POSITIVE" | "PF_OUT_OF_RANGE" | "PF_DIRECTION_MISSING" | "LOAD_Q_AMBIGUOUS" | "BAND_INVERTED" | "LOADING_LIMIT_RANGE" | "DUPLICATE_ID" | "ID_FORMAT" | "DANGLING_BUS_REF" | "SELF_LOOP_LINE" | "DUPLICATE_LINE" | "ISOLATED_BUS" | "DISCONNECTED_NETWORK" | "NO_INVERTER" | "NO_LOAD" | "PROFILE_LENGTH" | "PROFILE_HOUR" | "PS_PARAMETER_INVALID" | "SIZING_MARGIN_INVALID" | "TAU_MISSING_FOR_M4" | "SENSITIVITY_STEP_INVALID" | "DISTURBANCE_INVALID" | "SWEEP_RANGE_INVALID" | "SCENARIO_PATH_INVALID" | "SWEEP_CAP_EXCEEDED" | "PARAMETER_CAP_EXCEEDED" | "DURATION_CAP_EXCEEDED" | "SCENARIO_COUNT_INVALID" | "DEPENDS_ON_NOT_ALLOWED" | "MULTIPLE_INVERTERS_ON_BUS" | "MALFORMED_REQUEST" | "CABLE_TABLES_INCOMPLETE" | "CABLE_TABLES_UNCHECKED" | "CABLE_SETTINGS_INVALID";
         /**
          * IssueLevel
          * @enum {string}
@@ -1239,6 +1317,7 @@ export interface components {
             /** App Version */
             app_version: string;
             engine: components["schemas"]["EngineIdentity"];
+            features: components["schemas"]["FeaturesInfo"];
             /** Indicator Threshold Version */
             indicator_threshold_version: string | null;
             limits: components["schemas"]["LimitsInfo"];
@@ -1783,7 +1862,7 @@ export interface components {
          * WarningCode
          * @enum {string}
          */
-        WarningCode: "ENGINE_KIND_FAKE" | "ENGINE_VERSION_MISMATCH" | "PROFILE_PEAK_ABOVE_LOADS" | "RATING_MARGIN_SHORT" | "VALIDITY_NOT_CALIBRATED" | "CONSTRAINT_NOT_EVALUATED";
+        WarningCode: "ENGINE_KIND_FAKE" | "ENGINE_VERSION_MISMATCH" | "PROFILE_PEAK_ABOVE_LOADS" | "RATING_MARGIN_SHORT" | "VALIDITY_NOT_CALIBRATED" | "CONSTRAINT_NOT_EVALUATED" | "FEATURE_EXPERIMENTAL" | "LINE_R_MISMATCH" | "DIRECT_BURIAL_NOT_SUPPORTED";
     };
     responses: never;
     parameters: never;
@@ -1793,6 +1872,30 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    analyse_CB: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnalysisRequestBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalysisResponse"];
+                };
+            };
+        };
+    };
     analyse_M1: {
         parameters: {
             query?: never;

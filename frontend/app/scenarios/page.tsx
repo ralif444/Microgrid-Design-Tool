@@ -6,6 +6,7 @@
 // ranking is implied); the comparison table with the payload deltas follows the charts.
 import { useState } from "react";
 import type { M3cPayload } from "../../api-types";
+import { ExampleGuide, ExampleNext, nextReady } from "../../components/ExampleForm";
 import { BarChart } from "../../components/charts/BarChart";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
@@ -74,13 +75,13 @@ function OverrideEditor({ sc, paths }: { sc: Scenario; paths: string[] }) {
 type Row = (typeof METRICS)[number];
 
 function Scenarios() {
+  const { example } = useProject();
   const { scenarios } = useProject();
   const dispatch = useProjectDispatch();
-  const { design, fresh, busy, resp, error, run, m2Infeasible } = useDependentRun("M3c");
+  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M3c");
   const [selected, setSelected] = useState<string[]>([]);
   const [name, setName] = useState("");
   const [runLabels, setRunLabels] = useState<Record<string, string>>({});
-  const [dismissed, setDismissed] = useState<string | null>(null);
   const inverterCount = design.inverters?.length ?? 0;
   const paths = numericPaths(design);
   const chosen = scenarios.filter((s) => selected.includes(s.id));
@@ -113,8 +114,15 @@ function Scenarios() {
         <h1>Scenarios and comparison (M3c)</h1>
         <M1FreshnessBadge f={fresh} />
       </div>
+      <ExampleGuide screen="scenarios" />
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
+      {example && (
+        <p data-testid="example-scenarios">
+          Example mode: the scenarios come from the guided example&apos;s Project file (designs D2S and D2H of Doc 13 §4). The
+          first, D2 base, is the reference of the comparison (Doc 3 §6.6).
+        </p>
+      )}
       <form
         aria-label="New scenario"
         className={styles.form}
@@ -167,7 +175,7 @@ function Scenarios() {
         </button>
       </p>
       {inverterCount < 2 && <p>N−1 needs at least two inverters.</p>}
-      {error && error !== dismissed && <Toast message={error} onDismiss={() => setDismissed(error)} />}
+      {error && <Toast message={error} onDismiss={clearError} />}
       {r && <StatusBanner type="M3c" result={r} />}
       {p && resp && (
         <>
@@ -199,6 +207,7 @@ function Scenarios() {
         </>
       )}
       {!resp && <EmptyState title="Not compared yet.">Select two or more Scenarios and compare them, or run the N−1 check.</EmptyState>}
+      <ExampleNext screen="scenarios" ready={nextReady(r?.status)} />
     </>
   );
 }

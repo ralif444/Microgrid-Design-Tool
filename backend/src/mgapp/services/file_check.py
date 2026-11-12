@@ -16,7 +16,7 @@ from mgapp.domain.base import Model
 from mgapp.domain.contract import EngineIdentity
 from mgapp.domain.enums import EngineKind
 from mgapp.domain.run_record import RECORD_SCHEMA_VERSION, RunRecord
-from mgapp.services.canonical import sha256_hex
+from mgapp.services.canonical import snapshot_hash
 from mgapp.services.dependency import result_hash
 
 
@@ -111,11 +111,7 @@ def check_record(raw: Any) -> tuple[FileCheckResult, RunRecord | None]:
         ), None
     details = []
     try:
-        snap = (
-            sha256_hex({"snapshot": rec.snapshot, "scenarios": rec.scenarios})
-            if rec.scenarios
-            else sha256_hex(rec.snapshot)
-        )
+        snap = snapshot_hash(rec.snapshot, rec.scenarios)
     except ValueError:
         snap = ""
     if snap != rec.snapshot_hash:

@@ -22,7 +22,7 @@ Routes are Next.js static-export paths (file-based routing, ADR-002), no dynamic
 
 | ID | Screen | Route | Purpose | Main FR IDs | Priority |
 |---|---|---|---|---|---|
-| S-01 | Start | `/` | Create a new Project; open a Project file (import: check + forward migration, or reject with message); recent autosave offer. | FR-01, FR-54, FR-55, FR-56, FR-57 | Must (migration notice: Should) |
+| S-01 | Start | `/` | Create a new Project; open a Project file (import: check + forward migration, or reject with message); recent autosave offer; open the guided example (Doc 12 X9). | FR-01, FR-54, FR-55, FR-56, FR-57, FR-99 | Must (migration notice: Should) |
 | S-02 | Project overview | `/project/` | Name and description; pipeline status per step; design readiness checklist; Save Project (export JSON); counts of Buses, Lines, Loads, Inverters, RunRecords. | FR-02, FR-54, FR-55, FR-57 | Must (name/description: Should) |
 | S-03 | Loads (+ LoadProfile) | `/loads/` | Load table (Bus, P, Q or power factor with direction); optional 24-point LoadProfile editor; inline validation. | FR-03, FR-04, FR-05, FR-17, FR-18 | Must (LoadProfile: Should) |
 | S-04 | Sizing advice (PS) | `/sizing/` | Run PS; show SizingAdvice with basis and assumptions; Accept / Edit / Skip; stale-advice notice. | FR-06, FR-07, FR-08, FR-09, FR-27 | Must (pre-fill: Should) |
@@ -31,14 +31,15 @@ Routes are Next.js static-export paths (file-based routing, ADR-002), no dynamic
 | S-07 | Power flow (M1) | `/power-flow/` | Run M1; Status banner (an `INPUT_INVALID` result lists all violations, §5); bus voltages, system frequency, Inverter outputs, Line flows; freshness badge (current or stale). | FR-22, FR-23, FR-17, FR-19, FR-20, FR-21, FR-35, FR-36, FR-37, FR-42, FR-43, FR-45 | Must (all-violations list, progress: Should) |
 | S-08 | Constraint check (M2) | `/constraint-check/` | Run M2 with design margins m_inv, m_line (required, no default) and optional storage settings; verdict; limiting constraints list; margins; separate "Not evaluated" list (empty limits, never counted as satisfied); loadability λ_c, λ_s with resolution (λ_s labelled "solution existence, not a stability limit"); SizingCheck panel (separate from SizingAdvice). | FR-24, FR-25, FR-27, FR-26, FR-35, FR-36, FR-37, FR-38, FR-40 | Must (margins: Should) |
 | S-09 | Sensitivity (M3a) | `/sensitivity/` | Choose parameters and output metrics; run; ranked sensitivities. | FR-28, FR-39, FR-41 | Should |
-| S-10 | Sweep (M3b) | `/sweep/` | Choose an axis (one parameter, a shared scale factor over a set of elements, or load scale λ), range, step count; size indicator vs `SWEEP_CAP` (initial 1 000); per-point Status plot and table; first infeasible value. | FR-29, FR-44, FR-39, FR-41 | Should |
+| S-10 | Sweep (M3b) | `/sweep/` | Choose an axis (one parameter, a shared scale factor over a set of elements, or load scale λ), range, step count; optional per-point metrics (λ_c, ζ_min, Re λ_dom, indicators) and eigenvalues per point (Doc 3 §6.5, D-95); size indicator vs `SWEEP_CAP` (initial 1 000); per-point Status plot and table; first infeasible value. | FR-29, FR-44, FR-39, FR-41 | Should |
 | S-11 | Scenarios and comparison (M3c) | `/scenarios/` | Save current design as Scenario; edit overrides; select 2 or more; compare with explicit deltas. | FR-30, FR-31, FR-39, FR-41 | Should |
 | S-12 | Envelope (M3d) | `/envelope/` | Two parameters and ranges; grid of per-point Status; feasible fraction. | FR-32, FR-44 | Could |
 | S-13 | Small-signal (M4a) | `/small-signal/` | Run; eigenvalues, damping, dominant modes, participation (when available) tables; stability class STABLE / MARGINAL / UNSTABLE in words; indicators r_τ, κ, r_in, ε_X with "evaluated" flag and reason, labelled "validity not calibrated" until stage 1.6; optional τ_in and damping threshold inputs. | FR-33, FR-39, FR-41 | Should |
-| S-14 | Transient (M4b) | `/transient/` | Define disturbance from the four-kind catalogue (load step, load scaling on one or all buses, reference step on P*, Q*, V* or ω*, inverter outage; permanent or finite duration); run; frequency, voltage, P and Q time responses; transient class RECOVERED_STABLE / CRITERIA_VIOLATED / UNSTABLE in words; max RoCoF (descriptive). | FR-34, FR-39, FR-41 | Should |
+| S-14 | Transient (M4b) | `/transient/` | Define disturbance from the four-kind catalogue (load step, load scaling on one or all buses, reference step on P*, Q*, V* or ω*, inverter outage; permanent or finite duration); run; frequency, voltage, P and Q time responses; transient class RECOVERED_STABLE / CRITERIA_VIOLATED / UNSTABLE in words; max RoCoF (descriptive). | FR-34, FR-39, FR-41, FR-103 | Should |
 | S-15 | Run history | `/runs/` | RunRecord list (INPUT_INVALID hidden by default); detail; export; import; verify; re-run; reproduction outcome; version comparison. | FR-46..FR-53, FR-57 | Must (version warning: Should) |
 | S-16 | Report | `/report/` | HTML report: verdict, limiting constraints, margins, assumptions, tables, charts, RunRecord hashes; print layout. | FR-48, FR-58, FR-59, FR-60 | Must (print: Should) |
 | S-17 | About and limits | `/about/` | App, schema and engine versions (FAKE or REAL); active limits (`TIME_BUDGET`, `SWEEP_CAP`, `SCENARIO_CAP`); glossary; offline note. | FR-51, NFR-02, NFR-03 | Should [ASSUMPTION] |
+| S-19 | Cable and breaker sizing (experimental, Doc 12 X10) | `/cable-sizing/` | Installation settings with per-element overrides; Run; fixed islanded caveat; results table per Line and Inverter feeder with expandable factor rows. Hidden when `feature_cable_sizing` is off. | FR-105, FR-106, FR-112 | Could |
 
 Global elements on every screen (not separate screens): header (Project name, unsaved indicator, Save and Open buttons, engine kind badge), pipeline stepper (§3), a status toast area for transport errors (HTTP 4xx or 5xx, "cannot reach the local service").
 
@@ -78,6 +79,27 @@ Presentation only; every value comes from a payload already returned. Tile and c
 
 The strip sits under the page head and the Status banner; the inspector is a side panel, not a modal. Every result screen shows the latest RunRecord of its type that matches the current design (FR-93). Domain terms carry a "?" toggletip with Indonesian text (FR-91, §9 #1); S-17 About, built in this round, lists the glossary. Every chart, strip and inspector fed by a FAKE run carries the FAKE marking.
 
+### 2.3 Example mode (Doc 12 X9, D-92)
+
+Presentation and workflow only (`docs/EXAMPLE_MODE_PRD.md`). Entering: S-01 "Open guided example (D2)" opens `frontend/public/examples/guided-d2.mgproj.json` as a new unsaved copy (FR-99). Leaving: the header button "Leave example mode", or opening, creating or importing another Project; the Project and its RunRecords stay. Save writes a normal Project file; the example settings are not saved (stated in the toggletip of the header Tag).
+
+| Element | Where | Behaviour |
+|---|---|---|
+| Tag "Example mode" + "Leave example mode" | Header, next to the engine badge | Visible only in example mode (FR-99). |
+| Info banner + "What this step shows" | S-03 – S-16 under the page head | Info role, not a status colour; guidance 2–4 sentences, English, no result numbers, with the manuscript section it paraphrases (FR-102). On the Fake Engine it adds "Results on the Fake Engine are placeholders. Start with `MGAPP_ENGINE=REAL` to see engine results." Hidden in print; S-16 adds the printed line "Produced in example mode from the guided example D2." (D-97). |
+| "Example" tag | Each prefilled field | Toggletip names the source (FR-100). A field without a confirmed value shows "Not set in the example: enter a value." |
+| "Reset to example values" | Each form screen | Ghost button; re-applies the example layer only. |
+| "Next: <step>" | Under a successful result | Pipeline order (§3); further analyses M3a → M3b → M3c → M3d → M4a → M4b → Report (FR-102). Shown after a FEASIBLE or INFEASIBLE run, and always on S-03, S-05, S-06 (no Run button); none on the Report (D-97 K251). |
+| Example disturbances | S-14 | DR-01 load step, TS-02 inverter outage, DR-02 P* step (Doc 13 §5); choosing one refills the disturbance fields (FR-103). |
+| Read-only notice | S-06 | The study limits of the example come from the Project file. |
+| "Run the whole example" | S-02 | Could, built last (FR-104, D-92 K228). Runs the pipeline in order with each screen's starting values, skips steps the example leaves unset, stops at the first result that is not FEASIBLE, then opens the Report (D-98). |
+
+**Settings file** `frontend/public/examples/guided-d2.example.json`, read only by the frontend: `example_settings_version` (1), `project` (path of the Project file), `screens` mapping a screen id to `fields` (field name → {value, source}) and `guidance` ({text, source}), and `presets` for S-14 (id, label, source, disturbance fields). It is validated on load by a hand-written type guard: unknown keys are ignored; a value that fails the field's stage-1 rule or a `parameter_path` that does not resolve (Doc 3 §3.10) is dropped with a console warning and treated as not set; a missing or invalid file hides the S-01 action.
+
+### 2.4 Cable and breaker sizing (Doc 12 X10, D-100)
+
+S-19 exists only when the feature flag `feature_cable_sizing` is on (FR-105); it sits under Further analyses, after M2. Layout per `docs/CABLE_BREAKER_FEATURE_GUIDELINES.md` §6: settings panel (Project defaults) → Run → Status banner → the fixed caveat "Grid-forming inverters limit their fault current. A breaker sized here for overload may not trip on a fault in islanded operation. Fault protection is not assessed by this tool." → results table; a row expands to the factors, the table and page used for each factor, and the catalogue match (FR-112). Outcomes use Carbon support colours with icon and word, never brand colours. After a current run the single-line diagram shows a breaker symbol on each sized Line and Inverter feeder (FR-113); S-16 adds the section "Cable and overload sizing (experimental)" (FR-114); S-18 gains the entry kind `BREAKER` (FR-115).
+
 ## 3. Navigation
 ```mermaid
 flowchart TB
@@ -97,6 +119,7 @@ flowchart TB
     SIDE --> S12["S-12 Envelope M3d"]
     SIDE --> S13["S-13 Small-signal M4a"]
     SIDE --> S14["S-14 Transient M4b"]
+    S08 -. "valid M2, flag on" .-> S19["S-19 Cable and breaker sizing"]
     S08 --> S16["S-16 Report"]
     SIDE --> S16
     S16 --> S15["S-15 Run history"]
@@ -119,6 +142,7 @@ Stepper steps: 1 Loads, 2 Sizing advice (optional, can be skipped), 3 Network, 4
 | S-08 Run M2 | A valid M1 exists for the current design (M1 Status `FEASIBLE`, design not edited since). | Disabled button; panel "Run power flow (M1) first" or, if edited, the stale banner below. The HTTP API (Doc 6) still enforces the dependency (FR-38). |
 | S-09..S-14 Run | A valid M1 exists (as for M2). M2 verdict not required; an `INFEASIBLE` design is allowed. | Disabled button; same M1 message. `INFEASIBLE` M2 shows an info note "This design violates constraints; further analyses are still allowed" (FR-41). |
 | S-10, S-12 Run | Valid M1 and requested point count within `SWEEP_CAP`. | Size indicator turns to error; request still sendable, result is `INPUT_INVALID` / `SWEEP_CAP_EXCEEDED` (F4). |
+| S-19 Run (flag on) | A valid M2 exists for the current design (Status FEASIBLE or INFEASIBLE, design not edited since). | Disabled button; "Run the constraint check (M2) first" or the stale banner. The API returns `UNAVAILABLE / DEPENDENCY_NOT_MET` (FR-111). |
 | S-11 Compare / S-15 Re-run | 2 or more Scenarios selected (up to `SCENARIO_CAP` [ASSUMPTION]) / a RunRecord with verified hash. | "Select two or more Scenarios." / Re-run hidden after failed verification (FR-50). |
 | S-16 Report | At least one RunRecord with a result exists. | Empty state "No results yet. Run M1 and M2 first." |
 
@@ -373,6 +397,7 @@ Notation: `[ ]` button/field, `( )` option, `<..>` placeholder. Header and stepp
 
 - The store exposes actions through a small interface so a library can replace Context + reducer without touching screens (ADR-005, [ASSUMPTION]). No server-state cache (ADR-010); no undo or redo in v1; field-level schema stays in Doc 3.
 - Browser autosave (localStorage) is a convenience only [ASSUMPTION]: written after edits, offered on S-01 as "Restore unsaved work", never treated as a saved Project; wrapped for failure (private mode, quota). It must not replace the export prompt (P7).
+- Example mode (Doc 12 X9, D-92 K233): a UI-state slice `example` (null or {id, settings}) with actions `exampleEntered` and `exampleLeft`; screen forms read their initial value through `initialValue(screen, field)` with the precedence typed > last-RunRecord refill > example > empty. The slice is never part of the Project file, the canonical snapshot or a RunRecord.
 
 ## 8. Accessibility and language
 
@@ -411,6 +436,16 @@ DOC 7 COMPLETE
 ## Change log 2026-10-21 (user-approved change proposals from the proposal design checks)
 - C5.1 F3 outcome edge: Status equal and result_hash equal.
 - C5.4 first phase per key flow stated in §4.
+
+## Change log 2026-11-09 (cable round X10-0, D-100, user-confirmed 2026-11-09)
+- §2 S-19, §2.4, §3 diagram and §3.1 gating row added (Doc 12 X10, FR-105 – FR-115), behind the feature flag.
+
+## Change log 2026-11-05 (example mode, D-92)
+- §2 S-10: optional per-point metrics and eigenvalues (user decision at EX-3, D-95 K243).
+- §2.3 added: guided example D2, header Tag, banner, guidance, "Example" tags, reset, Next links, S-14 example disturbances, settings-file schema (Doc 12 X9, FR-99 – FR-104).
+- §2.3: when the Next link shows, banner and Next hidden in print, Report line (EX-5, D-97 K251, K252).
+- §2.3: "Run the whole example" behaviour (EX-6, D-98).
+- §7: UI-state slice `example` and `initialValue` (D-92 K233).
 
 ## Change log 2026-11-03 (SLD round, D-75)
 - §6.3: the circle diagram becomes the automatic single-line diagram (Doc 12 X8); overlay on S-07 and S-08, figure on S-16. §9 #4 stays: read-only first; drag-to-edit not in v1.

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
+import { RunWholeExample } from "../../components/RunWholeExample";
 import { useValidation } from "../../components/useValidation";
 import { useProject, useProjectDispatch } from "../../store";
 
@@ -70,6 +71,7 @@ function Overview() {
           ))}
         </tbody>
       </table>
+      <RunWholeExample />
       <h2>Design readiness for power flow (M1)</h2>
       {issues === null ? (
         <p>Checking the design…</p>
