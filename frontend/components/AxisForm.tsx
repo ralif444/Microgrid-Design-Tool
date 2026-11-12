@@ -1,6 +1,7 @@
 "use client";
 // Axis input shared by S-10 Sweep and S-12 Envelope (Doc 3 §6.5 Axis): PARAMETER, SCALE_FACTOR
-// (every element of the chosen kind that has the field, D-56 K98) or LOAD_SCALE λ.
+// (every element of the chosen kind that has the field, D-56 K98) or LOAD_SCALE λ; S-10 also offers
+// LOAD_PROFILE_HOUR when the design has a LoadProfile, with the range fixed to 0 … 23 (D-113 K337).
 import { useEffect, useState, type ReactNode } from "react";
 import { getMeta } from "../api-client";
 import type { ProjectSnapshot } from "../api-types";
@@ -8,8 +9,9 @@ import type { ExampleField } from "../store/example";
 import { ExampleTag, NotSet } from "./ExampleForm";
 import { FIELDS, numericPaths, unitOf } from "./Further";
 import { NumberField } from "./NumberField";
+import { HOUR_AXIS } from "./profileHour";
 
-type Kind = "PARAMETER" | "SCALE_FACTOR" | "LOAD_SCALE";
+type Kind = "PARAMETER" | "SCALE_FACTOR" | "LOAD_SCALE" | "LOAD_PROFILE_HOUR";
 type Coll = keyof typeof FIELDS;
 
 export interface AxisInput {
@@ -36,7 +38,7 @@ export function axisNeeds(needs: string[] | undefined, key: string): string[] {
 // `prefix` keeps ids and labels unique when two axes share a screen ("" for one axis).
 // shortcut: the example sets kind, range and step count only (LOAD_SCALE in guided D2); a PARAMETER or
 // SCALE_FACTOR example axis would also need its path or element set here.
-export function useAxis(design: ProjectSnapshot, prefix = "", example?: AxisExample): AxisInput {
+export function useAxis(design: ProjectSnapshot, prefix = "", example?: AxisExample, hourOk = false): AxisInput {
   const init = example?.ex?.value as { kind?: Kind; range_min?: number; range_max?: number; step_count?: number } | undefined;
   const [tagged, setTagged] = useState(!!init);
   const [kind, setKindRaw] = useState<Kind>(init?.kind ?? "PARAMETER");
@@ -69,7 +71,8 @@ export function useAxis(design: ProjectSnapshot, prefix = "", example?: AxisExam
       : kind === "SCALE_FACTOR"
         ? { kind, element_set: elementSet, field }
         : { kind };
-  const unit = kind === "PARAMETER" ? unitOf(path) : "factor";
+  const hour = kind === "LOAD_PROFILE_HOUR";
+  const unit = kind === "PARAMETER" ? unitOf(path) : hour ? "h" : "factor";
   const id = (s: string) => `${prefix.trim().replace(/\W+/g, "-").toLowerCase() || "axis"}-${s}`;
   const fields = (
     <>
@@ -79,6 +82,7 @@ export function useAxis(design: ProjectSnapshot, prefix = "", example?: AxisExam
           <option value="PARAMETER">One parameter</option>
           <option value="SCALE_FACTOR">Shared scale factor over a set of elements</option>
           <option value="LOAD_SCALE">Load scale λ (all loads, fixed power factor)</option>
+          {hourOk && <option value="LOAD_PROFILE_HOUR">Profile hour (24 h, loads scaled by the load profile)</option>}
         </select>
         {tagged && example?.ex && <ExampleTag label={`${prefix}Axis`} source={example.ex.source} />}
         {needs.includes("axis") && !tagged && lo === null && hi === null && <NotSet />}
@@ -119,6 +123,9 @@ export function useAxis(design: ProjectSnapshot, prefix = "", example?: AxisExam
           <span>Applies to: {elementSet.join(", ") || "none"}</span>
         </p>
       )}
+      {hour && <p>Hours 0 to 23, one point per hour; each hour scales every load by its profile value over the load table total (Eq. 12.9).</p>}
+      {!hour && (
+        <>
       <p>
         <NumberField id={id("min")} label={`${prefix}From`} unit={unit} value={lo} onChange={setLo} />
       </p>
@@ -136,8 +143,11 @@ export function useAxis(design: ProjectSnapshot, prefix = "", example?: AxisExam
           note={(needs.includes("step_count") || needs.includes("axis")) && steps === null ? <NotSet /> : undefined}
         />
       </p>
+        </>
+      )}
     </>
   );
+  if (hour) return { axis: { ...HOUR_AXIS }, unit, name: "hour", steps: HOUR_AXIS.step_count, fields, reset };
   return {
     axis: { ...shape, range_min: lo, range_max: hi, step_count: steps },
     unit,

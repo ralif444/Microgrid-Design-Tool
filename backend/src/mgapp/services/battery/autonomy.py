@@ -16,6 +16,7 @@ from mgapp.domain.battery import BatteryBank
 from mgapp.domain.contract import EngineIdentity
 from mgapp.domain.entities import ProjectSnapshot
 from mgapp.domain.enums import Status, StatusCode
+from mgapp.domain.profile import has_daily_profile, profile_lambdas
 from mgapp.services.guard import GuardedOutcome
 
 NO_PROFILE = "no daily load profile"
@@ -23,14 +24,10 @@ NO_PROFILE = "no daily load profile"
 
 def lambdas(s: ProjectSnapshot) -> tuple[list[float] | None, str | None]:
     """Eq. (12.9) per clock hour 0 – 23, or None with the reason."""
-    values = (s.load_profile.values or []) if s.load_profile else []
-    by_hour = {v.hour: v.p_kw for v in values}
-    if sorted(h for h in by_hour if h is not None) != list(range(24)) or len(values) != 24:
+    if not has_daily_profile(s):
         return None, NO_PROFILE
-    total = sum(ld.p_kw or 0.0 for ld in s.loads or [])
-    if total <= 0:
-        return None, "the Load table has no active power to scale"
-    return [(by_hour[h] or 0.0) / total for h in range(24)], None
+    lam = profile_lambdas(s)
+    return (lam, None) if lam is not None else (None, "the Load table has no active power to scale")
 
 
 def scaled(s: ProjectSnapshot, lam: float) -> ProjectSnapshot:

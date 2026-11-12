@@ -13,7 +13,6 @@ ROOT = Path(__file__).parents[2]
 DOCS = [ROOT / "docs" / "02_prd.md", ROOT / "docs" / "12_extensions.md"]
 EXCEPTIONS = {
     "FR-56": "no older Project schema version exists (D-66 K135)",
-    **{f"FR-{n}": "P11 hour axis, BESS-6 only on request (D-106 K310)" for n in (78, 79)},
     "FR-121": "golden comparison script, not a pytest (D-106 K310, .scratch/bess/golden.py)",
     "FR-106": "X10 settings saved in the Project, deferred by user decision (D-103 K287)",
     "NFR-09": "process requirement; evidence is the seam marking in Doc 8 §6",

@@ -388,3 +388,4 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | 2026-11-09 | Cable round X10-0 drafted (Doc 9 D-100, user-confirmed 2026-11-09): X10 with FR-105 – FR-115 (§2, §3.13, §4, §5, §6, §7, §9 points 24–32). |
 | 2026-11-09 | Ringkasan mentions X9 (example mode) and X10 (cable sizing, experimental, ADR-014, KONFLIK K-07 and K-08 open). |
 | 2026-11-12 | Battery round BESS-0 (Doc 9 D-106, ADR-015 accepted; `docs/BESS_FEATURE_GUIDELINES.md`): FR-75 – FR-78 reworded, B3 added (§2, §3.14, Eq. 12.14–12.18), FR-116 – FR-121; §4, §5, §6, §7 rows; §9 #4 reworded, points 33–39; Ringkasan sentence. |
+| 2026-11-13 | P11 built in round BESS-6 (Doc 9 D-113): axis kind `LOAD_PROFILE_HOUR` with fixed fields, M3b only, warning from both adapters, S-10 hour mode. |

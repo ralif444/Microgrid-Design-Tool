@@ -22,6 +22,7 @@ import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
+import { HOUR_AXIS, worstHours, type Worst } from "../../components/profileHour";
 import { useProject } from "../../store";
 
 type Metric = keyof KeyMetrics;
@@ -55,7 +56,7 @@ function Sweep() {
   const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M3b");
   const { example } = useProject();
   const s = example?.settings.screens.sweep;
-  const ax = useAxis(design, "", s && { ex: s.fields.axis ?? null, needs: axisNeeds(s.needs_value, "axis") });
+  const ax = useAxis(design, "", s && { ex: s.fields.axis ?? null, needs: axisNeeds(s.needs_value, "axis") }, !!design.load_profile);
   const ex = useExampleForm<{ point_metrics: PointMetric[] | null; include_eigenvalues: boolean | null }>(
     "sweep",
     { point_metrics: null, include_eigenvalues: null },
@@ -65,13 +66,16 @@ function Sweep() {
   const eigenvalues = ex.values.include_eigenvalues ?? false;
   const cap = useSweepCap();
   const [metric, setMetric] = useState<Metric>("system_frequency_hz");
-  const unit = ax.unit;
+  // the run's own axis decides the hour view, so a later form change does not relabel a result
+  const ranHours = (resp?.run_record.parameters as { axis?: { kind?: string } } | undefined)?.axis?.kind === HOUR_AXIS.kind;
+  const unit = ranHours ? "h" : ax.unit;
+  const xName = ranHours ? "hour" : ax.name;
 
   const r = resp?.result;
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as M3bPayload) : null;
   const shown = KEY_METRICS.filter(([k]) => !OPTIONAL.has(k) || p?.points.some((pt) => typeof pt.key_metrics[k] === "number"));
   const columns: DataColumn<SweepPoint>[] = [
-    { key: "v", header: "Value", unit, numeric: true, cell: (pt) => fmt(pt.value) },
+    { key: "v", header: ranHours ? "Hour" : "Value", unit, numeric: true, cell: (pt) => fmt(pt.value) },
     { key: "s", header: "Status", cell: (pt) => pt.status },
     ...shown.map(([k, name, u]) => ({ key: k, header: name, unit: u, numeric: true, cell: (pt: SweepPoint) => fmt(pt.key_metrics[k]) })),
     {
@@ -132,13 +136,21 @@ function Sweep() {
       </form>
       {error && <Toast message={error} onDismiss={clearError} />}
       {r && <StatusBanner type="M3b" result={r} />}
+      {(r?.warnings ?? [])
+        .filter((w) => w.code === "PROFILE_PEAK_ABOVE_LOADS")
+        .map((w, k) => (
+          <p key={k} role="alert">
+            {w.message}
+          </p>
+        ))}
       {p && resp && <KpiStrip label="Sweep key figures" kpis={m3bKpis(p, unit)} record={resp.run_record} />}
       {p && resp && (
         <>
           <p data-testid="first-infeasible">
-            First infeasible value:{" "}
+            {ranHours ? "First hour not FEASIBLE: " : "First infeasible value: "}
             {p.first_infeasible_value === null ? "none in range" : `${fmt(p.first_infeasible_value)} ${unit}`}
           </p>
+          {ranHours && <HourSummary points={p.points} fNominal={design.nominal_frequency_hz} />}
           <p>
             <label htmlFor="plot-metric">Plot</label>{" "}
             <select id="plot-metric" value={metric} onChange={(e) => setMetric(e.target.value as Metric)}>
@@ -149,7 +161,7 @@ function Sweep() {
               ))}
             </select>
           </p>
-          <SweepPlot points={p.points} metric={KEY_METRICS.find(([k]) => k === metric) ?? KEY_METRICS[0]} xName={ax.name} xUnit={unit} first={p.first_infeasible_value} record={resp.run_record} />
+          <SweepPlot points={p.points} metric={KEY_METRICS.find(([k]) => k === metric) ?? KEY_METRICS[0]} xName={xName} xUnit={unit} first={p.first_infeasible_value} record={resp.run_record} />
           <DataTable label="Sweep points" caption="Sweep points" columns={columns} rows={p.points} rowKey={(_, k) => k} rowName={(pt) => fmt(pt.value)} />
           <p className={styles.record}>
             RunRecord <code>{resp.run_record.record_id}</code>, engine {resp.run_record.engine_kind ?? "not called"}.
@@ -159,6 +171,29 @@ function Sweep() {
       {!resp && <EmptyState title="No sweep run yet.">Choose an axis and run the sweep to see each point&apos;s status and key metrics.</EmptyState>}
       <ExampleNext screen="sweep" ready={nextReady(r?.status)} />
     </>
+  );
+}
+
+// FR-79: the worst FEASIBLE hour per key metric (D-113 K338), only for an hour sweep.
+function HourSummary({ points, fNominal }: { points: SweepPoint[]; fNominal: number | null | undefined }) {
+  const rows = worstHours(points, fNominal);
+  const meta = (k: Metric) => KEY_METRICS.find(([m]) => m === k);
+  return (
+    <div data-testid="hour-summary">
+    <DataTable
+      label="Worst hour per key metric"
+      caption="Worst hour per key metric (FEASIBLE hours only; frequency by its distance from the nominal)"
+      columns={[
+        { key: "m", header: "Key metric", cell: (w: Worst) => meta(w.metric)?.[1] ?? w.metric },
+        { key: "h", header: "Worst hour", unit: "h", numeric: true, cell: (w: Worst) => w.hour },
+        { key: "v", header: "Value there", numeric: true, cell: (w: Worst) => `${fmt(w.value)} ${meta(w.metric)?.[2] ?? ""}` },
+      ]}
+      rows={rows}
+      rowKey={(w) => w.metric}
+      rowName={(w) => meta(w.metric)?.[1] ?? w.metric}
+      rowTestId={(w) => `hour-${w.metric}`}
+    />
+    </div>
   );
 }
 
