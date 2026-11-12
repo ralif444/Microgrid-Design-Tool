@@ -34,4 +34,4 @@ Limits
 - Autonomy (B3), the depletion chart and the report section come in BESS-4. `start_hour` is validated and stored but not used yet.
 - A bank edit does not hide an earlier BA result: it stays visible while the snapshot hash matches (D-106 K304). The table shows the banks the run used, from the payload.
 - No screenshots taken. 200 % zoom is checked in BESS-5.
-- The RealEngine M3c `zip(strict=True)` defect seen in BESS-0 is still open (engine untouched).
+- The RealEngine M3c `zip(strict=True)` defect seen in BESS-0 was still open here (engine untouched); fixed in stage 1 by D-112 (2026-11-12).

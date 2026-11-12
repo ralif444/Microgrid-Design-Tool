@@ -14,4 +14,4 @@ Checks
 
 Limits
 - On the Fake Engine PS returns no storage energy, so the E2E covers only "not evaluated"; the fit, no-fit and unknown paths are covered by the client test. A REAL run of S-04 with a profile is left to BESS-5.
-- Pre-existing, outside this round: on the Real Engine, M3c with scenarios whose snapshots belong to another design (the golden run uses the two-bus scenarios on D2) ends in `UNAVAILABLE / ENGINE_ERROR` from a `zip(strict=True)` in `mgengine.m2.check`, where `INPUT_INVALID` would be expected. Not fixed (engine untouched in this round).
+- Pre-existing, outside this round: on the Real Engine, M3c with scenarios whose snapshots belong to another design (the golden run uses the two-bus scenarios on D2) ends in `UNAVAILABLE / ENGINE_ERROR` from a `zip(strict=True)` in `mgengine.m2.check`, where `INPUT_INVALID` would be expected. Not fixed in this round; fixed in stage 1 by D-112 (2026-11-12), engine unchanged.

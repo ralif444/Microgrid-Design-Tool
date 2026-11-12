@@ -235,7 +235,7 @@ Stage 1 runs in the application service before any engine call and yields `INPUT
 | SENSITIVITY_STEP_INVALID | request | M3a: neither or both of step_relative / step_absolute, or ≤ 0 | "Give one step size: relative or absolute." |
 | DISTURBANCE_INVALID | request | M4b disturbance incomplete or inconsistent with its kind | "Complete the disturbance definition." |
 | SWEEP_RANGE_INVALID | field | Range min ≥ max or step count < 2 / not integer | "The sweep range or step count is not valid." |
-| SCENARIO_PATH_INVALID | entity | Override path does not resolve | "This scenario changes something that does not exist." |
+| SCENARIO_PATH_INVALID | entity | Override path does not resolve; or an M3c scenario snapshot lacks a base line or adds one (D-112) | "This scenario changes something that does not exist." |
 | SWEEP_CAP_EXCEEDED | request | M3b/M3d point count above SWEEP_CAP (initial 1 000) | "This sweep has too many points (<n>; the limit is <cap>). Reduce the range or step count." (D-68) |
 | PARAMETER_CAP_EXCEEDED | request | M3a parameter count above cap [ASSUMPTION value] | "Too many parameters selected (<n>; the limit is <cap>). Select fewer parameters." (D-68) |
 | DURATION_CAP_EXCEEDED | request | M4b duration above cap [ASSUMPTION value] | "The simulation time is too long (<t> s; the limit is <cap> s). Shorten the simulation end time." (D-68) |
@@ -537,3 +537,4 @@ Versioning: equal → load; older with a chain → migrate forward step by step 
 | 2026-11-02 | Stage 1.4 (Doc 9 D-54): droop conversion confirmed (§1, §9 #1); `balance_tolerance_kw` absent = not evaluated (§3.7, §9 #3). |
 | 2026-11-02 | Stage 1.5 (Doc 9 D-55 K87–K92, to be confirmed): M3a nullable `value`/`normalised_value`/`scheme` + `reason`, relative step rule (§6.4); M3c `relative_delta_ratio` (§6.6); M4a nullable `damping_ratio`, `damping_pass` (§6.8); M4b `settling` parameter, nullable `transient_class`/`settled`, `class_reason` (§6.9); codes MULTIPLE_INVERTERS_ON_BUS (§4) and EQUILIBRIUM_INVALID (§5.4). |
 | 2026-11-12 | §9 #6: BatteryBank and the profile hour axis taken up by the battery round (Doc 9 D-106, Doc 12 §3.14, ADR-015 accepted). |
+| 2026-11-12 | §4 SCENARIO_PATH_INVALID also covers an M3c scenario whose line ids differ from the base (Doc 9 D-112). |

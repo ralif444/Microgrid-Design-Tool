@@ -432,10 +432,22 @@ def validate_request(
         c.add(IssueCode.DEPENDS_ON_NOT_ALLOWED, IssueLevel.REQUEST, None, None, "depends_on")
     _parameters(c, t, parameters, snapshot, len(scenarios or []))
     for sc in scenarios or []:
-        for issue in validate_request(AnalysisType.M1, sc.project_snapshot, {}, False, None):
+        found = validate_request(AnalysisType.M1, sc.project_snapshot, {}, False, None)
+        for issue in found + _scenario_elements(snapshot, sc.project_snapshot):
             c.issues.append(
                 issue.model_copy(update={"entity": f"Scenario {sc.scenario_id}: {issue.entity}"})
             )
+    return c.issues
+
+
+def _scenario_elements(base: ProjectSnapshot, scen: ProjectSnapshot) -> list[ValidationIssue]:
+    """An M3c scenario holds exactly the base lines (D-112): the engine applies the base per-line
+    current limits to every scenario. Loads and inverters may differ (N−1 removes one, FR-80)."""
+    c = _Collector()
+    for id_ in sorted(
+        {ln.id for ln in base.lines if ln.id} ^ {ln.id for ln in scen.lines if ln.id}
+    ):
+        c.add(IssueCode.SCENARIO_PATH_INVALID, IssueLevel.ENTITY, "Line", id_)
     return c.issues
 
 
