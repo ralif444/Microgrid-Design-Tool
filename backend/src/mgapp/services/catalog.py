@@ -37,8 +37,19 @@ REQUIRED = {
     ),
     "CONDUCTOR": ("r_ohm_per_km", "x_ohm_per_km"),
     "BREAKER": ("in_a",),
+    "BATTERY_MODULE": ("energy_kwh", "voltage_min_v", "voltage_max_v"),  # Eq. 12.3, 12.4
 }
-OPTIONAL = {"INVERTER": ("tau_in_s",), "CONDUCTOR": ("ampacity_a",), "BREAKER": ()}
+OPTIONAL = {
+    "INVERTER": ("tau_in_s",),
+    "CONDUCTOR": ("ampacity_a",),
+    "BREAKER": (),
+    "BATTERY_MODULE": (
+        "nominal_voltage_v",
+        "discharge_power_kw",
+        "c_rate_per_h",
+        "recommended_dod_ratio",
+    ),
+}
 
 
 class EntryCheck(Model):
@@ -58,7 +69,12 @@ def entry_reasons(e: CatalogEntry) -> list[str]:
     reasons = [
         f"provenance.{f} is missing" for f in PROVENANCE_FIELDS if not getattr(e.provenance, f)
     ]
-    block = {"INVERTER": e.inverter, "CONDUCTOR": e.conductor, "BREAKER": e.breaker}[e.kind]
+    block = {
+        "INVERTER": e.inverter,
+        "CONDUCTOR": e.conductor,
+        "BREAKER": e.breaker,
+        "BATTERY_MODULE": e.battery_module,
+    }[e.kind]
     if block is None:
         return [*reasons, f"{e.kind.lower()} values are missing"]
     if e.breaker is not None:  # D-104 K296: the match needs the standard and the class
@@ -75,6 +91,9 @@ def entry_reasons(e: CatalogEntry) -> list[str]:
     for f in OPTIONAL[e.kind]:
         if getattr(block, f) is not None and not e.sources.get(f):
             reasons.append(f"sources.{f} (page or section) is missing")
+    m = e.battery_module
+    if m and m.voltage_min_v and m.voltage_max_v and m.voltage_min_v > m.voltage_max_v:
+        reasons.append("voltage_min_v is above voltage_max_v")
     if e.inverter is not None and not (
         e.inverter.grid_forming and e.inverter.grid_forming_reference
     ):

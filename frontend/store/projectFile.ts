@@ -28,5 +28,7 @@ export function toProjectFile(
     sizing_advice: s.sizingAdvice as unknown as ProjectFile["sizing_advice"],
     scenarios: s.scenarios,
     run_records: s.runRecords,
+    // Optional, omitted when empty, so a Project without banks saves as before (D-106 K306)
+    ...(s.batteryBanks.length ? { battery_banks: s.batteryBanks } : {}),
   };
 }

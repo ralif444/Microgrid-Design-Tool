@@ -4,7 +4,7 @@
 
 ## Ringkasan
 
-Dokumen ini memuat sepuluh fitur tambahan yang disepakati setelah seminar proposal. Semua fitur wajib tetap berada di dalam asumsi A1–A6 dan batasan naskah: fitur hanya boleh berupa perubahan antarmuka dan alur kerja, keluaran turunan dari model yang sama, atau mode baru yang menyusun ulang M1–M4, tanpa persamaan, variabel keadaan, atau asumsi baru. Tiga fitur berprioritas Should, yaitu panel indikator keabsahan, daftar periksa asumsi A1–A6 pada laporan, dan katalog komponen yang diisi pengguna dari datasheet; tujuh lainnya berprioritas Could. Bagian yang hanya menyentuh antarmuka mulai dikerjakan pada Tahap 1.2 dengan Fake Engine, sedangkan bagian yang memerlukan mesin nyata dikerjakan setelah gerbang 1.4. Tidak ada fitur tambahan yang boleh menunda gerbang Must atau Should dari naskah. Faktor partisipasi dan metrik stabilitas per titik sapuan tidak termasuk di sini karena sudah dijanjikan naskah; keduanya masuk daftar penyelarasan inti. Aplikasi tidak membawa data vendor bawaan, sehingga katalog tidak menjadi sumber rujukan skripsi. Putaran UX dan analitik (2026-11-03, X0–X7) menambah delapan fitur antarmuka murni: hasil terakhir yang bertahan saat berpindah layar, fondasi grafik, kartu KPI, grafik analitik, *crosshair*, panel inspektur, tooltip glosarium, dan unduhan SVG; semuanya hanya menampilkan payload yang sudah ada. Diagram segaris otomatis (X8, FR-94 – FR-98) menggantikan diagram lingkaran di S-05 dan menambah tooltip, lapisan hasil di S-07 dan S-08, gambar laporan, serta unduhan SVG, tanpa simbol untuk komponen yang tidak dimodelkan. Mode contoh terpandu (X9, FR-99 – FR-104) mengisi formulir analisis dari contoh D2 beserta sumber setiap nilai, tanpa mengubah model atau file Project. Penentuan ukuran kabel dan proteksi beban lebih (X10, FR-105 – FR-115) bersifat eksperimental di balik *flag* `feature_cable_sizing`; perhitungannya dilakukan aplikasi, bukan mesin (ADR-014), memakai tabel yang dimuat pengguna, dan dua KONFLIK terhadap naskah (proteksi di luar cakupan; PUIL 2011 terhadap PUIL 2020) masih terbuka.
+Dokumen ini memuat sepuluh fitur tambahan yang disepakati setelah seminar proposal. Semua fitur wajib tetap berada di dalam asumsi A1–A6 dan batasan naskah: fitur hanya boleh berupa perubahan antarmuka dan alur kerja, keluaran turunan dari model yang sama, atau mode baru yang menyusun ulang M1–M4, tanpa persamaan, variabel keadaan, atau asumsi baru. Tiga fitur berprioritas Should, yaitu panel indikator keabsahan, daftar periksa asumsi A1–A6 pada laporan, dan katalog komponen yang diisi pengguna dari datasheet; tujuh lainnya berprioritas Could. Bagian yang hanya menyentuh antarmuka mulai dikerjakan pada Tahap 1.2 dengan Fake Engine, sedangkan bagian yang memerlukan mesin nyata dikerjakan setelah gerbang 1.4. Tidak ada fitur tambahan yang boleh menunda gerbang Must atau Should dari naskah. Faktor partisipasi dan metrik stabilitas per titik sapuan tidak termasuk di sini karena sudah dijanjikan naskah; keduanya masuk daftar penyelarasan inti. Aplikasi tidak membawa data vendor bawaan, sehingga katalog tidak menjadi sumber rujukan skripsi. Putaran UX dan analitik (2026-11-03, X0–X7) menambah delapan fitur antarmuka murni: hasil terakhir yang bertahan saat berpindah layar, fondasi grafik, kartu KPI, grafik analitik, *crosshair*, panel inspektur, tooltip glosarium, dan unduhan SVG; semuanya hanya menampilkan payload yang sudah ada. Diagram segaris otomatis (X8, FR-94 – FR-98) menggantikan diagram lingkaran di S-05 dan menambah tooltip, lapisan hasil di S-07 dan S-08, gambar laporan, serta unduhan SVG, tanpa simbol untuk komponen yang tidak dimodelkan. Mode contoh terpandu (X9, FR-99 – FR-104) mengisi formulir analisis dari contoh D2 beserta sumber setiap nilai, tanpa mengubah model atau file Project. Penentuan ukuran kabel dan proteksi beban lebih (X10, FR-105 – FR-115) bersifat eksperimental di balik *flag* `feature_cable_sizing`; perhitungannya dilakukan aplikasi, bukan mesin (ADR-014), memakai tabel yang dimuat pengguna, dan dua KONFLIK terhadap naskah (proteksi di luar cakupan; PUIL 2011 terhadap PUIL 2020) masih terbuka. Putaran baterai (BESS-0, 2026-11-12, FR-116 – FR-121, ADR-015) menghidupkan kembali B1 dan B2 serta memasukkan B3 ke v1 sebagai saran otonomi pengosongan per inverter: analisis `BA` dihitung aplikasi dari hasil M1, bank baterai berada di luar snapshot kanonik, pengisian ulang tidak dimodelkan, dan tidak ada putusan M1–M4 yang berubah.
 
 ---
 
@@ -27,8 +27,9 @@ Dokumen ini memuat sepuluh fitur tambahan yang disepakati setelah seminar propos
 | P6 | A1–A6 checklist in the report | L1 | Should | 1.2 (Fake) | FR-63 |
 | K | User-filled component catalogue (GFM inverter, conductor) | L1 | Should | 1.2 | FR-64 – FR-72 |
 | B1 | Battery-module catalogue entries and PS module hint | L1 | Could | 1.2 | FR-73, FR-74 |
-| B2 | Battery power-adequacy advisory (BatteryCheck) | L2 | Could | after 1.4 | FR-75 – FR-77 |
-| P11 | 24-hour profile run | L3 | Could | after 1.4 | FR-78, FR-79 |
+| B2 | Battery power-adequacy advisory (app-side, analysis `BA`) | L2 | Could | Battery round (2026-11-12) | FR-75 – FR-77, FR-116, FR-118 – FR-121 |
+| B3 | Per-inverter discharge autonomy over the 24-hour profile (app-side, analysis `BA`) | L3 | Could | Battery round (2026-11-12) | FR-117 – FR-121 |
+| P11 | 24-hour profile run (independent of B3) | L3 | Could | after 1.4 | FR-78, FR-79 |
 | P12 | Static N−1 inverter check | L1 (via M3c) | Could | 1.2 (Fake), real after 1.4 | FR-80 |
 | P9 | Reactive-power sharing error | L2 | Could | after 1.4 | FR-81, FR-82 |
 | P3 | RunRecord diff | L1 | Could | 1.2 | FR-83 |
@@ -48,7 +49,9 @@ Dokumen ini memuat sepuluh fitur tambahan yang disepakati setelah seminar propos
 
 X0–X7 are the UX and analytics round of `docs/UX_ANALYTICS_GUIDELINES.md` (decisions Q1–Q7 there, Doc 9 D-72). The guideline calls them U0–U7; they are coded X here because U1–U4 already name the user groups (Doc 1 §6, Doc 11). All eight are presentation only: no payload, contract, API or Engine Port change, and the browser computes no engine number (it only selects, counts, sorts, filters and rounds for display).
 
-Deferred (not in v1): B3 per-inverter 24-h energy adequacy (only with supervisor approval, because it sits close to the excluded "detailed battery/dispatch"), batch M4b over all inverter outages, CSV import/export, p.u. ↔ physical display toggle.
+B1, B2, B3 and P11 follow `docs/BESS_FEATURE_GUIDELINES.md` (decisions E1–E9 and BESS-0 confirmations in Doc 9 D-106; computation placement in ADR-015).
+
+Deferred (not in v1): batch M4b over all inverter outages, CSV import/export, p.u. ↔ physical display toggle.
 
 ---
 
@@ -105,9 +108,9 @@ The verdict is "fit" when $\mathcal{N}_s \neq \emptyset$ (the hint uses its smal
 
 | ID | Requirement | Priority | Acceptance criteria | Source |
 |---|---|---|---|---|
-| FR-75 | The app shall let the user attach at most one BatteryBank to each Inverter: a catalogue module reference plus series and parallel counts, optional DC conversion efficiency. BatteryBank is design data. | Could | Given an Inverter, when a second bank is attached, then it is refused; editing a bank marks the M1 result stale (Q47: the M1 hash covers the whole design snapshot). | Q44, Q47 |
-| FR-76 | The M2 result shall carry an advisory `battery_check` per Inverter with a bank, computed in the engine by Eq. (12.6)–(12.8): bank capability, DC-side power, margin and a warning flag, with the capability source (power field or C-rate) and the efficiency assumption recorded. | Could | Given a canned M2 result with two banks, one below the inverter power, then `battery_check` has two entries, one flagged, each naming its Inverter and capability source. | Q45, Q46 |
-| FR-77 | `battery_check` shall never change the M2 verdict, `limiting_constraints` or margins; it is advisory like SizingCheck. | Could | Given an M2 `FEASIBLE` result with a flagged bank, then status stays `FEASIBLE` and the flag appears only in `battery_check` and in the report's advisory section. | Q43 (b), Q11 policy |
+| FR-75 | (Reworded 2026-11-12, D-106) The app shall let the user attach at most one BatteryBank to each Inverter, stored in the optional Project-file field `battery_banks` **outside** the canonical snapshot used by M1–M4: module `catalog_ref` with copied values (energy, DC voltage limits, discharge power or C-rate), series and parallel counts (integers ≥ 1), and the optional ratios DC efficiency, depth of discharge and initial state of charge (each in (0, 1]). Editing a bank changes no M1–M4 hash and marks no result stale. | Could | **Contract:** m1_m2_hashes_unchanged_by_banks; second_bank_on_inverter_invalid (`BATTERY_BANK_INVALID` with the field path). | Q44; guideline §2.1, §4.1 (replaces Q47) |
+| FR-76 | (Reworded 2026-11-12, D-106) The power advisory per bank shall be computed by the app-side battery service as analysis type `BA`, from the `depends_on` M1 payload (`inverter_results[].p_kw`), by Eq. (12.6)–(12.8): capability and its source (`discharge_power` or `c_rate`), DC-side power, margin and outcome OK, SHORT or NOT_EVALUATED with the reason (guideline §3.2). Not in the engine, not in the M2 payload. | Could | **Unit:** bank_power_field_vs_c_rate; power_margin_sign; negative_inverter_power_not_evaluated. Hand cases V3, V4. | Q45, Q46; guideline §3.2, ADR-015 |
+| FR-77 | (Reworded 2026-11-12, D-106) No `BA` outcome shall change any M1–M4 result, verdict, `limiting_constraints` or margin. | Could | **Contract:** ba_status_feasible_with_short_bank; the M2 result of the same design is byte-identical with and without banks. | Q43 (b), Q11 policy |
 
 **B2 rule.** For Inverter $i$ with a bank of $n_{s,i}$ modules in series and $n_{p,i}$ strings in parallel, module continuous discharge power $P_{mod}^{dis}$ (kW), module energy $E_{mod}$ (kWh) and C-rate $C$ (h⁻¹):
 
@@ -125,7 +128,7 @@ with $P_i$ the inverter active power at the M1 operating point (kW, positive whe
 
 | ID | Requirement | Priority | Acceptance criteria | Source |
 |---|---|---|---|---|
-| FR-78 | M3b shall accept the special parameter path `load_profile_hour` with range 0–23 and 24 steps; for each hour every Load is scaled by Eq. (12.9), the same pattern as the λ scaling of M2 (manuscript Eq. 4.14). | Could | Given a Project with a 24-point profile, when M3b runs on `load_profile_hour`, then 24 points are returned, each with its own Status; given no profile, then `INPUT_INVALID` naming the profile. | Manuscript 4.2.2, Eq. 4.14 pattern; Q13, Q14, Q34 |
+| FR-78 | (Reworded 2026-11-12, D-106) M3b shall accept the axis kind `LOAD_PROFILE_HOUR` with the fixed grid 0, 1, …, 23 (the repo sweep contract uses axis kinds, guideline R2); for each hour every Load is scaled by Eq. (12.9), the same pattern as the λ scaling of M2 (manuscript Eq. 4.14). | Could | Given a Project with a 24-point profile, when M3b runs on `load_profile_hour`, then 24 points are returned, each with its own Status; given no profile, then `INPUT_INVALID` naming the profile. | Manuscript 4.2.2, Eq. 4.14 pattern; Q13, Q14, Q34 |
 | FR-79 | The P11 result view shall label the axis "hour", report the worst hour per key metric and the first hour that is not `FEASIBLE`, and warn when any $\lambda_h > 1$ (profile peak above table total), as PS does. | Could | **E2E:** given a canned 24-point result, the worst hour per metric and the first infeasible hour are shown; $\lambda_h > 1$ shows the warning. | Manuscript 4.2.2 |
 
 **P11 rule.** With $P_h$ the profile active power at hour $h$ (kW) and $P_k^0, Q_k^0$ the table values of Load $k$:
@@ -227,17 +230,45 @@ Source: `docs/CABLE_BREAKER_FEATURE_GUIDELINES.md` (the guideline; its §0 guard
 | FR-114 | (X10) S-16 shall include the section "Cable and overload sizing (experimental)": the results table, method id, table-set id with `table_set_hash`, the caveat and the KONFLIK note on the PUIL edition. | Could | **E2E:** the report section names the method id and the table-set hash. | Guideline §6, D12 |
 | FR-115 | (X10) The Catalogue shall gain the entry kind `BREAKER` {standard, class, in_a, curve, poles, provenance}; each element lists the nearest catalogue cable at or above the chosen size with the same conductor, insulation and cores (datasheet ampacity and conditions shown as a check only) and a breaker of the same standard and $I_n$ if one exists. The UL-based breaker CSV is never used for $I_n$ steps. | Could | **Catalogue file:** BREAKER entry roundtrip. **Unit:** catalogue match picks the nearest larger cable. | Guideline §6, D11 |
 
+### 3.14 B3 and the battery adequacy analysis BA
+
+Source: `docs/BESS_FEATURE_GUIDELINES.md` (its §0 guardrails bind; [DERIVED] and [DESIGN CHOICE] labels are cited, not repeated); decisions in Doc 9 D-106; computation placement in ADR-015. Level L3 for B3 (a composition of 24 existing M1 runs), L2 for B2. Advice only: no state variable, no coupling between hours inside the model, no charging, no SoC-based droop. Fixed caveat on screen and in the report: "Discharge only: recharging is not modelled. The battery is not part of the network model (assumption A2). These results are advice and do not change the feasibility verdict." No feature flag; S-20 is listed only when the Project has at least one bank. Tests use the fictitious file `tests/fixtures/FAKE_battery_TEST_ONLY.json` (D-106 closes D-62 for the build).
+
+| ID | Requirement | Priority | Acceptance criteria | Source |
+|---|---|---|---|---|
+| FR-116 | `POST /api/analyses/BA` shall run through the existing pipeline (stage-1 validation of the snapshot and of `parameters` {banks, start_hour 0–23}, canonicalise and hash, dependency check, RunRecord) with `depends_on` an M1 RunRecordRef, status FEASIBLE, three-part check of Doc 3 §5.4; missing or stale gives `UNAVAILABLE / DEPENDENCY_NOT_MET`. Allowed Status FEASIBLE, INPUT_INVALID, UNAVAILABLE; a per-bank outcome does not change the request status. RunRecord per ADR-015 (`diagnostics.computed_by = "app"`, `diagnostics.engine_calls`). | Could | **Contract:** ba_depends_on_m1_missing_or_stale; ba_status_feasible_with_short_bank. | Guideline §4.2; ADR-015 |
+| FR-117 | When the snapshot has a 24-point LoadProfile, the service shall compute per bank the discharge autonomy of Eq. (12.14)–(12.18) from one M1 request per hour through the Engine Port (loads scaled by Eq. 12.9), in start-hour order with wrap past midnight, stopping at the first hour that is not FEASIBLE; outcomes DEPLETED (autonomy in hours and the clock hour), NOT_DEPLETED (cumulative energy and end SoC) or NOT_EVALUATED with the reason (guideline §3.3). | Could | **Unit:** usable_energy_formula; depletion_interpolates_within_hour; not_depleted_reports_end_soc; profile_wraps_past_midnight. **Contract:** ba_calls_engine_24_times_with_scaled_loads; ba_stops_at_first_non_feasible_hour; ba_without_profile_power_only. Hand cases V5, V6. | Guideline §3.3 |
+| FR-118 | An empty DC efficiency, depth of discharge or initial state of charge shall give NOT_EVALUATED for the part that needs it, with the field named; the server applies no default (D-59 K105). An initial SoC at or below $1 - D$ gives NOT_EVALUATED. | Could | **Unit:** missing_eta_dod_soc_not_evaluated; initial_soc_at_limit_not_evaluated. | Guideline §2.2, §3.2, §3.3 |
+| FR-119 | S-20 "Battery adequacy" (`/battery/`, under Further analyses) shall be listed only when the Project has at least one bank, with Run enabled only with a valid M1; S-05 shall offer the BatteryBank sub-form per Inverter (guideline §5). Not-evaluated cells show the reason, never 0 or blank; outcomes use Carbon support colours with icon and word (no red, no "Violated"). | Could | **E2E:** s20_hidden_without_bank; run_shows_caveat. | Guideline §5 |
+| FR-120 | S-20 shall show the depletion chart "State of charge per inverter over the profile day" on the shared chart foundation (FR-86, FR-89, FR-92), and S-16 the advisory section "Battery adequacy (advice, discharge only)" with the table, the chart, the caveat and the RunRecord id; the A2 row of the A1–A6 checklist notes "battery not modelled; see the advisory section". | Could | **E2E:** depletion_chart_show_data_row_count; report_section_names_run_record. | Guideline §5 |
+| FR-121 | A Project without banks shall produce byte-identical API responses and hashes before and after the battery round. | Could | **Golden:** no_bank_project_responses_byte_identical. | Guideline §4.3 |
+
+**B3 rule.** Symbols: $E_{mod}$ module energy (kWh); $n_{s,i}, n_{p,i}$ series and parallel counts; $\eta_{dc,i}$ DC conversion efficiency; $D_i$ depth of discharge; $SoC_{0,i}$ initial state of charge (ratios); $h_0$ start hour; $\Delta t = 1$ h; $P_i(h)$ active power of Inverter $i$ (kW) from the M1 run at hour $h$ with loads scaled by Eq. (12.9).
+
+$$E_{bank,i} = n_{s,i}\, n_{p,i}\, E_{mod} \qquad [\text{kWh}] \tag{12.14}$$
+
+$$E_{use,i} = \eta_{dc,i}\, E_{bank,i}\,\bigl(SoC_{0,i} - (1 - D_i)\bigr) \qquad [\text{kWh, AC side}] \tag{12.15}$$
+
+$$E_{cum,i}(j) = \sum_{k=0}^{j} P_i(h_k)\,\Delta t, \qquad h_k = (h_0 + k) \bmod 24, \quad j = 0,\dots,23 \tag{12.16}$$
+
+$$SoC_i(j) = SoC_{0,i} - \frac{E_{cum,i}(j)}{\eta_{dc,i}\, E_{bank,i}} \tag{12.17}$$
+
+$$j^* = \min\{\, j : E_{cum,i}(j) > E_{use,i} \,\}, \qquad t_{aut,i} = j^* + \frac{E_{use,i} - E_{cum,i}(j^*-1)}{P_i(h_{j^*})} \qquad [\text{h}],\quad E_{cum,i}(-1) = 0 \tag{12.18}$$
+
+Each profile value is the average power over its hour (manuscript Eq. 4.4 reading); the profile wraps past midnight; the horizon is 24 hours. $SoC_i(j)$ is a post-processed sum and is never fed back into any M1 run, so the hours stay uncoupled inside the model and no state is added. Diturunkan dalam penelitian ini.
+
 ## 4. Contract changes (merge into Doc 3 at stage 1.5)
 
 | Item | Change |
 |---|---|
 | Catalogue document | New file type, own `schema_version`; entries of kind INVERTER, CONDUCTOR, BATTERY_MODULE with provenance (FR-64 – FR-68, FR-73). |
 | `catalog_ref` | Optional object on Inverter and Line (and on BatteryBank module): entry id, provenance, catalogue schema version, `modified` flag (FR-69). Part of the canonical snapshot. |
-| BatteryBank | New optional design entity, 0..1 per Inverter: module `catalog_ref` with copied values, series count, parallel count, optional DC efficiency (FR-75). |
-| M2 payload | New optional group `battery_check`: per Inverter {capability_kw, capability_source, dc_side_power_kw, margin_kw, warning, assumptions} (FR-76); `not_evaluated` reason when η_dc is absent (D-59 K105). |
+| BatteryBank | (2026-11-12, D-106) Optional Project-file field `battery_banks` (omitted when empty; `schema_version` stays 1), 0..1 bank per Inverter, outside the canonical snapshot: {inverter_id, module {catalog_ref, energy_kwh, voltage_min_v, voltage_max_v, discharge_power_kw or null, c_rate_per_h or null}, series_count, parallel_count, dc_efficiency_ratio, depth_of_discharge_ratio, initial_soc_ratio (each or null)} (FR-75, guideline §4.1). New unit suffix `_per_h` (1/h). Stage-1 IssueCode `BATTERY_BANK_INVALID` with the field path. |
+| Catalogue kind BATTERY_MODULE | {energy_kwh, nominal_voltage_v, voltage_min_v, voltage_max_v, discharge_power_kw, c_rate_per_h, recommended_dod_ratio}, all optional, with provenance (FR-73). |
+| Analysis type `BA` (2026-11-12) | `depends_on` an M1 RunRecordRef (FEASIBLE); `parameters` {banks, start_hour}; payload `banks[]` {inverter_id, bank, power, autonomy with curve[]}, `hours[]`, `caveat_text` (guideline §4.2); WarningCode `BATTERY_POWER_SHORT`; ADR-015. Replaces the M2 group `battery_check` (FR-76 reworded): the M2 payload is unchanged. |
 | M1 payload | New group `sharing`: per Inverter {p_deviation_kw, q_deviation_kvar, q_droop_not_rating_proportional} (FR-81). |
 | M3 metrics | Add `MAX_Q_SHARING_ERROR` (FR-82). |
-| M3b parameter path | Add special path `load_profile_hour` (FR-78). |
+| M3b axis kind | Add axis kind `LOAD_PROFILE_HOUR`, fixed grid 0–23 (FR-78 reworded 2026-11-12). |
 | X10 cable sizing (FR-105 – FR-115) | analysis_type `CB` with `depends_on` an M2 RunRecordRef; Project field `CableSizingSettings` outside the canonical snapshot (FR-106); the `cable_tables.json` schema with `table_set_hash` in the RunRecord parameters (FR-107); stage-1 codes `CABLE_TABLES_INCOMPLETE`, `CABLE_TABLES_UNCHECKED`, `CABLE_SETTINGS_INVALID` (D-102 K281); dependency on M2 FEASIBLE or INFEASIBLE, engine fields null, `diagnostics.computed_by = "app"` (ADR-014); warning codes `LINE_R_MISMATCH`, `FEATURE_EXPERIMENTAL`, `DIRECT_BURIAL_NOT_SUPPORTED`; Catalogue kind `BREAKER` (FR-115). |
 | Indicators | Payload groups for r_τ, κ, r_in, ε_X with `evaluated` flag and reason (FR-61); threshold version in MetaInfo (FR-62). Align with the core indicator contract (§8). |
 
@@ -249,11 +280,11 @@ Source: `docs/CABLE_BREAKER_FEATURE_GUIDELINES.md` (the guideline; its §0 guard
 | S-05 Network editor | "Choose from catalogue" on Inverter and Line rows; "modified from catalogue" marker; current-limit confirmation; BatteryBank sub-form per Inverter (Could). |
 | S-04 Sizing advice | Catalogue hints (FR-72), module hint (FR-74). |
 | S-07, S-13, S-14, S-16 | Validity-indicator panel (FR-61, FR-62). |
-| S-08 | Shortcut per limiting-constraint row (FR-84); BatteryCheck advisory panel (FR-76). |
+| S-08 | Shortcut per limiting-constraint row (FR-84). (The BatteryCheck panel moved to S-20, D-106.) |
 | S-10 | Hour mode (FR-79). |
 | S-11 | "Generate N−1 scenarios" action (FR-80). |
 | S-15 | Compare two RunRecords (FR-83). |
-| S-16 | A1–A6 checklist (FR-63); advisory section lists BatteryCheck. |
+| S-16 | A1–A6 checklist (FR-63); advisory section "Battery adequacy (advice, discharge only)" (FR-120). |
 | S-01 | Example Projects (FR-85). |
 | S-07, S-08, S-10, S-12, S-13, S-14 | KPI strip (FR-87). |
 | S-07 – S-14, S-16 | Analytics charts (FR-86, FR-88), crosshair on line and point charts (FR-89), Download SVG (FR-92); every result screen reads its latest matching RunRecord (FR-93). |
@@ -266,6 +297,8 @@ Source: `docs/CABLE_BREAKER_FEATURE_GUIDELINES.md` (the guideline; its §0 guard
 | S-02 | "Run the whole example" (FR-104, Could, built last). |
 | S-19 Cable and breaker sizing (new, `/cable-sizing/`, flag only) | Settings, Run, caveat, results table with expandable factor rows (FR-112). |
 | S-05, S-07, S-08 (SLD), S-16, S-18 | Breaker symbols after a current CB run (FR-113); report section (FR-114); Catalogue kind `BREAKER` (FR-115). |
+| S-20 Battery adequacy (new, `/battery/`, only with a bank) | Start hour, Run (valid M1), status banner, fixed caveat, per-bank table (power and autonomy), depletion chart (FR-119, FR-120). |
+| S-05, S-18, S-04, SLD | BatteryBank sub-form per Inverter (FR-75, FR-119); Catalogue kind "Battery module" (FR-73); module hint (FR-74); inverter hover card and Inspector row "Battery bank: n_s × n_p of <module>", no battery symbol (§9 #15). |
 
 ## 6. API changes (merge into Doc 6)
 
@@ -273,7 +306,7 @@ Source: `docs/CABLE_BREAKER_FEATURE_GUIDELINES.md` (the guideline; its §0 guard
 |---|---|---|---|
 | 16 | POST | `/api/catalogs/import` | Check a Catalogue file's content: `schema_version`, forward migration, rejection, entry validation (provenance, grid-forming guard). HTTP 200 with a FileCheckResult wrapper; no RunRecord. |
 
-Catalogue export is a client-side download, like Project export. No other endpoint is added: P12 reuses M3c, P11 reuses M3b, P3 and P7 are client-side. X10 adds no path: it is the analysis type `CB` on the existing `POST /api/analyses/{type}` route, with engine fields null (FR-111).
+Catalogue export is a client-side download, like Project export. No other endpoint is added: P12 reuses M3c, P11 reuses M3b, P3 and P7 are client-side. X10 adds no path: it is the analysis type `CB` on the existing `POST /api/analyses/{type}` route, with engine fields null (FR-111). The battery round adds no path: analysis type `BA` on the same route (FR-116, ADR-015).
 
 ## 7. Test additions (merge into Doc 8)
 
@@ -281,8 +314,8 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 |---|---|---|
 | FR-61, FR-62 | API + E2E | indicators_not_evaluated_have_reason; uncalibrated_label_no_colour |
 | FR-64 – FR-72 | Catalogue file + E2E | catalogue_roundtrip; newer_version_refused; gfm_guard_refuses_use; copy_keeps_hash_on_catalogue_edit; current_limit_needs_confirmation; ps_values_unchanged_by_hints |
-| FR-75 – FR-77 | API (Fake) | battery_check_per_bank; c_rate_fallback_named; verdict_unaffected_by_battery_flag; bank_edit_marks_m1_stale |
-| FR-78, FR-79 | API (Fake) | hour_sweep_24_points; no_profile_input_invalid |
+| FR-73 – FR-77, FR-116 – FR-121 | Unit + Contract (API, Fake) + Golden + Catalogue file + E2E; hand cases V1–V6 on REAL (BESS-5) | guideline §7 (replaces battery_check_per_bank and bank_edit_marks_m1_stale) |
+| FR-78, FR-79 | API (Fake) | hour_axis_24_points; no_profile_input_invalid; lambda_above_one_warns |
 | FR-80 | API (Fake) + E2E | n_minus_1_builds_scenarios; single_inverter_disabled |
 | FR-81, FR-82 | API (Fake) | sharing_group_present; metric_not_a_constraint |
 | FR-83 – FR-85 | E2E | diff_lists_paths; shortcut_prefills_m3a; example_opens_as_copy |
@@ -305,7 +338,7 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | 1 | Conductor tables from an official standard: postponed by the user (2026-11-01). | POSTPONED |
 | 2 | Eq. (12.3)–(12.13) are author-derived; they enter the skripsi marked "diturunkan dalam penelitian ini" and are verified by hand calculation on D2 before use. Their features (B1, B2, P11, P9) follow the Should extensions (D-59 K104). | DECIDED (user 2026-11-02) |
 | 3 | Cancelling DR-08 deviates from the manuscript's documentation requirement (Tabel A.3, "no equations in application design documents"); record the change in the alignment list and in the skripsi methodology. | KONFLIK (user-decided) |
-| 4 | B3 energy adequacy: out of v1 (D-59 K106). | DECIDED (user 2026-11-02) |
+| 4 | B3 in v1 as a per-inverter discharge-autonomy advisory (user 2026-11-12, replaces D-59 K106); no supervisor gate, one-line mention to the supervisor. | DECIDED (user 2026-11-12, D-106) |
 | 5 | Example catalogue entries: none shipped (D-59 K107). | DECIDED (user 2026-11-02) |
 | 6 | X0: read the latest matching RunRecord, no new reducer state (D-72 K151). | DECIDED (user 2026-11-03) |
 | 7 | Participation grid orientation: the payload is `factors[mode][state]` (Doc 3 §6.8); the grid draws states as rows and modes as columns. | DECIDED (from Doc 3, 2026-11-03) |
@@ -334,6 +367,13 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | 30 | X10: no table values in the repo; the filled table file stays out of the public repo (`data/private/`, git-ignored) because PUIL is copyrighted. | DECIDED (guideline §0) |
 | 31 | X10: verification by hand cases H1–H6 (exact match) and validation of the $I_B$ input chain against PSIM line currents; no ETAP or other cable-sizing software comparison. | DECIDED (user 2026-11-08, D-100 K266) |
 | 32 | X10: no ADR written at X10-0; ADR-014 is reserved for the app-side computation placement if the user asks for one. | OPEN (user) |
+| 33 | Battery: BatteryBank outside the canonical snapshot (guideline §2.1). | DECIDED (user 2026-11-12, D-106) |
+| 34 | Battery: no default for DC efficiency, depth of discharge or initial SoC; empty → NOT_EVALUATED (guideline §2.2, D-59 K105). The DoD = 1.0 fallback of the design session is dropped. | DECIDED (user 2026-11-12, D-106) |
+| 35 | Battery: `battery_banks` is an optional Project-file field, omitted when empty, `schema_version` stays 1 (an older app refuses a file with banks as an unknown field). | DECIDED (user 2026-11-12, D-106) |
+| 36 | Battery: build and tests on the fictitious TEST ONLY module, DC-window and profile data; real data for the thesis cases only if the user supplies them with sources (closes D-62 for the build). | DECIDED (user 2026-11-12, D-106) |
+| 37 | Battery: the ADR-015 points Q1–Q6 (engine identity, overall time budget, FAKE marking, service exception, app-analysis map, OpenAPI): every recommendation taken. | DECIDED (user 2026-11-12, D-106 K309) |
+| 38 | Battery: glossary toggletips for DoD, SoC, autonomy and C-rate need a source each (FR-91); a term without one is left out. | OPEN (owner, BESS-4) |
+| 39 | Battery future work (guideline §9, Bab 5 saran): SoC-based droop as a quasi-static sequential run (new assumption, coupled hours: scope change), charging operating points, DC-side dynamics in M4, minimum autonomy over all start hours, lifetime and cost. | DECIDED (out of v1, user 2026-11-12) |
 
 ## Log
 
@@ -347,3 +387,4 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | 2026-11-05 | Example round added (Doc 9 D-92, user-confirmed at EX-0): X9 with FR-99 – FR-104 (§2, §3.12, §5, §7, §9 points 19–23). |
 | 2026-11-09 | Cable round X10-0 drafted (Doc 9 D-100, user-confirmed 2026-11-09): X10 with FR-105 – FR-115 (§2, §3.13, §4, §5, §6, §7, §9 points 24–32). |
 | 2026-11-09 | Ringkasan mentions X9 (example mode) and X10 (cable sizing, experimental, ADR-014, KONFLIK K-07 and K-08 open). |
+| 2026-11-12 | Battery round BESS-0 (Doc 9 D-106, ADR-015 accepted; `docs/BESS_FEATURE_GUIDELINES.md`): FR-75 – FR-78 reworded, B3 added (§2, §3.14, Eq. 12.14–12.18), FR-116 – FR-121; §4, §5, §6, §7 rows; §9 #4 reworded, points 33–39; Ringkasan sentence. |

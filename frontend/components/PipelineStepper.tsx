@@ -39,6 +39,8 @@ export const FURTHER: [string, string][] = [
 
 // S-19 (Doc 12 X10) joins the list only when /api/meta reports the flag (FR-105, D-103 K286).
 export const CABLE_SIZING: [string, string] = ["/cable-sizing/", "Cable and breaker sizing"];
+// S-20 (Doc 12 B2, B3) joins the list only when the Project has a BatteryBank (FR-119, D-106).
+export const BATTERY: [string, string] = ["/battery/", "Battery adequacy"];
 
 const FURTHER_TYPES = new Set(["M3a", "M3b", "M3c", "M3d", "M4a", "M4b"]);
 
@@ -71,13 +73,15 @@ export function PipelineStepperView({
   path,
   m1Missing = false,
   cableSizing = false,
+  battery = false,
 }: {
   states: StepState[];
   path: string;
   m1Missing?: boolean;
   cableSizing?: boolean;
+  battery?: boolean;
 }) {
-  const further = cableSizing ? [...FURTHER, CABLE_SIZING] : FURTHER;
+  const further = [...FURTHER, ...(cableSizing ? [CABLE_SIZING] : []), ...(battery ? [BATTERY] : [])];
   const inFurther = further.some(([h]) => path.startsWith(h));
   return (
     <nav aria-label="Pipeline" className={styles.nav}>
@@ -147,5 +151,6 @@ export function PipelineStepper() {
   const states = state.project ? stepStates(state, report) : STEPS.map(() => "todo" as StepState);
   const m1Missing = !m1Ref(state.runRecords);
   const cableSizing = useCableSizingFlag() === true;
-  return <PipelineStepperView states={states} path={path} m1Missing={m1Missing} cableSizing={cableSizing} />;
+  const battery = state.batteryBanks.length > 0;
+  return <PipelineStepperView states={states} path={path} m1Missing={m1Missing} cableSizing={cableSizing} battery={battery} />;
 }

@@ -45,3 +45,4 @@ export type CatalogEntry = S["CatalogEntry"];
 export type CatalogRef = S["CatalogRef"];
 export type CatalogImportResponse = S["CatalogImportResponse"];
 export type EntryCheck = S["EntryCheck"];
+export type BatteryBank = S["BatteryBank"];

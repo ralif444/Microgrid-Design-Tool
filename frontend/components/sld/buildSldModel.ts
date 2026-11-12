@@ -2,7 +2,7 @@
 // Pure: Project (+ the current M1 and M2, chosen by the caller with `latestRun`, FR-93) → elements with
 // the rows that tooltip, inspector and "View as table" all read. No layout, no store, and no physics:
 // values are copied from the Project or a payload and only rounded for display (`num`, R1, R2).
-import type { LimitingConstraint, M1Payload, M2Payload, ProjectSnapshot, ValidationIssue } from "../../api-types";
+import type { BatteryBank, LimitingConstraint, M1Payload, M2Payload, ProjectSnapshot, ValidationIssue } from "../../api-types";
 import { num } from "../format";
 import { KIND_WORDS, nearLimit } from "../M2Results";
 
@@ -50,6 +50,7 @@ export type SldInput = {
   m2?: { payload: M2Payload; limiting: LimitingConstraint[] } | null;
   issues?: ValidationIssue[];
   marginWarn?: number | null;
+  banks?: BatteryBank[]; // battery round (D-108): one design-data row, no symbol
 };
 
 const NO_M1 = "No current power-flow result";
@@ -87,7 +88,7 @@ function checks(id: string, m2: SldInput["m2"], marginWarn: number | null, extra
 const results = (rows: SldRow[] | null | undefined, hasM1: boolean): SldSection =>
   rows ? { title: "Results", rows } : { title: "Results", rows: [], empty: hasM1 ? "Not in this power-flow result" : NO_M1 };
 
-export function buildSldModel({ design, m1 = null, m2 = null, issues = [], marginWarn = null }: SldInput): SldModel {
+export function buildSldModel({ design, m1 = null, m2 = null, issues = [], marginWarn = null, banks = [] }: SldInput): SldModel {
   const buses = byId(design.buses);
   const busIds = new Set(buses.map((b) => b.id));
   const lines = byId(design.lines);
@@ -207,6 +208,9 @@ export function buildSldModel({ design, m1 = null, m2 = null, issues = [], margi
             unsetTau(i.tau_p_s, "τ_P filter"),
             unsetTau(i.tau_q_s, "τ_Q filter"),
             ...(i.catalog_ref ? [{ label: "Catalogue entry", value: i.catalog_ref.entry_id }] : []),
+            ...banks
+              .filter((b) => b.inverter_id === i.id)
+              .map((b) => ({ label: "Battery bank", value: `${b.series_count} × ${b.parallel_count} of ${b.module.catalog_ref.entry_id}` })),
           ],
         },
         results(r ? [row("P", r.p_kw, "kW"), row("Q", r.q_kvar, "kvar"), row("S", r.s_kva, "kVA"), row("Loading", r.loading_ratio, "ratio")] : null, !!m1),

@@ -40,6 +40,7 @@ Routes are Next.js static-export paths (file-based routing, ADR-002), no dynamic
 | S-16 | Report | `/report/` | HTML report: verdict, limiting constraints, margins, assumptions, tables, charts, RunRecord hashes; print layout. | FR-48, FR-58, FR-59, FR-60 | Must (print: Should) |
 | S-17 | About and limits | `/about/` | App, schema and engine versions (FAKE or REAL); active limits (`TIME_BUDGET`, `SWEEP_CAP`, `SCENARIO_CAP`); glossary; offline note. | FR-51, NFR-02, NFR-03 | Should [ASSUMPTION] |
 | S-19 | Cable and breaker sizing (experimental, Doc 12 X10) | `/cable-sizing/` | Installation settings with per-element overrides; Run; fixed islanded caveat; results table per Line and Inverter feeder with expandable factor rows. Hidden when `feature_cable_sizing` is off. | FR-105, FR-106, FR-112 | Could |
+| S-20 | Battery adequacy (Doc 12 B2, B3) | `/battery/` | Start hour; Run; status banner; fixed discharge-only caveat; per-bank table (power and autonomy outcomes with reasons); depletion chart. Listed only when the Project has at least one BatteryBank. | FR-76, FR-117 – FR-120 | Could |
 
 Global elements on every screen (not separate screens): header (Project name, unsaved indicator, Save and Open buttons, engine kind badge), pipeline stepper (§3), a status toast area for transport errors (HTTP 4xx or 5xx, "cannot reach the local service").
 
@@ -100,6 +101,10 @@ Presentation and workflow only (`docs/EXAMPLE_MODE_PRD.md`). Entering: S-01 "Ope
 
 S-19 exists only when the feature flag `feature_cable_sizing` is on (FR-105); it sits under Further analyses, after M2. Layout per `docs/CABLE_BREAKER_FEATURE_GUIDELINES.md` §6: settings panel (Project defaults) → Run → Status banner → the fixed caveat "Grid-forming inverters limit their fault current. A breaker sized here for overload may not trip on a fault in islanded operation. Fault protection is not assessed by this tool." → results table; a row expands to the factors, the table and page used for each factor, and the catalogue match (FR-112). Outcomes use Carbon support colours with icon and word, never brand colours. After a current run the single-line diagram shows a breaker symbol on each sized Line and Inverter feeder (FR-113); S-16 adds the section "Cable and overload sizing (experimental)" (FR-114); S-18 gains the entry kind `BREAKER` (FR-115).
 
+### 2.5 Battery adequacy (Doc 12 B2, B3, D-106)
+
+S-20 is listed under Further analyses only when the Project has at least one BatteryBank (FR-119); a Project without a bank looks and behaves as before. Layout per `docs/BESS_FEATURE_GUIDELINES.md` §5: start-hour field (prefilled 0) → Run → Status banner → the fixed caveat "Discharge only: recharging is not modelled. The battery is not part of the network model (assumption A2). These results are advice and do not change the feasibility verdict." → one row per bank (power outcome with capability, DC-side power and margin; autonomy outcome with usable energy, autonomy in hours and the depletion clock hour, or the end SoC) → depletion chart "State of charge per inverter over the profile day" (FR-120). Not-evaluated cells show the reason, never 0 or blank. Outcomes use Carbon support colours with icon and word: OK and NOT_DEPLETED neutral or green, SHORT and DEPLETED orange, NOT_EVALUATED grey; no red, no "Violated". S-05 gains the BatteryBank sub-form per Inverter (at most one bank; editing it marks no result stale, D-106 K304); S-18 the entry kind "Battery module"; S-04 the module hint (FR-74); S-16 the advisory section "Battery adequacy (advice, discharge only)". The SLD has no battery symbol; the inverter hover card and Inspector gain the row "Battery bank: n_s × n_p of <module>".
+
 ## 3. Navigation
 ```mermaid
 flowchart TB
@@ -120,6 +125,7 @@ flowchart TB
     SIDE --> S13["S-13 Small-signal M4a"]
     SIDE --> S14["S-14 Transient M4b"]
     S08 -. "valid M2, flag on" .-> S19["S-19 Cable and breaker sizing"]
+    S07 -. "valid M1, a bank exists" .-> S20["S-20 Battery adequacy"]
     S08 --> S16["S-16 Report"]
     SIDE --> S16
     S16 --> S15["S-15 Run history"]
@@ -143,6 +149,7 @@ Stepper steps: 1 Loads, 2 Sizing advice (optional, can be skipped), 3 Network, 4
 | S-09..S-14 Run | A valid M1 exists (as for M2). M2 verdict not required; an `INFEASIBLE` design is allowed. | Disabled button; same M1 message. `INFEASIBLE` M2 shows an info note "This design violates constraints; further analyses are still allowed" (FR-41). |
 | S-10, S-12 Run | Valid M1 and requested point count within `SWEEP_CAP`. | Size indicator turns to error; request still sendable, result is `INPUT_INVALID` / `SWEEP_CAP_EXCEEDED` (F4). |
 | S-19 Run (flag on) | A valid M2 exists for the current design (Status FEASIBLE or INFEASIBLE, design not edited since). | Disabled button; "Run the constraint check (M2) first" or the stale banner. The API returns `UNAVAILABLE / DEPENDENCY_NOT_MET` (FR-111). |
+| S-20 Run | A valid M1 exists for the current design (Status FEASIBLE, design not edited since) and at least one BatteryBank. | Disabled button; "Run power flow (M1) first" or the stale banner. The API returns `UNAVAILABLE / DEPENDENCY_NOT_MET` (FR-116). |
 | S-11 Compare / S-15 Re-run | 2 or more Scenarios selected (up to `SCENARIO_CAP` [ASSUMPTION]) / a RunRecord with verified hash. | "Select two or more Scenarios." / Re-run hidden after failed verification (FR-50). |
 | S-16 Report | At least one RunRecord with a result exists. | Empty state "No results yet. Run M1 and M2 first." |
 
@@ -436,6 +443,9 @@ DOC 7 COMPLETE
 ## Change log 2026-10-21 (user-approved change proposals from the proposal design checks)
 - C5.1 F3 outcome edge: Status equal and result_hash equal.
 - C5.4 first phase per key flow stated in §4.
+
+## Change log 2026-11-12 (battery round BESS-0, D-106)
+- §2 S-20, §2.5, §3 diagram and §3.1 gating row added (Doc 12 B2, B3, FR-116 – FR-121); no feature flag, listed only when a bank exists.
 
 ## Change log 2026-11-09 (cable round X10-0, D-100, user-confirmed 2026-11-09)
 - §2 S-19, §2.4, §3 diagram and §3.1 gating row added (Doc 12 X10, FR-105 – FR-115), behind the feature flag.

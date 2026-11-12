@@ -3,14 +3,17 @@
 // only rule set. Also yields the snapshot hash used for the stale-M1 check (D-46).
 import { useEffect, useState } from "react";
 import { validateProject } from "../api-client";
-import type { AnalysisType, ProjectSnapshot, ValidationReport } from "../api-types";
+import type { AnalysisType, BatteryBank, ProjectSnapshot, ValidationReport } from "../api-types";
 
-export function useValidation(design: ProjectSnapshot, target: AnalysisType | null = null): ValidationReport | null {
+// Banks are checked only when some exist (D-108), so the request is otherwise unchanged. The
+// default is one shared array: a fresh [] per render would restart the debounce every render.
+const NO_BANKS: BatteryBank[] = [];
+export function useValidation(design: ProjectSnapshot, target: AnalysisType | null = null, banks: BatteryBank[] = NO_BANKS): ValidationReport | null {
   const [report, setReport] = useState<ValidationReport | null>(null);
   useEffect(() => {
     let live = true;
     const t = setTimeout(() => {
-      void validateProject({ project_snapshot: design, target_analysis_type: target }).then((r) => {
+      void validateProject({ project_snapshot: design, target_analysis_type: target, ...(banks.length ? { battery_banks: banks } : {}) }).then((r) => {
         if (live) setReport(r.ok ? r.data : null);
       });
     }, 300);
@@ -18,7 +21,7 @@ export function useValidation(design: ProjectSnapshot, target: AnalysisType | nu
       live = false;
       clearTimeout(t);
     };
-  }, [design, target]);
+  }, [design, target, banks]);
   return report;
 }
 

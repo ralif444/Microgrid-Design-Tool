@@ -97,12 +97,12 @@ ADR coverage: ADR-001 → 2.3, 3.4; ADR-002 → 2.3, 3.4, 3.8; ADR-003 → 2.4, 
 | Bab III subsection | FR / NFR / DR groups | ADR | Screens / flows | Endpoints | Test seams / gates |
 |---|---|---|---|---|---|
 | 3.2 Diagram alir | NFR-18 | ADR-009 | — | — | Doc 10 gates EG/XG |
-| 3.3 Kebutuhan | all FR-01…FR-60, NFR-01…18, DR-01…09; Doc 12 extensions FR-61…FR-115 | — | — | — | NFR-09 (every FR has a test) |
+| 3.3 Kebutuhan | all FR-01…FR-60, NFR-01…18, DR-01…09; Doc 12 extensions FR-61…FR-121 | — | — | — | NFR-09 (every FR has a test) |
 | 3.4 Pemilihan kerangka kerja dan metodologi | — (selection by project criteria; no new FR/NFR group) | ADR-001, 002, 005, 007, 009 | — | — | — |
 | 3.5 Arsitektur | FR-21, FR-35, FR-36, FR-42, FR-43, FR-46–FR-48; NFR-02, 07, 08, 10, 11, 14, 17 | ADR-008, 010 | — | `/api/health`, `/api/meta` | T2, T6 |
 | 3.6 Kontrak data | FR-03–FR-05, FR-10–FR-16, FR-47, FR-54–FR-57; NFR-05, NFR-12, NFR-16; DR-09 | ADR-004 | S-03, S-05, S-06 | `/api/projects/validate`, `/api/projects/import` | T4, T7 |
 | 3.7 Desain API | FR-17–FR-25, FR-35–FR-45; NFR-04, 06, 15 | ADR-003, 006, 007 | — | all 15 endpoints | T1, T2 |
-| 3.8 Antarmuka | FR-14, FR-26, FR-45, FR-58–FR-60; Doc 12 FR-86–FR-93 (UX round X0–X7, D-72), FR-94–FR-98 (SLD X8, D-75), FR-99–FR-104 (example mode X9, D-92), FR-105–FR-115 (cable sizing X10, D-100, experimental); NFR-03, 05, 13 | ADR-002, 005, 013 | S-01…S-17, S-19, F1–F4 | — | T5, T7 |
+| 3.8 Antarmuka | FR-14, FR-26, FR-45, FR-58–FR-60; Doc 12 FR-86–FR-93 (UX round X0–X7, D-72), FR-94–FR-98 (SLD X8, D-75), FR-99–FR-104 (example mode X9, D-92), FR-105–FR-115 (cable sizing X10, D-100, experimental), FR-116–FR-121 (battery B2, B3, D-106, ADR-015); NFR-03, 05, 13 | ADR-002, 005, 013, 015 | S-01…S-17, S-19, S-20, F1–F4 | — | T5, T7 |
 | 3.9 Struktur | NFR-10, 11, 15, 17 | ADR-001, 002 | — | — | T6 |
 | 3.10 Verifikasi dan validasi | NFR-01, 07, 08, 09, 12, 14, 16; FR-49–FR-53 | ADR-008, 009 | S-15, F3 | `/api/run-records/verify`, `/rerun` | T1–T7; offline M5 (procedure) |
 | 3.11 Roadmap | NFR-18; scheduling of all FR | ADR-009 | — | — | XG-P0…XG-P4 |
@@ -220,6 +220,9 @@ DOC 11 COMPLETE
 ## Change log 2026-10-21 (user-approved change proposals from the proposal design checks)
 - C5.20 replicability row: tool versions pinned at P0, engine at P2.
 - Parameter-variation row updated for K-06 (proposal records skripsi parametric design without results).
+
+## Change log 2026-11-12 (battery round BESS-0, D-106)
+- §3: rows 3.3 and 3.8 name FR-116 – FR-121 (Doc 12 B2, B3), ADR-015 and S-20.
 
 ## Change log 2026-11-09 (cable round X10-0, D-100)
 - §3: rows 3.3 and 3.8 name FR-105 – FR-115 (Doc 12 X10) and S-19.

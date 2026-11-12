@@ -1,5 +1,6 @@
 // Project store reducer (ADR-005: Context + reducer). The open Project lives here (Doc 7 §7).
 import type {
+  BatteryBank,
   DesignConstraints,
   ProjectFile,
   ProjectSnapshot,
@@ -56,6 +57,8 @@ export interface ProjectState {
   design: ProjectSnapshot;
   sizingAdvice: SizingAdvice[];
   scenarios: Scenario[];
+  // Battery round (D-106 K304): design data outside the snapshot, so an edit makes nothing stale.
+  batteryBanks: BatteryBank[];
   runRecords: RunRecord[];
   unsaved: boolean;
   // Example mode (Doc 12 X9, D-92 K233): UI state only, never in the Project file or a snapshot.
@@ -88,6 +91,9 @@ export type ProjectAction =
   | { type: "scenarioAdded"; name: string }
   | { type: "scenarioUpdated"; id: string; patch: Partial<Omit<Scenario, "id">> }
   | { type: "scenarioRemoved"; id: string }
+  // At most one bank per Inverter (FR-75): set replaces that Inverter's bank.
+  | { type: "bankSet"; bank: BatteryBank }
+  | { type: "bankRemoved"; inverterId: string }
   // Project file (D-47): load replaces the open Project; save clears the unsaved flag.
   | { type: "projectLoaded"; file: ProjectFile }
   // Example Project (Doc 12 FR-85): a new unsaved copy with its own id; the example stays as is.
@@ -114,6 +120,7 @@ export const initialState: ProjectState = {
   design: emptyDesign(),
   sizingAdvice: [],
   scenarios: [],
+  batteryBanks: [],
   runRecords: [],
   unsaved: false,
   example: null,
@@ -188,8 +195,18 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
     case "rowRemoved": {
       if (action.collection === "buses" && busDependents(d, action.id).length > 0) return state; // FR-11
       const rows: Row[] = d[action.collection] ?? [];
-      return edit(state, { [action.collection]: rows.filter((x) => x.id !== action.id) });
+      const next = edit(state, { [action.collection]: rows.filter((x) => x.id !== action.id) });
+      // D-108: an Inverter's bank goes with it
+      return action.collection === "inverters" ? { ...next, batteryBanks: state.batteryBanks.filter((b) => b.inverter_id !== action.id) } : next;
     }
+    case "bankSet":
+      return {
+        ...state,
+        batteryBanks: [...state.batteryBanks.filter((b) => b.inverter_id !== action.bank.inverter_id), action.bank],
+        unsaved: true,
+      };
+    case "bankRemoved":
+      return { ...state, batteryBanks: state.batteryBanks.filter((b) => b.inverter_id !== action.inverterId), unsaved: true };
     case "constraintSet":
       return edit(state, { design_constraints: { ...d.design_constraints, [action.field]: action.value } });
     case "adviceAdded":
@@ -285,6 +302,7 @@ export function fromProjectFile(f: ProjectFile): Omit<ProjectState, "unsaved" | 
     },
     sizingAdvice: f.sizing_advice as unknown as SizingAdvice[],
     scenarios: (f.scenarios ?? []) as Scenario[],
+    batteryBanks: f.battery_banks ?? [],
     runRecords: f.run_records as RunRecord[],
   };
 }

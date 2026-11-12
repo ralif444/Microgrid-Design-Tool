@@ -187,3 +187,69 @@ def test_fr_115_conductor_match_fields_are_checked(
 ) -> None:  # D-104 K293
     doc = catalog(conductor(conductor={"r_ohm_per_km": 0.5, "x_ohm_per_km": 0.3, **values}))
     assert _import(client, doc)["file_check"]["code"] == "MALFORMED_FILE"
+
+
+# Battery round BESS-1 (Doc 12 FR-73; D-106, D-107). Values are fictitious (MOD-T1 of the
+# verification framework §2), test data only.
+def module(**values: Any) -> dict[str, Any]:
+    fields = {"energy_kwh": 5, "voltage_min_v": 44.8, "voltage_max_v": 57.6}
+    return {
+        "id": "M1",
+        "kind": "BATTERY_MODULE",
+        "provenance": PROV,
+        "sources": {f: "p. 3" for f in fields},
+        "battery_module": {**fields, **values},
+    }
+
+
+def test_fr_73_battery_module_roundtrip(client: TestClient) -> None:
+    doc = catalog(
+        module(discharge_power_kw=2.5, nominal_voltage_v=51.2),
+        {**module(c_rate_per_h=0.2), "id": "M2"},
+    )
+    doc["entries"][0]["sources"] |= {"discharge_power_kw": "p. 4", "nominal_voltage_v": "p. 3"}
+    doc["entries"][1]["sources"] |= {"c_rate_per_h": "p. 4"}
+    out = _import(client, copy.deepcopy(doc))
+    assert out["file_check"]["accepted"] and out["catalog"] == doc
+    assert [c["usable"] for c in out["entry_checks"]] == [True, True]
+
+
+def test_fr_73_module_without_power_capability_is_stored_and_usable(client: TestClient) -> None:
+    # D-107: the B2 warning is shown by S-18; B1 can still use the entry.
+    out = _import(client, catalog(module()))
+    assert out["file_check"]["accepted"] and out["entry_checks"][0]["usable"]
+
+
+@pytest.mark.parametrize(
+    ("entry", "reason"),
+    [
+        (module(energy_kwh=None), "energy_kwh is missing"),
+        (module(voltage_max_v=None), "voltage_max_v is missing"),
+        (
+            {**module(), "sources": {"energy_kwh": "p. 3", "voltage_min_v": "p. 3"}},
+            "sources.voltage_max_v (page or section) is missing",
+        ),
+        (
+            module(recommended_dod_ratio=0.8),
+            "sources.recommended_dod_ratio (page or section) is missing",
+        ),
+        (module(voltage_min_v=60), "voltage_min_v is above voltage_max_v"),
+        ({**module(), "battery_module": None}, "battery_module values are missing"),
+    ],
+)
+def test_fr_73_module_guard_names_the_gap(
+    client: TestClient, entry: dict[str, Any], reason: str
+) -> None:
+    out = _import(client, catalog(entry))
+    assert out["file_check"]["accepted"] and not out["entry_checks"][0]["usable"]
+    assert reason in out["entry_checks"][0]["reasons"]
+
+
+@pytest.mark.parametrize(
+    "values",
+    [{"energy_kwh": 0}, {"c_rate_per_h": -1}, {"recommended_dod_ratio": 1.2}, {"voltage_min_v": 0}],
+)
+def test_fr_73_module_values_out_of_range_refused(
+    client: TestClient, values: dict[str, Any]
+) -> None:
+    assert _import(client, catalog(module(**values)))["file_check"]["code"] == "MALFORMED_FILE"
