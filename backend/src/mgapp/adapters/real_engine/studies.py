@@ -26,6 +26,7 @@ from mgapp.domain.contract import (
 from mgapp.domain.entities import ProjectSnapshot
 from mgapp.domain.enums import (
     CONSTRAINT_UNIT,
+    M4_POINT_METRICS,
     ConstraintKind,
     IssueCode,
     IssueLevel,
@@ -60,7 +61,6 @@ from mgapp.domain.payloads import (
     TransientClass,
 )
 
-M4_POINT_METRICS = {"ZETA_MIN", "RE_LAMBDA_DOM", "INDICATORS"}
 MSG_M3 = "Analysis completed; the status of each point or scenario is in the results."
 MSG_M4_FAILED = (
     "The stability calculation failed ({code}). This is a calculation problem, not an "

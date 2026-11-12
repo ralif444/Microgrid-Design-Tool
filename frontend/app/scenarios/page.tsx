@@ -78,11 +78,10 @@ function Scenarios() {
   const { example } = useProject();
   const { scenarios } = useProject();
   const dispatch = useProjectDispatch();
-  const { design, fresh, busy, resp, error, run, m2Infeasible } = useDependentRun("M3c");
+  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M3c");
   const [selected, setSelected] = useState<string[]>([]);
   const [name, setName] = useState("");
   const [runLabels, setRunLabels] = useState<Record<string, string>>({});
-  const [dismissed, setDismissed] = useState<string | null>(null);
   const inverterCount = design.inverters?.length ?? 0;
   const paths = numericPaths(design);
   const chosen = scenarios.filter((s) => selected.includes(s.id));
@@ -176,7 +175,7 @@ function Scenarios() {
         </button>
       </p>
       {inverterCount < 2 && <p>N−1 needs at least two inverters.</p>}
-      {error && error !== dismissed && <Toast message={error} onDismiss={() => setDismissed(error)} />}
+      {error && <Toast message={error} onDismiss={clearError} />}
       {r && <StatusBanner type="M3c" result={r} />}
       {p && resp && (
         <>

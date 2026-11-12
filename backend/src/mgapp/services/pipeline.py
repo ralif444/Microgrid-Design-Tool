@@ -11,7 +11,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from mgapp.domain.base import Model
+from mgapp.domain.base import FiniteJson, Model
 from mgapp.domain.contract import (
     AnalysisRequest,
     AnalysisResult,
@@ -32,7 +32,13 @@ from mgapp.domain.enums import (
 )
 from mgapp.domain.run_record import AnalysisResponse
 from mgapp.services.cable_sizing.service import compute as compute_cable_sizing
-from mgapp.services.canonical import normalise_raw, normalise_snapshot, sha256_hex
+from mgapp.services.canonical import (
+    normalise_raw,
+    normalise_snapshot,
+    safe_sha256_hex,
+    sha256_hex,
+    snapshot_hash,
+)
 from mgapp.services.dependency import check_dependency
 from mgapp.services.guard import ExecutionGuard
 from mgapp.services.limits import Limits, check_size_limits
@@ -44,7 +50,7 @@ class AnalysisRequestBody(Model):
     """HTTP body of POST /api/analyses/{type} (Doc 6 §3.1). analysis_type comes from the route."""
 
     project_snapshot: ProjectSnapshot
-    parameters: dict[str, Any]
+    parameters: FiniteJson
     solver_config: SolverConfig
     depends_on: RunRecordRef | None = None
     scenarios: list[ScenarioSnapshot] | None = None
@@ -128,7 +134,7 @@ class Pipeline:
         r = raw if isinstance(raw, dict) else {}
         snapshot = normalise_raw(r.get("project_snapshot"))
         scen = r.get("scenarios") if isinstance(r.get("scenarios"), list) else None
-        snap_hash = self._safe_hash({"snapshot": snapshot, "scenarios": scen} if scen else snapshot)
+        snap_hash = safe_sha256_hex({"snapshot": snapshot, "scenarios": scen} if scen else snapshot)
         rec = self._records.build(
             analysis_type=t,
             parameters=r.get("parameters") if isinstance(r.get("parameters"), dict) else {},
@@ -142,13 +148,6 @@ class Pipeline:
             replay_of_record_id=replay_of,
         )
         return AnalysisResponse(result=result, run_record=rec)
-
-    @staticmethod
-    def _safe_hash(value: Any) -> str:
-        try:
-            return sha256_hex(value)
-        except ValueError:
-            return sha256_hex(None)
 
     def run(
         self, t: AnalysisType, body: AnalysisRequestBody, replay_of: str | None = None
@@ -168,13 +167,11 @@ class Pipeline:
             if body.scenarios is not None
             else None
         )
-        snap_hash = (
-            sha256_hex({"snapshot": snapshot, "scenarios": scenarios}) if scenarios else base_hash
-        )
+        snap_hash = snapshot_hash(snapshot, scenarios) if scenarios else base_hash
         depends = body.depends_on.model_dump(mode="json") if body.depends_on else None
         if t is AnalysisType.CB and isinstance(body.parameters.get("tables"), dict):
             # The server derives the hash and overwrites the client's value (D-102 K282).
-            tables_hash = self._safe_hash(body.parameters["tables"])
+            tables_hash = safe_sha256_hex(body.parameters["tables"])
             body.parameters = {**body.parameters, "table_set_hash": tables_hash}
         solver = body.solver_config.model_dump(mode="json")
 

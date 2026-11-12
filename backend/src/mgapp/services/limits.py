@@ -40,36 +40,23 @@ def check_size_limits(
     def issue(code: IssueCode, msg: str) -> None:
         out.append(ValidationIssue(code=code, level=IssueLevel.REQUEST, message=msg))
 
-    if t is AnalysisType.M3B:
-        n = _steps(parameters.get("axis"))
-        if n > limits.sweep_cap:
-            issue(
-                IssueCode.SWEEP_CAP_EXCEEDED,
-                f"This sweep has too many points ({n}; the limit is {limits.sweep_cap}). "
-                "Reduce the range or step count.",
-            )
-    if t is AnalysisType.M3D:
-        n = _steps(parameters.get("axis_x")) * _steps(parameters.get("axis_y"))
-        if n > limits.sweep_cap:
-            issue(
-                IssueCode.SWEEP_CAP_EXCEEDED,
-                f"This sweep has too many points ({n}; the limit is {limits.sweep_cap}). "
-                "Reduce the range or step count.",
-            )
-    if (
-        t in (AnalysisType.M3B, AnalysisType.M3D)
-        and limits.lambda_c_point_cap is not None
-        and "LAMBDA_C" in (parameters.get("point_metrics") or [])
-    ):
+    if t in (AnalysisType.M3B, AnalysisType.M3D):
         n = (
             _steps(parameters.get("axis"))
             if t is AnalysisType.M3B
-            else (_steps(parameters.get("axis_x")) * _steps(parameters.get("axis_y")))
+            else _steps(parameters.get("axis_x")) * _steps(parameters.get("axis_y"))
         )
-        if n > limits.lambda_c_point_cap:
+        if n > limits.sweep_cap:
             issue(
                 IssueCode.SWEEP_CAP_EXCEEDED,
-                f"Loadability at every point is limited to {limits.lambda_c_point_cap} points"
+                f"This sweep has too many points ({n}; the limit is {limits.sweep_cap}). "
+                "Reduce the range or step count.",
+            )
+        cap = limits.lambda_c_point_cap
+        if cap is not None and n > cap and "LAMBDA_C" in (parameters.get("point_metrics") or []):
+            issue(
+                IssueCode.SWEEP_CAP_EXCEEDED,
+                f"Loadability at every point is limited to {cap} points"
                 f" (this sweep has {n}). Reduce the step count or leave out loadability per point.",
             )
     if t is AnalysisType.M3A and limits.m3a_parameter_cap is not None:

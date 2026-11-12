@@ -31,14 +31,19 @@ async def read_json(request: Request, limit_bytes: int) -> Any:
         raise TransportFailureError(413)
     try:
         return json.loads(raw)
-    except (ValueError, UnicodeDecodeError) as exc:
+    except (ValueError, RecursionError) as exc:  # RecursionError: nesting too deep to decode
         raise TransportFailureError(400) from exc
+
+
+async def read_body(request: Request) -> tuple[Pipeline, Any]:
+    """The app's pipeline and the decoded JSON body, read under the MetaInfo body limit."""
+    pipeline: Pipeline = request.app.state.pipeline
+    return pipeline, await read_json(request, pipeline.limits.body_limit_mib * 1024 * 1024)
 
 
 def _handler(t: AnalysisType) -> Callable[[Request], Awaitable[AnalysisResponse]]:
     async def analyse(request: Request) -> AnalysisResponse:
-        pipeline: Pipeline = request.app.state.pipeline
-        raw = await read_json(request, pipeline.limits.body_limit_mib * 1024 * 1024)
+        pipeline, raw = await read_body(request)
         return await run_in_threadpool(pipeline.run_raw, t, raw)
 
     analyse.__name__ = f"analyse_{t.value}"

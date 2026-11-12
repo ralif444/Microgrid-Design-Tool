@@ -12,12 +12,17 @@ from typing import Any, TypeGuard
 
 from pydantic import ValidationError
 
-from mgapp.domain.base import Model
+from mgapp.domain.base import FiniteJson, Model
 from mgapp.domain.contract import ScenarioSnapshot, ValidationIssue
 from mgapp.domain.entities import ProjectSnapshot
-from mgapp.domain.enums import AnalysisType, IssueCode, IssueLevel
+from mgapp.domain.enums import M4_POINT_METRICS, AnalysisType, IssueCode, IssueLevel
 from mgapp.services.cable_sizing.service import parameter_issues as cable_parameter_issues
-from mgapp.services.canonical import normalise_raw, normalise_snapshot, sha256_hex
+from mgapp.services.canonical import (
+    normalise_raw,
+    normalise_snapshot,
+    safe_sha256_hex,
+    sha256_hex,
+)
 
 ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,32}$")
 
@@ -57,7 +62,6 @@ MESSAGES: dict[IssueCode, str] = {
     IssueCode.CABLE_SETTINGS_INVALID: "Check the cable sizing settings.",
 }
 
-M4_POINT_METRICS = frozenset({"ZETA_MIN", "RE_LAMBDA_DOM", "INDICATORS"})
 DISTURBANCE_KINDS = frozenset({"LOAD_STEP", "LOAD_SCALING", "REFERENCE_STEP", "INVERTER_OUTAGE"})
 REFERENCES = frozenset({"P_SETPOINT", "Q_SETPOINT", "V_SETPOINT", "F_SETPOINT"})
 SETTLING_FIELDS = ("frequency_band_hz", "voltage_band_kv", "window_s")
@@ -434,7 +438,7 @@ class ValidateRequest(Model):
 
     project_snapshot: ProjectSnapshot
     target_analysis_type: AnalysisType | None = None  # null = M1 rules
-    parameters: dict[str, Any] | None = None  # null = no request-level checks
+    parameters: FiniteJson | None = None  # null = no request-level checks
 
 
 class ValidationReport(Model):
@@ -451,16 +455,12 @@ def validate_raw(raw: Any) -> ValidationReport:
         req = ValidateRequest.model_validate(raw)
     except ValidationError:
         snap = normalise_raw(raw.get("project_snapshot") if isinstance(raw, dict) else None)
-        try:
-            h = sha256_hex(snap)
-        except ValueError:
-            h = sha256_hex(None)
         issue = ValidationIssue(
             code=IssueCode.MALFORMED_REQUEST,
             level=IssueLevel.REQUEST,
             message=MESSAGES[IssueCode.MALFORMED_REQUEST],
         )
-        return ValidationReport(valid=False, issues=[issue], snapshot_hash=h)
+        return ValidationReport(valid=False, issues=[issue], snapshot_hash=safe_sha256_hex(snap))
     t = req.target_analysis_type or AnalysisType.M1
     issues = validate_request(t, req.project_snapshot, req.parameters or {}, False, None)
     if req.parameters is None:

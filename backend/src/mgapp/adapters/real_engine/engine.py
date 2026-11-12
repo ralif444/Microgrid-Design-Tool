@@ -25,6 +25,7 @@ from mgapp.adapters.real_engine import studies
 from mgapp.adapters.real_engine.studies import constraint
 from mgapp.adapters.real_engine.studies import result as _result
 from mgapp.domain.contract import (
+    MSG_ENGINE_ERROR,
     AnalysisRequest,
     AnalysisResult,
     EngineIdentity,
@@ -63,10 +64,6 @@ log = logging.getLogger("mgapp.real_engine")
 
 SWEEP_CAP = 1000  # λ-trace point cap = MetaInfo sweep cap (D-51 K44)
 
-MSG_ENGINE_ERROR = (
-    "The calculation engine failed unexpectedly (internal error, not a solver result). "
-    "Run again; if it repeats, report the RunRecord."
-)
 _M1_MESSAGES = {
     EStatus.SOLVER_FAILED: "The power flow did not converge ({code}). This is a calculation "
     "problem, not a limit violation. Check inverter droop and line data, then run again.",

@@ -10,8 +10,9 @@ import { runAnalysis } from "../api-client";
 import type { AnalysisRequestBody, AnalysisType, PsPayload, RunRecord, Status } from "../api-types";
 import { adviceInputHash, m1Ref, useProject, useProjectDispatch, type ProjectState, type PsParameters } from "../store";
 import type { ExampleSettings } from "../store/example";
-import { applyOverrides, SOLVER } from "./Further";
+import { applyOverrides } from "./Further";
 import { Icon, type IconName } from "./Icon";
+import { SOLVER } from "./useAnalysisCall";
 
 const STEPS: [AnalysisType, string, string][] = [
   ["PS", "Sizing advice (PS)", "sizing"],

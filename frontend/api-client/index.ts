@@ -29,6 +29,12 @@ async function call<T>(path: string, init?: RequestInit): Promise<ApiOutcome<T>>
   }
 }
 
+const post = (body: unknown): RequestInit => ({
+  method: "POST",
+  headers: { "content-type": "application/json" },
+  body: JSON.stringify(body),
+});
+
 // Example Project files shipped with the frontend (Doc 12 FR-85); checked by importProject after.
 export function getExample(name: string): Promise<ApiOutcome<unknown>> {
   return call<unknown>(`/examples/${name}.mgproj.json`);
@@ -47,26 +53,12 @@ export function runAnalysis(
   type: AnalysisType,
   body: AnalysisRequestBody,
 ): Promise<ApiOutcome<AnalysisResponse>> {
-  return call<AnalysisResponse>(`/api/analyses/${type}`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  return call<AnalysisResponse>(`/api/analyses/${type}`, post(body));
 }
 
 export function validateProject(body: ValidateRequest): Promise<ApiOutcome<ValidationReport>> {
-  return call<ValidationReport>("/api/projects/validate", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  return call<ValidationReport>("/api/projects/validate", post(body));
 }
-
-const post = (body: unknown): RequestInit => ({
-  method: "POST",
-  headers: { "content-type": "application/json" },
-  body: JSON.stringify(body),
-});
 
 // The server stores nothing; it checks the file and returns it (Doc 6 §3.6).
 export function importProject(file: unknown): Promise<ApiOutcome<ImportResponse>> {

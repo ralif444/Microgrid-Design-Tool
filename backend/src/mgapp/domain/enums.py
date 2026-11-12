@@ -182,5 +182,9 @@ class WarningCode(StrEnum):
     )
 
 
+M4_POINT_METRICS = frozenset({"ZETA_MIN", "RE_LAMBDA_DOM", "INDICATORS"})
+"""Sweep point metrics that need the M4a model, hence τ_p and τ_q (Doc 3 §6.5, D-53)."""
+
+
 class InitialGuess(StrEnum):
     DEFAULT = "DEFAULT"

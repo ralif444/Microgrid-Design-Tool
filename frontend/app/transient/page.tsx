@@ -46,7 +46,7 @@ const CLASS_WORDS: Record<string, string> = {
 };
 
 function Transient() {
-  const { design, fresh, busy, resp, error, run, m2Infeasible } = useDependentRun("M4b");
+  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M4b");
   // Example mode (Doc 12 X9 FR-103, D-92 K232): the Doc 13 §5 disturbances DR-01, TS-02, DR-02 as presets;
   // the first fills the form on arrival, choosing one refills it, any edit makes the values the user's.
   const { example } = useProject();
@@ -90,7 +90,6 @@ function Transient() {
   const [fBand, setFBand] = useState<number | null>(null);
   const [vBand, setVBand] = useState<number | null>(null);
   const [win, setWin] = useState<number | null>(null);
-  const [dismissed, setDismissed] = useState<string | null>(null);
 
   const onLoads = kind === "LOAD_STEP" || kind === "LOAD_SCALING";
   const elements = [
@@ -239,7 +238,7 @@ function Transient() {
           {busy ? "Running..." : "Run M4b"}
         </button>
       </form>
-      {error && error !== dismissed && <Toast message={error} onDismiss={() => setDismissed(error)} />}
+      {error && <Toast message={error} onDismiss={clearError} />}
       {r && <StatusBanner type="M4b" result={r} />}
       {p && resp && <KpiStrip label="Transient key figures" kpis={m4bKpis(p)} record={resp.run_record} />}
       {p && resp && (

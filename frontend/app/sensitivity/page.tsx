@@ -23,7 +23,7 @@ type Sens = M3aPayload["sensitivities"][number];
 const FLAG = "status differs between the two sides";
 
 function Sensitivity() {
-  const { design, fresh, busy, resp, error, run, m2Infeasible } = useDependentRun("M3a");
+  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M3a");
   // Example mode (Doc 12 X9, D-92 K230): paths and metrics from the guided example; a path that does not
   // resolve on this Project is dropped (Doc 7 §2.3). The step stays the user's (D-92 K231).
   const ex = useExampleForm<{ parameter_paths: string[] | null; output_metrics: OutputMetric[] | null }>(
@@ -43,7 +43,6 @@ function Sensitivity() {
   const setMetrics = (v: OutputMetric[]) => ex.set("output_metrics", v);
   const [stepKind, setStepKind] = useState<"step_relative" | "step_absolute">("step_relative");
   const [step, setStep] = useState<number | null>(null);
-  const [dismissed, setDismissed] = useState<string | null>(null);
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     const pre = shortcutPrefill(design, q.get("kind") ?? "", q.get("element") ?? "");
@@ -114,7 +113,7 @@ function Sensitivity() {
           {busy ? "Running..." : "Run M3a"}
         </button>
       </form>
-      {error && error !== dismissed && <Toast message={error} onDismiss={() => setDismissed(error)} />}
+      {error && <Toast message={error} onDismiss={clearError} />}
       {r && <StatusBanner type="M3a" result={r} />}
       {p &&
         resp &&

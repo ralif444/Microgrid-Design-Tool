@@ -12,16 +12,18 @@ import logging
 import threading
 from dataclasses import dataclass
 
-from mgapp.domain.contract import AnalysisRequest, AnalysisResult, EngineIdentity, Warning
+from mgapp.domain.contract import (
+    MSG_ENGINE_ERROR,
+    AnalysisRequest,
+    AnalysisResult,
+    EngineIdentity,
+    Warning,
+)
 from mgapp.domain.enums import ALLOWED_STATUS, EngineKind, Status, StatusCode, WarningCode
 from mgapp.engine_port import EnginePort
 
 log = logging.getLogger("mgapp.guard")
 
-MSG_ENGINE_ERROR = (
-    "The calculation engine failed unexpectedly (internal error, not a solver result). "
-    "Run again; if it repeats, report the RunRecord."
-)
 FAKE_WARNING = Warning(
     code=WarningCode.ENGINE_KIND_FAKE,
     message="Result from the Fake Engine; not an engine calculation.",

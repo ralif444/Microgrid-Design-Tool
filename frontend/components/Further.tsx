@@ -1,12 +1,10 @@
 "use client";
 // Shared parts of the further-analysis screens S-09..S-11 (Doc 7 §6.5, Doc 9 D-56).
-import { useState } from "react";
-import { runAnalysis } from "../api-client";
 import type { AnalysisRequestBody, AnalysisResponse, AnalysisType, OutputMetric, ProjectSnapshot, RunRecord } from "../api-types";
 import { latestRun, m1Ref, useProject, useProjectDispatch } from "../store";
+import { num } from "./format";
+import { SOLVER, useAnalysisCall } from "./useAnalysisCall";
 import { m1Freshness, useValidation } from "./useValidation";
-
-export const SOLVER = { mismatch_tolerance_w: 0.001, max_iterations: 50, initial_guess: "DEFAULT" as const };
 
 // Doc 3 §6.4 metrics with the contract unit of the Real adapter (D-55 K93).
 export const METRICS: [OutputMetric, string, string][] = [
@@ -106,22 +104,15 @@ export function useDependentRun(type: AnalysisType) {
   const ref = m1Ref(runRecords);
   const report = useValidation(design);
   const fresh = m1Freshness(ref?.snapshot_hash ?? null, report);
-  const [busy, setBusy] = useState(false);
+  const { busy, error, setError, call } = useAnalysisCall();
   const resp = asResponse(latestRun(runRecords, type, report?.snapshot_hash ?? null));
-  const [error, setError] = useState<string | null>(null);
   async function run(extra: Pick<AnalysisRequestBody, "parameters" | "scenarios">) {
     if (!ref) return;
-    setError(null);
-    setBusy(true);
-    const out = await runAnalysis(type, { project_snapshot: design, solver_config: SOLVER, depends_on: ref, ...extra });
-    setBusy(false);
-    if (!out.ok) {
-      setError(out.message);
-      return;
-    }
-    dispatch({ type: "runRecordAdded", record: out.data.run_record });
+    const data = await call(type, { project_snapshot: design, solver_config: SOLVER, depends_on: ref, ...extra });
+    if (data) dispatch({ type: "runRecordAdded", record: data.run_record });
   }
-  return { design, fresh, busy, resp, error, run, m2Infeasible: lastM2Infeasible(runRecords) };
+  const clearError = () => setError(null);
+  return { design, fresh, busy, resp, error, clearError, run, m2Infeasible: lastM2Infeasible(runRecords) };
 }
 
 // A stored RunRecord in the shape of a fresh response (Doc 12 X0, FR-93).
@@ -136,4 +127,4 @@ export function InfeasibleNote({ show }: { show: boolean }) {
   return show ? <p>This design violates constraints; further analyses are still allowed.</p> : null;
 }
 
-export const fmt = (v: number | null | undefined) => (v === null || v === undefined ? "—" : String(Number(v.toPrecision(6))));
+export const fmt = (v: number | null | undefined) => (v === null || v === undefined ? "—" : String(num(v)));

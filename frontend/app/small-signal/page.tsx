@@ -55,11 +55,10 @@ const EIGEN: DataColumn<EigRow>[] = [
 ];
 
 function SmallSignal() {
-  const { design, fresh, busy, resp, error, run, m2Infeasible } = useDependentRun("M4a");
+  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M4a");
   const { from, conflict } = tauInSource(design.inverters ?? []);
   const [tauIn, setTauIn] = useState<number | null>(from?.tau_in_s ?? null);
   const [threshold, setThreshold] = useState<number | null>(null);
-  const [dismissed, setDismissed] = useState<string | null>(null);
   const r = resp?.result;
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as M4aPayload) : null;
   const eig: EigRow[] = p ? eigenRows(p) : [];
@@ -104,7 +103,7 @@ function SmallSignal() {
           {busy ? "Running..." : "Run M4a"}
         </button>
       </form>
-      {error && error !== dismissed && <Toast message={error} onDismiss={() => setDismissed(error)} />}
+      {error && <Toast message={error} onDismiss={clearError} />}
       {r && <StatusBanner type="M4a" result={r} />}
       {p && resp && <KpiStrip label="Small-signal key figures" kpis={m4aKpis(p, thresholdGiven)} record={resp.run_record} />}
       {p && resp && (

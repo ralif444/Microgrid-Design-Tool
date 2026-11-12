@@ -33,7 +33,7 @@ const limiting = (g: SweepPoint) => {
 };
 
 function Envelope() {
-  const { design, fresh, busy, resp, error, run, m2Infeasible } = useDependentRun("M3d");
+  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M3d");
   // Example mode (Doc 12 X9, D-92 K230/K231): X axis from the guided example, Y axis left to the user.
   const { example } = useProject();
   const s = example?.settings.screens.envelope;
@@ -41,7 +41,6 @@ function Envelope() {
   const y = useAxis(design, "Y axis: ", s && { ex: s.fields.axis_y ?? null, needs: axisNeeds(s.needs_value, "axis_y") });
   const ex = useExampleForm("envelope", {}, { onReset: () => (x.reset(), y.reset()) });
   const cap = useSweepCap();
-  const [dismissed, setDismissed] = useState<string | null>(null);
   const points = x.steps !== null && y.steps !== null ? x.steps * y.steps : null;
 
   const r = resp?.result;
@@ -77,7 +76,7 @@ function Envelope() {
           {busy ? "Running..." : "Run envelope"}
         </button>
       </form>
-      {error && error !== dismissed && <Toast message={error} onDismiss={() => setDismissed(error)} />}
+      {error && <Toast message={error} onDismiss={clearError} />}
       {r && <StatusBanner type="M3d" result={r} />}
       {p && resp && <KpiStrip label="Envelope key figures" kpis={m3dKpis(p)} record={resp.run_record} />}
       {p && resp && (

@@ -3,13 +3,13 @@
 // advisory panel (P4), Accept or Skip (FR-08; Edit deferred, Doc 9 D-45 K5), stale notice.
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { runAnalysis } from "../../api-client";
 import type { AnalysisResponse, PsPayload } from "../../api-types";
 import { catalogHints, useCatalog } from "../../components/Catalog";
 import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
+import { SOLVER, useAnalysisCall } from "../../components/useAnalysisCall";
 import {
   adviceInputHash,
   useProject,
@@ -18,7 +18,6 @@ import {
   type SizingAdvice,
 } from "../../store";
 
-const SOLVER = { mismatch_tolerance_w: 0.001, max_iterations: 50, initial_guess: "DEFAULT" as const }; // ignored by PS
 
 const EMPTY: PsParameters = {
   inverter_margin_ratio: null,
@@ -138,9 +137,8 @@ function Sizing() {
   // Last advice first, then the guided example (Doc 12 X9, D-92 K230), else empty.
   const ex = useExampleForm<PsParameters>("sizing", sizingAdvice.at(-1)?.ps_parameters ?? EMPTY);
   const ps = ex.values;
-  const [busy, setBusy] = useState(false);
+  const { busy, error, call } = useAnalysisCall();
   const [resp, setResp] = useState<AnalysisResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [stale, setStale] = useState(false);
   const latest = sizingAdvice.at(-1);
   const hasLoad = (design.loads?.length ?? 0) > 0;
@@ -151,29 +149,23 @@ function Sizing() {
   }, [design, ps, latest]);
 
   async function run() {
-    setError(null);
-    setBusy(true);
     // Optional parameters are sent only when entered; required ones are sent as entered so
     // stage 1 can name what is missing (PS_PARAMETER_INVALID).
     const parameters = Object.fromEntries(Object.entries(ps).filter(([, v]) => v !== null));
-    const out = await runAnalysis("PS", { project_snapshot: design, parameters, solver_config: SOLVER });
-    setBusy(false);
-    if (!out.ok) {
-      setError(out.message);
-      return;
-    }
-    setResp(out.data);
-    dispatch({ type: "runRecordAdded", record: out.data.run_record });
-    if (out.data.result.status === "FEASIBLE") {
+    const data = await call("PS", { project_snapshot: design, parameters, solver_config: SOLVER }); // PS ignores the solver settings
+    if (!data) return;
+    setResp(data);
+    dispatch({ type: "runRecordAdded", record: data.run_record });
+    if (data.result.status === "FEASIBLE") {
       dispatch({
         type: "adviceAdded",
         advice: {
-          id: out.data.run_record.record_id,
-          created_at: out.data.run_record.created_at,
+          id: data.run_record.record_id,
+          created_at: data.run_record.created_at,
           input_hash: await adviceInputHash(design, ps),
           ps_parameters: ps,
           state: "PROPOSED",
-          result: out.data.result.payload as unknown as PsPayload,
+          result: data.result.payload as unknown as PsPayload,
         },
       });
     }

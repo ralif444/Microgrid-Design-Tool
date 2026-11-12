@@ -4,16 +4,15 @@
 // the session), table file picker, Run gated on a current M2, status banner, the fixed caveat above
 // the results table, rows that expand to the factors with their table and page. Advice only.
 import { useState } from "react";
-import { runAnalysis } from "../../api-client";
 import { useCatalog } from "../../components/Catalog";
 import { EmptyState } from "../../components/EmptyState";
-import { SOLVER } from "../../components/Further";
 import { Icon } from "../../components/Icon";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toggletip } from "../../components/Term";
 import { Toast } from "../../components/Toast";
+import { SOLVER, useAnalysisCall } from "../../components/useAnalysisCall";
 import { useValidation } from "../../components/useValidation";
 import {
   arrangements,
@@ -204,8 +203,7 @@ function CableSizing() {
   const lastM2 = runRecords.findLast((r) => r.analysis_type === "M2");
   const [s, update] = useCbSession();
   const set = (patch: Partial<CbSettings>) => update({ settings: { ...s.settings, ...patch } });
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { busy, error, setError, call } = useAnalysisCall();
   const [open, setOpen] = useState<Set<string>>(new Set());
   const { catalog, checks } = useCatalog();
   const usable = new Set(checks.filter((c) => c.usable).map((c) => c.entry_id));
@@ -230,21 +228,15 @@ function CableSizing() {
 
   async function run() {
     if (!ref || s.tables === null) return;
-    setError(null);
-    setBusy(true);
-    const out = await runAnalysis("CB", {
+    const data = await call("CB", {
       project_snapshot: design,
       solver_config: SOLVER,
       depends_on: ref,
       parameters: { method_id: METHOD_ID, settings: settingsBody(s.settings), tables: s.tables },
     });
-    setBusy(false);
-    if (!out.ok) {
-      setError(out.message);
-      return;
-    }
+    if (!data) return;
     setOpen(new Set());
-    update({ record: out.data.run_record });
+    update({ record: data.run_record });
   }
 
   const gate = !ref

@@ -3,7 +3,6 @@
 // (D-46 K11), optional storage settings; Run disabled unless the M1 result is current (§3.1). The
 // single-line diagram carries the M1 labels and M2 marks (Doc 12 FR-96) and opens the Inspector.
 import { useState } from "react";
-import { runAnalysis } from "../../api-client";
 import type { M2Payload, RunRecord } from "../../api-types";
 import Link from "next/link";
 import { EmptyState } from "../../components/EmptyState";
@@ -20,11 +19,10 @@ import { RequireProject } from "../../components/RequireProject";
 import { ResultsDiagram } from "../../components/sld/ResultsDiagram";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
+import { SOLVER, useAnalysisCall } from "../../components/useAnalysisCall";
 import { m1Freshness, useValidation } from "../../components/useValidation";
 import { latestRun, m1Ref, useProject, useProjectDispatch } from "../../store";
 import styles from "./constraint-check.module.css";
-
-const SOLVER = { mismatch_tolerance_w: 0.001, max_iterations: 50, initial_guess: "DEFAULT" as const };
 
 type M2Params = Record<
   "inverter_margin_ratio" | "line_margin_ratio" | "autonomy_h" | "dc_efficiency_ratio" | "depth_of_discharge_ratio",
@@ -51,8 +49,7 @@ function ConstraintCheck() {
   // an empty field takes the guided example's value (Doc 12 X9, D-92 K230).
   const ex = useExampleForm<M2Params>("constraint-check", lastM2Params(runRecords));
   const params = ex.values;
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { busy, error, setError, call } = useAnalysisCall();
   const [inspect, setInspect] = useState<ElementRef | null>(null);
   const ref = m1Ref(runRecords);
   const report = useValidation(design);
@@ -61,16 +58,9 @@ function ConstraintCheck() {
 
   async function run() {
     if (!ref) return;
-    setError(null);
-    setBusy(true);
     const parameters = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== null));
-    const out = await runAnalysis("M2", { project_snapshot: design, parameters, solver_config: SOLVER, depends_on: ref });
-    setBusy(false);
-    if (!out.ok) {
-      setError(out.message);
-      return;
-    }
-    dispatch({ type: "runRecordAdded", record: out.data.run_record });
+    const data = await call("M2", { project_snapshot: design, parameters, solver_config: SOLVER, depends_on: ref });
+    if (data) dispatch({ type: "runRecordAdded", record: data.run_record });
   }
 
   const r = resp?.result;

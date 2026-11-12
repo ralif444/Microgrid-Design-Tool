@@ -7,7 +7,7 @@ from typing import Any
 from fastapi import APIRouter, Request
 from starlette.concurrency import run_in_threadpool
 
-from mgapp.api.routers.analyses import read_json
+from mgapp.api.routers.analyses import read_body
 from mgapp.services.file_check import VerifyResponse, verify
 from mgapp.services.pipeline import Pipeline
 from mgapp.services.rerun import RerunResponse, rerun
@@ -31,8 +31,7 @@ BODY = {
 
 
 async def _record(request: Request) -> tuple[Pipeline, Any]:
-    pipeline: Pipeline = request.app.state.pipeline
-    raw = await read_json(request, pipeline.limits.body_limit_mib * 1024 * 1024)
+    pipeline, raw = await read_body(request)
     return pipeline, raw.get("run_record") if isinstance(raw, dict) else None
 
 

@@ -52,7 +52,7 @@ type PointMetric = "LAMBDA_C" | "ZETA_MIN" | "RE_LAMBDA_DOM" | "INDICATORS";
 const OPTIONAL = new Set<Metric>(["max_q_sharing_error_pu", "lambda_c", "zeta_min", "re_lambda_dom_per_s", "r_tau", "kappa"]);
 
 function Sweep() {
-  const { design, fresh, busy, resp, error, run, m2Infeasible } = useDependentRun("M3b");
+  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M3b");
   const { example } = useProject();
   const s = example?.settings.screens.sweep;
   const ax = useAxis(design, "", s && { ex: s.fields.axis ?? null, needs: axisNeeds(s.needs_value, "axis") });
@@ -65,7 +65,6 @@ function Sweep() {
   const eigenvalues = ex.values.include_eigenvalues ?? false;
   const cap = useSweepCap();
   const [metric, setMetric] = useState<Metric>("system_frequency_hz");
-  const [dismissed, setDismissed] = useState<string | null>(null);
   const unit = ax.unit;
 
   const r = resp?.result;
@@ -131,7 +130,7 @@ function Sweep() {
           {busy ? "Running..." : "Run sweep"}
         </button>
       </form>
-      {error && error !== dismissed && <Toast message={error} onDismiss={() => setDismissed(error)} />}
+      {error && <Toast message={error} onDismiss={clearError} />}
       {r && <StatusBanner type="M3b" result={r} />}
       {p && resp && <KpiStrip label="Sweep key figures" kpis={m3bKpis(p, unit)} record={resp.run_record} />}
       {p && resp && (
