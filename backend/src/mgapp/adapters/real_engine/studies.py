@@ -60,6 +60,7 @@ from mgapp.domain.payloads import (
     SweepPoint,
     TransientClass,
 )
+from mgapp.domain.profile import HOUR_AXIS, hour_peak_warning
 
 MSG_M3 = "Analysis completed; the status of each point or scenario is in the results."
 MSG_M4_FAILED = (
@@ -250,7 +251,12 @@ def m3b(req: AnalysisRequest, max_points: int) -> AnalysisResult:
     pts = _sweep(req, max_points, [req.parameters["axis"]])
     first = next((pt.value for pt in pts if pt.status is not Status.FEASIBLE), None)
     payload = M3bPayload(points=pts, first_infeasible_value=first).model_dump(mode="json")
-    return result(Status.FEASIBLE, StatusCode.OK, MSG_M3, payload)
+    warn = (
+        hour_peak_warning(req.project_snapshot)
+        if req.parameters["axis"].get("kind") == HOUR_AXIS
+        else None
+    )
+    return result(Status.FEASIBLE, StatusCode.OK, MSG_M3, payload, warnings=[warn] if warn else [])
 
 
 def m3d(req: AnalysisRequest, max_points: int) -> AnalysisResult:

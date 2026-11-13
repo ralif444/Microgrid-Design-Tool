@@ -31,7 +31,7 @@ Routes are Next.js static-export paths (file-based routing, ADR-002), no dynamic
 | S-07 | Power flow (M1) | `/power-flow/` | Run M1; Status banner (an `INPUT_INVALID` result lists all violations, §5); bus voltages, system frequency, Inverter outputs, Line flows; freshness badge (current or stale). | FR-22, FR-23, FR-17, FR-19, FR-20, FR-21, FR-35, FR-36, FR-37, FR-42, FR-43, FR-45 | Must (all-violations list, progress: Should) |
 | S-08 | Constraint check (M2) | `/constraint-check/` | Run M2 with design margins m_inv, m_line (required, no default) and optional storage settings; verdict; limiting constraints list; margins; separate "Not evaluated" list (empty limits, never counted as satisfied); loadability λ_c, λ_s with resolution (λ_s labelled "solution existence, not a stability limit"); SizingCheck panel (separate from SizingAdvice). | FR-24, FR-25, FR-27, FR-26, FR-35, FR-36, FR-37, FR-38, FR-40 | Must (margins: Should) |
 | S-09 | Sensitivity (M3a) | `/sensitivity/` | Choose parameters and output metrics; run; ranked sensitivities. | FR-28, FR-39, FR-41 | Should |
-| S-10 | Sweep (M3b) | `/sweep/` | Choose an axis (one parameter, a shared scale factor over a set of elements, or load scale λ), range, step count; optional per-point metrics (λ_c, ζ_min, Re λ_dom, indicators) and eigenvalues per point (Doc 3 §6.5, D-95); size indicator vs `SWEEP_CAP` (initial 1 000); per-point Status plot and table; first infeasible value. | FR-29, FR-44, FR-39, FR-41 | Should |
+| S-10 | Sweep (M3b) | `/sweep/` | Choose an axis (one parameter, a shared scale factor over a set of elements, load scale λ, or, when the design has a LoadProfile, profile hour 0 – 23 with the range fixed, D-113), range, step count; hour mode adds the worst hour per key metric and the first hour that is not FEASIBLE (FR-79); optional per-point metrics (λ_c, ζ_min, Re λ_dom, indicators) and eigenvalues per point (Doc 3 §6.5, D-95); size indicator vs `SWEEP_CAP` (initial 1 000); per-point Status plot and table; first infeasible value. | FR-29, FR-44, FR-39, FR-41 | Should |
 | S-11 | Scenarios and comparison (M3c) | `/scenarios/` | Save current design as Scenario; edit overrides; select 2 or more; compare with explicit deltas. | FR-30, FR-31, FR-39, FR-41 | Should |
 | S-12 | Envelope (M3d) | `/envelope/` | Two parameters and ranges; grid of per-point Status; feasible fraction. | FR-32, FR-44 | Could |
 | S-13 | Small-signal (M4a) | `/small-signal/` | Run; eigenvalues, damping, dominant modes, participation (when available) tables; stability class STABLE / MARGINAL / UNSTABLE in words; indicators r_τ, κ, r_in, ε_X with "evaluated" flag and reason, labelled "validity not calibrated" until stage 1.6; optional τ_in and damping threshold inputs. | FR-33, FR-39, FR-41 | Should |
@@ -443,6 +443,9 @@ DOC 7 COMPLETE
 ## Change log 2026-10-21 (user-approved change proposals from the proposal design checks)
 - C5.1 F3 outcome edge: Status equal and result_hash equal.
 - C5.4 first phase per key flow stated in §4.
+
+## Change log 2026-11-13 (battery round BESS-6, D-113)
+- §2 S-10: profile hour axis with fixed range, worst hour per key metric, first hour not FEASIBLE (Doc 12 P11, FR-78, FR-79).
 
 ## Change log 2026-11-12 (battery round BESS-0, D-106)
 - §2 S-20, §2.5, §3 diagram and §3.1 gating row added (Doc 12 B2, B3, FR-116 – FR-121); no feature flag, listed only when a bank exists.

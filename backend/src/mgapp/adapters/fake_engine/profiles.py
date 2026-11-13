@@ -33,6 +33,30 @@ def _margin(element: str, value: float, normalised: float) -> dict[str, object]:
 
 _MARGINS = [_margin("B1", 0.92, 0.02), _margin("B2", 1.0, 0.1)]
 
+
+# Placeholder 24-hour sweep (not engineering values) for the FR-79 E2E (D-113 K337): the worst
+# FEASIBLE hours are 19 (frequency, voltage), 20 (loading) and 21 (losses); hour 22 is the first
+# that is not FEASIBLE and carries the most extreme values, which must not count as worst.
+def _hour(h: int) -> dict[str, object]:
+    peak = {19: 3, 20: 2, 21: 1}.get(h, 0)
+    bad = h == 22
+    return {
+        "value": h,
+        "status": "SOLVER_FAILED" if bad else "FEASIBLE",
+        "status_code": "NO_CONVERGENCE" if bad else "OK",
+        "limiting_constraint": None,
+        "key_metrics": {
+            "system_frequency_hz": 49.0 if bad else 50.0 - 0.01 * (h % 6) - 0.1 * (h == 19),
+            "min_voltage_pu": 0.5 if bad else 0.99 - 0.01 * peak,
+            "max_loading_ratio": 2.0 if bad else 0.5 + 0.1 * (h == 20),
+            "total_losses_kw": 9.0 if bad else 0.1 + 0.05 * (h == 21),
+            "epsilon_x_ratio": None,
+        },
+    }
+
+
+_HOURS = {"points": [_hour(h) for h in range(24)], "first_infeasible_value": 22}
+
 PROFILES: dict[str, dict[AnalysisType, ScriptEntry]] = {
     "default": {},
     "m1-solver-failed": {AnalysisType.M1: ScriptEntry(Outcome.SOLVER_FAILED)},
@@ -40,4 +64,5 @@ PROFILES: dict[str, dict[AnalysisType, ScriptEntry]] = {
     "m2-infeasible": {AnalysisType.M2: ScriptEntry(Outcome.INFEASIBLE)},
     "m4a-indicators": {AnalysisType.M4A: ScriptEntry(payload_patch={"indicators": _INDICATORS})},
     "m2-near-limit": {AnalysisType.M2: ScriptEntry(payload_patch={"constraint_margins": _MARGINS})},
+    "m3b-hours": {AnalysisType.M3B: ScriptEntry(payload_patch=_HOURS)},
 }

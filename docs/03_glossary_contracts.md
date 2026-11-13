@@ -399,7 +399,7 @@ Convergence: $\max|F_P| < 10^{-3}$ W and $\max|F_Q| < 10^{-3}$ VAR. SOLVER_FAILE
 | Output: points | array of SweepPoint | | One per grid value. |
 | Output: first_infeasible_value | number or null | axis unit | First grid value whose status is not FEASIBLE. |
 
-**Axis:** {kind, parameter_path | element_set, field, range_min, range_max, step_count}. `kind` = PARAMETER (one field of one element) or SCALE_FACTOR (one factor applied uniformly to `field` of every element in `element_set`, keeping ratios between units; manuscript Tabel 4.10) or LOAD_SCALE (λ: P and Q of all Loads at fixed PF, Eq. 4.14). Grid: $p_k = p_{start} + k\,\Delta p$.
+**Axis:** {kind, parameter_path | element_set, field, range_min, range_max, step_count}. `kind` = PARAMETER (one field of one element) or SCALE_FACTOR (one factor applied uniformly to `field` of every element in `element_set`, keeping ratios between units; manuscript Tabel 4.10) or LOAD_SCALE (λ: P and Q of all Loads at fixed PF, Eq. 4.14) or, for M3b only, LOAD_PROFILE_HOUR (clock hour h with fixed range_min 0, range_max 23, step_count 24; every Load scaled by λ_h of Doc 12 Eq. 12.9; needs a LoadProfile, else `PROFILE_LENGTH` on `load_profile`; Doc 9 D-113). Grid: $p_k = p_{start} + k\,\Delta p$.
 
 **SweepPoint:** {value, status, status_code, limiting_constraint, key_metrics{system_frequency_hz, min_voltage_pu, max_loading_ratio, total_losses_kw, lambda_c?, zeta_min?, re_lambda_dom_per_s?, epsilon_x_ratio, r_tau?, kappa?}, eigenvalues?}.
 
@@ -526,7 +526,7 @@ Versioning: equal → load; older with a chain → migrate forward step by step 
 | 3 | `balance_tolerance_kw` default and whether it belongs to DesignConstraints or solver_config. | CLOSED: no default, stays in DesignConstraints (Doc 9 D-54 K84) |
 | 4 | Settling window and envelope criteria for the transient class (engine side). | → engine design, stage 1.3.5 |
 | 5 | Indicator thresholds (r_τ, κ, r_in, ε_X) calibrated from M5. | → stage 1.6 |
-| 6 | Doc 12 extensions (catalogue, BatteryBank, sharing metrics, profile hour axis) merged at stage 1.5. Catalogue document, `catalog_ref` on Inverter and Line, and unit suffixes `_v` (V) and `_uf_per_km` (µF/km) for catalogue fields applied by Doc 9 D-61; Sharing group in M1 and MAX_Q_SHARING_ERROR applied by D-63. BatteryBank and the profile hour axis no longer postponed (D-106 K307): BatteryBank is an optional Project-file field `battery_banks` outside the canonical snapshot, `schema_version` stays 1 (K304, K306); the profile hour axis is the M3b axis kind `LOAD_PROFILE_HOUR`; analysis type `BA`, IssueCode `BATTERY_BANK_INVALID`, WarningCode `BATTERY_POWER_SHORT`, Catalogue kind `BATTERY_MODULE` and unit suffix `_per_h` (1/h) per Doc 12 §4 and ADR-015; applied in this document when their round lands (BESS-1 – BESS-4, BESS-6). | PARTLY APPLIED |
+| 6 | Doc 12 extensions (catalogue, BatteryBank, sharing metrics, profile hour axis) merged at stage 1.5. Catalogue document, `catalog_ref` on Inverter and Line, and unit suffixes `_v` (V) and `_uf_per_km` (µF/km) for catalogue fields applied by Doc 9 D-61; Sharing group in M1 and MAX_Q_SHARING_ERROR applied by D-63. BatteryBank and the profile hour axis no longer postponed (D-106 K307): BatteryBank is an optional Project-file field `battery_banks` outside the canonical snapshot, `schema_version` stays 1 (K304, K306); the profile hour axis is the M3b axis kind `LOAD_PROFILE_HOUR`; analysis type `BA`, IssueCode `BATTERY_BANK_INVALID`, WarningCode `BATTERY_POWER_SHORT`, Catalogue kind `BATTERY_MODULE` and unit suffix `_per_h` (1/h) per Doc 12 §4 and ADR-015; applied in this document when their round lands (BESS-1 – BESS-4, BESS-6). | APPLIED (2026-11-13, D-113) |
 
 ## Log
 
@@ -538,3 +538,4 @@ Versioning: equal → load; older with a chain → migrate forward step by step 
 | 2026-11-02 | Stage 1.5 (Doc 9 D-55 K87–K92, to be confirmed): M3a nullable `value`/`normalised_value`/`scheme` + `reason`, relative step rule (§6.4); M3c `relative_delta_ratio` (§6.6); M4a nullable `damping_ratio`, `damping_pass` (§6.8); M4b `settling` parameter, nullable `transient_class`/`settled`, `class_reason` (§6.9); codes MULTIPLE_INVERTERS_ON_BUS (§4) and EQUILIBRIUM_INVALID (§5.4). |
 | 2026-11-12 | §9 #6: BatteryBank and the profile hour axis taken up by the battery round (Doc 9 D-106, Doc 12 §3.14, ADR-015 accepted). |
 | 2026-11-12 | §4 SCENARIO_PATH_INVALID also covers an M3c scenario whose line ids differ from the base (Doc 9 D-112). |
+| 2026-11-13 | §6.5 Axis kind LOAD_PROFILE_HOUR for M3b (Doc 9 D-113, BESS-6); §9 #6 applied. |

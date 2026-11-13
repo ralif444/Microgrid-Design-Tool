@@ -16,6 +16,7 @@ from mgapp.domain import contract
 from mgapp.domain.entities import Load as LoadEntity
 from mgapp.domain.entities import ProjectSnapshot
 from mgapp.domain.enums import PfDirection
+from mgapp.domain.profile import HOUR_AXIS, profile_lambdas
 
 SQRT3 = math.sqrt(3.0)
 TWO_PI = 2.0 * math.pi
@@ -132,7 +133,8 @@ def grid(axis: dict[str, Any]) -> list[float]:
 
 
 def on_axis(s: ProjectSnapshot, axis: dict[str, Any], v: float) -> ProjectSnapshot:
-    """PARAMETER sets the value; SCALE_FACTOR scales `field` of each element; LOAD_SCALE = λ."""
+    """PARAMETER sets the value; SCALE_FACTOR scales `field` of each element; LOAD_SCALE = λ;
+    LOAD_PROFILE_HOUR = clock hour h, applied as LOAD_SCALE at λ_h (Eq. 12.9, D-113 K335)."""
     if axis["kind"] == "PARAMETER":
         return with_value(s, axis["parameter_path"], v)
     if axis["kind"] == "SCALE_FACTOR":
@@ -140,6 +142,8 @@ def on_axis(s: ProjectSnapshot, axis: dict[str, Any], v: float) -> ProjectSnapsh
             path = f"{el}/{axis['field']}"
             s = with_value(s, path, num(get(s, path)) * v)
         return s
+    if axis["kind"] == HOUR_AXIS:
+        v = num((profile_lambdas(s) or [])[int(v)])  # stage 1 guarantees the profile
     loads = [  # LOAD_SCALE (Eq. 4.14): P and Q at fixed PF; a pf-given Load follows P
         ld.model_copy(
             update={

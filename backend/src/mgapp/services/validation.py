@@ -17,6 +17,7 @@ from mgapp.domain.battery import BatteryBank
 from mgapp.domain.contract import ScenarioSnapshot, ValidationIssue
 from mgapp.domain.entities import ProjectSnapshot
 from mgapp.domain.enums import M4_POINT_METRICS, AnalysisType, IssueCode, IssueLevel
+from mgapp.domain.profile import HOUR_AXIS, table_total_kw
 from mgapp.services.battery import bank_issues
 from mgapp.services.battery.service import parameter_issues as battery_parameter_issues
 from mgapp.services.cable_sizing.service import parameter_issues as cable_parameter_issues
@@ -287,13 +288,15 @@ def _path_ok(s: ProjectSnapshot, path: Any) -> bool:
     return False
 
 
-def _axis_ok(s: ProjectSnapshot, axis: Any) -> bool:
+def _axis_ok(s: ProjectSnapshot, axis: Any, hour_ok: bool = False) -> bool:
     if not isinstance(axis, dict):
         return False
     lo, hi, n = axis.get("range_min"), axis.get("range_max"), axis.get("step_count")
     if not (_is_num(lo) and _is_num(hi) and _is_int(n)) or lo >= hi or n < 2:
         return False
     kind = axis.get("kind")
+    if kind == HOUR_AXIS:  # M3b only, fixed grid 0 … 23 (D-113 K333); λ needs table power (K334)
+        return hour_ok and (lo, hi, n) == (0, 23, 24) and table_total_kw(s) > 0
     if kind == "PARAMETER":
         return _path_ok(s, axis.get("parameter_path"))
     if kind == "SCALE_FACTOR":
@@ -354,7 +357,11 @@ def _parameters(
             if not _path_ok(s, path):
                 bad(IssueCode.SCENARIO_PATH_INVALID, "parameter_paths")
     elif t is AnalysisType.M3B:
-        if not _axis_ok(s, p.get("axis")):
+        axis = p.get("axis")
+        hour = isinstance(axis, dict) and axis.get("kind") == HOUR_AXIS
+        if hour and s.load_profile is None:
+            bad(IssueCode.PROFILE_LENGTH, "load_profile")  # FR-78 names the profile (K334)
+        elif not _axis_ok(s, axis, hour_ok=True):
             bad(IssueCode.SWEEP_RANGE_INVALID, "axis")
     elif t is AnalysisType.M3D:
         for ax in ("axis_x", "axis_y"):

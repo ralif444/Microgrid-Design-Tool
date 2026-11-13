@@ -18,6 +18,7 @@ from mgapp.adapters.fake_engine import payloads
 from mgapp.domain.contract import AnalysisRequest, AnalysisResult, EngineIdentity, Warning
 from mgapp.domain.enums import AnalysisType, EngineKind, Status, StatusCode, WarningCode
 from mgapp.domain.payloads import Verdict
+from mgapp.domain.profile import HOUR_AXIS, hour_peak_warning
 
 # Version of the canned behaviour; bump when canned outputs change (RunRecord engine_version).
 FAKE_ENGINE_VERSION = "fake-2"  # fake-2: CONSTRAINT_NOT_EVALUATED on M2
@@ -144,6 +145,12 @@ def build_result(
                 path="payload.not_evaluated",
             )
         )
+    axis = request.parameters.get("axis")
+    if request.analysis_type is AnalysisType.M3B and isinstance(axis, dict):
+        warn = (
+            hour_peak_warning(request.project_snapshot) if axis.get("kind") == HOUR_AXIS else None
+        )
+        warnings += [warn] if warn else []  # as the Real adapter (D-113 K336)
     diagnostics: dict[str, object] = {"engine": "FAKE"}
     if outcome is Outcome.INPUT_INVALID:
         diagnostics["issues"] = []
