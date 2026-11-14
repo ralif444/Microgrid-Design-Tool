@@ -37,9 +37,7 @@ def _press(page: Page, target: Locator, key: str = "Enter") -> None:
     page.keyboard.press(key)
 
 
-def test_dod_7_key_flow_by_keyboard_only(
-    server: Callable[[str], str], page: Page
-) -> None:
+def test_dod_7_key_flow_by_keyboard_only(server: Callable[[str], str], page: Page) -> None:
     page.goto(server("default") + "/")
     _type(page, page.get_by_label("Project name"), "Keyboard project")
     _type(page, page.get_by_label("Nominal voltage, line-to-line (kV)"), "0.4")
@@ -86,9 +84,7 @@ def test_dod_7_key_flow_by_keyboard_only(
     _press(page, step_link(page, "Power flow (M1)", go=lambda t: _press(page, t)))
     expect(page.get_by_text("No problems found.")).to_be_visible()
     _press(page, page.get_by_role("button", name="Run M1"))
-    expect(page.get_by_role("status", name="Status")).to_have_attribute(
-        "data-status", "FEASIBLE"
-    )
+    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
 
     _press(page, step_link(page, "Report", go=lambda t: _press(page, t)))
     expect(page.get_by_role("table", name="Traceability")).to_contain_text("M1")

@@ -40,9 +40,7 @@ def test_fr_73_fr_74_battery_module_entry_and_hint(
         page.get_by_label(f"{label} ({unit})").fill(value)
         page.get_by_label(f"{label}: page or section").fill("p. 3")
     expect(
-        page.get_by_text(
-            "used only by the battery advice, not by the network model (A2)"
-        ).first
+        page.get_by_text("used only by the battery advice, not by the network model (A2)").first
     ).to_be_visible()
     warning = "the battery power check (B2) cannot use this module"
     expect(page.get_by_role("note")).to_contain_text(warning)
@@ -86,12 +84,8 @@ def test_fr_75_battery_bank_on_s05_saved_outside_the_design(
     form = page.get_by_role("form", name="Battery bank")
     form.get_by_label("Inverter", exact=True).select_option("INV1")
     form.get_by_label("Battery module").select_option("E1")
-    expect(form.get_by_label("Depth of discharge, optional (ratio)")).to_have_value(
-        "0.8"
-    )
-    expect(
-        form.get_by_label("Initial state of charge, optional (ratio)")
-    ).to_have_value("1")
+    expect(form.get_by_label("Depth of discharge, optional (ratio)")).to_have_value("0.8")
+    expect(form.get_by_label("Initial state of charge, optional (ratio)")).to_have_value("1")
     form.get_by_label("Modules in series (count)").fill("8")
     form.get_by_label("Strings in parallel (count)").fill("2")
     form.get_by_role("button", name="Save bank").click()
@@ -110,8 +104,7 @@ def test_fr_75_battery_bank_on_s05_saved_outside_the_design(
         page.get_by_role("button", name="Save", exact=True).click()
     doc = json.loads(Path(dl.value.path()).read_text(encoding="utf-8"))
     assert [
-        (b["inverter_id"], b["module"]["catalog_ref"]["entry_id"])
-        for b in doc["battery_banks"]
+        (b["inverter_id"], b["module"]["catalog_ref"]["entry_id"]) for b in doc["battery_banks"]
     ] == [("INV1", "E1")]
     assert "battery" not in json.dumps(doc["inverters"])  # outside the design data
 
@@ -119,9 +112,7 @@ def test_fr_75_battery_bank_on_s05_saved_outside_the_design(
     expect(page.get_by_test_id("bank-list")).to_have_count(0)
 
 
-def test_fr_119_s20_hidden_without_bank(
-    server: Callable[[str], str], page: Page
-) -> None:
+def test_fr_119_s20_hidden_without_bank(server: Callable[[str], str], page: Page) -> None:
     enter_design(page, server("default"), gui_snapshot())
     further = studies(page)
     expect(further.get_by_role("link", name="Sensitivity (M3a)")).to_be_visible()
@@ -158,14 +149,10 @@ def _open_s20_and_run(page: Page) -> None:
     studies(page).get_by_role("link", name="Battery adequacy").click()
     expect(page.get_by_label("Start hour (h)")).to_have_value("0")
     page.get_by_role("button", name="Run battery adequacy").click()
-    expect(page.get_by_role("status", name="Status")).to_have_attribute(
-        "data-status", "FEASIBLE"
-    )
+    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
 
 
-def test_fr_76_fr_116_run_shows_caveat(
-    server: Callable[[str], str], page: Page
-) -> None:
+def test_fr_76_fr_116_run_shows_caveat(server: Callable[[str], str], page: Page) -> None:
     enter_design(page, server("default"), gui_snapshot())
     _bank(page)
     _run_m1(page)
@@ -181,17 +168,13 @@ def test_fr_76_fr_116_run_shows_caveat(
 
 def test_fr_120_depletion_chart_show_data_and_report_section(
     server: Callable[[str], str], page: Page, tmp_path: Path
-) -> (
-    None
-):  # D-110; the GUI has no profile editor yet (FR-04 Should), so the file carries it
+) -> None:  # D-110; the GUI has no profile editor yet (FR-04 Should), so the file carries it
     enter_design(page, server("default"), gui_snapshot())
     _bank(page, dod="0.8")
     with page.expect_download() as dl:
         page.get_by_role("button", name="Save", exact=True).click()
     doc = json.loads(Path(dl.value.path()).read_text(encoding="utf-8"))
-    lam = (
-        [0.4] * 6 + [0.6] * 12 + [1.0] * 4 + [0.4] * 2
-    )  # PF-T scaled to the 10 kW design
+    lam = [0.4] * 6 + [0.6] * 12 + [1.0] * 4 + [0.4] * 2  # PF-T scaled to the 10 kW design
     doc["load_profile"] = {
         "id": "PF-T",
         "values": [{"hour": h, "p_kw": 10 * x} for h, x in enumerate(lam)],
@@ -199,9 +182,7 @@ def test_fr_120_depletion_chart_show_data_and_report_section(
     file = tmp_path / "profiled.mgproj.json"
     file.write_text(json.dumps(doc), encoding="utf-8")
     page.get_by_label("Open project file").set_input_files(file)
-    expect(page).to_have_url(
-        re.compile(r"/workspace/$")
-    )  # the import is done; was a race
+    expect(page).to_have_url(re.compile(r"/workspace/$"))  # the import is done; was a race
     expect(page.get_by_test_id("project-name")).to_have_text("E2E project")
     _run_m1(page)
     _open_s20_and_run(page)
@@ -211,19 +192,13 @@ def test_fr_120_depletion_chart_show_data_and_report_section(
     expect(row).to_contain_text("lasts 24 h; end state of charge 1")
     title = "State of charge per inverter over the profile day"
     figure = page.get_by_role("figure", name=title)
-    expect(
-        figure.get_by_text("FAKE engine: placeholder, not an engine result")
-    ).to_be_visible()
+    expect(figure.get_by_text("FAKE engine: placeholder, not an engine result")).to_be_visible()
     page.get_by_role("button", name=f"Show data: {title}").click()
-    expect(
-        page.get_by_role("table", name=f"{title} data").locator("tbody tr")
-    ).to_have_count(25)
+    expect(page.get_by_role("table", name=f"{title} data").locator("tbody tr")).to_have_count(25)
     record = page.get_by_test_id("ba-record").locator("code").inner_text()
 
     step(page, "Report")
-    section = page.get_by_role(
-        "region", name="Battery adequacy (advice, discharge only)"
-    )
+    section = page.get_by_role("region", name="Battery adequacy (advice, discharge only)")
     expect(section).to_contain_text("Discharge only: recharging is not modelled.")
     expect(section).to_contain_text(f"RunRecord {record}")
     expect(page.get_by_role("table", name="Model assumptions")).to_contain_text(

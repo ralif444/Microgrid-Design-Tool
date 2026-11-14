@@ -35,9 +35,7 @@ def _m1_m2(page: Page) -> None:
     step(page, "Constraint check (M2)")
     _margins(page)
     page.get_by_role("button", name="Run M2").click()
-    expect(page.get_by_role("status", name="Status")).to_have_attribute(
-        "data-status", "FEASIBLE"
-    )
+    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
 
 
 def _run_cb(page: Page) -> None:
@@ -54,9 +52,7 @@ def _run_cb(page: Page) -> None:
     page.get_by_label("Ambient temperature (°C)").fill("30")
     page.get_by_label("Grouping count").fill("1")
     page.get_by_role("button", name="Run cable sizing").click()
-    expect(page.get_by_role("status", name="Status")).to_have_attribute(
-        "data-status", "FEASIBLE"
-    )
+    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
 
 
 def test_fr_113_fr_114_sld_shows_breaker_symbols_after_run(
@@ -87,9 +83,7 @@ def test_fr_113_fr_114_sld_shows_breaker_symbols_after_run(
     step(page, "Report")
     section = page.get_by_role("region", name=SECTION)
     expect(section).to_contain_text("IEC60364_OVERLOAD_PUIL2011")
-    expect(section).to_contain_text(
-        table_set_hash(json.loads(TABLES.read_text(encoding="utf-8")))
-    )
+    expect(section).to_contain_text(table_set_hash(json.loads(TABLES.read_text(encoding="utf-8"))))
     expect(section).to_contain_text(CAVEAT)
     expect(section).to_contain_text("PUIL 2020")
     expect(page.locator(BREAKERS)).to_have_count(0)  # not on the report figure (K295)

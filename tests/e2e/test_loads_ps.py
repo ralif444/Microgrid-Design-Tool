@@ -16,7 +16,8 @@ UNIT = re.compile(r"\(.+\)")
 
 
 def _numeric_inputs_have_units(page: Page) -> None:
-    numeric = page.locator("input[inputmode=decimal]")  # number inputs accept a dot or a comma (plan F1)
+    # number inputs accept a dot or a comma (plan F1)
+    numeric = page.locator("input[inputmode=decimal]")
     expect(numeric.first).to_be_visible()  # wait for the screen
     names = numeric.evaluate_all(
         "els => els.map(e => e.getAttribute('aria-label')"
@@ -28,7 +29,7 @@ def _numeric_inputs_have_units(page: Page) -> None:
 
 def test_fr_01_fr_03_fr_05_fr_06_fr_08_loads_to_sizing_advice(
     server: Callable[[str], str],
-    page: Page,  # noqa: F811
+    page: Page,
 ) -> None:
     page.goto(server("default") + "/loads/")
     expect(page.get_by_text("Create or open a Project first")).to_be_visible()

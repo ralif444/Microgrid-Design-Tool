@@ -22,16 +22,12 @@ CAVEAT = (
 )
 
 
-def test_fr_105_screen_hidden_when_flag_off(
-    server: Callable[..., str], page: Page
-) -> None:
+def test_fr_105_screen_hidden_when_flag_off(server: Callable[..., str], page: Page) -> None:
     base = server("default")
     enter_design(page, base, gui_snapshot())
     further = studies(page)
     expect(further.get_by_role("link", name="Transient (M4b)")).to_be_visible()
-    expect(further.get_by_role("link", name="Cable and breaker sizing")).to_have_count(
-        0
-    )
+    expect(further.get_by_role("link", name="Cable and breaker sizing")).to_have_count(0)
     page.goto(f"{base}/cable-sizing/")
     expect(page.get_by_test_id("cable-sizing-off")).to_be_visible()
     expect(page.get_by_role("button", name="Run cable sizing")).to_have_count(0)
@@ -51,9 +47,7 @@ def test_fr_112_run_shows_caveat(server: Callable[..., str], page: Page) -> None
     step(page, "Constraint check (M2)")
     _margins(page)
     page.get_by_role("button", name="Run M2").click()
-    expect(page.get_by_role("status", name="Status")).to_have_attribute(
-        "data-status", "FEASIBLE"
-    )
+    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
 
     studies(page).get_by_role("link", name="Cable and breaker sizing").click()
     expect(run).to_be_disabled()  # no table file yet
@@ -68,9 +62,7 @@ def test_fr_112_run_shows_caveat(server: Callable[..., str], page: Page) -> None
     page.get_by_label("Cable construction", exact=True).select_option("MULTICORE")
     run.click()
 
-    expect(page.get_by_role("status", name="Status")).to_have_attribute(
-        "data-status", "FEASIBLE"
-    )
+    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
     caveat = page.get_by_test_id("cable-caveat")
     expect(caveat).to_have_text(CAVEAT)
     table = page.get_by_role("table", name="Cable and breaker sizing results")

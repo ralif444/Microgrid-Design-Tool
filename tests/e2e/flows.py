@@ -53,9 +53,7 @@ def delete(page: Page, name: str) -> None:
     expect(page.get_by_role("dialog")).to_have_count(0)
 
 
-def create_project(
-    page: Page, base: str, snap: dict[str, Any], name: str = "E2E project"
-) -> None:
+def create_project(page: Page, base: str, snap: dict[str, Any], name: str = "E2E project") -> None:
     page.goto(base + "/")
     page.get_by_label("Project name").fill(name)
     if snap.get("nominal_voltage_kv") is not None:
@@ -92,9 +90,7 @@ def enter_design(page: Page, base: str, snap: dict[str, Any]) -> None:
         row.get_by_label(f"P of {rid} (kW)").fill(str(ld["p_kw"]))
         if ld.get("power_factor") is not None:
             row.get_by_label("PF", exact=True).check()
-            row.get_by_label(f"Power factor of {rid} (ratio)").fill(
-                str(ld["power_factor"])
-            )
+            row.get_by_label(f"Power factor of {rid} (ratio)").fill(str(ld["power_factor"]))
             row.get_by_label(f"PF direction of {rid}").select_option(ld["pf_direction"])
         else:
             row.get_by_label(f"Q of {rid} (kvar)").fill(str(ld["q_kvar"]))
@@ -111,8 +107,9 @@ def gui_snapshot() -> dict[str, Any]:
     return snap
 
 
-# Area navigation (ADR-016 option B, Doc 14 D15): every test reaches a screen through these helpers, so
-# a shell change edits only STEP_LINK. Values: (area tab, screen link) as drawn by AreaNav.
+# Area navigation (ADR-016 option B, Doc 14 D15): every test reaches a screen through these
+# helpers, so a shell change edits only STEP_LINK.
+# Values: (area tab, screen link) as drawn by AreaNav.
 STEP_LINK = {
     "Project": ("Model", "Project"),
     "Loads": ("Model", "Loads"),
@@ -134,9 +131,7 @@ STEP_LINK = {
 
 def area_tab(page: Page, name: str) -> Locator:
     """A header area tab: Model, Check, Studies or Report."""
-    return page.get_by_role("navigation", name="Areas").get_by_role(
-        "link", name=name, exact=True
-    )
+    return page.get_by_role("navigation", name="Areas").get_by_role("link", name=name, exact=True)
 
 
 def area(page: Page, name: str) -> None:
@@ -151,18 +146,14 @@ def studies(page: Page) -> Locator:
     return page.get_by_role("list", name="Studies")
 
 
-def step_link(
-    page: Page, name: str, go: Callable[[Locator], None] | None = None
-) -> Locator:
-    """The screen link of a former pipeline step; opens its area first (with `go`, default click)."""
+def step_link(page: Page, name: str, go: Callable[[Locator], None] | None = None) -> Locator:
+    """The screen link of a former pipeline step; opens its area first (`go`, default click)."""
     tab_name, link = STEP_LINK[name]
     tab = area_tab(page, tab_name)
     if tab.get_attribute("aria-current") != "page":
         (go or (lambda t: t.click()))(tab)
         expect(tab).to_have_attribute("aria-current", "page")
-    return page.get_by_role("navigation", name="Screens").get_by_role(
-        "link", name=link, exact=True
-    )
+    return page.get_by_role("navigation", name="Screens").get_by_role("link", name=link, exact=True)
 
 
 def step(page: Page, name: str) -> None:
