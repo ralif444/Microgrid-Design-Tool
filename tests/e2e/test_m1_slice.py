@@ -31,7 +31,9 @@ def test_fr_17_m1_with_empty_template_lists_issues(
     page.get_by_role("button", name="Run M1").click()
     banner = page.get_by_role("status", name="Status")
     expect(banner).to_have_attribute("data-status", "INPUT_INVALID")
-    expect(banner.get_by_role("list", name="Issues")).to_contain_text("Nominal voltage, line-to-line")
+    expect(banner.get_by_role("list", name="Issues")).to_contain_text(
+        "Nominal voltage, line-to-line"
+    )
     expect(page.get_by_test_id("record-id")).to_be_visible()
 
 
