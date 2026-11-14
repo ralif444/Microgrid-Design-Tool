@@ -15,8 +15,9 @@ UNIT = re.compile(r"\(.+\)")
 
 
 def _numeric_inputs_have_units(page: Page) -> None:
-    expect(page.locator("input[type=number]").first).to_be_visible()  # wait for the screen
-    names = page.locator("input[type=number]").evaluate_all(
+    numeric = page.locator("input[inputmode=decimal]")  # number inputs accept a dot or a comma (plan F1)
+    expect(numeric.first).to_be_visible()  # wait for the screen
+    names = numeric.evaluate_all(
         "els => els.map(e => e.getAttribute('aria-label')"
         " || (e.labels[0] && e.labels[0].textContent) || '')"
     )

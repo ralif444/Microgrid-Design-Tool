@@ -1,5 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { fixed, num } from "./format";
+import { fixed, num, parseNumber } from "./format";
+
+describe("F1 locale-safe number input", () => {
+  it("accepts a dot or a comma as decimal separator", () => {
+    expect(parseNumber("0.44")).toBe(0.44);
+    expect(parseNumber(" 0,44 ")).toBe(0.44);
+    expect(parseNumber("-0,5")).toBe(-0.5);
+    expect(parseNumber("1e-3")).toBe(0.001);
+    expect(parseNumber(",5")).toBe(0.5);
+    expect(parseNumber("12")).toBe(12);
+    expect(parseNumber("0,440")).toBe(0.44);
+  });
+  it("returns null for empty and undefined for anything else", () => {
+    expect(parseNumber("")).toBeNull();
+    expect(parseNumber("  ")).toBeNull();
+    for (const s of ["abc", "1.234,5", "1,2,3", "0x10", "-", "1,500", "12,000"]) expect(parseNumber(s)).toBeUndefined();
+  });
+  it("refuses fractions where an integer is required", () => {
+    expect(parseNumber("3", true)).toBe(3);
+    expect(parseNumber("2,5", true)).toBeUndefined();
+  });
+});
 
 describe("K147 number display", () => {
   it("hides unit round-trip noise and keeps real digits", () => {
