@@ -1,8 +1,10 @@
 # Plan: functional items (delete confirmation, locale-safe number input, autosave)
 
-Status: needs-info
+Status: ready-for-agent
 
 Basis: `spec.md` ("Functional additions allowed"). Plan only; nothing here is implemented. Paths are relative to `frontend/` unless they start with `tests/`.
+
+Decisions (user, 2026-11-14): delete asks for confirmation (dialog, no undo; Doc 07 §7 also says no undo in v1). Autosave asks before restoring. Unanswered points take the planned default: the dialog covers every removal (element, scenario, battery bank); run records stay out of the draft.
 
 None of the three needs the new shell. They can ship before `plan-workspace.md` W4, each on its own branch, in the order below (smallest and safest first).
 
@@ -43,7 +45,7 @@ Change:
 
 Open points:
 - `runRecords` can be large. Plan: leave them out of the draft (results are re-runnable; stale markers already handle it). Alternative: include and cap.
-- ADR-005 says state lives in `useReducer`; a draft copy in `localStorage` is an addition and should be noted in an ADR.
+- No ADR needed: autosave is already required by the manuscript (4.3.1: backup in browser local storage, never a saved Project) and specified in Doc 04 §3 and Doc 07 S-01 and §7; it was never built.
 
 Check: unit test for write, restore, version mismatch (draft ignored) and storage failure. One e2e: edit, reload, restore.
 

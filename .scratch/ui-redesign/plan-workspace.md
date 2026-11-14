@@ -1,6 +1,6 @@
 # Plan: port the diagram workspace to the app
 
-Status: needs-info
+Status: ready-for-agent
 
 Basis: `spec.md`, `docs/design/redesign-2026-11-13/workspace-mockup.html`, `docs/check-screen-changes.md`. Plan only; nothing here is implemented. Paths are relative to `frontend/` unless they start with `docs/` or `tests/`.
 
@@ -17,7 +17,13 @@ Fixed for every stage: presentation layer only. No change to the engine, the Eng
 - Diagram: `components/sld/SingleLineDiagram.tsx` already has selection, keyboard activation, zoom and fit.
 - Tests: 29 vitest files; 22 Python Playwright files in `tests/e2e/` with about 918 locator calls. Stepper link names are used about 94 times (for example "6 Constraint check (M2)" 25 times). `components/PipelineStepper.test.ts` depends on the 9-entry order.
 
-## Conflicts with the doc set (need your decision before W4 and W5)
+## Decisions (user, 2026-11-14)
+
+- ADR-016 accepted. Newest finding behind it: the manuscript itself (4.1.5, 4.3.7) requires the eight-step stepper and the engine badge on every screen and 17 routes. So the workspace keeps the stepper (compact, in the header) and all routes; the four areas group the steps. No Doc 14 KONFLIK needed.
+- W4: new route beside the old pages.
+- Carbon kept, restyled through tokens.
+
+## Conflicts with the doc set (resolved by ADR-016)
 
 | Your redesign decision | What the docs say now | Where |
 |---|---|---|
@@ -25,7 +31,7 @@ Fixed for every stage: presentation layer only. No change to the engine, the Eng
 | EN/ID language switch | English labels with Indonesian glossary, DECIDED 2026-10-17 | `docs/07_ui_ia.md:413,422` |
 | Dark theme | Deferred; a revisit trigger | ADR-011 `:65`, ADR-012 `:97` |
 
-Proposal: one new ADR that records the three decisions and supersedes those lines, plus the matching edits in Doc 07. Whether this also needs a Doc 14 entry is your call (it does not touch the manuscript).
+Resolved: `docs/05_adr/ADR-016-diagram-workspace.md`; Doc 07 §8 and §9 #1 updated. The stepper row is not superseded (manuscript 4.3.7).
 
 ## Stages
 
@@ -56,7 +62,7 @@ Apply the seven mockup phases to `/power-flow/` and `/constraint-check/` without
 ### W4. Workspace shell (large; the risky one)
 
 - First, in `tests/e2e/`: move navigation into one helper in `flows.py` so the shell change is one edit, not 94. No app change in this step.
-- New shell: header with the four area tabs, element tree, diagram, inspector, results drawer. Model = `/network/` content plus loads and constraints in the inspector; Check = W3. Reuse `SingleLineDiagram`, `Inspector`, `EntityTable`.
+- New shell: header with the four area tabs and the compact eight-step stepper (manuscript 4.3.7), element tree, diagram, inspector, results drawer. Model = `/network/` content plus loads and constraints in the inspector; Check = W3. Reuse `SingleLineDiagram`, `Inspector`, `EntityTable`.
 - Build it at a new route beside the old pages; switch the default and remove `PipelineStepper` only when the e2e suite passes on the new shell.
 - Stepper rules that must survive: stale-M1 blocking (FR-38, FR-40, FR-93), "Next: step" guidance (FR-102), inspector as side panel (FR-90, FR-91).
 
@@ -78,6 +84,4 @@ Apply the seven mockup phases to `/power-flow/` and `/constraint-check/` without
 
 ## Decisions needed from you
 
-1. Approve the ADR that supersedes Doc 07 P1, the English-only decision and the dark-theme deferral.
-2. W4: new route beside the old pages (recommended), or replace in place.
-3. Keep Carbon components and restyle through tokens (recommended), or replace them.
+None open for W1 to W4. W5 waits on the vocabulary issue.
