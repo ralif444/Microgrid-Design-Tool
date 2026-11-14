@@ -13,6 +13,9 @@ import { Icon } from "./Icon";
 import styles from "./PipelineStepper.module.css";
 import { m1Freshness, useValidation } from "./useValidation";
 
+// ADR-016 decision 1: the workspace is the default page frame; opening or creating a Project lands there.
+export const HOME = "/workspace/";
+
 export type StepState = "todo" | "done" | "stale" | "blocked";
 type Step = { n: number | null; label: string; href: string | null };
 

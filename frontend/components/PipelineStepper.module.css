@@ -1,15 +1,16 @@
 /* Links styled like Carbon ProgressIndicator (ADR-012 point 2): a rule above each step, teal for done
-   and current, a circle with the number or a check. */
-.nav { display: flex; flex-direction: column; gap: var(--space-2); }
-.steps { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-1); list-style: none; margin: 0; padding: 0; }
+   and current, a circle with the number or a check. Compact (ADR-016 decision 1): one row of steps
+   sized to their labels, the step-7 list on the row below. */
+.nav { display: flex; flex-direction: column; gap: var(--space-1); }
+.steps { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-1); list-style: none; margin: 0; padding: 0; }
 .step {
-  display: flex; align-items: center; gap: var(--space-1); min-width: 8rem;
-  border-top: var(--border-width-strong) solid var(--color-border-strong); padding-top: var(--space-2);
+  display: flex; flex: 1 1 auto; align-items: center; gap: var(--space-1);
+  border-top: var(--border-width-strong) solid var(--color-border-strong); padding-top: var(--space-1);
 }
 .step[data-state="done"], .step[data-current] { border-top-color: var(--cds-interactive); }
 .link {
   display: inline-flex; align-items: center; gap: var(--space-2);
-  min-height: var(--control-height); padding: 0 var(--space-2) 0 0;
+  min-height: 1.75rem; padding: 0 var(--space-2) 0 0;
   color: var(--color-fg-muted); text-decoration: none; font-size: var(--text-sm); white-space: nowrap;
 }
 a.link:hover { color: var(--color-fg); text-decoration: underline; }

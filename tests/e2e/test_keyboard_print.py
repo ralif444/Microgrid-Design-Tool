@@ -42,7 +42,7 @@ def test_dod_7_key_flow_by_keyboard_only(server: Callable[[str], str], page: Pag
     _type(page, page.get_by_label("Project name"), "Keyboard project")
     _type(page, page.get_by_label("Nominal voltage, line-to-line (kV)"), "0.4")
     _press(page, page.get_by_role("button", name="Create project"))
-    expect(page.get_by_role("heading", name="Project overview")).to_be_visible()
+    expect(page.get_by_role("heading", name="Workspace")).to_be_visible()
 
     _press(page, step_link(page, "Network"))
     for bus in ("B1", "B2"):

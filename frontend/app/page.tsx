@@ -17,6 +17,7 @@ import { NumberField } from "../components/NumberField";
 import uiStyles from "../components/ui.module.css";
 import { UNSAVED_CONFIRM } from "../components/ProjectFileMenu";
 import { useProject, useProjectDispatch } from "../store";
+import { HOME } from "../components/PipelineStepper";
 
 // Doc 13 §4 reference designs (prototype values until WP 1.6.1).
 const EXAMPLES: [string, string][] = [
@@ -59,7 +60,7 @@ export default function Home() {
       created_at: new Date().toISOString(),
     });
     if (settings) dispatch({ type: "exampleEntered", settings });
-    router.push("/project/");
+    router.push(HOME);
   }
 
   async function restore(d: Draft) {
@@ -67,7 +68,7 @@ export default function Home() {
     if (!r.ok) return setNote(r.message);
     if (!r.data.file_check.accepted || !r.data.project) return setNote(r.data.file_check.message);
     dispatch({ type: "draftRestored", file: r.data.project as unknown as ProjectFile });
-    router.push("/project/");
+    router.push(HOME);
   }
 
   function create(e: React.FormEvent) {
@@ -83,7 +84,7 @@ export default function Home() {
       nominal_voltage_kv: kv,
       nominal_frequency_hz: hz,
     });
-    router.push("/project/");
+    router.push(HOME);
   }
 
   return (
@@ -93,7 +94,7 @@ export default function Home() {
       <p>To continue earlier work, use “Open project file” in the header.</p>
       {project && (
         <p>
-          Open Project: <Link href="/project/">{project.name}</Link>
+          Open Project: <Link href={HOME}>{project.name}</Link>
         </p>
       )}
       {draft && !project && (

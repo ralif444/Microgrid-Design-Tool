@@ -20,7 +20,7 @@ def test_fr_99_guided_example_enters_and_leaves_example_mode(
     base = server("default")
     page.goto(base + "/")
     page.get_by_role("button", name="Open guided example (D2)").click()
-    page.wait_for_url("**/project/")
+    page.wait_for_url("**/workspace/")
     expect(page.get_by_test_id("project-name")).to_have_text(
         re.compile(r"^Guided example D2\s*\*unsaved")
     )
@@ -43,12 +43,12 @@ def test_fr_101_other_projects_leave_example_mode(server: Callable[[str], str], 
     base = server("default")
     page.goto(base + "/")
     page.get_by_role("button", name="Open guided example (D2)").click()
-    page.wait_for_url("**/project/")
+    page.wait_for_url("**/workspace/")
     expect(page.get_by_test_id("example-mode")).to_be_visible()
     page.get_by_role("link", name="Microgrid Design Tool").click()  # client-side: the store stays
     page.once("dialog", lambda d: d.accept())  # unsaved-changes confirm (K17)
     page.get_by_role("button", name="Open example D2:").click()
-    page.wait_for_url("**/project/")
+    page.wait_for_url("**/workspace/")
     expect(page.get_by_test_id("project-name")).to_have_text(re.compile(r"^Example D2"))
     expect(page.get_by_test_id("example-mode")).to_have_count(0)
 
@@ -63,7 +63,7 @@ def test_fr_100_s04_s06_s08_prefill_and_run_without_typing(
     base = server("default")
     page.goto(base + "/")
     page.get_by_role("button", name="Open guided example (D2)").click()
-    page.wait_for_url("**/project/")
+    page.wait_for_url("**/workspace/")
     step(page, "Sizing advice")
     expect(page.get_by_label("Inverter margin m_inv (ratio)")).to_have_value("0.2")
     expect(page.get_by_label("Number of inverter units n (count)")).to_have_value("2")
@@ -102,7 +102,7 @@ def test_fr_101_normal_project_forms_stay_empty(server: Callable[[str], str], pa
     base = server("default")
     page.goto(base + "/")
     page.get_by_role("button", name="Open example D2:").click()
-    page.wait_for_url("**/project/")
+    page.wait_for_url("**/workspace/")
     step(page, "Sizing advice")
     expect(page.get_by_label("Inverter margin m_inv (ratio)")).to_have_value("")
     expect(_tags(page)).to_have_count(0)
@@ -121,7 +121,7 @@ def test_fr_100_s09_to_s12_prefill_and_run(server: Callable[[str], str], page: P
     base = server("default")
     page.goto(base + "/")
     page.get_by_role("button", name="Open guided example (D2)").click()
-    page.wait_for_url("**/project/")
+    page.wait_for_url("**/workspace/")
     _run_m1(page)
     not_set = page.get_by_text("Not set in the example: enter a value.")
 
@@ -184,7 +184,7 @@ def test_fr_101_normal_sweep_sends_no_point_metrics(
     base = server("default")
     page.goto(base + "/")
     page.get_by_role("button", name="Open example D2:").click()
-    page.wait_for_url("**/project/")  # the open navigates; clicking on before it lands is lost
+    page.wait_for_url("**/workspace/")  # the open navigates; clicking on before it lands is lost
     _run_m1(page)
     step(page, "Sweep (M3b)")
     expect(page.get_by_label("Axis", exact=True)).to_have_value("PARAMETER")
@@ -205,7 +205,7 @@ def test_fr_103_s13_runs_and_s14_offers_the_doc13_disturbances(
     base = server("default")
     page.goto(base + "/")
     page.get_by_role("button", name="Open guided example (D2)").click()
-    page.wait_for_url("**/project/")
+    page.wait_for_url("**/workspace/")
     _run_m1(page)
 
     # S-13: tau_in and the damping threshold stay empty (D-92 K231); Run needs no typing.
@@ -263,7 +263,7 @@ def test_fr_101_normal_transient_form_starts_empty(
     base = server("default")
     page.goto(base + "/")
     page.get_by_role("button", name="Open example D2:").click()
-    page.wait_for_url("**/project/")
+    page.wait_for_url("**/workspace/")
     _run_m1(page)
     step(page, "Transient (M4b)")
     expect(page.get_by_label("Example disturbance", exact=True)).to_have_count(0)
@@ -277,7 +277,7 @@ def test_fr_102_guidance_and_next_links_lead_through_the_pipeline(
     base = server("default")
     page.goto(base + "/")
     page.get_by_role("button", name="Open guided example (D2)").click()
-    page.wait_for_url("**/project/")
+    page.wait_for_url("**/workspace/")
     step(page, "Loads")
     guide = page.get_by_test_id("example-guide")
     expect(guide).to_contain_text("Example mode: this screen shows the guided example.")
@@ -351,7 +351,7 @@ def test_fr_104_run_the_whole_example_runs_in_order_and_opens_the_report(
     base = server("default")
     page.goto(base + "/")
     page.get_by_role("button", name="Open guided example (D2)").click()
-    page.wait_for_url("**/project/")
+    page.wait_for_url("**/workspace/")
     sent = _analyses(page)
     page.get_by_role("button", name="Run the whole example").click()
     page.wait_for_url("**/report/")
@@ -368,7 +368,7 @@ def test_fr_104_run_the_whole_example_stops_at_the_first_failure(
     base = server("m2-infeasible")
     page.goto(base + "/")
     page.get_by_role("button", name="Open guided example (D2)").click()
-    page.wait_for_url("**/project/")
+    page.wait_for_url("**/workspace/")
     sent = _analyses(page)
     page.get_by_role("button", name="Run the whole example").click()
     expect(page.get_by_test_id("example-run-stopped")).to_have_text(
@@ -378,7 +378,7 @@ def test_fr_104_run_the_whole_example_stops_at_the_first_failure(
     expect(progress.locator("[data-step=M2]")).to_have_attribute("data-state", "INFEASIBLE")
     expect(progress.locator("[data-step=M4b]")).to_contain_text("not run")
     assert sent == ["PS", "M1", "M2"]
-    expect(page).to_have_url(re.compile(r"/project/$"))
+    expect(page).to_have_url(re.compile(r"/workspace/$"))
 
 
 def test_fr_104_no_whole_example_run_outside_example_mode(
@@ -387,5 +387,5 @@ def test_fr_104_no_whole_example_run_outside_example_mode(
     base = server("default")
     page.goto(base + "/")
     page.get_by_role("button", name="Open example D2:").click()
-    page.wait_for_url("**/project/")
+    page.wait_for_url("**/workspace/")
     expect(page.get_by_role("button", name="Run the whole example")).to_have_count(0)

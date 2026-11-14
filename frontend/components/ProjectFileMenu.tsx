@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { getMeta, importProject } from "../api-client";
 import type { FileCheckResult, MetaInfo, ProjectFile } from "../api-types";
 import { toProjectFile, useProject, useProjectDispatch } from "../store";
+import { HOME } from "./PipelineStepper";
 import { clearDraft, writeDraft } from "../store/draft";
 import { downloadJson, NOT_JSON, readJson } from "./files";
 import styles from "./ui.module.css";
@@ -87,7 +88,7 @@ export function ProjectFileMenu() {
     setNote(r.data.file_check);
     if (!r.data.file_check.accepted || !r.data.project) return;
     dispatch({ type: "projectLoaded", file: r.data.project as unknown as ProjectFile });
-    router.push("/project/");
+    router.push(HOME);
   }
 
   return (

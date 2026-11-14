@@ -60,7 +60,7 @@ def create_project(page: Page, base: str, snap: dict[str, Any], name: str = "E2E
             str(snap["nominal_voltage_kv"])
         )
     page.get_by_role("button", name="Create project").click()
-    expect(page.get_by_role("heading", name="Project overview")).to_be_visible()
+    expect(page.get_by_role("heading", name="Workspace")).to_be_visible()
 
 
 def enter_design(page: Page, base: str, snap: dict[str, Any]) -> None:

@@ -39,7 +39,7 @@ def _sweep_with_profile(page: Page, base: str, tmp_path: Path, lam: list[float])
     f = tmp_path / "p.mgproj.json"
     f.write_text(json.dumps(doc), encoding="utf-8")
     page.get_by_label("Open project file").set_input_files(f)
-    expect(page).to_have_url(re.compile(r"/project/$"))  # the import is done (FR-120 race)
+    expect(page).to_have_url(re.compile(r"/workspace/$"))  # the import is done (FR-120 race)
     _run_m1(page)
     step(page, "Sweep (M3b)")
     page.wait_for_url("**/sweep/")

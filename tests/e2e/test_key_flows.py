@@ -120,6 +120,8 @@ def test_f2_open_refused_skipped_and_stage_1_issues(
     page.get_by_label("Open project file").set_input_files(odd)
     expect(page.get_by_test_id("project-name")).to_have_text("Reopened")
     expect(page.get_by_test_id("file-check")).to_contain_text("run_records[0]")
+    page.wait_for_url("**/workspace/")
+    step(page, "Project")
     expect(page.get_by_role("heading", name="Project overview")).to_be_visible()
     expect(page.get_by_role("list", name="Readiness issues")).to_contain_text(
         "Power cannot be negative"

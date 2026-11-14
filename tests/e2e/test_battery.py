@@ -184,7 +184,7 @@ def test_fr_120_depletion_chart_show_data_and_report_section(
     file = tmp_path / "profiled.mgproj.json"
     file.write_text(json.dumps(doc), encoding="utf-8")
     page.get_by_label("Open project file").set_input_files(file)
-    expect(page).to_have_url(re.compile(r"/project/$"))  # the import is done; was a race
+    expect(page).to_have_url(re.compile(r"/workspace/$"))  # the import is done; was a race
     expect(page.get_by_test_id("project-name")).to_have_text("E2E project")
     _run_m1(page)
     _open_s20_and_run(page)

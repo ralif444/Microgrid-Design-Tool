@@ -19,6 +19,7 @@ import { M1BlockedNote } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { M1Results } from "../../components/M1Results";
 import { ConstraintTable, M2Results } from "../../components/M2Results";
+import { RunWholeExample } from "../../components/RunWholeExample";
 import { RequireProject } from "../../components/RequireProject";
 import { ResultsDiagram } from "../../components/sld/ResultsDiagram";
 import { SingleLineDiagram } from "../../components/sld/SingleLineDiagram";
@@ -253,6 +254,7 @@ function Workspace() {
           </details>
         )}
         {error && <Toast message={error} onDismiss={() => setError(null)} />}
+        {area === "model" && <RunWholeExample />}
         {area === "model" ? (
           <section aria-label="Single-line diagram">
             <h2 className="sr-only">Single-line diagram</h2>
