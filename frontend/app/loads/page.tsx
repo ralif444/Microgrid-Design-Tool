@@ -1,22 +1,75 @@
 "use client";
 // S-03 Loads (Doc 7 §6.1): Load table with Q or power factor per row (FR-03), inline stage-1
 // messages from /api/projects/validate (FR-17, FR-18). Buses are edited on S-05 (D-46 K8).
-// LoadProfile (FR-04) is Should, stage 1.5.
+// LoadProfile (FR-04): the 24-hour table below the loads (audit O-2).
 import Link from "next/link";
 import { useState } from "react";
-import type { Load, ValidationIssue } from "../../api-types";
+import type { Load, ProjectSnapshot, ValidationIssue } from "../../api-types";
 import { ExampleGuide, ExampleNext } from "../../components/ExampleForm";
 import { CANNOT_UNDO, useConfirmDelete } from "../../components/ConfirmDelete";
 import { CellInput, CellSelect, DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
 import { Icon } from "../../components/Icon";
 import { RequireProject } from "../../components/RequireProject";
-import { loadMode, modePatch, PF_DIRECTIONS, type LoadMode } from "../../components/elementFields";
+import { loadMode, modePatch, PF_DIRECTIONS, issueWhere, Q_SIGN_NOTE, type LoadMode } from "../../components/elementFields";
 import { useValidation } from "../../components/useValidation";
 import { useProject, useProjectDispatch } from "../../store";
 import styles from "./loads.module.css";
 
-const where = (i: ValidationIssue) => [i.entity, i.id, i.field].filter(Boolean).join(" / ");
+type HourValue = NonNullable<NonNullable<ProjectSnapshot["load_profile"]>["values"]>[number];
+// O-2: the one LoadProfile (Doc 3 §3.5), 24 hourly values of system active power; the server checks it.
+function ProfileEditor({ issues, confirm }: { issues: ValidationIssue[]; confirm: (title: string, body: string, ok: () => void) => void }) {
+  const { design } = useProject();
+  const dispatch = useProjectDispatch();
+  const lp = design.load_profile;
+  const setP = (hour: number | null | undefined, p_kw: number | null) =>
+    lp && dispatch({ type: "profileSet", profile: { ...lp, values: (lp.values ?? []).map((v) => (v.hour === hour ? { ...v, p_kw } : v)) } });
+  const columns: DataColumn<HourValue>[] = [
+    { key: "hour", header: "Hour", unit: "h", numeric: true, cell: (v) => String(v.hour) },
+    { key: "p_kw", header: "P", unit: "kW", numeric: true, fields: ["values.p_kw"], edit: { kind: "number", value: (v) => v.p_kw, onChange: (v, p) => setP(v.hour, p) } },
+  ];
+  return (
+    <section aria-labelledby="profile-h" id="profile">
+      <div className={styles.toolbar}>
+        <h2 id="profile-h">Daily load profile</h2>
+        {lp ? (
+          <button
+            type="button"
+            onClick={() => confirm("Remove the load profile?", `The 24 hourly values are removed from the design. ${CANNOT_UNDO}`, () => dispatch({ type: "profileSet", profile: null }))}
+          >
+            Remove profile
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => dispatch({ type: "profileSet", profile: { id: "LP1", values: Array.from({ length: 24 }, (_, hour) => ({ hour, p_kw: null })) } })}
+          >
+            + Add a 24-hour profile
+          </button>
+        )}
+      </div>
+      <p className={styles.note}>
+        System active power for each hour of a day. Storage advice, the hour sweep and Battery use it; power flow uses the Load table above.
+      </p>
+      {lp && <DataTable label="Load profile" columns={columns} rows={lp.values ?? []} rowKey={(v, k) => v.hour ?? k} rowName={(v) => `hour ${v.hour}`} />}
+      {issues.length > 0 && (
+        <div className="problems">
+          <Icon name="list" size={20} />
+          <ul aria-label="Load profile problems">
+            {/* one line per message: an empty new profile would otherwise list the same message 24 times */}
+            {[...Map.groupBy(issues, (i) => i.message)].map(([m, all]) => (
+              <li key={m}>
+                {m}
+                {all.length > 1 && ` (${all.length} hourly values)`}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
+
 
 function Loads() {
   const { dialog, confirm } = useConfirmDelete();
@@ -66,15 +119,24 @@ function Loads() {
         </div>
       ),
     },
+    // D-14: one quantity and one unit per column; the column the mode does not use stays empty
     {
-      key: "q",
-      header: "Q (kvar) or power factor (ratio)",
+      key: "q_kvar",
+      header: "Q",
+      unit: "kvar",
       numeric: true,
-      fields: ["q_kvar", "power_factor"],
       cell: (l) =>
         modeOf(l) === "Q" ? (
           <CellInput label={`Q of ${l.id} (kvar)`} kind="number" value={l.q_kvar} onChange={(v: number | null) => set(l, { q_kvar: v })} invalid={bad(l, "q_kvar")} />
-        ) : (
+        ) : null,
+    },
+    {
+      key: "power_factor",
+      header: "Power factor",
+      unit: "ratio",
+      numeric: true,
+      cell: (l) =>
+        modeOf(l) === "PF" ? (
           <CellInput
             label={`Power factor of ${l.id} (ratio)`}
             kind="number"
@@ -82,7 +144,7 @@ function Loads() {
             onChange={(v: number | null) => set(l, { power_factor: v })}
             invalid={bad(l, "power_factor")}
           />
-        ),
+        ) : null,
     },
     {
       key: "pf_direction",
@@ -100,7 +162,7 @@ function Loads() {
     },
   ];
 
-  const other = issues.filter((i) => i.entity !== "Load");
+  const other = issues.filter((i) => i.entity !== "Load" && i.entity !== "LoadProfile");
   return (
     <>
       <h1>Loads</h1>
@@ -139,13 +201,15 @@ function Loads() {
           empty={<EmptyState title="No loads yet.">Add the first load.</EmptyState>}
         />
       )}
+      <p className={styles.note}>{Q_SIGN_NOTE}</p>
+      <ProfileEditor issues={issues.filter((i) => i.entity === "LoadProfile")} confirm={confirm} />
       {other.length > 0 && (
         <div className="problems">
           <Icon name="list" size={20} />
           <ul aria-label="Other problems">
             {other.map((i, k) => (
               <li key={k}>
-                {where(i) || "Design"}: {i.message}
+                {issueWhere(i)}: {i.message}
               </li>
             ))}
           </ul>

@@ -6,7 +6,7 @@
 // Inverters (Doc 12 FR-66, FR-69, FR-70).
 import { useEffect, useState } from "react";
 import { ExampleGuide, ExampleNext } from "../../components/ExampleForm";
-import { BUS_COLUMNS, INVERTER_COLUMNS, LINE_COLUMNS } from "../../components/elementFields";
+import { BUS_COLUMNS, INVERTER_COLUMNS, issueWhere, LINE_COLUMNS } from "../../components/elementFields";
 import { BankPick, CatalogPick } from "../../components/ElementSource";
 import { EmptyState } from "../../components/EmptyState";
 import { EntityTable } from "../../components/EntityTable";
@@ -136,7 +136,7 @@ function Network() {
           <ul aria-label="Network issues">
             {listed.map((i, k) => (
               <li key={k}>
-                {[i.entity, i.id, i.field].filter(Boolean).join(" / ") || "Design"}: {i.message}
+                {issueWhere(i)}: {i.message}
               </li>
             ))}
           </ul>

@@ -5,7 +5,7 @@
 import { useState } from "react";
 import type { Load, ValidationIssue } from "../api-types";
 import { busDependents, useProject, useProjectDispatch, type Collection } from "../store";
-import { BUS_COLUMNS, CONSTRAINT_FIELDS, INVERTER_COLUMNS, LINE_COLUMNS, loadMode, modePatch, PF_DIRECTIONS, type LoadMode } from "./elementFields";
+import { BUS_COLUMNS, CONSTRAINT_FIELDS, INVERTER_COLUMNS, LINE_COLUMNS, loadMode, modePatch, PF_DIRECTIONS, Q_SIGN_NOTE, type LoadMode } from "./elementFields";
 import styles from "./ElementForm.module.css";
 import type { Column } from "./EntityTable";
 import { useRowDelete } from "./EntityTable";
@@ -215,6 +215,9 @@ export function ElementForm({ target, onRename, onDeleted }: { target: ElementRe
             />,
           ]
         : []),
+      <p key="sign" className={styles.hint}>
+        {Q_SIGN_NOTE}
+      </p>,
     ];
   }
 

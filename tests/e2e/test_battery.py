@@ -94,7 +94,7 @@ def test_fr_75_battery_bank_on_s05_saved_outside_the_design(
     form.get_by_label("Initial state of charge, optional (ratio)").fill("1.5")
     form.get_by_role("button", name="Save bank").click()
     expect(page.get_by_role("list", name="Network issues")).to_contain_text(
-        "battery_banks[0].initial_soc_ratio"
+        "INV1, initial soc ratio"
     )
     form.get_by_label("Initial state of charge, optional (ratio)").fill("1")
     form.get_by_role("button", name="Save bank").click()

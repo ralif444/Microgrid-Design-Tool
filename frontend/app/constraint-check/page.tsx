@@ -8,7 +8,7 @@ import Link from "next/link";
 import { EmptyState } from "../../components/EmptyState";
 import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
 import { asResponse } from "../../components/Further";
-import { CheckStrip } from "../../components/CheckStrip";
+import { CheckStrip, useSizingMarginNote } from "../../components/CheckStrip";
 import { Icon } from "../../components/Icon";
 import { Inspector, type ElementRef } from "../../components/Inspector";
 import { m2Kpis } from "../../components/kpi";
@@ -33,6 +33,7 @@ function ConstraintCheck() {
   // an empty field takes the guided example's value (Doc 12 X9, D-92 K230).
   const ex = useExampleForm<M2Params>("constraint-check", lastM2Params(runRecords));
   const params = ex.values;
+  const marginNote = useSizingMarginNote(ex);
   const { busy, error, setError, call } = useAnalysisCall();
   const [inspect, setInspect] = useState<ElementRef | null>(null);
   const ref = m1Ref(runRecords);
@@ -81,7 +82,7 @@ function ConstraintCheck() {
             value={params[k]}
             onChange={(v) => ex.set(k, v)}
             adornment={ex.tag(k, label)}
-            note={ex.note(k)}
+            note={marginNote(k)}
           />
         ))}
         {ex.resetButton}

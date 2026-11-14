@@ -59,6 +59,14 @@ def test_fr_01_fr_03_fr_05_fr_06_fr_08_loads_to_sizing_advice(
     row.get_by_label("P of L1 (kW)").fill("5")
     expect(row).not_to_contain_text("Power cannot be negative")
     _numeric_inputs_have_units(page)
+    expect(page.get_by_text("For a leading load")).to_be_visible()  # Q sign line (audit D-15)
+    # LoadProfile editor (audit O-2): 24 hourly rows; the server names the empty values
+    page.get_by_role("button", name="+ Add a 24-hour profile").click()
+    expect(page.get_by_role("table", name="Load profile").locator("tbody tr")).to_have_count(24)
+    expect(page.get_by_role("list", name="Load profile problems")).to_be_visible()
+    page.get_by_role("button", name="Remove profile").click()
+    page.get_by_role("button", name="Delete", exact=True).click()
+    expect(page.get_by_role("table", name="Load profile")).to_have_count(0)
 
     step(page, "Sizing advice")
     _numeric_inputs_have_units(page)

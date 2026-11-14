@@ -6,16 +6,16 @@
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import type { M1Payload, M2Payload } from "../../api-types";
-import { CheckStrip } from "../../components/CheckStrip";
+import { CheckStrip, useSizingMarginNote } from "../../components/CheckStrip";
 import { ElementForm, LimitsForm } from "../../components/ElementForm";
-import { lastM2Params, M2_FIELDS, type M2Params } from "../../components/elementFields";
+import { issueWhere, lastM2Params, M2_FIELDS, type M2Params } from "../../components/elementFields";
 import { EmptyState } from "../../components/EmptyState";
 import { ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
 import { asResponse } from "../../components/Further";
 import { Icon } from "../../components/Icon";
 import { Inspector, type ElementRef } from "../../components/Inspector";
 import inspectorStyles from "../../components/Inspector.module.css";
-import { M1BlockedNote } from "../../components/M1Freshness";
+import { CheckFailed, M1BlockedNote } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { M1Results } from "../../components/M1Results";
 import { ConstraintTable, M2Results } from "../../components/M2Results";
@@ -27,7 +27,7 @@ import { useSldModel } from "../../components/sld/useSldModel";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import { SOLVER, useAnalysisCall } from "../../components/useAnalysisCall";
-import { m1Freshness, useValidation } from "../../components/useValidation";
+import { m1Freshness, useValidationState } from "../../components/useValidation";
 import { ID_PREFIX, latestRun, m1Ref, nextId, useProject, useProjectDispatch } from "../../store";
 import styles from "./workspace.module.css";
 
@@ -141,7 +141,8 @@ function Workspace() {
   const [drawer, setDrawer] = useState(true);
   const [tab, setTab] = useState<"margins" | "pf">("margins");
   const sld = useSldModel();
-  const report = useValidation(design);
+  const check = useValidationState(design);
+  const report = check.report;
   const ref = m1Ref(runRecords);
   const fresh = m1Freshness(ref?.snapshot_hash ?? null, report);
   const m1Record = runRecords.find((r) => r.record_id === ref?.record_id) ?? null;
@@ -153,6 +154,7 @@ function Workspace() {
   // starts from the user's last M2 entry, or the guided example's (K147, D-92 K230), as on S-08
   const ex = useExampleForm<M2Params>("constraint-check", lastM2Params(runRecords));
   const params = ex.values;
+  const marginNote = useSizingMarginNote(ex);
   const marginsSet = params.inverter_margin_ratio !== null && params.line_margin_ratio !== null;
   // opened by the user, it stays open while they type (audit D-9); closed by default once margins are set
   const [settingsOpen, setSettingsOpen] = useState(!marginsSet);
@@ -215,7 +217,7 @@ function Workspace() {
                   value={params[k]}
                   onChange={(v) => ex.set(k, v)}
                   adornment={ex.tag(k, label)}
-                  note={ex.note(k)}
+                  note={marginNote(k)}
                 />
               ))}
               {ex.resetButton}
@@ -235,7 +237,11 @@ function Workspace() {
         {area === "model" && (
           <section aria-label="Design issues" className={styles.issues}>
             <h2>Design issues</h2>
-            {designIssues.length === 0 ? (
+            {check.error ? (
+              <CheckFailed error={check.error} onRetry={check.retry} />
+            ) : report === null ? (
+              <p>Checking the design…</p>
+            ) : designIssues.length === 0 ? (
               <p className="all-clear">
                 <Icon name="feasible" />
                 No network-level problems found.
@@ -244,7 +250,7 @@ function Workspace() {
               <ul>
                 {designIssues.map((i, k) => (
                   <li key={k}>
-                    {[i.entity, i.id, i.field].filter(Boolean).join(" / ") || "Design"}: {i.message}
+                    {issueWhere(i)}: {i.message}
                   </li>
                 ))}
               </ul>

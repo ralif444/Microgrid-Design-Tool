@@ -7,7 +7,7 @@ import type { AnalysisResponse, PsPayload } from "../../api-types";
 import { moduleHint } from "../../components/battery";
 import { catalogHints, useCatalog } from "../../components/Catalog";
 import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
-import { fixed, fixedOr } from "../../components/format";
+import { fixed, fixedOr, plural } from "../../components/format";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
@@ -81,7 +81,9 @@ function AdvicePanel({ a }: { a: SizingAdvice }) {
                 </td>
               </>
             ) : (
-              <td colSpan={2}>Storage advice needs a LoadProfile and an autonomy time.</td>
+              <td colSpan={2}>
+                Storage advice needs a LoadProfile and an autonomy time. <Link href="/loads/#profile">Add the profile on Loads</Link>
+              </td>
             )}
           </tr>
         </tbody>
@@ -95,27 +97,25 @@ function AdvicePanel({ a }: { a: SizingAdvice }) {
 
 // FR-09: accepted advice offers editable Inverter drafts (unit_count rows at the unit rating) for
 // S-05; Accept itself changes no design entity (FR-08).
-function InverterDrafts({ plan }: { plan: PsPayload["inverter_plan"] }) {
+function InverterDrafts({ adviceId, plan }: { adviceId: string; plan: PsPayload["inverter_plan"] }) {
+  const { design, draftsAdded } = useProject();
   const dispatch = useProjectDispatch();
-  const [added, setAdded] = useState(false);
+  // O-1: remembered per advice in the store, so a second visit does not offer the drafts again
+  const added = draftsAdded[adviceId];
   if (added)
     return (
       <p role="status">
-        {plan.unit_count} inverter drafts added. <Link href="/network/">Complete them in Network</Link>
+        {plural(added, "inverter draft")} added. <Link href="/network/">Complete them in Network</Link>
       </p>
     );
+  // not remembered after a reload (store only): name the rows that still lack a bus instead
+  const unplaced = (design.inverters ?? []).filter((i) => !i.bus_id).length;
   return (
     <p>
-      <button
-        type="button"
-        onClick={() => {
-          for (let k = 0; k < plan.unit_count; k++)
-            dispatch({ type: "rowAdded", collection: "inverters", row: { rated_kva: plan.unit_rating_kva } });
-          setAdded(true);
-        }}
-      >
+      <button type="button" onClick={() => dispatch({ type: "draftsAdded", adviceId, count: plan.unit_count, ratedKva: plan.unit_rating_kva })}>
         Add {plan.unit_count} inverter drafts of {plan.unit_rating_kva} kVA
       </button>
+      {unplaced > 0 && ` ${plural(unplaced, "inverter")} without a bus already in the design.`}
     </p>
   );
 }
@@ -292,16 +292,23 @@ function Sizing() {
           )}
           <AdvicePanel a={latest} />
           {latest.state === "PROPOSED" && (
-            <p>
-              <button type="button" onClick={() => dispatch({ type: "adviceDecided", id: latest.id, state: "ACCEPTED" })}>
-                Accept
-              </button>{" "}
-              <button type="button" onClick={() => dispatch({ type: "adviceDecided", id: latest.id, state: "SKIPPED" })}>
-                Skip
-              </button>
-            </p>
+            <div aria-label="Decide on the advice" role="group">
+              <ul>
+                <li>Accept: keep this advice as the sizing basis and offer inverter drafts from it. The design does not change.</li>
+                <li>Skip: go on without this advice. The design does not change.</li>
+              </ul>
+              <p>
+                <button type="button" disabled={stale} onClick={() => dispatch({ type: "adviceDecided", id: latest.id, state: "ACCEPTED" })}>
+                  Accept
+                </button>{" "}
+                <button type="button" disabled={stale} onClick={() => dispatch({ type: "adviceDecided", id: latest.id, state: "SKIPPED" })}>
+                  Skip
+                </button>
+                {stale && " Run the advice again to accept or skip it."}
+              </p>
+            </div>
           )}
-          {latest.state === "ACCEPTED" && <InverterDrafts plan={latest.result.inverter_plan} />}
+          {latest.state === "ACCEPTED" && <InverterDrafts adviceId={latest.id} plan={latest.result.inverter_plan} />}
         </>
       )}
       <ExampleNext screen="sizing" ready={nextReady(resp?.result.status)} />

@@ -1,16 +1,21 @@
 "use client";
 // S-02 Project overview (Doc 7 §2): name and nominal values (Doc 9 D-45 K2), counts, readiness.
+import { issueWhere } from "../../components/elementFields";
 import Link from "next/link";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { RunWholeExample } from "../../components/RunWholeExample";
-import { useValidation } from "../../components/useValidation";
+import { CheckFailed } from "../../components/M1Freshness";
+import { useValidationState } from "../../components/useValidation";
 import { useProject, useProjectDispatch } from "../../store";
 
 function Overview() {
   const { project, design, runRecords } = useProject();
   const dispatch = useProjectDispatch();
-  const issues = useValidation(design)?.issues ?? null;
+  const check = useValidationState(design);
+  const issues = check.report?.issues ?? null;
+  // D-12: kV and Hz problems sit by their field (aria-invalid via NumberField); the rest stay in the list
+  const fieldError = (f: string) => issues?.filter((i) => i.entity === "Project" && i.field === f).map((i) => i.message).join(" ") || null;
 
   const counts: [string, number][] = [
     ["Buses", design.buses?.length ?? 0],
@@ -49,6 +54,7 @@ function Overview() {
           label="Nominal voltage, line-to-line"
           unit="kV"
           value={design.nominal_voltage_kv}
+          error={fieldError("nominal_voltage_kv")}
           onChange={(v) => dispatch({ type: "projectUpdated", nominal_voltage_kv: v })}
         />
       </p>
@@ -58,6 +64,7 @@ function Overview() {
           label="Nominal frequency"
           unit="Hz"
           value={design.nominal_frequency_hz}
+          error={fieldError("nominal_frequency_hz")}
           onChange={(v) => dispatch({ type: "projectUpdated", nominal_frequency_hz: v })}
         />
       </p>
@@ -73,14 +80,16 @@ function Overview() {
       </table>
       <RunWholeExample />
       <h2>Design readiness for power flow (M1)</h2>
-      {issues === null ? (
+      {check.error ? (
+        <CheckFailed error={check.error} onRetry={check.retry} />
+      ) : issues === null ? (
         <p>Checking the design…</p>
       ) : issues.length === 0 ? (
         <p>No problems found.</p>
       ) : (
         <ul aria-label="Readiness issues">
           {issues.map((i, k) => (
-            <li key={k}>{[i.entity, i.id, i.field].filter(Boolean).join(" / ") || "Design"}: {i.message}</li>
+            <li key={k}>{issueWhere(i)}: {i.message}</li>
           ))}
         </ul>
       )}

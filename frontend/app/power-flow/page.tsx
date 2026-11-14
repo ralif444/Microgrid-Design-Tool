@@ -1,6 +1,7 @@
 "use client";
 // S-07 Power flow (M1) on the Project store design (D-46 K7). Readiness is shown before a run
 // but never blocks it (Doc 7 P6): a run with problems returns INPUT_INVALID listing all issues.
+import { issueWhere } from "../../components/elementFields";
 import Link from "next/link";
 import { useState } from "react";
 import type { M2Payload, M1Payload } from "../../api-types";
@@ -19,7 +20,8 @@ import { ResultsDiagram } from "../../components/sld/ResultsDiagram";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import { SOLVER, useAnalysisCall } from "../../components/useAnalysisCall";
-import { m1Freshness, useValidation } from "../../components/useValidation";
+import { m1Freshness, useValidationState } from "../../components/useValidation";
+import { CheckFailed } from "../../components/M1Freshness";
 import { latestRun, m1Ref, useProject, useProjectDispatch } from "../../store";
 import styles from "./power-flow.module.css";
 
@@ -28,7 +30,8 @@ function PowerFlow() {
   const dispatch = useProjectDispatch();
   const { busy, error, setError, call } = useAnalysisCall();
   const [inspect, setInspect] = useState<ElementRef | null>(null);
-  const report = useValidation(design);
+  const check = useValidationState(design);
+  const report = check.report;
   const resp = asResponse(latestRun(runRecords, "M1", report?.snapshot_hash ?? null));
   const ref = m1Ref(runRecords);
   const fresh = m1Freshness(ref?.snapshot_hash ?? null, report);
@@ -55,7 +58,9 @@ function PowerFlow() {
       <CheckStrip fresh={fresh} m1={payload} m1Record={m1Record} />
       <ExampleGuide screen="power-flow" />
       <h2>Readiness</h2>
-      {report === null ? (
+      {check.error ? (
+        <CheckFailed error={check.error} onRetry={check.retry} />
+      ) : report === null ? (
         <p className={styles.checking}>Checking the design…</p>
       ) : report.valid ? (
         <p className="all-clear">
@@ -68,7 +73,7 @@ function PowerFlow() {
           <ul aria-label="Readiness warnings">
             {report.issues.map((i, k) => (
               <li key={k}>
-                {[i.entity, i.id, i.field].filter(Boolean).join(" / ") || "Design"}: {i.message}
+                {issueWhere(i)}: {i.message}
               </li>
             ))}
           </ul>

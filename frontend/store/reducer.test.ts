@@ -195,3 +195,18 @@ describe("FR-02 name and description; FR-11 Bus delete guard", () => {
     expect(freed.design.buses?.map((b) => b.id)).toEqual(["B1"]);
   });
 });
+
+describe("audit O-1, O-2", () => {
+  it("adds inverter drafts once per advice and forgets them on a new Accept", () => {
+    const s = run([created, { type: "draftsAdded", adviceId: "a1", count: 2, ratedKva: 5 }]);
+    expect(s.design.inverters?.map((i) => [i.id, i.rated_kva])).toEqual([["INV1", 5], ["INV2", 5]]);
+    expect(s.draftsAdded).toEqual({ a1: 2 });
+    expect(run([{ type: "adviceDecided", id: "a2", state: "ACCEPTED" }], s).draftsAdded).toEqual({});
+  });
+  it("sets and removes the load profile", () => {
+    const profile = { id: "LP1", values: [{ hour: 0, p_kw: 3 }] };
+    const s = run([created, { type: "profileSet", profile }]);
+    expect(s.design.load_profile).toEqual(profile);
+    expect(run([{ type: "profileSet", profile: null }], s).design.load_profile).toBeNull();
+  });
+});

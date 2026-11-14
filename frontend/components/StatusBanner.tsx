@@ -1,7 +1,7 @@
 // Status banner (Doc 7 P2, §5): colour role + icon + Status word, plain message, next step,
 // collapsible details. Texts come from status-text.ts; this file only presents them.
 import type { AnalysisResult, AnalysisType, ValidationIssue } from "../api-types";
-import { fieldName } from "./elementFields";
+import { issueWhere } from "./elementFields";
 import { Icon, type IconName } from "./Icon";
 import styles from "./StatusBanner.module.css";
 import { Term } from "./Term";
@@ -45,7 +45,7 @@ export function StatusBanner({ type, result }: { type: AnalysisType; result: Ana
         <ul aria-label="Issues" className={styles.issues}>
           {issues.map((i, k) => (
             <li key={k}>
-              <span className={styles.where}>{[i.id ?? (i.entity === "parameters" ? "Settings" : i.entity), i.field && fieldName(i.field)].filter(Boolean).join(", ") || "Design"}</span>: {i.message}
+              <span className={styles.where}>{issueWhere(i)}</span>: {i.message}
             </li>
           ))}
         </ul>
