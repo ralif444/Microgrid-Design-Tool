@@ -3,7 +3,7 @@
 // the rows that tooltip, inspector and "View as table" all read. No layout, no store, and no physics:
 // values are copied from the Project or a payload and only rounded for display (`num`, R1, R2).
 import type { BatteryBank, LimitingConstraint, M1Payload, M2Payload, ProjectSnapshot, ValidationIssue } from "../../api-types";
-import { num } from "../format";
+import { fixed, num } from "../format";
 import { KIND_WORDS, nearLimit } from "../M2Results";
 
 export type SldKind = "system" | "bus" | "inverter" | "load" | "line";
@@ -62,6 +62,8 @@ const NO_M1 = "No current power-flow result";
 const NO_M2 = "No current constraint check";
 
 const fmt = (v: number | null | undefined) => (v === null || v === undefined ? null : String(num(v)));
+// result labels on the diagram use the fixed result decimals (plan W1); inputs and inspector rows keep `fmt`
+const res = (v: number | null | undefined, unit: string) => (v === null || v === undefined ? "—" : fixed(v, unit));
 const row = (label: string, v: number | null | undefined, unit: string, missing = "not entered"): SldRow =>
   fmt(v) === null ? { label, value: "—", unit, note: missing } : { label, value: fmt(v)!, unit };
 const byId = <T extends { id?: string | null }>(xs: T[] | undefined) =>
@@ -127,7 +129,7 @@ export function buildSldModel({ design, m1 = null, m2 = null, issues = [], margi
     tags: [
       `${fmt(design.nominal_voltage_kv) ?? "—"} kV LL`,
       `${fmt(design.nominal_frequency_hz) ?? "—"} Hz nominal`,
-      ...(m1 ? [`${fmt(m1.system_frequency_hz)} Hz system`] : []),
+      ...(m1 ? [`${res(m1.system_frequency_hz, "Hz")} Hz system`] : []),
     ],
     sections: [
       {
@@ -163,7 +165,7 @@ export function buildSldModel({ design, m1 = null, m2 = null, issues = [], margi
         id: b.id,
         name: b.name ?? undefined,
         label: `Bus ${b.id}${b.name ? ` (${b.name})` : ""}, ${count(nInv, "inverter")}, ${count(nLoad, "load")}, ${count(nLine, "line")}${alone ? ", not connected" : ""}`,
-        tags: [b.id, ...(r ? [`${fmt(r.voltage_pu)} p.u.`, `${fmt(r.angle_deg)} °`] : [])],
+        tags: [b.id, ...(r ? [`${res(r.voltage_pu, "p.u.")} p.u.`, `${res(r.angle_deg, "deg")} °`] : [])],
         mark: c.mark,
       },
       "Bus",
@@ -196,7 +198,7 @@ export function buildSldModel({ design, m1 = null, m2 = null, issues = [], margi
         id: i.id,
         busId: i.bus_id ?? undefined,
         label: `Inverter ${i.id} at bus ${i.bus_id ?? "—"}, rated ${fmt(i.rated_kva) ?? "—"} kVA`,
-        tags: [i.id, `${fmt(i.rated_kva) ?? "—"} kVA`, ...(r ? [`${fmt(r.p_kw)} kW`, `loading ${fmt(r.loading_ratio)}`] : [])],
+        tags: [i.id, `${fmt(i.rated_kva) ?? "—"} kVA`, ...(r ? [`${res(r.p_kw, "kW")} kW`, `loading ${res(r.loading_ratio, "ratio")}`] : [])],
         mark: c.mark,
         ...(r ? { loading: r.loading_ratio } : {}),
       },
@@ -269,7 +271,7 @@ export function buildSldModel({ design, m1 = null, m2 = null, issues = [], margi
         from: l.from_bus_id ?? undefined,
         to: l.to_bus_id ?? undefined,
         label: `Line ${l.id} from ${l.from_bus_id ?? "—"} to ${l.to_bus_id ?? "—"}`,
-        tags: [l.id, ...(r ? [`${fmt(r.current_a)} A`] : [])],
+        tags: [l.id, ...(r ? [`${res(r.current_a, "A")} A`] : [])],
         mark: c.mark,
       },
       "Line",

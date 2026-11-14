@@ -70,8 +70,8 @@ describe("SLD model (FR-94, FR-95)", () => {
       sharing: [],
     } as unknown as M1Payload;
     const m = buildSldModel({ design: D2, m1 });
-    expect(m.buses.find((e) => e.id === b)!.tags).toEqual([b, "0.975 p.u.", "-1.5 °"]);
-    expect(m.inverters.find((e) => e.id === i)!.tags).toContain("loading 0.82");
+    expect(m.buses.find((e) => e.id === b)!.tags).toEqual([b, "0.9750 p.u.", "-1.50 °"]); // result decimals (W1)
+    expect(m.inverters.find((e) => e.id === i)!.tags).toContain("loading 0.820");
     expect(value(m.system, "Results", "System frequency")).toMatchObject({ value: "49.9", unit: "Hz" });
     // an element the run does not cover
     const other = m.buses.find((e) => e.id !== b)!;

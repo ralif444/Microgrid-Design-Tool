@@ -25,6 +25,8 @@
 .flag[data-mark="violated"] > svg { fill: var(--role-negative-icon); }
 .add { margin: var(--space-1) var(--space-4) var(--space-2); font-size: var(--text-sm); }
 form.add { display: grid; justify-items: start; gap: var(--space-1); }
+/* "Add bus" is a list action like "+ Add inverter": tertiary, not the filled submit look of globals.css */
+.list form.add button[type="submit"]:not(:disabled):not(:hover) { background: transparent; border-color: var(--cds-button-primary); color: var(--cds-button-primary); }
 
 .canvas { grid-area: canvas; min-width: 0; padding: var(--space-3) var(--space-4); }
 .canvas h2 { font-size: var(--text-md); }
@@ -45,7 +47,9 @@ form.add { display: grid; justify-items: start; gap: var(--space-1); }
 
 /* Desktop only, but 200 % zoom (Doc 7 §8) narrows the viewport: the inspector moves under the canvas,
    then everything stacks, so the page never scrolls sideways. */
-@media (max-width: 1100px) {
+/* a 1280 px laptop at 125 % scaling is 1024 px wide: narrower side panels keep the inspector beside the diagram */
+@media (max-width: 1100px) { .ws { grid-template-columns: 12rem minmax(0, 1fr) 19rem; } }
+@media (max-width: 900px) {
   .ws { grid-template-columns: 12rem minmax(0, 1fr); grid-template-areas: "bar bar" "list canvas" "insp insp" "dock dock"; }
   .insp { border-left: 0; border-top: var(--border-width) solid var(--color-border); }
   .bar { flex-wrap: wrap; }
