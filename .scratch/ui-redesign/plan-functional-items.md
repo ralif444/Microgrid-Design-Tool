@@ -49,6 +49,10 @@ Open points:
 
 Check: unit test for write, restore, version mismatch (draft ignored) and storage failure. One e2e: edit, reload, restore.
 
+Done 2026-11-14: `frontend/store/draft.ts` (key `mgapp-draft`; the draft is the Project file without run records, its `schema_version` checked on read), autosave 1 s after the last change in `components/ProjectFileMenu.tsx`, restore / discard offer on S-01 (`app/page.tsx`, discard asks first), reducer action `draftRestored` (loaded, still unsaved). Tests: `store/draft.test.ts`, `tests/e2e/test_autosave.py`.
+- Example mode: entering it clears the draft and nothing is written while in it; after leaving, edits are autosaved like any unsaved Project.
+- A loaded or saved Project (unsaved flag off) clears the draft. Creating a new Project while a draft is offered replaces the draft without asking (the offer is on the same screen).
+
 ## Decisions needed from you
 
 None open (see the decisions line at the top).

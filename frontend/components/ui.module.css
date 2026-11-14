@@ -44,6 +44,7 @@
   border-left: var(--banner-edge) solid var(--role-attention-edge);
 }
 .blocked > svg { fill: var(--role-attention-icon); }
+.draftText { flex: 1 1 20rem; margin: 0; } /* S-01 restore offer (F3): text, then its two buttons */
 /* the empty state's one action is primary (guideline §6); a link keeps its role and looks like a button */
 .empty > :is(a, button) {
   display: inline-flex; align-items: center; min-height: var(--control-height); padding: 0 var(--space-4);
