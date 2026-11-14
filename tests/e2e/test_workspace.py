@@ -104,3 +104,34 @@ def test_w4_check_area_runs_and_keeps_the_stale_rule(
     ).click()
     expect(page.get_by_test_id("m1-blocked")).to_contain_text("Re-run M1")
     expect(run_m2).to_be_disabled()
+
+
+def test_w6_studies_and_report_host_the_step_pages(
+    server: Callable[[str], str], page: Page
+) -> None:
+    _open(page, server("default"))
+    areas = page.get_by_role("navigation", name="Areas")
+    areas.get_by_role("button", name="Check").click()
+    page.get_by_role("button", name="Run M1").click()
+    expect(page.get_by_role("region", name="Check status")).to_contain_text(
+        "Power flow solved"
+    )
+    # Studies: the step-7 pages, one at a time, the workspace stays open
+    areas.get_by_role("button", name="Studies").click()
+    expect(
+        page.get_by_role("heading", name="Sensitivity (M3a)", level=1)
+    ).to_be_visible()
+    page.get_by_role("navigation", name="Studies").get_by_role(
+        "button", name="Transient (M4b)"
+    ).click()
+    expect(page.get_by_role("heading", name="Transient (M4b)", level=1)).to_be_visible()
+    expect(page.get_by_role("heading", name="Sensitivity (M3a)")).to_have_count(0)
+    # Report: the report and the run history, with the M1 run made in Check
+    areas.get_by_role("button", name="Report").click()
+    expect(page.get_by_role("heading", name="Report: E2E project")).to_be_visible()
+    page.get_by_role("navigation", name="Report and history").get_by_role(
+        "button", name="Run history"
+    ).click()
+    expect(page.get_by_role("heading", name="Run history", level=1)).to_be_visible()
+    expect(page.get_by_role("main")).to_contain_text("M1")
+    page.wait_for_url("**/workspace/")

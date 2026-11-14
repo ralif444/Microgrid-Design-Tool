@@ -76,6 +76,7 @@ Apply the seven mockup phases to `/power-flow/` and `/constraint-check/` without
 
 - The six M3/M4 pages, `/runs/` and `/report/` first move under the new tabs unchanged.
 - Any redesign of them gets its own mockup and approval first, as the Check screen did.
+- Done 2026-11-14: the Studies area hosts the step-7 pages (the six M3/M4 pages, cable sizing behind its flag, battery with a bank) under a sub-navigation; the Report area hosts `/report/` and `/runs/`. Pages unchanged; their routes stay. The workspace bar is not printed, so the report prints as on its own route.
 
 ## Left for later, needs model or engine change
 
