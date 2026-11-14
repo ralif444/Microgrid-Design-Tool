@@ -73,6 +73,7 @@ Apply the seven mockup phases to `/power-flow/` and `/constraint-check/` without
 
 - Dictionary plus a language context, no new dependency; `html lang` follows it; number separators follow it through `Intl.NumberFormat`.
 - Blocked on `issues/01-indonesian-vocabulary.md` for the Indonesian strings. The English side can ship first with the switch hidden.
+- Groundwork done 2026-11-14: `components/i18n.ts` (dictionary `EN`, empty `ID`, `translate`, `localize` swaps the decimal separator through `Intl.NumberFormat`, no grouping) and `components/Language.tsx` (`LanguageProvider` in the root layout sets `<html lang>`, `useLanguage()` gives `t` and `n`, `LanguageSwitch` renders nothing while `LANGUAGE_SWITCH_SHOWN` is false). Only the area tab names go through `t` so far. Left for W5 proper: the Indonesian strings, moving the other labels into `EN`, and routing displayed numbers (`num`, `fixed`) through `n`.
 
 ### W6. Studies and Report areas (not planned in detail)
 

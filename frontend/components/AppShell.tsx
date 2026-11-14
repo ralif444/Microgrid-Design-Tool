@@ -13,6 +13,7 @@ import { EngineBadge } from "./EngineBadge";
 import { AreaScreens, AreaTabs } from "./AreaNav";
 import { ProjectFileMenu } from "./ProjectFileMenu";
 import { Toggletip } from "./Term";
+import { LanguageSwitch } from "./Language";
 import { ThemeSwitch } from "./ThemeSwitch";
 
 // The visible mark is a dot; the text stays for assistive tech and tests.
@@ -55,6 +56,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Link>
         <ProjectFileMenu />
         <ThemeSwitch className={styles.seg} />
+        <LanguageSwitch className={styles.seg} />
         {example && (
           <span className={styles.example} data-testid="example-mode">
             <Tag type="blue" size="md">

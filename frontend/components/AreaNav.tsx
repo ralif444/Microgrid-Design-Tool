@@ -13,6 +13,7 @@ import { useCableSizingFlag } from "./cable";
 import { Icon } from "./Icon";
 import styles from "./AreaNav.module.css";
 import { m1Freshness, useValidation } from "./useValidation";
+import { useLanguage } from "./Language";
 
 // ADR-016 decision 1: the workspace is the page frame; opening or creating a Project lands there.
 export const HOME = "/workspace/";
@@ -178,7 +179,8 @@ function useAreaNav() {
 
 export function AreaTabs() {
   const { list, area } = useAreaNav();
-  return <AreaTabsView list={list} current={area?.key ?? null} />;
+  const { t } = useLanguage();
+  return <AreaTabsView list={list.map((a) => ({ ...a, label: t(`area.${a.key}`) }))} current={area?.key ?? null} />;
 }
 
 export function AreaScreens() {
