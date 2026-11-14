@@ -8,6 +8,7 @@ import type { M4bPayload } from "../../api-types";
 import { LineChart } from "../../components/charts/LineChart";
 import { EmptyState } from "../../components/EmptyState";
 import { ExampleGuide, ExampleNext, ExampleTag, nextReady, NotSet, useExampleForm } from "../../components/ExampleForm";
+import { fixedOr } from "../../components/format";
 import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
 import { IndicatorPanel } from "../../components/IndicatorPanel";
 import { m4bKpis } from "../../components/kpi";
@@ -249,7 +250,7 @@ function Transient() {
           </p>
           <ul className={styles.facts}>
             <li>Settled: {p.settled === null || p.settled === undefined ? "not judged" : p.settled ? "yes" : "no"}</li>
-            <li>Largest rate of change of frequency (descriptive): {fmt(p.max_rocof_hz_per_s)} Hz/s</li>
+            <li>Largest rate of change of frequency (descriptive): {fixedOr(p.max_rocof_hz_per_s, "Hz/s")} Hz/s</li>
           </ul>
           <IndicatorPanel />
           {(

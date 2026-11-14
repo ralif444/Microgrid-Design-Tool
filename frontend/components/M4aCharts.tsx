@@ -7,7 +7,7 @@ import { GridChart } from "./charts/GridChart";
 import { LineChart } from "./charts/LineChart";
 import { Swatch } from "./charts/marks";
 import { SERIES } from "./charts/palette";
-import { fmt } from "./Further";
+import { fixedOr } from "./format";
 import { participationRows } from "./participation";
 
 export type EigRow = { k: number; re: number; im: number; zeta: number | null | undefined; f: number | undefined; dominant: boolean };
@@ -36,7 +36,7 @@ export function M4aCharts({ p, record, reason }: { p: M4aPayload; record: RunRec
             name: "Eigenvalue",
             values: eig.map((e) => e.im),
             marker: (i) => (eig[i].dominant ? { m: "diamond", filled: true } : { m: "circle" }),
-            title: (i) => `#${eig[i].k}: ζ ${fmt(eig[i].zeta)}, f ${fmt(eig[i].f)} Hz${eig[i].dominant ? " (dominant)" : ""}`,
+            title: (i) => `#${eig[i].k}: ζ ${fixedOr(eig[i].zeta, "ratio")}, f ${fixedOr(eig[i].f, "Hz")} Hz${eig[i].dominant ? " (dominant)" : ""}`,
           },
         ]}
         legend={[

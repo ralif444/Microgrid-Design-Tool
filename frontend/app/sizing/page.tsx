@@ -7,6 +7,7 @@ import type { AnalysisResponse, PsPayload } from "../../api-types";
 import { moduleHint } from "../../components/battery";
 import { catalogHints, useCatalog } from "../../components/Catalog";
 import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
+import { fixed, fixedOr } from "../../components/format";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { StatusBanner } from "../../components/StatusBanner";
@@ -48,12 +49,12 @@ function AdvicePanel({ a }: { a: SizingAdvice }) {
         <tbody>
           <tr>
             <th scope="row">Load apparent power</th>
-            <td>{p.load_apparent_kva} kVA</td>
+            <td>{fixed(p.load_apparent_kva, "kVA")} kVA</td>
             <td />
           </tr>
           <tr>
             <th scope="row">Total inverter rating</th>
-            <td>{p.required_inverter_kva.value_kva} kVA</td>
+            <td>{fixed(p.required_inverter_kva.value_kva, "kVA")} kVA</td>
             <td>
               {p.required_inverter_kva.basis} {p.required_inverter_kva.assumptions.join(" ")}
             </td>
@@ -61,7 +62,7 @@ function AdvicePanel({ a }: { a: SizingAdvice }) {
           <tr>
             <th scope="row">Inverters</th>
             <td>
-              {plan.unit_count} × {plan.unit_rating_kva} kVA (installed {plan.installed_kva} kVA, redundancy {plan.redundancy})
+              {plan.unit_count} × {fixed(plan.unit_rating_kva, "kVA")} kVA (installed {fixed(plan.installed_kva, "kVA")} kVA, redundancy {plan.redundancy})
             </td>
             <td>
               {plan.basis} {plan.assumptions.join(" ")}
@@ -72,8 +73,8 @@ function AdvicePanel({ a }: { a: SizingAdvice }) {
             {p.storage_energy ? (
               <>
                 <td>
-                  AC {p.storage_energy.e_ac_kwh} kWh, DC {p.storage_energy.e_dc_kwh ?? "—"} kWh, nominal{" "}
-                  {p.storage_energy.e_nom_kwh ?? "—"} kWh (stage {p.storage_energy.stage})
+                  AC {fixed(p.storage_energy.e_ac_kwh, "kWh")} kWh, DC {fixedOr(p.storage_energy.e_dc_kwh, "kWh")} kWh, nominal{" "}
+                  {fixedOr(p.storage_energy.e_nom_kwh, "kWh")} kWh (stage {p.storage_energy.stage})
                 </td>
                 <td>
                   {p.storage_energy.basis} {p.storage_energy.assumptions.join(" ")}
@@ -148,7 +149,7 @@ function ModuleHint({ eNomKwh }: { eNomKwh: number | null }) {
   const mod = modules.find((e) => e.id === modId) ?? modules[0];
   const inv = inverters.find((e) => e.id === invId)?.inverter;
   const h = moduleHint(eNomKwh, mod.battery_module ?? {}, { min: inv?.dc_voltage_min_v, max: inv?.dc_voltage_max_v }, ns);
-  const kwh = (v: number) => `${Number(v.toFixed(4))} kWh`;
+  const kwh = (v: number) => `${fixed(v, "kWh")} kWh`;
   return (
     <section aria-label="Battery module hint">
       <p>Battery module hint (hint only; the advice values above do not change):</p>

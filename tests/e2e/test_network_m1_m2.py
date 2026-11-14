@@ -34,7 +34,7 @@ def test_fr_10_fr_19_fr_15_fr_24_fr_27_fr_40_network_to_m2(
 
     step(page, "Network")
     page.get_by_role("tab", name="Lines").click()
-    expect(page.get_by_label("Total R, derived, read-only (Ω) of LN1")).to_have_text("0.1")
+    expect(page.get_by_label("Total R, derived, read-only (Ω) of LN1")).to_have_text("0.1000")
     _numeric_inputs_have_units(page)
     page.get_by_role("tab", name="Inverters").click()
     _numeric_inputs_have_units(page)

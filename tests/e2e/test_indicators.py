@@ -31,10 +31,10 @@ def test_fr_61_fr_62_fr_63_panel_and_checklist(server: Callable[[str], str], pag
     expect(rows).to_have_count(4)
     for k, (assumption, value) in enumerate(
         [
-            ("A1", "0.11"),
-            ("A1", "0.22"),
+            ("A1", "0.110"),
+            ("A1", "0.220"),
             ("A2", "not evaluated: tau_in_s not given"),
-            ("A4", "0.44"),
+            ("A4", "0.440"),
         ]
     ):
         expect(rows.nth(k).locator("td").nth(1)).to_have_text(assumption)
@@ -45,7 +45,7 @@ def test_fr_61_fr_62_fr_63_panel_and_checklist(server: Callable[[str], str], pag
     checklist = page.get_by_role("table", name="Model assumptions").locator("tbody tr")
     expect(checklist).to_have_count(6)
     expect(checklist.nth(0)).to_contain_text("Checked by indicator (r_τ, κ)")
-    expect(checklist.nth(0)).to_contain_text("r_τ: 0.11; κ: 0.22")
+    expect(checklist.nth(0)).to_contain_text("r_τ: 0.110; κ: 0.220")
     expect(checklist.nth(0).locator("code")).to_have_text(re.compile(r"^[0-9a-f]{64}$"))
     expect(checklist.nth(2)).to_contain_text("Set by the user; explored by sweep (M3b)")
     expect(checklist.nth(5)).to_contain_text("By construction")

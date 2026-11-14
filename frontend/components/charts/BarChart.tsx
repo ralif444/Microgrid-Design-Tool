@@ -6,7 +6,7 @@
 // `labelWidth` widens the category column for long names.
 import { memo, useMemo } from "react";
 import type { RunRecord } from "../../api-types";
-import { num } from "../format";
+import { fixed, num } from "../format";
 import { ChartFrame } from "./ChartFrame";
 import { MarkerShape, Swatch } from "./marks";
 import { SERIES } from "./palette";
@@ -32,7 +32,10 @@ export const BarChart = memo(function BarChart({
   record,
   negative,
   labelWidth = M.l,
+  unit = /\(([^()]+)\)\s*$/.exec(valueTitle)?.[1] ?? "",
 }: {
+  /** value unit for the bar labels; defaults to the last "(unit)" of `valueTitle` */
+  unit?: string;
   title: string;
   valueTitle: string; // with unit, e.g. "Bus voltage (p.u.)"
   categoryTitle: string;
@@ -107,7 +110,7 @@ export const BarChart = memo(function BarChart({
                       ))}
                     {(!dots || !multi) && (
                       <text x={left ? end - 4 : end + (dots ? 9 : 4)} y={y + BAR / 2 + 4} textAnchor={left ? "end" : "start"}>
-                        {v === null ? "—" : num(v)}
+                        {v === null ? "—" : fixed(v, unit)}
                       </text>
                     )}
                   </g>

@@ -12,7 +12,7 @@ describe("Validity-indicator rows (Doc 12 FR-61, FR-61a)", () => {
     const m4a = rec("M4a", "s1", { indicators: { r_tau: ind(0.5), kappa: ind(2), r_in: ind(null, "no tau_in"), epsilon_x: ind(0.01) } });
     const rows = indicatorRows([m4a], "s1");
     expect(rows.map((r) => r.assumption)).toEqual(["A1", "A1", "A2", "A4"]);
-    expect(rows.map(indicatorText)).toEqual(["0.5", "2", "not evaluated: no tau_in", "0.01"]);
+    expect(rows.map(indicatorText)).toEqual(["0.500", "2.000", "not evaluated: no tau_in", "0.010"]); // ratio, 3 decimals (audit decision 2)
   });
 
   it("falls back to ε_X of M1 and ignores runs on another design", () => {

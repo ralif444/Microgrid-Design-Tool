@@ -10,6 +10,7 @@ import { axisNeeds, SizeIndicator, useAxis, useSweepCap } from "../../components
 import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
 import { ChartFrame } from "../../components/charts/ChartFrame";
 import { EmptyState } from "../../components/EmptyState";
+import { fixed, fixedOr } from "../../components/format";
 import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
 import { Icon, type IconName } from "../../components/Icon";
@@ -29,7 +30,7 @@ const CELL: Record<string, [IconName, string, string]> = {
 const cell = (s: string): [IconName, string, string] => CELL[s] ?? ["warn", s.toLowerCase().replace(/_/g, " "), styles.other];
 const limiting = (g: SweepPoint) => {
   const c = g.limiting_constraint;
-  return c ? `${KIND_WORDS[c.kind] ?? c.kind}, ${c.element_id}, normalised margin ${fmt(c.normalised_margin)}` : "none";
+  return c ? `${KIND_WORDS[c.kind] ?? c.kind}, ${c.element_id}, normalised margin ${fixedOr(c.normalised_margin, "ratio")}` : "none";
 };
 
 function Envelope() {
@@ -81,7 +82,7 @@ function Envelope() {
       {p && resp && <KpiStrip label="Envelope key figures" kpis={m3dKpis(p)} record={resp.run_record} />}
       {p && resp && (
         <>
-          <p data-testid="feasible-fraction">Feasible fraction: {fmt(p.feasible_fraction * 100)} % of {p.grid.length} points</p>
+          <p data-testid="feasible-fraction">Feasible fraction: {fixed(p.feasible_fraction * 100, "%")} % of {p.grid.length} points</p>
           <StatusGrid p={p} x={x} y={y} record={resp.run_record} />
           <p className={styles.record}>
             RunRecord <code>{resp.run_record.record_id}</code>, engine {resp.run_record.engine_kind ?? "not called"}.

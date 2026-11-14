@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fixed, num, parseNumber } from "./format";
+import { fixed, fixedOr, num, parseNumber } from "./format";
 
 describe("F1 locale-safe number input", () => {
   it("accepts a dot or a comma as decimal separator", () => {
@@ -44,7 +44,16 @@ describe("W1 result decimals per unit", () => {
   it("never hides a small value or an unknown unit", () => {
     expect(fixed(0.043, "kW")).toBe("0.043");
     expect(fixed(0.00003, "p.u.")).toBe("0.00003");
+    expect(fixed(0.043353, "kW")).toBe("0.043");
+    expect(fixed(-0.0532505, "deg")).toBe("-0.053");
     expect(fixed(12, "count")).toBe("12");
-    expect(fixed(0.40000000001, "kV")).toBe("0.4");
+    expect(fixed(0.40000000001, "kV")).toBe("0.4000");
+    expect(fixed(1.23, "furlong")).toBe("1.23");
+  });
+  it("shows a value below the display floor as a bound, never in e-notation", () => {
+    expect(fixed(1.25918e-10, "ratio")).toBe("< 0.00001");
+    expect(fixed(-2e-12, "ratio")).toBe("> −0.00001");
+    expect(fixed(0.0000123, "ratio")).toBe("0.000012");
+    expect(fixedOr(null, "kW")).toBe("—");
   });
 });

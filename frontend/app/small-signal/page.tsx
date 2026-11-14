@@ -9,7 +9,8 @@ import { ExampleGuide, ExampleNext, nextReady } from "../../components/ExampleFo
 import { tauInSource } from "../../components/Catalog";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
-import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
+import { fixedOr } from "../../components/format";
+import { InfeasibleNote, useDependentRun } from "../../components/Further";
 import { IndicatorPanel } from "../../components/IndicatorPanel";
 import { m4aKpis } from "../../components/kpi";
 import { KpiStrip } from "../../components/KpiStrip";
@@ -32,8 +33,8 @@ const yesNo = (b: boolean | null | undefined, none: string) => (b === null || b 
 type Dom = M4aPayload["dominant_modes"][number];
 const DOMINANT: DataColumn<Dom>[] = [
   { key: "k", header: "Eigenvalue", term: "eigen", cell: (d) => <strong>#{d.eigenvalue_index}</strong> },
-  { key: "z", header: "Damping ratio", term: "zeta", unit: "ratio", numeric: true, cell: (d) => fmt(d.damping_ratio) },
-  { key: "f", header: "Frequency", unit: "Hz", numeric: true, cell: (d) => fmt(d.frequency_hz) },
+  { key: "z", header: "Damping ratio", term: "zeta", unit: "ratio", numeric: true, cell: (d) => fixedOr(d.damping_ratio, "ratio") },
+  { key: "f", header: "Frequency", unit: "Hz", numeric: true, cell: (d) => fixedOr(d.frequency_hz, "Hz") },
   {
     key: "e",
     header: "Associated elements",
@@ -48,10 +49,10 @@ const DOMINANT: DataColumn<Dom>[] = [
 
 const EIGEN: DataColumn<EigRow>[] = [
   { key: "k", header: "#", cell: (e) => `${e.k}${e.dominant ? " (dominant)" : ""}` },
-  { key: "re", header: "Real part", unit: "1/s", numeric: true, cell: (e) => fmt(e.re) },
-  { key: "im", header: "Imaginary part", unit: "1/s", numeric: true, cell: (e) => fmt(e.im) },
-  { key: "z", header: "Damping ratio", term: "zeta", unit: "ratio", numeric: true, cell: (e) => fmt(e.zeta) },
-  { key: "f", header: "Frequency", unit: "Hz", numeric: true, cell: (e) => fmt(e.f) },
+  { key: "re", header: "Real part", unit: "1/s", numeric: true, cell: (e) => fixedOr(e.re, "1/s") },
+  { key: "im", header: "Imaginary part", unit: "1/s", numeric: true, cell: (e) => fixedOr(e.im, "1/s") },
+  { key: "z", header: "Damping ratio", term: "zeta", unit: "ratio", numeric: true, cell: (e) => fixedOr(e.zeta, "ratio") },
+  { key: "f", header: "Frequency", unit: "Hz", numeric: true, cell: (e) => fixedOr(e.f, "Hz") },
 ];
 
 function SmallSignal() {
@@ -111,7 +112,7 @@ function SmallSignal() {
           <h2>Class: {p.stability_class}</h2>
           <p data-testid="stability-class">{CLASS_WORDS[p.stability_class]}</p>
           <ul className={styles.facts}>
-            <li>Lowest damping of the oscillatory modes ζ_min: {fmt(p.zeta_min)}</li>
+            <li>Lowest damping of the oscillatory modes ζ_min: {fixedOr(p.zeta_min, "ratio")}</li>
             <li>Damping passes the threshold: {yesNo(p.damping_pass, "not judged (no threshold or no oscillatory mode)")}</li>
             {p.outside_definition && <li>The operating point violates constraints: outside definition [19].</li>}
           </ul>

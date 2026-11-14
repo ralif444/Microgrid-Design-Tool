@@ -10,7 +10,8 @@ import { BarChart } from "../../components/charts/BarChart";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
 import { ExampleGuide, ExampleNext, nextReady, NotSet, useExampleForm } from "../../components/ExampleForm";
-import { fmt, InfeasibleNote, METRICS, numericPaths, shortcutPrefill, useDependentRun } from "../../components/Further";
+import { fixedOr } from "../../components/format";
+import { InfeasibleNote, METRICS, numericPaths, shortcutPrefill, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
 import { Icon } from "../../components/Icon";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
@@ -128,8 +129,8 @@ function Sensitivity() {
           const columns: DataColumn<Sens>[] = [
             { key: "rank", header: "Rank", numeric: true, cell: (s) => rank.get(s.parameter_path) ?? "—" },
             { key: "path", header: "Parameter", cell: (s) => s.parameter_path },
-            { key: "v", header: "dy/dp", cell: (s) => `${fmt(s.value)}${s.value === null || !s.unit ? "" : ` ${s.unit}`}` },
-            { key: "n", header: "Normalised", unit: "ratio", numeric: true, cell: (s) => fmt(s.normalised_value) },
+            { key: "v", header: "dy/dp", cell: (s) => `${fixedOr(s.value, s.unit ?? "")}${s.value === null || !s.unit ? "" : ` ${s.unit}`}` },
+            { key: "n", header: "Normalised", unit: "ratio", numeric: true, cell: (s) => fixedOr(s.normalised_value, "ratio") },
             { key: "s", header: "Scheme", cell: (s) => s.scheme ?? "—" },
             {
               key: "note",

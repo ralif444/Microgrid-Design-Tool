@@ -97,7 +97,7 @@ def test_fr_32_fr_44_envelope(server: Callable[[str], str], page: Page) -> None:
     _status(page, "FEASIBLE")
     expect(page.get_by_role("table", name="Envelope grid").locator("tbody tr")).to_have_count(2)
     expect(page.get_by_test_id("feasible-fraction")).to_have_text(
-        "Feasible fraction: 100 % of 4 points"
+        "Feasible fraction: 100.0 % of 4 points"
     )
 
     page.get_by_label("X axis: Points (count)").fill("40")

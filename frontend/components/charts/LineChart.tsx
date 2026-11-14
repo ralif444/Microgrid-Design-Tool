@@ -5,7 +5,7 @@
 // Opt-in crosshair (Doc 12 X4, FR-89): snaps to the nearest real sample, lists every series there.
 import { memo, useContext, useId, useMemo, useState, type KeyboardEvent, type PointerEvent } from "react";
 import type { RunRecord } from "../../api-types";
-import { num } from "../format";
+import { fixed, num } from "../format";
 import { ChartFrame, ReportCharts, type LegendItem } from "./ChartFrame";
 import { MarkerShape, Swatch, type Mark } from "./marks";
 import { DASH, DASH_WORD, SERIES } from "./palette";
@@ -191,7 +191,7 @@ export const LineChart = memo(function LineChart({
           </strong>
           {series.map((s) => (
             <span key={s.name}>
-              {s.name}: {s.values[at] === null || s.values[at] === undefined ? "—" : `${num(s.values[at] as number)} ${crosshair.unit}`}
+              {s.name}: {s.values[at] === null || s.values[at] === undefined ? "—" : `${fixed(s.values[at] as number, crosshair.unit)} ${crosshair.unit}`}
             </span>
           ))}
         </div>

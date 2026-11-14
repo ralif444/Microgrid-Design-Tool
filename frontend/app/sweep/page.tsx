@@ -13,6 +13,7 @@ import { FEAS } from "../../components/charts/palette";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
 import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
+import { fixedOr } from "../../components/format";
 import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
 import { m3bKpis } from "../../components/kpi";
@@ -77,7 +78,7 @@ function Sweep() {
   const columns: DataColumn<SweepPoint>[] = [
     { key: "v", header: ranHours ? "Hour" : "Value", unit, numeric: true, cell: (pt) => fmt(pt.value) },
     { key: "s", header: "Status", cell: (pt) => pt.status },
-    ...shown.map(([k, name, u]) => ({ key: k, header: name, unit: u, numeric: true, cell: (pt: SweepPoint) => fmt(pt.key_metrics[k]) })),
+    ...shown.map(([k, name, u]) => ({ key: k, header: name, unit: u, numeric: true, cell: (pt: SweepPoint) => fixedOr(pt.key_metrics[k], u) })),
     {
       key: "l",
       header: "Limiting constraint",
@@ -185,8 +186,8 @@ function HourSummary({ points, fNominal }: { points: SweepPoint[]; fNominal: num
       caption="Worst hour per key metric (FEASIBLE hours only; frequency by its distance from the nominal)"
       columns={[
         { key: "m", header: "Key metric", cell: (w: Worst) => meta(w.metric)?.[1] ?? w.metric },
-        { key: "h", header: "Worst hour", unit: "h", numeric: true, cell: (w: Worst) => w.hour },
-        { key: "v", header: "Value there", numeric: true, cell: (w: Worst) => `${fmt(w.value)} ${meta(w.metric)?.[2] ?? ""}` },
+        { key: "h", header: "Worst hour", unit: "h", numeric: true, cell: (w: Worst) => String(w.hour) }, // a clock hour, not a duration: no decimals
+        { key: "v", header: "Value there", numeric: true, cell: (w: Worst) => `${fixedOr(w.value, meta(w.metric)?.[2] ?? "")} ${meta(w.metric)?.[2] ?? ""}` },
       ]}
       rows={rows}
       rowKey={(w) => w.metric}

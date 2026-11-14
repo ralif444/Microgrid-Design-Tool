@@ -1,7 +1,7 @@
 // KPI strip under the Status banner (Doc 12 X2, FR-87): Carbon-style tiles, label, value with
 // unit (rounded for display), and the element it comes from. A FAKE run is marked (CLAUDE.md).
 import type { RunRecord } from "../api-types";
-import { num } from "./format";
+import { fixed } from "./format";
 import { Icon } from "./Icon";
 import type { Kpi } from "./kpi";
 import styles from "./KpiStrip.module.css";
@@ -20,7 +20,7 @@ export function KpiStrip({ label, kpis, record }: { label: string; kpis: Kpi[]; 
             <dd className={styles.value}>
               {k.icon && <Icon name={k.icon} size={20} />}
               {/* a payload word may break after "_" (RECOVERED_STABLE) without changing its text */}
-              <span>{k.value === null ? "—" : typeof k.value === "string" ? k.value.split("_").flatMap((w, i) => (i ? ["_", <wbr key={i} />, w] : [w])) : num(k.value)}</span>{" "}
+              <span>{k.value === null ? "—" : typeof k.value === "string" ? k.value.split("_").flatMap((w, i) => (i ? ["_", <wbr key={i} />, w] : [w])) : fixed(k.value, k.unit)}</span>{" "}
               <span className={styles.unit}>{k.unit}</span>
             </dd>
             {k.detail && <dd className={styles.detail}>{k.detail}</dd>}

@@ -11,7 +11,8 @@ import { BarChart } from "../../components/charts/BarChart";
 import { CANNOT_UNDO, useConfirmDelete } from "../../components/ConfirmDelete";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
-import { applyOverrides, fmt, nMinus1, InfeasibleNote, METRICS, numericPaths, unitOf, useDependentRun } from "../../components/Further";
+import { fixed, fixedOr } from "../../components/format";
+import { applyOverrides, nMinus1, InfeasibleNote, METRICS, numericPaths, unitOf, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
@@ -102,11 +103,11 @@ function Scenarios() {
     ...results.map((s, k) => ({
       key: s.scenario_id,
       header: `${label(s.scenario_id)} (${s.status})`,
-      cell: ([m]: Row) => {
+      cell: ([m, , unit]: Row) => {
         const d = p?.deltas.find((x) => x.metric === m && x.scenario_id === s.scenario_id);
         const v = KEY[m] ? s.key_metrics[KEY[m]] : null;
         const rel = d?.relative_delta_ratio;
-        return `${KEY[m] ? fmt(v as number | null) : ""}${k > 0 && d ? ` (difference ${fmt(d.delta)} ${d.unit}${rel === null || rel === undefined ? "" : `, relative ${fmt(rel)} ratio`})` : ""}`;
+        return `${KEY[m] ? fixedOr(v as number | null, unit) : ""}${k > 0 && d ? ` (difference ${fixed(d.delta, d.unit)} ${d.unit}${rel === null || rel === undefined ? "" : `, relative ${fixed(rel, "ratio")} ratio`})` : ""}`;
       },
     })),
   ];

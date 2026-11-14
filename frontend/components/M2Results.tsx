@@ -9,7 +9,7 @@ import { AdvisoryPanel } from "./AdvisoryPanel";
 import { BarChart } from "./charts/BarChart";
 import { LoadabilityAxis } from "./charts/LoadabilityAxis";
 import { DataTable, type DataColumn } from "./DataTable";
-import { fixed, num } from "./format";
+import { fixed, fixedOr } from "./format";
 import { Icon, type IconName } from "./Icon";
 import styles from "./M2Results.module.css";
 
@@ -46,7 +46,7 @@ export const KIND_WORDS: Record<string, string> = {
   POWER_BALANCE: "Power balance",
 };
 
-const fmt = (v: number | null | undefined) => (v === null || v === undefined ? "not available" : String(num(v)));
+const fmt = (v: number | null | undefined) => fixedOr(v, "ratio", "not available"); // loadability values are ratios
 
 // A number with its unit in a fixed-width slot, so values and units each share an edge (mockup phase 3).
 const withUnit = (text: string, unit: string) => (
@@ -196,7 +196,7 @@ export function M2Results({ p, charts }: { p: M2Payload; charts?: { record: RunR
         <DataTable label="Inverter ratings" columns={INV_SIZING} rows={s.per_inverter} rowKey={(i) => i.inverter_id} rowName={(i) => i.inverter_id} />
         <DataTable label="Line currents" columns={LINE_SIZING} rows={s.per_line} rowKey={(x) => x.line_id} rowName={(x) => x.line_id} />
         <p className={styles.basis}>
-          {s.storage ? `Storage energy: AC ${num(s.storage.e_ac_kwh)} kWh (stage ${s.storage.stage}). ` : "No storage check. "}
+          {s.storage ? `Storage energy: AC ${fixed(s.storage.e_ac_kwh, "kWh")} kWh (stage ${s.storage.stage}). ` : "No storage check. "}
           {s.basis} {s.assumptions.join(" ")}
         </p>
       </AdvisoryPanel>

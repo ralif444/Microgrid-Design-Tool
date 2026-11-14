@@ -7,7 +7,8 @@ import { AUTONOMY_OUTCOME, POWER_OUTCOME, type BaBank, type BaPayload } from "..
 import { autonomyText, SocChart } from "../../components/BatteryResults";
 import { Toggletip } from "../../components/Term";
 import { EmptyState } from "../../components/EmptyState";
-import { fmt, useDependentRun } from "../../components/Further";
+import { fixedOr } from "../../components/format";
+import { useDependentRun } from "../../components/Further";
 import { Icon } from "../../components/Icon";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
@@ -58,16 +59,16 @@ function Row({ b }: { b: BaBank }) {
       <td>
         <Tag o={POWER_OUTCOME[p.outcome]} />
       </td>
-      <td className="num">{fmt(p.capability_kw)}</td>
+      <td className="num">{fixedOr(p.capability_kw, "kW")}</td>
       <td>{p.capability_source ? SOURCE[p.capability_source] : "—"}</td>
-      <td className="num">{fmt(p.inverter_p_kw)}</td>
-      <td className="num">{fmt(p.dc_side_power_kw)}</td>
-      <td className="num">{fmt(p.margin_kw)}</td>
+      <td className="num">{fixedOr(p.inverter_p_kw, "kW")}</td>
+      <td className="num">{fixedOr(p.dc_side_power_kw, "kW")}</td>
+      <td className="num">{fixedOr(p.margin_kw, "kW")}</td>
       <td>{p.reason ? `Not evaluated: ${p.reason}.` : "—"}</td>
       <td>
         <Tag o={AUTONOMY_OUTCOME[b.autonomy.outcome]} />
       </td>
-      <td className="num">{fmt(b.autonomy.usable_energy_kwh)}</td>
+      <td className="num">{fixedOr(b.autonomy.usable_energy_kwh, "kWh")}</td>
       <td>{autonomyText(b)}</td>
     </tr>
   );

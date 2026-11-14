@@ -13,10 +13,22 @@ export const parseNumber = (s: string, integer = false): number | null | undefin
 };
 export const NOT_A_NUMBER = "Enter a number, for example 0.44 or 0,44.";
 
-// Results only (ADR-016, plan W1): fixed decimals per unit so result columns line up. Inputs keep `num`.
-const DP: Record<string, number> = { kW: 2, kvar: 2, kVA: 2, "p.u.": 4, pu: 4 /* margin rows spell it "pu" */, deg: 2, Hz: 3, A: 1, ratio: 3, "pu of rating": 3 };
-// A non-zero value that would keep fewer than 2 significant digits (0.043 kW at 2 decimals) falls back to `num`.
+// Results (plan W1; audit 2026-11-14 decision 2): fixed decimals per unit everywhere a result is shown.
+// Inputs keep `num`; "Show data", exports and Run history keep full precision.
+const DP: Record<string, number> = {
+  kW: 2, kvar: 2, kVA: 2, kWh: 2, kV: 4, "p.u.": 4, pu: 4 /* margin rows spell it "pu" */, deg: 2, "°": 2, Hz: 3, "Hz/s": 3,
+  A: 1, ratio: 3, factor: 3, "pu of rating": 3, s: 3, h: 2, "1/s": 2, "Ω": 4, count: 0, "%": 1,
+};
+// A non-zero value that would keep fewer than 2 significant digits (0.043 kW at 2 decimals) shows 2
+// significant digits; one below 10^-(d+2) is shown as a bound ("< 0.000001" p.u.), never in e-notation.
 export const fixed = (v: number, unit: string) => {
   const d = DP[unit];
-  return d === undefined || (v !== 0 && Math.abs(v) < 10 ** (1 - d)) ? String(num(v)) : v.toFixed(d);
+  if (d === undefined) return String(num(v));
+  const a = Math.abs(v);
+  if (v === 0 || a >= 10 ** (1 - d)) return v.toFixed(d);
+  const floor = 10 ** -(d + 2);
+  if (a < floor) return `${v < 0 ? "> −" : "< "}${floor.toFixed(d + 2)}`;
+  return String(Number(v.toPrecision(2)));
 };
+/** `fixed` for a value that may be missing. */
+export const fixedOr = (v: number | null | undefined, unit: string, missing = "—") => (v === null || v === undefined ? missing : fixed(v, unit));
