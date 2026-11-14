@@ -1,40 +1,40 @@
 /* Carbon's .cds--header is fixed and one 48 px row; here it stays in the flow and may wrap, so
-   nothing scrolls sideways at 200 % zoom (WP 1.7.2). Navy background, white text (guideline §5). */
+   nothing scrolls sideways at 200 % zoom (WP 1.7.2). Plain surface with a bottom rule (ADR-016 §3). */
 .header:global(.cds--header) { /* doubled class: Carbon's chunk may load after this module */
   position: relative; inset: auto; z-index: auto;
   height: auto; min-height: 3rem; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-4);
   padding: var(--space-1) var(--space-8); box-sizing: border-box;
-  background: var(--mdt-header-bg); border-bottom: none; color: var(--mdt-header-fg);
+  background: var(--color-page); border-bottom: var(--border-width) solid var(--color-border); color: var(--color-fg);
 }
-.header a, .header :global(.cds--header__name) { color: var(--mdt-header-fg); }
+.header a, .header :global(.cds--header__name) { color: var(--color-fg); }
 .header :global(.cds--header__name) { padding: 0; font-weight: var(--weight-semibold); font-size: var(--text-md); letter-spacing: 0; white-space: nowrap; }
-.header :focus-visible, .header :global(.cds--header__name):focus { outline: var(--focus-width) solid var(--mdt-header-focus); outline-offset: var(--focus-offset); border: none; }
+.header :focus-visible, .header :global(.cds--header__name):focus { outline: var(--focus-width) solid var(--focus-color); outline-offset: var(--focus-offset); border: none; }
 .project {
   display: inline-flex; align-items: center; white-space: nowrap; font-size: var(--text-md);
-  padding-left: var(--space-4); border-left: var(--border-width) solid var(--mdt-header-rule); color: var(--mdt-header-fg-muted);
+  padding-left: var(--space-4); border-left: var(--border-width) solid var(--color-border); color: var(--color-fg-muted);
 }
 .unsaved { display: inline-flex; align-items: center; margin-left: var(--space-2); }
-.dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--mdt-header-fg); }
+.dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--color-fg); }
 .spacer { flex: 1; }
 .util { font-size: var(--text-sm); white-space: nowrap; }
 .below { position: relative; }
-.signature { height: 4px; background: var(--mdt-gradient); }
 .strip { background: var(--color-surface); border-bottom: var(--border-width) solid var(--color-border); padding: var(--space-2) var(--space-8); }
 .strip > nav { max-width: var(--content-max); margin: 0 auto; }
 @media (max-width: 720px) {
   .header, .strip { padding-left: var(--space-4); padding-right: var(--space-4); }
   .spacer { display: none; }
 }
-/* Save and "Open project file" on navy: outlined in white (Carbon tertiary would be teal on navy). */
-.header button, .header label {
-  min-height: 2rem; padding: 0 var(--space-4); border: var(--border-width) solid var(--mdt-header-fg);
-  background: transparent; color: var(--mdt-header-fg); font-size: var(--text-sm);
-}
-.header button:hover:not(:disabled), .header label:hover { background: var(--mdt-header-hover); }
-.header [role="status"] { color: var(--mdt-header-fg-muted); }
+/* Save, "Open project file" and the theme switch: outlined like every other button (globals.css). */
+.header button, .header label { min-height: 2rem; padding: 0 var(--space-4); font-size: var(--text-sm); }
+.header [role="status"] { color: var(--color-fg-muted); }
+/* Theme switch: two-button segment, pressed one filled with ink (mockup .seg) */
+.seg { display: inline-flex; }
+.seg button { color: var(--color-fg-muted); border-color: var(--color-border-strong); }
+.seg button + button { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--color-fg); color: var(--color-page); font-weight: var(--weight-semibold); }
 .header :global(.cds--tag) { margin: 0; }
 @media print { .header:global(.cds--header) { display: none; } } /* Carbon's display: flex beats the global print rule */
-/* Example mode (Doc 12 X9): Tag, toggletip icon and Leave button in one group; the icon is white on navy. */
+/* Example mode (Doc 12 X9): Tag, toggletip icon and Leave button in one group. */
 .example { display: inline-flex; align-items: center; gap: var(--space-2); }
-.header .tip button { min-height: 0; padding: 0; border: 0; color: var(--mdt-header-fg); }
-.header .tip button:hover:not(:disabled) { background: none; color: var(--mdt-header-fg); } /* beats Term .button:hover */
+.header .tip button { min-height: 0; padding: 0; border: 0; color: var(--color-fg); }
+.header .tip button:hover:not(:disabled) { background: none; color: var(--color-fg); } /* beats Term .button:hover */

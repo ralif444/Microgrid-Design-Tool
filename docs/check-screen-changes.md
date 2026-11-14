@@ -238,6 +238,76 @@ UI (non-text):
 | Dividers, button and chip borders `--rule` | `--surface` | 1.57 | 1.77 | below 3:1, left (see phase 7) |
 | Loading-bar track `--rule` | `--canvas` | 1.35 | 2.01 | below 3:1, left; value printed beside it |
 
+### App tokens after W2 (2026-11-14)
+
+Re-computed from the values in `frontend/app/carbon.scss` and `frontend/app/tokens.css` (WCAG 2.1 formula), light / dark. Role names: `ink` text-primary, `ink2` text-secondary (also success = FEASIBLE, info fg, input border, info edge), `act` interactive/focus/link, `onc` text-on-color, `neg` negative role, `cau` caution role (attention uses the same values), `errfg` error fg, `err_edge` support-error (error edge and icon), `adv` advisory fg. The chart series rows are also checked in the browser by `test_ux_round_chart_colours_reach_3_to_1_on_the_frame` in both themes.
+
+Text:
+
+| Foreground | Background | Where | Light | Dark |
+|---|---|---|---|---|
+| `ink` #1b2733 / #e6eaed | `page` #f7f8f9 / #252c33 | body text on page/header | 14.26 | 11.67 |
+| `ink` #1b2733 / #e6eaed | `raised` #ffffff / #2c343c | tables, panels, inputs | 15.17 | 10.43 |
+| `ink` #1b2733 / #e6eaed | `hover` #e8ebee / #343c44 | hovered row | 12.67 | 9.25 |
+| `ink` #1b2733 / #e6eaed | `sel` #dfe9f8 / #273750 | selected row, SLD halo | 12.39 | 9.93 |
+| `ink` #1b2733 / #e6eaed | `canvas` #e4e7ea / #1c2227 | diagram canvas | 12.22 | 13.27 |
+| `ink2` #5b6875 / #9aa6b2 | `page` #f7f8f9 / #252c33 | secondary text; FEASIBLE (success fg); info fg on info bg | 5.36 | 5.70 |
+| `ink2` #5b6875 / #9aa6b2 | `raised` #ffffff / #2c343c | secondary text on panels; FEASIBLE in a table | 5.70 | 5.09 |
+| `ink2` #5b6875 / #9aa6b2 | `hover` #e8ebee / #343c44 | secondary text, hovered row | 4.77 | 4.52 |
+| `ink2` #5b6875 / #9aa6b2 | `sel` #dfe9f8 / #273750 | secondary text, selected row | 4.66 | 4.84 |
+| `onc` #ffffff / #10202f | `act` #1f5fbf / #7fb0f5 | primary button | 6.09 | 7.43 |
+| `onc` #ffffff / #10202f | `acth` #0043ce / #a6c8ff | primary button hover | 7.79 | 9.71 |
+| `onc` #ffffff / #10202f | `acta` #002d9c / #d0e2ff | primary button pressed | 11.32 | 12.61 |
+| `onc` #ffffff / #10202f | `dang` #da1e28 / #ff8389 | danger button (delete dialog) | 5.00 | 6.98 |
+| `onc` #ffffff / #10202f | `dangh` #b81921 / #ffb3b8 | danger hover | 6.56 | 9.76 |
+| `page` #f7f8f9 / #252c33 | `ink` #1b2733 / #e6eaed | pressed theme segment | 14.26 | 11.67 |
+| `act` #1f5fbf / #7fb0f5 | `page` #f7f8f9 / #252c33 | links on page | 5.73 | 6.34 |
+| `act` #1f5fbf / #7fb0f5 | `raised` #ffffff / #2c343c | links, outlined button text | 6.09 | 5.67 |
+| `acth` #0043ce / #a6c8ff | `raised` #ffffff / #2c343c | link hover | 7.79 | 7.41 |
+| `acth` #0043ce / #a6c8ff | `hover` #e8ebee / #343c44 | row action link hover | 6.51 | 6.57 |
+| `neg` #b53b0b / #f0834a | `negbg` #fbe6dc / #4a2c1e | INFEASIBLE chip / violated row | 4.85 | 4.82 |
+| `neg` #b53b0b / #f0834a | `page` #f7f8f9 / #252c33 | negative text on page | 5.49 | 5.41 |
+| `neg` #b53b0b / #f0834a | `raised` #ffffff / #2c343c | negative text in table | 5.84 | 4.84 |
+| `cau` #8a5a0b / #e0b050 | `caubg` #f6ead0 / #443619 | caution and attention (stale M1) banner | 4.96 | 5.87 |
+| `cau` #8a5a0b / #e0b050 | `page` #f7f8f9 / #252c33 | caution text on page | 5.57 | 7.06 |
+| `cau` #8a5a0b / #e0b050 | `raised` #ffffff / #2c343c | caution text in table | 5.92 | 6.31 |
+| `errfg` #a2191f / #ffb3b8 | `errbg` #fff1f1 / #520408 | error banner | 7.09 | 8.98 |
+| `errfg` #a2191f / #ffb3b8 | `page` #f7f8f9 / #252c33 | error text on page | 7.33 | 8.34 |
+| `errfg` #a2191f / #ffb3b8 | `raised` #ffffff / #2c343c | field error on panel | 7.79 | 7.45 |
+| `adv` #6929c4 / #d4bbff | `page` #f7f8f9 / #252c33 | advisory text (layer-02) | 7.27 | 8.31 |
+| `adv` #6929c4 / #d4bbff | `raised` #ffffff / #2c343c | advisory text on panel | 7.74 | 7.42 |
+
+UI, non-text (target 3:1):
+
+| Foreground | Background | Where | Light | Dark |
+|---|---|---|---|---|
+| `act` #1f5fbf / #7fb0f5 | `page` #f7f8f9 / #252c33 | focus ring on page | 5.73 | 6.34 |
+| `act` #1f5fbf / #7fb0f5 | `raised` #ffffff / #2c343c | focus ring on panel | 6.09 | 5.67 |
+| `act` #1f5fbf / #7fb0f5 | `canvas` #e4e7ea / #1c2227 | focus ring on diagram | 4.91 | 7.21 |
+| `ink2` #5b6875 / #9aa6b2 | `raised` #ffffff / #2c343c | input border, info/success edge+icon | 5.70 | 5.09 |
+| `ink2` #5b6875 / #9aa6b2 | `page` #f7f8f9 / #252c33 | info/success edge on page | 5.36 | 5.70 |
+| `neg` #b53b0b / #f0834a | `negbg` #fbe6dc / #4a2c1e | negative edge+icon on tint | 4.85 | 4.82 |
+| `neg` #b53b0b / #f0834a | `raised` #ffffff / #2c343c | negative mark on panel/SLD | 5.84 | 4.84 |
+| `cau` #8a5a0b / #e0b050 | `caubg` #f6ead0 / #443619 | caution/attention edge+icon on tint | 4.96 | 5.87 |
+| `cau` #8a5a0b / #e0b050 | `raised` #ffffff / #2c343c | caution mark on panel | 5.92 | 6.31 |
+| `err_edge` #da1e28 / #fa4d56 | `errbg` #fff1f1 / #520408 | error edge+icon on tint | 4.55 | 4.54 |
+| `err_edge` #da1e28 / #fa4d56 | `raised` #ffffff / #2c343c | error edge+icon, SLD issue outline | 5.00 | 3.76 |
+| `err_edge` #da1e28 / #fa4d56 | `page` #f7f8f9 / #252c33 | error edge on page | 4.71 | 4.21 |
+| `s0` #00737d / #08bdba | `raised` #ffffff / #2c343c | chart series 1 | 5.60 | 5.41 |
+| `s1` #0b1f44 / #e6eaed | `raised` #ffffff / #2c343c | chart series 2 | 16.23 | 10.43 |
+| `s2` #8a3ffc / #be95ff | `raised` #ffffff / #2c343c | chart series 3 | 5.00 | 5.37 |
+| `s3` #d02670 / #ff7eb6 | `raised` #ffffff / #2c343c | chart series 4 | 5.01 | 5.36 |
+| `s4` #b28600 / #d2a106 | `raised` #ffffff / #2c343c | chart series 5 | 3.33 | 5.31 |
+
+Failures found and fixed (next step of the same hue, as planned in `w2-tokens.md` §5):
+
+| Pair | Was (light / dark) | Fix | Now |
+|---|---|---|---|
+| `ink2` on hovered row (`layer-hover-01`) | 4.06 / 4.07 on mockup rule-2 #d6dade / #39434c | hover background #e8ebee (light), #343c44 (dark) | 4.77 / 4.52 |
+| `ink2` on selected row (`layer-selected-01`, `highlight`), dark | 4.46 on mockup act-soft #2b3d55 | #273750 | 4.84 |
+
+Not in the mockup, from `@carbon/colors`: hover/pressed blue-70/80 (light), blue-30/20 (dark); dark danger button red-40/30/20 (keeps `text-on-color` #10202f readable); dark error fg/bg red-30/red-90; dark advisory purple-30; dark chart series teal-40, purple-40, magenta-40, yellow-40 (yellow-30 is Carbon support-warning, so not a series colour), series 2 = ink.
+
 ## Blocked / needs logic change
 
 - Line current has no limit in the model (no ampacity), so lines show "no limit" and get no status. A line-loading status needs a model change (the planned X10 cable work).

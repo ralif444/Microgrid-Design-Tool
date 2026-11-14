@@ -123,27 +123,32 @@ def test_ux_round_chart_colours_reach_3_to_1_on_the_frame(
     page.locator("h1").first.wait_for()
     series = re.search(r"SERIES = \[([^\]]+)\]", PALETTE.read_text(encoding="utf-8"))
     assert series
-    colours = re.findall(r'"(#[0-9a-f]{6})"', series.group(1))
+    # var(--series-N): one value per theme, resolved below
+    colours = re.findall(r'"([^"]+)"', series.group(1))
+    assert len(colours) == 5
     roles = ["--role-success-icon", "--role-negative-icon", "--cds-border-strong-01"]
-    # resolve each colour as the browser draws it (CSS variables included) to rgb()
-    resolved = page.evaluate(
-        """([colours, roles]) => {
-            const el = document.createElement("span");
-            document.body.appendChild(el);
-            const rgb = (c) => { el.style.color = c; return getComputedStyle(el).color; };
-            const out = {};
-            for (const c of colours) out[c] = rgb(c);
-            for (const r of roles) out[r] = rgb(`var(${r})`);
-            out.frame = rgb("var(--cds-layer-01)"); // chart frame background
-            el.remove();
-            return out;
-        }""",
-        [colours, roles],
-    )
-    frame = _lum(resolved.pop("frame"))
-    ratios = {
-        k: (max(frame, _lum(v)) + 0.05) / (min(frame, _lum(v)) + 0.05) for k, v in resolved.items()
-    }
-    assert len(ratios) == len(colours) + len(roles)
-    low = {k: round(v, 2) for k, v in ratios.items() if v < 3}
-    assert not low, f"below 3:1 against the chart frame: {low}"
+    for theme in ("light", "dark"):
+        # resolve each colour as the browser draws it (CSS variables included) to rgb()
+        resolved = page.evaluate(
+            """([colours, roles, theme]) => {
+                document.documentElement.dataset.theme = theme;
+                const el = document.createElement("span");
+                document.body.appendChild(el);
+                const rgb = (c) => { el.style.color = c; return getComputedStyle(el).color; };
+                const out = {};
+                for (const c of colours) out[c] = rgb(c);
+                for (const r of roles) out[r] = rgb(`var(${r})`);
+                out.frame = rgb("var(--cds-layer-01)"); // chart frame background
+                el.remove();
+                return out;
+            }""",
+            [colours, roles, theme],
+        )
+        frame = _lum(resolved.pop("frame"))
+        ratios = {
+            k: (max(frame, _lum(v)) + 0.05) / (min(frame, _lum(v)) + 0.05)
+            for k, v in resolved.items()
+        }
+        assert len(ratios) == len(colours) + len(roles)
+        low = {k: round(v, 2) for k, v in ratios.items() if v < 3}
+        assert not low, f"{theme}: below 3:1 against the chart frame: {low}"

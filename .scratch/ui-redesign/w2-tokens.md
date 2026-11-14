@@ -1,6 +1,6 @@
-# W2 token mapping (proposal, not applied)
+# W2 token mapping (applied 2026-11-14)
 
-Status: needs-info
+Status: done
 
 Basis: ADR-016 §3, mockup tokens (`docs/check-screen-changes.md`), current `frontend/app/tokens.css` and `frontend/app/carbon.scss`, Carbon `white` and `g100` themes and `@carbon/colors` (values read from `node_modules` on 2026-11-14). Nothing here is applied.
 
@@ -67,3 +67,12 @@ Spot check done 2026-11-14 (all pass 4.5:1): red-30 on dark raised 7.45, red-30 
 2. Hover and pressed shades of the accent are not in the mockup. Proposal: Carbon blue-70 #0043ce / blue-80 #002d9c for light, blue-30 #a6c8ff / blue-20 for dark. Or give your own.
 3. FEASIBLE: quiet grey (ink-2 with the check icon and the word), or keep a green (light #0e6027 / dark green-30 #6fdc8c)?
 4. Stale M1: the mockup used the warn colour for the stale chip. Use warn for the attention role too, or keep blue?
+
+## Answers (2026-11-14)
+
+1. Approved: §1 map; navy header and gradient bar removed.
+2. Carbon blues: blue-70 / blue-80 (light), blue-30 / blue-20 (dark).
+3. FEASIBLE quiet grey (ink-2, check icon, word).
+4. Attention role = warn amber (same values as caution).
+
+Contrast fixes made at implementation (hover row #e8ebee / #343c44, dark selected #273750) and the dark-only additions (danger button, chart series) are listed in `docs/check-screen-changes.md`, "App tokens after W2".

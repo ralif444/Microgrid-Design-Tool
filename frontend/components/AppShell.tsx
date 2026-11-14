@@ -1,7 +1,7 @@
 "use client";
-// App shell (Doc 7 §2 global elements; visual guidelines §5): Carbon Header in navy with the wordmark,
+// App shell (Doc 7 §2 global elements; ADR-016 §3): Carbon Header on the page surface with the wordmark,
 // Project name with unsaved indicator, Run history, Catalogue, About (S-17), Save / Open and the engine kind badge
-// (P2); the 4 px signature gradient bar; the pipeline stepper strip (P1). In example mode (Doc 12 X9,
+// (P2), the theme switch; the pipeline stepper strip (P1). In example mode (Doc 12 X9,
 // FR-99) a blue Tag "Example mode" (info, not a status colour) and "Leave example mode" sit by the badge.
 import { Header, HeaderName, Tag } from "@carbon/react";
 import Link from "next/link";
@@ -12,6 +12,7 @@ import { EngineBadge } from "./EngineBadge";
 import { PipelineStepper } from "./PipelineStepper";
 import { ProjectFileMenu } from "./ProjectFileMenu";
 import { Toggletip } from "./Term";
+import { ThemeSwitch } from "./ThemeSwitch";
 
 // The visible mark is a dot; the text stays for assistive tech and tests.
 export function UnsavedFlag() {
@@ -49,6 +50,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           About
         </Link>
         <ProjectFileMenu />
+        <ThemeSwitch className={styles.seg} />
         {example && (
           <span className={styles.example} data-testid="example-mode">
             <Tag type="blue" size="md">
@@ -66,7 +68,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         <EngineBadge />
       </Header>
       <div className={`no-print ${styles.below}`}>
-        <div className={styles.signature} aria-hidden="true" />
         <div className={styles.strip}>
           <PipelineStepper />
         </div>

@@ -356,3 +356,11 @@ def test_fr_92_chart_svg_download_carries_the_caption(
     assert "Inverter loading" in svg and f"RunRecord {record}" in svg and "Engine FAKE" in svg
     assert "FAKE ENGINE — not an engine result" in svg
     assert "class=" not in svg and "var(--" not in svg and "font-size:12px" in svg
+    # dark theme on screen: the file still carries light-theme colours (no dark ink #e6eaed) and the
+    # page keeps its theme
+    page.get_by_role("group", name="Theme").get_by_role("button", name="Dark").click()
+    with page.expect_download() as dark:
+        page.get_by_role("button", name="Download SVG: Inverter loading").click()
+    dark_svg = Path(dark.value.path()).read_text(encoding="utf-8")
+    assert "rgb(230, 234, 237)" not in dark_svg and "rgb(27, 39, 51)" in dark_svg
+    assert page.evaluate("document.documentElement.dataset.theme") == "dark"
