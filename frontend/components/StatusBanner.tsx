@@ -1,10 +1,11 @@
 // Status banner (Doc 7 P2, §5): colour role + icon + Status word, plain message, next step,
 // collapsible details. Texts come from status-text.ts; this file only presents them.
 import type { AnalysisResult, AnalysisType, ValidationIssue } from "../api-types";
+import { fieldName } from "./elementFields";
 import { Icon, type IconName } from "./Icon";
 import styles from "./StatusBanner.module.css";
 import { Term } from "./Term";
-import { type BannerText, bannerText } from "./status-text";
+import { type BannerText, bannerText, statusWord } from "./status-text";
 
 // status-text roles → token roles (tokens.css, guideline §7.2)
 export const TOKEN_ROLE: Record<BannerText["role"], string> = {
@@ -30,7 +31,7 @@ export function StatusBanner({ type, result }: { type: AnalysisType; result: Ana
     <section role="status" aria-label="Status" data-status={result.status} data-role={TOKEN_ROLE[t.role]} className={styles.banner}>
       <h2 className={styles.status}>
         <Icon name={statusIcon(result)} size={20} />
-        {result.status}
+        {statusWord(type, result)}
         <Term k={result.status} />
       </h2>
       <p className={styles.headline}>{t.headline}</p>
@@ -44,7 +45,7 @@ export function StatusBanner({ type, result }: { type: AnalysisType; result: Ana
         <ul aria-label="Issues" className={styles.issues}>
           {issues.map((i, k) => (
             <li key={k}>
-              <span className={styles.where}>{[i.entity, i.id, i.field].filter(Boolean).join(" / ") || "Design"}</span>: {i.message}
+              <span className={styles.where}>{[i.id ?? (i.entity === "parameters" ? "Settings" : i.entity), i.field && fieldName(i.field)].filter(Boolean).join(", ") || "Design"}</span>: {i.message}
             </li>
           ))}
         </ul>
@@ -55,6 +56,10 @@ export function StatusBanner({ type, result }: { type: AnalysisType; result: Ana
       <details className={styles.details}>
         <summary>Details</summary>
         <dl>
+          <dt>Status</dt>
+          <dd>
+            <code>{result.status}</code>
+          </dd>
           <dt>status_code</dt>
           <dd>
             <code>{result.status_code}</code>

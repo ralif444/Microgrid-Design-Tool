@@ -21,7 +21,7 @@ import { ConstraintTable, KIND_WORDS, M2Results } from "../../components/M2Resul
 import { RequireProject } from "../../components/RequireProject";
 import { SldFigure } from "../../components/sld/SldFigure";
 import { statusIcon, TOKEN_ROLE } from "../../components/StatusBanner";
-import { bannerText } from "../../components/status-text";
+import { bannerText, statusWord } from "../../components/status-text";
 import { useValidation } from "../../components/useValidation";
 import { BarChart } from "../../components/charts/BarChart";
 import { ReportCharts } from "../../components/charts/ChartFrame";
@@ -138,7 +138,7 @@ function Report() {
           <p>
             <strong className={styles.word}>
               <Icon name={statusIcon(m2.result)} size={20} />
-              {m2.result.status}
+              {statusWord("M2", m2.result)}
             </strong>
             : {bannerText("M2", m2.result).headline}
           </p>
@@ -210,12 +210,12 @@ function Report() {
           {m1 && <M1Results p={m1p} charts={{ limits: (m1.snapshot as ProjectSnapshot | null)?.design_constraints, record: m1, voltage: false }} />}
         </>
       ) : (
-        <p className={styles.muted}>No power flow (M1) result{m1 ? `: the latest run ended with ${m1.result.status}` : ""}.</p>
+        <p className={styles.muted}>No power flow (M1) result{m1 ? `: the latest run ended with “${statusWord("M1", m1.result)}”` : ""}.</p>
       )}
 
       {m4ap && m4a && (
         <>
-          <h3>Small-signal (M4a): class {m4ap.stability_class}</h3>
+          <h3>Small-signal (M4a): {statusWord("M4a", m4a.result)}</h3>
           {outdated(m4a)}
           <M4aCharts p={m4ap} record={m4a} reason={m4a.result.diagnostics?.participation_reason} />
         </>

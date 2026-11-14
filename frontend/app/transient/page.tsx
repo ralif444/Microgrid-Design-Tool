@@ -132,7 +132,9 @@ function Transient() {
   return (
     <>
       <div className={styles.head}>
-        <h1>Transient (M4b)</h1>
+        <h1>
+          Transient <span className="code-label">(M4b)</span>
+        </h1>
         <M1FreshnessBadge f={fresh} />
       </div>
       <ExampleGuide screen="transient" />

@@ -82,7 +82,7 @@ def test_f1_pipeline_infeasible_loop_to_report(server: Callable[[str], str], pag
 
     _m1_m2(page)
     step(page, "Report")
-    expect(page.get_by_test_id("verdict")).to_contain_text("INFEASIBLE")
+    expect(page.get_by_test_id("verdict")).to_contain_text("Limits violated")
     expect(page.get_by_test_id("outdated")).to_have_count(0)
 
 

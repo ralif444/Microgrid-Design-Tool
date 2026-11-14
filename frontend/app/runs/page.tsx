@@ -198,7 +198,7 @@ function Runs() {
       <p>
         <label>
           <input type="checkbox" checked={hideInvalid} onChange={(e) => setHideInvalid(e.target.checked)} /> Hide
-          INPUT_INVALID
+          runs refused for invalid input
         </label>
         {hideInvalid && hidden > 0 && <span> ({hidden} hidden)</span>}{" "}
         <label>

@@ -49,7 +49,9 @@ function Envelope() {
   return (
     <>
       <div className={styles.head}>
-        <h1>Envelope (M3d)</h1>
+        <h1>
+          Envelope <span className="code-label">(M3d)</span>
+        </h1>
         <M1FreshnessBadge f={fresh} />
       </div>
       <ExampleGuide screen="envelope" />

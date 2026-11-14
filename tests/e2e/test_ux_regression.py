@@ -37,7 +37,7 @@ def _run_all(page: Page) -> None:
     page.get_by_role("button", name="Run M2").click()
     _ok(page)
     step(page, "Sensitivity (M3a)")
-    page.get_by_label("inverters/INV1/rated_kva").check()
+    page.get_by_label("INV1, Rating (kVA)").check()
     page.get_by_label("System frequency (Hz)").check()
     page.get_by_label("Step (ratio)").fill("0.01")
     page.get_by_role("button", name="Run M3a").click()

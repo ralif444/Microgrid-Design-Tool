@@ -21,6 +21,8 @@ const DP: Record<string, number> = {
 };
 // A non-zero value that would keep fewer than 2 significant digits (0.043 kW at 2 decimals) shows 2
 // significant digits; one below 10^-(d+2) is shown as a bound ("< 0.000001" p.u.), never in e-notation.
+export const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+
 export const fixed = (v: number, unit: string) => {
   const d = DP[unit];
   if (d === undefined) return String(num(v));

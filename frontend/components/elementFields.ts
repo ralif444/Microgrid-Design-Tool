@@ -45,6 +45,19 @@ export const CONSTRAINT_FIELDS: [keyof DesignConstraints, string, string][] = [
   ["balance_tolerance_kw", "Power-balance tolerance, optional", "kW"],
 ];
 
+// Field names and units as the tables and inspector show them (elementFields.ts); loads have no column list there.
+export const FIELD_NAME: Record<string, [string, string]> = Object.fromEntries([
+  ...[...LINE_COLUMNS, ...INVERTER_COLUMNS].flatMap((c) => (c.kind === "number" ? [[c.field, [c.label.replace(/, (optional|needed for M4)$/, ""), c.unit]]] : [])),
+  ["p_kw", ["Active power P", "kW"]],
+  ["q_kvar", ["Reactive power Q", "kvar"]],
+  ["power_factor", ["Power factor", "ratio"]],
+  ["nominal_voltage_kv", ["Nominal voltage, line-to-line", "kV"]],
+  ["nominal_frequency_hz", ["Nominal frequency", "Hz"]],
+  ...[...LINE_COLUMNS, ...INVERTER_COLUMNS].flatMap((c) => (c.kind === "bus" ? [[c.field, [c.label, ""]]] : [])),
+  ...CONSTRAINT_FIELDS.map(([f, l, u]) => [f, [l.replace(/, optional$/, ""), u]]),
+]);
+export const fieldName = (f: string) => FIELD_NAME[f]?.[0] ?? f.replace(/_/g, " ");
+
 // S-03 (FR-03): Q or power factor per load. The choice is a screen state, not data: both empty reads as Q.
 export type LoadMode = "Q" | "PF";
 export const loadMode = (l: Load, chosen?: LoadMode): LoadMode => chosen ?? (l.power_factor != null || l.pf_direction != null ? "PF" : "Q");

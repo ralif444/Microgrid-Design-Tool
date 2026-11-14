@@ -102,6 +102,8 @@ td, code { overflow-wrap: anywhere; }
 .table-scroll { position: relative; max-width: 100%; overflow-x: auto; } /* relative: clips its .sr-only children too */
 
 /* Global hooks still used by screens (replaced by components in step 2). */
+/* analysis code after a plain name ("Sensitivity (M3a)"): secondary, the name stays "Name (code)" for readers */
+.code-label { font-size: 0.8em; font-weight: var(--weight-regular); color: var(--color-fg-muted); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .advice {
   border: var(--border-width) var(--advisory-border-style) var(--role-advisory-edge);

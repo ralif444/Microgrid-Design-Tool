@@ -70,9 +70,9 @@ def test_fr_01_fr_03_fr_05_fr_06_fr_08_loads_to_sizing_advice(
     advice = page.get_by_role("region", name="Sizing advice")
     expect(advice).to_contain_text("Advice (not design data)")
     expect(advice).to_contain_text("Fake Engine placeholder")  # basis shown (FR-07)
-    expect(page.get_by_test_id("advice-state")).to_have_text("State: PROPOSED")
+    expect(page.get_by_test_id("advice-state")).to_have_text("State: Proposed")
     page.get_by_role("button", name="Accept").click()
-    expect(page.get_by_test_id("advice-state")).to_have_text("State: ACCEPTED")
+    expect(page.get_by_test_id("advice-state")).to_have_text("State: Accepted")
 
     step(page, "Project")
     expect(page.get_by_role("table", name="Counts")).to_contain_text("Inverters0")  # FR-08

@@ -117,9 +117,9 @@ def test_fr_84_limiting_constraint_shortcut_to_m3a(
     # Fake limiting rows are bus voltage and inverter loading; the line case is a client test.
     page.get_by_role("link", name="Most influential parameters for INV1").click()
     expect(page.get_by_role("heading", name="Sensitivity (M3a)")).to_be_visible()
-    expect(page.get_by_label("inverters/INV1/rated_kva")).to_be_checked()
-    expect(page.get_by_label("inverters/INV2/voltage_droop_kv_per_kvar")).to_be_checked()
-    expect(page.get_by_label("lines/LN1/r_ohm_per_km")).not_to_be_checked()
+    expect(page.get_by_label("INV1, Rating (kVA)")).to_be_checked()
+    expect(page.get_by_label("INV2, Q–V droop (kV/kvar)")).to_be_checked()
+    expect(page.get_by_label("LN1, R (Ω/km)")).not_to_be_checked()
     expect(page.get_by_label("Highest inverter loading (ratio)")).to_be_checked()
     expect(page.get_by_label("System frequency (Hz)")).not_to_be_checked()
     expect(page.get_by_role("status", name="Status")).to_have_count(0)  # nothing ran

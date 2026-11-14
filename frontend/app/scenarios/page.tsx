@@ -11,8 +11,8 @@ import { BarChart } from "../../components/charts/BarChart";
 import { CANNOT_UNDO, useConfirmDelete } from "../../components/ConfirmDelete";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
-import { fixed, fixedOr } from "../../components/format";
-import { applyOverrides, nMinus1, InfeasibleNote, METRICS, numericPaths, unitOf, useDependentRun } from "../../components/Further";
+import { fixed, fixedOr, plural } from "../../components/format";
+import { applyOverrides, nMinus1, InfeasibleNote, METRICS, numericPaths, ParamOptions, paramLabel, paramName, paramUnit, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
@@ -39,9 +39,9 @@ function OverrideEditor({ sc, paths }: { sc: Scenario; paths: string[] }) {
       <ul aria-label={`Overrides of ${sc.name}`}>
         {sc.overrides.map((o) => (
           <li key={o.parameter_path}>
-            {o.parameter_path} = {o.value} {unitOf(o.parameter_path)}{" "}
+            {paramName(o.parameter_path)} = {o.value} {paramUnit(o.parameter_path)}{" "}
             <button type="button" onClick={() => set(sc.overrides.filter((x) => x !== o))}>
-              Remove {o.parameter_path}
+              Remove {paramLabel(o.parameter_path)}
             </button>
           </li>
         ))}
@@ -50,13 +50,11 @@ function OverrideEditor({ sc, paths }: { sc: Scenario; paths: string[] }) {
         <label htmlFor={`path-${sc.id}`}>Change in {sc.name}</label>{" "}
         <select id={`path-${sc.id}`} value={path} onChange={(e) => setPath(e.target.value)}>
           <option value="">Choose…</option>
-          {paths.map((pp) => (
-            <option key={pp}>{pp}</option>
-          ))}
+          <ParamOptions paths={paths} />
         </select>
       </p>
       <p>
-        <NumberField id={`value-${sc.id}`} label={`New value for ${sc.name}`} unit={path ? unitOf(path) : "—"} value={value} onChange={setValue} />
+        <NumberField id={`value-${sc.id}`} label={`New value for ${sc.name}`} unit={path ? paramUnit(path) : "—"} value={value} onChange={setValue} />
       </p>
       <button
         type="button"
@@ -114,7 +112,9 @@ function Scenarios() {
   return (
     <>
       <div className={styles.head}>
-        <h1>Scenarios and comparison (M3c)</h1>
+        <h1>
+          Scenarios and comparison <span className="code-label">(M3c)</span>
+        </h1>
         <M1FreshnessBadge f={fresh} />
       </div>
       <ExampleGuide screen="scenarios" />
@@ -122,8 +122,8 @@ function Scenarios() {
       <InfeasibleNote show={m2Infeasible} />
       {example && (
         <p data-testid="example-scenarios">
-          Example mode: the scenarios come from the guided example&apos;s Project file (designs D2S and D2H of Doc 13 §4). The
-          first, D2 base, is the reference of the comparison (Doc 3 §6.6).
+          Example mode: the scenarios come from the guided example&apos;s Project file (the stressed design D2S and the
+          near-limit design D2H of the validation plan). The first, D2 base, is the reference of the comparison.
         </p>
       )}
       <form
@@ -153,7 +153,7 @@ function Scenarios() {
                 checked={selected.includes(sc.id)}
                 onChange={() => setSelected(selected.includes(sc.id) ? selected.filter((x) => x !== sc.id) : [...selected, sc.id])}
               />{" "}
-              {sc.name} ({sc.overrides.length} change(s))
+              {sc.name} ({plural(sc.overrides.length, "change")})
             </label>
           </h2>
           <OverrideEditor sc={sc} paths={paths} />

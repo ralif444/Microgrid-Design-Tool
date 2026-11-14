@@ -20,8 +20,8 @@ function Constraints() {
       <p>Every limit starts empty. An empty limit is not evaluated and is never counted as satisfied.</p>
       {example && (
         <p data-testid="example-constraints">
-          Example mode: these limits come from the guided example&apos;s Project file, as the reference-design study settings of
-          Doc 3 §3.7, not values from a standard. Editing one changes the design like any other edit.
+          Example mode: these limits come from the guided example&apos;s Project file, as the study settings of the
+          reference designs, not values from a standard. Editing one changes the design like any other edit.
         </p>
       )}
       {CONSTRAINT_FIELDS.map(([k, label, unit]) => (

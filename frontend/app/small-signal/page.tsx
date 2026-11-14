@@ -67,7 +67,9 @@ function SmallSignal() {
   return (
     <>
       <div className={styles.head}>
-        <h1>Small-signal (M4a)</h1>
+        <h1>
+          Small-signal <span className="code-label">(M4a)</span>
+        </h1>
         <M1FreshnessBadge f={fresh} />
       </div>
       <ExampleGuide screen="small-signal" />

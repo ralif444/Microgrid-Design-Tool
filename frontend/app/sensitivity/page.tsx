@@ -11,7 +11,7 @@ import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
 import { ExampleGuide, ExampleNext, nextReady, NotSet, useExampleForm } from "../../components/ExampleForm";
 import { fixedOr } from "../../components/format";
-import { InfeasibleNote, METRICS, numericPaths, shortcutPrefill, useDependentRun } from "../../components/Further";
+import { InfeasibleNote, METRICS, numericPaths, paramLabel, shortcutPrefill, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
 import { Icon } from "../../components/Icon";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
@@ -59,7 +59,9 @@ function Sensitivity() {
   return (
     <>
       <div className={styles.head}>
-        <h1>Sensitivity (M3a)</h1>
+        <h1>
+          Sensitivity <span className="code-label">(M3a)</span>
+        </h1>
         <M1FreshnessBadge f={fresh} />
       </div>
       <ExampleGuide screen="sensitivity" />
@@ -78,7 +80,7 @@ function Sensitivity() {
           {ex.tag("parameter_paths", "Parameters")}
           {numericPaths(design).map((pp) => (
             <label key={pp}>
-              <input type="checkbox" checked={paths.includes(pp)} onChange={() => setPaths(toggle(paths, pp))} /> {pp}
+              <input type="checkbox" checked={paths.includes(pp)} onChange={() => setPaths(toggle(paths, pp))} /> {paramLabel(pp)}
             </label>
           ))}
         </fieldset>
@@ -128,7 +130,7 @@ function Sensitivity() {
           const flagged = rows.filter((s) => s.status_change);
           const columns: DataColumn<Sens>[] = [
             { key: "rank", header: "Rank", numeric: true, cell: (s) => rank.get(s.parameter_path) ?? "—" },
-            { key: "path", header: "Parameter", cell: (s) => s.parameter_path },
+            { key: "path", header: "Parameter", cell: (s) => paramLabel(s.parameter_path) },
             { key: "v", header: "dy/dp", cell: (s) => `${fixedOr(s.value, s.unit ?? "")}${s.value === null || !s.unit ? "" : ` ${s.unit}`}` },
             { key: "n", header: "Normalised", unit: "ratio", numeric: true, cell: (s) => fixedOr(s.normalised_value, "ratio") },
             { key: "s", header: "Scheme", cell: (s) => s.scheme ?? "—" },
@@ -154,19 +156,19 @@ function Sensitivity() {
                 title={`Tornado: ${label}`}
                 valueTitle="Normalised sensitivity (ratio)"
                 categoryTitle="Parameter"
-                categories={drawn.map((s) => `${s.parameter_path}${s.status_change ? " (status differs)" : ""}`)}
+                categories={drawn.map((s) => `${paramLabel(s.parameter_path)}${s.status_change ? " (status differs)" : ""}`)}
                 series={[{ name: label, values: drawn.map((s) => s.normalised_value ?? null) }]}
                 labelWidth={230}
                 note={[
                   `Bars in the payload's rank order (largest absolute normalised effect first); metric unit ${unit}.`,
-                  missing.length ? `Not reported: ${missing.map((s) => `${s.parameter_path} (${s.reason ?? "no reason given"})`).join("; ")}.` : null,
-                  flagged.length ? `Status differs between the two sides for: ${flagged.map((s) => s.parameter_path).join(", ")}.` : null,
+                  missing.length ? `Not reported: ${missing.map((s) => `${paramLabel(s.parameter_path)} (${s.reason ?? "no reason given"})`).join("; ")}.` : null,
+                  flagged.length ? `Status differs between the two sides for: ${flagged.map((s) => paramLabel(s.parameter_path)).join(", ")}.` : null,
                 ]
                   .filter(Boolean)
                   .join(" ")}
                 record={resp.run_record}
               />
-              <DataTable label={`Sensitivity of ${label}`} caption={`Sensitivity of ${label}`} columns={columns} rows={rows} rowKey={(s) => s.parameter_path} rowName={(s) => s.parameter_path} />
+              <DataTable label={`Sensitivity of ${label}`} caption={`Sensitivity of ${label}`} columns={columns} rows={rows} rowKey={(s) => s.parameter_path} rowName={(s) => paramLabel(s.parameter_path)} />
             </section>
           );
         })}

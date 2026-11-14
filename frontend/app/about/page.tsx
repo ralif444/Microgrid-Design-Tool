@@ -72,7 +72,7 @@ export default function AboutPage() {
         </>
       )}
       <h2>Glosarium</h2>
-      <p>Definitions are taken from the manuscript (Seminar, 28-10-2026) or Doc 3 §2; each names its source. The same texts open from the info button beside a term.</p>
+      <p>Definitions are taken from the manuscript (Seminar, 28-10-2026) or the project glossary; each names its source. The same texts open from the info button beside a term.</p>
       <DataTable label="Glossary" caption="Glossary" columns={TERMS} rows={Object.values(GLOSSARY)} rowKey={(r) => r.term} rowName={(r) => r.term} />
     </>
   );

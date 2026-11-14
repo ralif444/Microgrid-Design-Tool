@@ -22,7 +22,7 @@ def test_fr_09_accepted_advice_prefills_inverter_drafts(
     page.get_by_label("Number of inverter units n (count)").fill("2")
     page.get_by_label("Redundancy r (0 or 1) (count)").fill("0")
     page.get_by_role("button", name="Run advice").click()
-    expect(page.get_by_test_id("advice-state")).to_have_text("State: PROPOSED")
+    expect(page.get_by_test_id("advice-state")).to_have_text("State: Proposed")
     expect(page.get_by_role("button", name="Add 2 inverter drafts", exact=False)).to_have_count(0)
     page.get_by_role("button", name="Accept").click()
     page.get_by_role("button", name="Add 2 inverter drafts", exact=False).click()

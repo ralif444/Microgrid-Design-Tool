@@ -1,5 +1,6 @@
 // Status presentation texts (Doc 7 §5). Headline and next-step hint per Status / reason.
 import type { AnalysisResult, AnalysisType } from "../api-types";
+import { plural } from "./format";
 
 export interface BannerText {
   role: "success" | "warning" | "error" | "caution" | "attention" | "neutral";
@@ -22,7 +23,7 @@ export function bannerText(type: AnalysisType, r: AnalysisResult): BannerText {
         // WP 1.7.4: a check without a limit is not satisfied, so "all constraints" would overstate it.
         const skipped = ((r.payload as { not_evaluated?: unknown[] } | null)?.not_evaluated ?? []).length;
         const headline = skipped
-          ? `The design meets every evaluated constraint; ${skipped} check(s) had no limit and were not evaluated.`
+          ? `The design meets every evaluated constraint; ${skipped === 1 ? "1 check had no limit and was" : `${skipped} checks had no limit and were`} not evaluated.`
           : "The design meets all constraints.";
         return { role: "success", headline, hint: skipped ? "Enter the missing limits on Constraints, then re-run M2." : "Explore further analyses or open the report." };
       }
@@ -35,7 +36,7 @@ export function bannerText(type: AnalysisType, r: AnalysisResult): BannerText {
     case "INFEASIBLE":
       return {
         role: "warning",
-        headline: `A valid operating point exists, but the design violates ${r.limiting_constraints?.length ?? 0} constraint(s).`,
+        headline: `A valid operating point exists, but the design violates ${plural(r.limiting_constraints?.length ?? 0, "constraint")}.`,
         hint: "Change the element named first, then re-run M1 and M2.",
       };
     case "SOLVER_FAILED":
@@ -53,7 +54,7 @@ export function bannerText(type: AnalysisType, r: AnalysisResult): BannerText {
     case "INPUT_INVALID":
       if (r.status_code === "SWEEP_CAP_EXCEEDED")
         return { role: "caution", headline: "This sweep has too many points. Nothing was calculated.", hint: "Reduce the range or step count." };
-      return { role: "caution", headline: `The input has ${n} problem(s). Nothing was calculated.`, hint: "Fix the listed fields." };
+      return { role: "caution", headline: `The input has ${plural(n, "problem")}. Nothing was calculated.`, hint: "Fix the listed fields." };
     case "UNAVAILABLE":
       switch (r.status_code) {
         case "TIMEOUT":
@@ -75,5 +76,29 @@ export function bannerText(type: AnalysisType, r: AnalysisResult): BannerText {
         default:
           return { role: "neutral", headline: "This analysis does not apply to this design.", hint: "Choose another analysis or change the design." };
       }
+  }
+}
+
+// Banner headline word (audit D-5): analyses without a constraint check get their own word, not "FEASIBLE".
+const CLASS_WORD: Record<string, string> = { STABLE: "Stable", MARGINAL: "Marginally stable", UNSTABLE: "Unstable" };
+export function statusWord(type: AnalysisType, r: AnalysisResult): string {
+  switch (r.status) {
+    case "FEASIBLE":
+      if (type === "M1") return "Solved";
+      if (type === "M4a") return CLASS_WORD[(r.payload as { stability_class?: string } | null)?.stability_class ?? ""] ?? "Analysed";
+      if (type === "M4b") return "Simulated";
+      if (type === "M2") return "Meets the limits";
+      if (type === "PS" || type === "CB" || type === "BA") return "Advice ready";
+      return "Completed";
+    case "INFEASIBLE":
+      return "Limits violated";
+    case "SOLVER_FAILED":
+      return "No solution";
+    case "PHYSICALLY_INADMISSIBLE":
+      return "Not physically possible";
+    case "INPUT_INVALID":
+      return "Input needs fixing";
+    case "UNAVAILABLE":
+      return ({ TIMEOUT: "Timed out", DEPENDENCY_NOT_MET: "Needs an earlier result", ENGINE_ERROR: "Engine error" } as Record<string, string>)[r.status_code] ?? "Not applicable";
   }
 }

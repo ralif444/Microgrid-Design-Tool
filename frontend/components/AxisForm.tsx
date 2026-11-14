@@ -7,7 +7,7 @@ import { getMeta } from "../api-client";
 import type { ProjectSnapshot } from "../api-types";
 import type { ExampleField } from "../store/example";
 import { ExampleTag, NotSet } from "./ExampleForm";
-import { FIELDS, numericPaths, unitOf } from "./Further";
+import { FIELDS, fieldName, numericPaths, ParamOptions, paramName, paramUnit } from "./Further";
 import { NumberField } from "./NumberField";
 import { HOUR_AXIS } from "./profileHour";
 
@@ -72,7 +72,7 @@ export function useAxis(design: ProjectSnapshot, prefix = "", example?: AxisExam
         ? { kind, element_set: elementSet, field }
         : { kind };
   const hour = kind === "LOAD_PROFILE_HOUR";
-  const unit = kind === "PARAMETER" ? unitOf(path) : hour ? "h" : "factor";
+  const unit = kind === "PARAMETER" ? paramUnit(path) : hour ? "h" : "factor";
   const id = (s: string) => `${prefix.trim().replace(/\W+/g, "-").toLowerCase() || "axis"}-${s}`;
   const fields = (
     <>
@@ -92,9 +92,7 @@ export function useAxis(design: ProjectSnapshot, prefix = "", example?: AxisExam
           <label htmlFor={id("path")}>{prefix}Parameter</label>{" "}
           <select id={id("path")} value={path} onChange={(e) => setPath(e.target.value)}>
             <option value="">Choose…</option>
-            {numericPaths(design).map((pp) => (
-              <option key={pp}>{pp}</option>
-            ))}
+            <ParamOptions paths={numericPaths(design)} />
           </select>
         </p>
       )}
@@ -117,7 +115,9 @@ export function useAxis(design: ProjectSnapshot, prefix = "", example?: AxisExam
           <label htmlFor={id("field")}>{prefix}Field</label>{" "}
           <select id={id("field")} value={field} onChange={(e) => setField(e.target.value)}>
             {FIELDS[coll].map((f) => (
-              <option key={f}>{f}</option>
+              <option key={f} value={f}>
+                {fieldName(f)}
+              </option>
             ))}
           </select>{" "}
           <span>Applies to: {elementSet.join(", ") || "none"}</span>
@@ -147,11 +147,16 @@ export function useAxis(design: ProjectSnapshot, prefix = "", example?: AxisExam
       )}
     </>
   );
-  if (hour) return { axis: { ...HOUR_AXIS }, unit, name: "hour", steps: HOUR_AXIS.step_count, fields, reset };
+  if (hour) return { axis: { ...HOUR_AXIS }, unit, name: "Hour", steps: HOUR_AXIS.step_count, fields, reset };
   return {
     axis: { ...shape, range_min: lo, range_max: hi, step_count: steps },
     unit,
-    name: kind === "PARAMETER" ? path : kind,
+    name:
+      kind === "PARAMETER"
+        ? paramName(path) || "Parameter"
+        : kind === "SCALE_FACTOR"
+          ? `Scale factor on ${fieldName(field)} of ${coll}`
+          : "Load scale λ",
     steps,
     fields,
     reset,

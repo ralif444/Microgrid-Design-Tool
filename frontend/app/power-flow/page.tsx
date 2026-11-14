@@ -43,7 +43,9 @@ function PowerFlow() {
   return (
     <>
       <div className={styles.head}>
-        <h1>Power flow (M1)</h1>
+        <h1>
+          Power flow <span className="code-label">(M1)</span>
+        </h1>
         <button type="button" className="primary" onClick={() => void run()} disabled={busy} aria-busy={busy || undefined}>
           {busy ? "Running..." : "Run M1"}
         </button>

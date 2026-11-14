@@ -56,7 +56,9 @@ function ConstraintCheck() {
   return (
     <>
       <div className={styles.head}>
-        <h1>Constraint check (M2)</h1>
+        <h1>
+          Constraint check <span className="code-label">(M2)</span>
+        </h1>
       </div>
       <CheckStrip fresh={fresh} m1={m1} m1Record={m1Record} m2={payload} />
       <ExampleGuide screen="constraint-check" />

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ProjectSnapshot } from "../api-types";
-import { applyOverrides, nMinus1, numericPaths, shortcutPrefill } from "./Further";
+import { applyOverrides, nMinus1, numericPaths, paramLabel, shortcutPrefill } from "./Further";
 
 const design: ProjectSnapshot = {
   nominal_voltage_kv: 0.4,
@@ -45,5 +45,14 @@ describe("Limiting-constraint shortcut (Doc 12 FR-84)", () => {
     });
     expect(shortcutPrefill(d, "INVERTER_LOADING", "INV1")?.paths).not.toContain("lines/LN1/r_ohm_per_km");
     expect(shortcutPrefill(d, "POWER_BALANCE", "SYSTEM")).toBeNull();
+  });
+});
+
+describe("paramLabel", () => {
+  it("names the element and field with the inspector label and unit", () => {
+    expect(paramLabel("inverters/INV1/frequency_droop_hz_per_kw")).toBe("INV1, P–f droop (Hz/kW)");
+    expect(paramLabel("lines/LN1/current_limit_a")).toBe("LN1, Current limit (A)");
+    expect(paramLabel("loads/L1/power_factor")).toBe("L1, Power factor (ratio)");
+    expect(paramLabel("inverters/INV2/tau_p_s")).toBe("INV2, τ_P (s)");
   });
 });

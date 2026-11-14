@@ -70,7 +70,7 @@ function Sweep() {
   // the run's own axis decides the hour view, so a later form change does not relabel a result
   const ranHours = (resp?.run_record.parameters as { axis?: { kind?: string } } | undefined)?.axis?.kind === HOUR_AXIS.kind;
   const unit = ranHours ? "h" : ax.unit;
-  const xName = ranHours ? "hour" : ax.name;
+  const xName = ranHours ? "Hour" : ax.name;
 
   const r = resp?.result;
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as M3bPayload) : null;
@@ -88,7 +88,9 @@ function Sweep() {
   return (
     <>
       <div className={styles.head}>
-        <h1>Sweep (M3b)</h1>
+        <h1>
+          Sweep <span className="code-label">(M3b)</span>
+        </h1>
         <M1FreshnessBadge f={fresh} />
       </div>
       <ExampleGuide screen="sweep" />

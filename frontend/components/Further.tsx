@@ -2,6 +2,8 @@
 // Shared parts of the further-analysis screens S-09..S-11 (Doc 7 §6.5, Doc 9 D-56).
 import type { AnalysisRequestBody, AnalysisResponse, AnalysisType, OutputMetric, ProjectSnapshot, RunRecord } from "../api-types";
 import { latestRun, m1Ref, useProject, useProjectDispatch } from "../store";
+import { FIELD_NAME, fieldName } from "./elementFields";
+export { fieldName };
 import { num } from "./format";
 import { SOLVER, useAnalysisCall } from "./useAnalysisCall";
 import { m1Freshness, useValidation } from "./useValidation";
@@ -52,6 +54,29 @@ const SUFFIX: [string, string][] = [
   ["_kvar", "kvar"], ["_kw", "kW"], ["_kv", "kV"], ["_hz", "Hz"], ["_km", "km"], ["_s", "s"], ["_a", "A"],
 ];
 export const unitOf = (path: string) => SUFFIX.find(([s]) => path.endsWith(s))?.[1] ?? "1";
+
+// "inverters/INV1/rated_kva" → "INV1, Rating"; paramLabel adds the unit: "INV1, Rating (kVA)".
+export const paramName = (path: string) => {
+  const [, id, f] = path.split("/");
+  return f ? `${id}, ${fieldName(f)}` : path;
+};
+export const paramUnit = (path: string) => FIELD_NAME[path.split("/")[2] ?? ""]?.[1] ?? unitOf(path);
+export const paramLabel = (path: string) => `${paramName(path)} (${paramUnit(path)})`;
+
+// <option>s of a parameter picker, grouped per element; the value stays the path the request needs.
+export function ParamOptions({ paths }: { paths: string[] }) {
+  const groups = new Map<string, string[]>();
+  for (const pp of paths) groups.set(pp.split("/")[1], [...(groups.get(pp.split("/")[1]) ?? []), pp]);
+  return [...groups].map(([id, pps]) => (
+    <optgroup key={id} label={id}>
+      {pps.map((pp) => (
+        <option key={pp} value={pp}>
+          {paramLabel(pp)}
+        </option>
+      ))}
+    </optgroup>
+  ));
+}
 
 export function applyOverrides(d: ProjectSnapshot, overrides: { parameter_path: string; value: number }[]): ProjectSnapshot {
   let out = d;

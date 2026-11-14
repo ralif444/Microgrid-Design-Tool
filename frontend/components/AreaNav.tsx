@@ -154,7 +154,7 @@ export function AreaScreensView({ area, at, states, m1Missing = false }: { area:
             <li key={h} data-state={state ?? undefined}>
               <Link href={h} aria-current={h === at || (!h.startsWith(HOME) && at.startsWith(h)) ? "page" : undefined}>
                 {state === "done" && <Icon name="check" size={12} />}
-                {label}
+                <CodedLabel text={label} />
               </Link>
               {/* state words sit beside the link, so its name stays the screen name */}
               {state === "done" && <span className="sr-only">done</span>}
@@ -186,4 +186,16 @@ export function AreaScreens() {
   const report = useValidation(state.design);
   const states = state.project ? stepStates(state, report) : STEPS.map(() => "todo" as StepState);
   return area ? <AreaScreensView area={area} at={at} states={states} m1Missing={!m1Ref(state.runRecords)} /> : null;
+}
+
+// "Sensitivity (M3a)" → name, then the code as a smaller secondary label (audit D-26).
+export function CodedLabel({ text }: { text: string }) {
+  const m = /^(.*\S)\s+(\((?:M\d\w?|PS|CB|BA)\))$/.exec(text);
+  return m ? (
+    <>
+      {m[1]} <span className="code-label">{m[2]}</span>
+    </>
+  ) : (
+    <>{text}</>
+  );
 }

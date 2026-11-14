@@ -86,7 +86,7 @@ function AdvicePanel({ a }: { a: SizingAdvice }) {
           </tr>
         </tbody>
       </table>
-      <p data-testid="advice-state">State: {a.state}</p>
+      <p data-testid="advice-state">State: {({ PROPOSED: "Proposed", ACCEPTED: "Accepted", SKIPPED: "Skipped" } as Record<string, string>)[a.state] ?? a.state}</p>
       <CatalogHints unitKva={plan.unit_rating_kva} />
       <ModuleHint eNomKwh={p.storage_energy?.e_nom_kwh ?? null} />
     </section>

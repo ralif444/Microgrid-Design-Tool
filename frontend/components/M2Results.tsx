@@ -9,7 +9,7 @@ import { AdvisoryPanel } from "./AdvisoryPanel";
 import { BarChart } from "./charts/BarChart";
 import { LoadabilityAxis } from "./charts/LoadabilityAxis";
 import { DataTable, type DataColumn } from "./DataTable";
-import { fixed, fixedOr } from "./format";
+import { fixed, fixedOr, plural } from "./format";
 import { Icon, type IconName } from "./Icon";
 import styles from "./M2Results.module.css";
 
@@ -154,7 +154,7 @@ export function M2Results({ p, charts }: { p: M2Payload; charts?: { record: RunR
           series={[{ name: "Normalised margin", values: sorted.map((c) => c.normalised_margin) }]}
           negative="Violated (margin < 0)"
           labelWidth={210}
-          note={p.not_evaluated.length ? `${p.not_evaluated.length} check(s) without a limit are listed under Not evaluated, not drawn.` : undefined}
+          note={p.not_evaluated.length ? `${plural(p.not_evaluated.length, "check")} without a limit ${p.not_evaluated.length === 1 ? "is" : "are"} listed under Not evaluated, not drawn.` : undefined}
           record={charts.record}
         />
       )}
