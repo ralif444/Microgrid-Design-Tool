@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from flows import enter_design, gui_snapshot
+from flows import enter_design, go_route, gui_snapshot
 from playwright.sync_api import Page
 from test_network_m1_m2 import _run_m1
 
@@ -33,8 +33,7 @@ def test_200_percent_zoom_no_sideways_page_scroll(server: Callable[[str], str], 
             wide[name] = over
 
     for r in ROUTES:
-        page.locator(f'a[href="/{r}/"]').first.click()
-        page.wait_for_url(f"**/{r}/")
+        go_route(page, r)
         page.locator("h1").first.wait_for()
         measure(r)
         if r == "network":

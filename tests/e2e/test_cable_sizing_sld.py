@@ -12,7 +12,7 @@ import json
 from collections.abc import Callable
 from pathlib import Path
 
-from flows import enter_design, gui_snapshot, step
+from flows import enter_design, gui_snapshot, step, studies
 from playwright.sync_api import Page, expect
 from test_cable_sizing import CAVEAT, FLAG_ON, TABLES
 from test_network_m1_m2 import _margins, _run_m1
@@ -22,7 +22,12 @@ from mgapp.services.cable_sizing.tables import table_set_hash
 BREAKERS = '[data-testid^="diagram-breaker-"]'
 LEGEND = "Circuit breaker (sizing result)"
 SECTION = "Cable and overload sizing (experimental)"
-PROV = {"manufacturer": "Test maker", "model": "T-1", "document": "Test sheet", "revision": "r1"}
+PROV = {
+    "manufacturer": "Test maker",
+    "model": "T-1",
+    "document": "Test sheet",
+    "revision": "r1",
+}
 
 
 def _m1_m2(page: Page) -> None:
@@ -30,13 +35,13 @@ def _m1_m2(page: Page) -> None:
     step(page, "Constraint check (M2)")
     _margins(page)
     page.get_by_role("button", name="Run M2").click()
-    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
+    expect(page.get_by_role("status", name="Status")).to_have_attribute(
+        "data-status", "FEASIBLE"
+    )
 
 
 def _run_cb(page: Page) -> None:
-    page.get_by_role("list", name="Further analyses").get_by_role(
-        "link", name="Cable and breaker sizing"
-    ).click()
+    studies(page).get_by_role("link", name="Cable and breaker sizing").click()
     page.get_by_label("Load table file (JSON)").set_input_files(TABLES)
     for label, value in (
         ("Method", "B1"),
@@ -49,7 +54,9 @@ def _run_cb(page: Page) -> None:
     page.get_by_label("Ambient temperature (°C)").fill("30")
     page.get_by_label("Grouping count").fill("1")
     page.get_by_role("button", name="Run cable sizing").click()
-    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
+    expect(page.get_by_role("status", name="Status")).to_have_attribute(
+        "data-status", "FEASIBLE"
+    )
 
 
 def test_fr_113_fr_114_sld_shows_breaker_symbols_after_run(
@@ -74,12 +81,15 @@ def test_fr_113_fr_114_sld_shows_breaker_symbols_after_run(
         expect(tip).to_contain_text(text)
 
     step(page, "Network")
+    page.get_by_text("Diagram (read-only)").click()  # the S-05 diagram is a closed disclosure
     expect(page.get_by_test_id("diagram-breaker-INV1")).to_be_visible()
 
     step(page, "Report")
     section = page.get_by_role("region", name=SECTION)
     expect(section).to_contain_text("IEC60364_OVERLOAD_PUIL2011")
-    expect(section).to_contain_text(table_set_hash(json.loads(TABLES.read_text(encoding="utf-8"))))
+    expect(section).to_contain_text(
+        table_set_hash(json.loads(TABLES.read_text(encoding="utf-8")))
+    )
     expect(section).to_contain_text(CAVEAT)
     expect(section).to_contain_text("PUIL 2020")
     expect(page.locator(BREAKERS)).to_have_count(0)  # not on the report figure (K295)
@@ -111,7 +121,11 @@ def test_fr_115_catalogue_breaker_and_match(
                 "kind": "BREAKER",
                 "provenance": PROV,
                 "sources": {"in_a": "p. 5"},
-                "breaker": {"standard": "FAKE MCB standard", "class": "MCB", "in_a": 20},
+                "breaker": {
+                    "standard": "FAKE MCB standard",
+                    "class": "MCB",
+                    "in_a": 20,
+                },
             },
         ],
     }

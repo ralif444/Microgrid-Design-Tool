@@ -16,7 +16,7 @@ import { EngineBadgeView } from "../../../components/EngineBadge";
 import { Icon } from "../../../components/Icon";
 import { M1BlockedNote, M1FreshnessBadge } from "../../../components/M1Freshness";
 import { NumberField } from "../../../components/NumberField";
-import { PipelineStepperView, STEPS, type StepState } from "../../../components/PipelineStepper";
+import { areaOf, areas, AreaScreensView, AreaTabsView, STEPS, type StepState } from "../../../components/AreaNav";
 import { StatusBanner, TOKEN_ROLE, statusIcon } from "../../../components/StatusBanner";
 import { bannerText } from "../../../components/status-text";
 import { Toast } from "../../../components/Toast";
@@ -211,13 +211,17 @@ export default function ComponentsPage() {
         </div>
       </Demo>
 
-      <Demo title="Pipeline stepper">
-        {STEPPER.map(([label, states, path, missing]) => (
-          <figure key={label} style={{ margin: "0 0 var(--space-4)" }}>
-            <figcaption style={{ color: "var(--color-fg-muted)", fontSize: "var(--text-xs)", marginBottom: "var(--space-1)" }}>{label}</figcaption>
-            <PipelineStepperView states={states} path={path} m1Missing={missing} />
-          </figure>
-        ))}
+      <Demo title="Area navigation">
+        {STEPPER.map(([label, states, path, missing]) => {
+          const area = areaOf(areas(), path)!;
+          return (
+            <figure key={label} style={{ margin: "0 0 var(--space-4)" }}>
+              <figcaption style={{ color: "var(--color-fg-muted)", fontSize: "var(--text-xs)", marginBottom: "var(--space-1)" }}>{label}</figcaption>
+              <AreaTabsView list={areas()} current={area.key} />
+              <AreaScreensView area={area} at={path} states={states} m1Missing={missing} />
+            </figure>
+          );
+        })}
       </Demo>
 
       <Demo title="Status banner, every Doc 7 §5 row">

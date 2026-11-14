@@ -1,10 +1,10 @@
 "use client";
-// W4 diagram workspace (ADR-016; plan-workspace.md W4): areas Model and Check, element list, diagram,
-// inspector beside it (FR-90, FR-91) and, in Check, the results drawer. It sits beside the step pages:
-// the stepper and the engine badge of the shell stay (manuscript 4.3.7). Runs follow the S-07 / S-08
-// rules: M2 needs the current M1 (FR-38, FR-40, FR-93). W6: Studies and Report host the step pages
-// unchanged (plan-workspace.md W6); a redesign of them needs its own mockup first.
-import { useEffect, useState, type ReactNode } from "react";
+// Diagram workspace (ADR-016 option B; plan-workspace.md W4): the Model and Check areas, picked by
+// `?area=` from the header tabs (AreaNav). Element list, diagram, inspector beside it (FR-90, FR-91) and,
+// in Check, the results drawer. Runs follow the S-07 / S-08 rules: M2 needs the current M1 (FR-38,
+// FR-40, FR-93). Studies and Report are their own routes under the same tabs.
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import type { M1Payload, M2Payload } from "../../api-types";
 import { CheckStrip } from "../../components/CheckStrip";
 import { ElementForm, LimitsForm } from "../../components/ElementForm";
@@ -29,60 +29,8 @@ import { Toast } from "../../components/Toast";
 import { SOLVER, useAnalysisCall } from "../../components/useAnalysisCall";
 import { m1Freshness, useValidation } from "../../components/useValidation";
 import { latestRun, m1Ref, useProject, useProjectDispatch } from "../../store";
-import BatteryPage from "../battery/page";
-import CableSizingPage from "../cable-sizing/page";
-import EnvelopePage from "../envelope/page";
-import ReportPage from "../report/page";
-import RunsPage from "../runs/page";
-import ScenariosPage from "../scenarios/page";
-import SensitivityPage from "../sensitivity/page";
-import SmallSignalPage from "../small-signal/page";
-import SweepPage from "../sweep/page";
-import TransientPage from "../transient/page";
-import { useCableSizingFlag } from "../../components/cable";
-import { BATTERY, CABLE_SIZING, FURTHER } from "../../components/PipelineStepper";
 import styles from "./workspace.module.css";
 
-type Area = "model" | "check" | "studies" | "report";
-type Hosted = [href: string, label: string, page: () => ReactNode];
-const AREAS: [Area, string][] = [
-  ["model", "Model"],
-  ["check", "Check"],
-  ["studies", "Studies"],
-  ["report", "Report"],
-];
-const REPORT_PAGES: Hosted[] = [
-  ["/report/", "Report", () => <ReportPage />],
-  ["/runs/", "Run history", () => <RunsPage />],
-];
-const STUDY_PAGES: Record<string, () => ReactNode> = {
-  "/sensitivity/": () => <SensitivityPage />,
-  "/sweep/": () => <SweepPage />,
-  "/scenarios/": () => <ScenariosPage />,
-  "/envelope/": () => <EnvelopePage />,
-  "/small-signal/": () => <SmallSignalPage />,
-  "/transient/": () => <TransientPage />,
-  "/cable-sizing/": () => <CableSizingPage />,
-  "/battery/": () => <BatteryPage />,
-};
-
-// W6: one hosted page at a time under a sub-navigation, as on its own route.
-function HostedPages({ label, pages }: { label: string; pages: Hosted[] }) {
-  const [current, setCurrent] = useState(pages[0][0]);
-  const page = pages.find(([h]) => h === current) ?? pages[0];
-  return (
-    <div className={styles.hosted}>
-      <nav aria-label={label} className={`no-print ${styles.sub}`}>
-        {pages.map(([h, text]) => (
-          <button key={h} type="button" aria-current={h === page[0] ? "page" : undefined} onClick={() => setCurrent(h)}>
-            {text}
-          </button>
-        ))}
-      </nav>
-      {page[2]()}
-    </div>
-  );
-}
 type Selection = ElementRef | { kind: "limits" } | null;
 const MARK_WORD = { violated: "Violated", limiting: "Limiting", near: "Near limit" } as const;
 
@@ -163,14 +111,9 @@ function ElementList({ selected, onSelect, editable }: { selected: Selection; on
 }
 
 function Workspace() {
-  const { design, runRecords, batteryBanks } = useProject();
+  const { design, runRecords } = useProject();
   const dispatch = useProjectDispatch();
-  const cableSizing = useCableSizingFlag() === true;
-  // the stepper's step-7 list: cable sizing behind its flag (FR-105), battery with a bank (FR-119)
-  const studies = [...FURTHER, ...(cableSizing ? [CABLE_SIZING] : []), ...(batteryBanks.length ? [BATTERY] : [])].map(
-    ([h, label]): Hosted => [h, label, STUDY_PAGES[h]],
-  );
-  const [area, setArea] = useState<Area>("model");
+  const area = useSearchParams().get("area") === "check" ? "check" : "model";
   const [sel, setSel] = useState<Selection>(null);
   const [focusKey, setFocusKey] = useState(0);
   const [drawer, setDrawer] = useState(true);
@@ -190,11 +133,6 @@ function Workspace() {
   const params = ex.values;
   const marginsSet = params.inverter_margin_ratio !== null && params.line_margin_ratio !== null;
   const { busy, error, setError, call } = useAnalysisCall();
-
-  useEffect(() => {
-    const a = new URLSearchParams(window.location.search).get("area");
-    if (AREAS.some(([k]) => k === a)) setArea(a as Area);
-  }, []);
 
   const select = (s: Selection) => {
     setSel(s);
@@ -218,14 +156,7 @@ function Workspace() {
   return (
     <div className={styles.ws} data-area={area}>
       <div className={`no-print ${styles.bar}`}>
-        <h1>Workspace</h1>
-        <nav aria-label="Areas" className={styles.areas}>
-          {AREAS.map(([k, label]) => (
-            <button key={k} type="button" aria-current={area === k ? "page" : undefined} onClick={() => setArea(k)}>
-              {label}
-            </button>
-          ))}
-        </nav>
+        <h1>{area === "check" ? "Check" : "Model"}</h1>
         <span className={styles.spacer} />
         <button type="button" onClick={() => void runM1()} disabled={busy} aria-busy={busy || undefined}>
           Run M1
@@ -235,11 +166,9 @@ function Workspace() {
         </button>
       </div>
 
-      {area === "studies" && <HostedPages key="studies" label="Studies" pages={studies} />}
-      {area === "report" && <HostedPages key="report" label="Report and history" pages={REPORT_PAGES} />}
-      {(area === "model" || area === "check") && <ElementList selected={sel} onSelect={select} editable={area === "model"} />}
+      <ElementList selected={sel} onSelect={select} editable={area === "model"} />
 
-      {(area === "model" || area === "check") && <div className={styles.canvas}>
+      <div className={styles.canvas}>
         {area === "check" && <CheckStrip fresh={fresh} m1={m1} m1Record={m1Record} m2={m2} />}
         {area === "check" && <M1BlockedNote f={fresh} />}
         {area === "check" && (
@@ -282,9 +211,9 @@ function Workspace() {
             )}
           </section>
         )}
-      </div>}
+      </div>
 
-      {(area === "model" || area === "check") && <div className={styles.insp}>
+      <div className={styles.insp}>
         {sel?.kind === "limits" ? (
           <aside aria-label="Inspector: Design limits" className={`no-print ${inspectorStyles.docked}`}>
             <div className={inspectorStyles.top}>
@@ -310,7 +239,7 @@ function Workspace() {
         ) : (
           <p className={styles.empty}>Choose an element in the list or on the diagram.</p>
         )}
-      </div>}
+      </div>
 
       {area === "check" && (
         <section aria-label="Results" className={styles.dock}>
@@ -359,7 +288,10 @@ function Workspace() {
 export default function WorkspacePage() {
   return (
     <RequireProject>
-      <Workspace />
+      {/* useSearchParams in a static export needs a Suspense boundary */}
+      <Suspense fallback={null}>
+        <Workspace />
+      </Suspense>
     </RequireProject>
   );
 }

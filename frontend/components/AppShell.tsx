@@ -1,15 +1,16 @@
 "use client";
-// App shell (Doc 7 §2 global elements; ADR-016 §3): Carbon Header on the page surface with the wordmark,
-// Project name with unsaved indicator, the W4 Workspace (beside the step pages), Run history, Catalogue, About (S-17), Save / Open and the engine kind badge
-// (P2), the theme switch; the pipeline stepper strip (P1). In example mode (Doc 12 X9,
+// App shell (Doc 7 §2 global elements; ADR-016 option B): Carbon Header on the page surface with the
+// wordmark, Project name with unsaved indicator, the area tabs, Catalogue, About (S-17), Save / Open, the
+// theme switch and the engine kind badge (P2); below it the screens of the current area, which replace
+// the pipeline stepper (Doc 14 D15). In example mode (Doc 12 X9,
 // FR-99) a blue Tag "Example mode" (info, not a status colour) and "Leave example mode" sit by the badge.
 import { Header, HeaderName, Tag } from "@carbon/react";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { useProject, useProjectDispatch } from "../store";
 import styles from "./AppShell.module.css";
 import { EngineBadge } from "./EngineBadge";
-import { PipelineStepper } from "./PipelineStepper";
+import { AreaScreens, AreaTabs } from "./AreaNav";
 import { ProjectFileMenu } from "./ProjectFileMenu";
 import { Toggletip } from "./Term";
 import { ThemeSwitch } from "./ThemeSwitch";
@@ -39,15 +40,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             {unsaved && <UnsavedFlag />}
           </span>
         )}
-        <span className={styles.spacer} />
+        {/* useSearchParams in a static export needs a Suspense boundary */}
         {project && (
-          <Link href="/workspace/" className={styles.util}>
-            Workspace
-          </Link>
+          <Suspense fallback={null}>
+            <AreaTabs />
+          </Suspense>
         )}
-        <Link href="/runs/" className={styles.util}>
-          Run history
-        </Link>
+        <span className={styles.spacer} />
         <Link href="/catalogue/" className={styles.util}>
           Catalogue
         </Link>
@@ -72,11 +71,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
         <EngineBadge />
       </Header>
-      <div className={`no-print ${styles.below}`}>
-        <div className={styles.strip}>
-          <PipelineStepper />
+      {project && (
+        <div className={`no-print ${styles.below}`}>
+          <div className={styles.strip}>
+            <Suspense fallback={null}>
+              <AreaScreens />
+            </Suspense>
+          </div>
         </div>
-      </div>
+      )}
       <main>{children}</main>
     </>
   );

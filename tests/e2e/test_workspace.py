@@ -6,13 +6,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from flows import enter_design, gui_snapshot, step
+from flows import area, enter_design, gui_snapshot, step, step_link, studies
 from playwright.sync_api import Page, expect
 
 
 def _open(page: Page, base: str) -> None:
     enter_design(page, base, gui_snapshot())
-    page.get_by_role("link", name="Workspace", exact=True).click()
+    area(page, "Model")
     page.wait_for_url("**/workspace/")
 
 
@@ -69,9 +69,7 @@ def test_w4_check_area_runs_and_keeps_the_stale_rule(
     server: Callable[[str], str], page: Page
 ) -> None:
     _open(page, server("default"))
-    page.get_by_role("navigation", name="Areas").get_by_role(
-        "button", name="Check"
-    ).click()
+    area(page, "Check")
     run_m2 = page.get_by_role("button", name="Run M2")
     expect(page.get_by_test_id("m1-blocked")).to_be_visible()
     expect(run_m2).to_be_disabled()
@@ -92,46 +90,41 @@ def test_w4_check_area_runs_and_keeps_the_stale_rule(
     drawer.get_by_role("button", name="Hide results").click()
     expect(drawer.get_by_role("tabpanel")).to_have_count(0)
     # an edit in Model makes M1 stale: M2 is blocked again (FR-38, FR-40)
-    page.get_by_role("navigation", name="Areas").get_by_role(
-        "button", name="Model"
-    ).click()
+    area(page, "Model")
     _pick(page, "INV1")
     page.get_by_role("complementary", name="Inspector: Inverter INV1").get_by_label(
         "Rating"
     ).fill("11")
-    page.get_by_role("navigation", name="Areas").get_by_role(
-        "button", name="Check"
-    ).click()
+    area(page, "Check")
     expect(page.get_by_test_id("m1-blocked")).to_contain_text("Re-run M1")
     expect(run_m2).to_be_disabled()
 
 
-def test_w6_studies_and_report_host_the_step_pages(
+def test_w6_area_tabs_replace_the_stepper(
     server: Callable[[str], str], page: Page
 ) -> None:
+    """ADR-016 option B (Doc 14 D15): the header area tabs and their screens replace the stepper; the
+    stepper's blocked state stays on the screen it guards (FR-38, FR-40)."""
     _open(page, server("default"))
-    areas = page.get_by_role("navigation", name="Areas")
-    areas.get_by_role("button", name="Check").click()
+    expect(page.get_by_role("navigation", name="Pipeline")).to_have_count(0)
+    area(page, "Check")
+    screens = page.get_by_role("navigation", name="Screens")
+    expect(screens.get_by_role("link", name="Diagram")).to_have_attribute(
+        "aria-current", "page"
+    )
+    expect(page.get_by_test_id("step-6-blocked")).to_contain_text("M1 missing")
     page.get_by_role("button", name="Run M1").click()
     expect(page.get_by_role("region", name="Check status")).to_contain_text(
         "Power flow solved"
     )
-    # Studies: the step-7 pages, one at a time, the workspace stays open
-    areas.get_by_role("button", name="Studies").click()
-    expect(
-        page.get_by_role("heading", name="Sensitivity (M3a)", level=1)
-    ).to_be_visible()
-    page.get_by_role("navigation", name="Studies").get_by_role(
-        "button", name="Transient (M4b)"
-    ).click()
+    expect(page.get_by_test_id("step-6-blocked")).to_have_count(0)
+    further = studies(page)
+    expect(further.get_by_role("link", name="Sensitivity (M3a)")).to_have_attribute(
+        "aria-current", "page"
+    )
+    step(page, "Transient (M4b)")
     expect(page.get_by_role("heading", name="Transient (M4b)", level=1)).to_be_visible()
-    expect(page.get_by_role("heading", name="Sensitivity (M3a)")).to_have_count(0)
-    # Report: the report and the run history, with the M1 run made in Check
-    areas.get_by_role("button", name="Report").click()
-    expect(page.get_by_role("heading", name="Report: E2E project")).to_be_visible()
-    page.get_by_role("navigation", name="Report and history").get_by_role(
-        "button", name="Run history"
-    ).click()
+    step(page, "Run history")
     expect(page.get_by_role("heading", name="Run history", level=1)).to_be_visible()
     expect(page.get_by_role("main")).to_contain_text("M1")
-    page.wait_for_url("**/workspace/")
+    expect(step_link(page, "Report")).to_be_visible()

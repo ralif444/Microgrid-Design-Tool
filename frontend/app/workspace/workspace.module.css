@@ -9,12 +9,6 @@
 .bar { grid-area: bar; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-4); border-bottom: var(--border-width) solid var(--color-border); }
 .bar h1 { margin: 0; font-size: var(--text-lg); }
 .spacer { flex: 1; }
-.areas { display: flex; align-self: stretch; margin-left: var(--space-3); }
-.areas > :is(button, a) {
-  display: inline-flex; align-items: center; padding: 0 var(--space-3); border: 0; border-block: 3px solid transparent;
-  background: none; color: var(--color-fg); font-weight: var(--weight-medium, 500); text-decoration: none; cursor: pointer;
-}
-.areas > [aria-current="page"] { font-weight: var(--weight-semibold); border-bottom-color: var(--color-fg); }
 
 .list { grid-area: list; overflow: auto; padding: var(--space-3) 0; border-right: var(--border-width) solid var(--color-border); background: var(--cds-layer-01); }
 .list h2 { display: flex; justify-content: space-between; margin: var(--space-3) var(--space-4) var(--space-1); font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--cds-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
@@ -48,11 +42,3 @@ form.add { display: grid; justify-items: start; gap: var(--space-1); }
 .tabs [role="tab"] { padding: var(--space-2) var(--space-3); border: 0; border-bottom: 3px solid transparent; background: none; color: var(--color-fg); cursor: pointer; }
 .tabs [role="tab"][aria-selected="true"] { font-weight: var(--weight-semibold); border-bottom-color: var(--color-fg); }
 .panel { padding: var(--space-3) var(--space-4); }
-
-/* W6: Studies and Report host the step pages full width under a sub-navigation. */
-.ws:is([data-area="studies"], [data-area="report"]) { grid-template-areas: "bar bar bar" "host host host"; }
-.hosted { grid-area: host; min-width: 0; padding: var(--space-3) var(--space-5) var(--space-6); }
-.sub { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-bottom: var(--space-4); border-bottom: var(--border-width) solid var(--color-border); }
-.sub button { padding: var(--space-2) var(--space-3); border: 0; border-bottom: 3px solid transparent; background: none; color: var(--color-fg); cursor: pointer; }
-.sub button[aria-current="page"] { font-weight: var(--weight-semibold); border-bottom-color: var(--color-fg); }
-@media print { :global(main):has(> .ws) { padding: 0; } .ws { display: block; border: 0; } .hosted { padding: 0; } }

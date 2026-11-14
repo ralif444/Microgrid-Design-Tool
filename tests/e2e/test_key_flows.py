@@ -20,25 +20,29 @@ from test_report_runs import _m1_m2
 
 SCREENS = [
     "Project",
-    "1 Loads",
-    "2 Sizing advice",
-    "3 Network",
-    "4 Constraints",
-    "5 Power flow (M1)",
-    "6 Constraint check (M2)",
-    "8 Report",
+    "Loads",
+    "Sizing advice",
+    "Network",
+    "Constraints",
+    "Power flow (M1)",
+    "Constraint check (M2)",
+    "Report",
     "Run history",
 ]
 
 
 def _fake_banner(page: Page) -> None:
-    expect(page.get_by_role("status", name="Status").get_by_test_id("fake-warning")).to_be_visible()
+    expect(
+        page.get_by_role("status", name="Status").get_by_test_id("fake-warning")
+    ).to_be_visible()
 
 
-def test_f1_pipeline_infeasible_loop_to_report(server: Callable[[str], str], page: Page) -> None:
+def test_f1_pipeline_infeasible_loop_to_report(
+    server: Callable[[str], str], page: Page
+) -> None:
     enter_design(page, server("m2-infeasible"), gui_snapshot())
     for name in SCREENS:  # Doc 7 P2: engine kind on every screen
-        page.get_by_role("link", name=name, exact=True).click()
+        step(page, name)
         expect(page.get_by_test_id("engine-badge")).to_have_text("Engine: FAKE")
 
     step(page, "Sizing advice")
@@ -51,21 +55,30 @@ def test_f1_pipeline_infeasible_loop_to_report(server: Callable[[str], str], pag
 
     _run_m1(page)
     _fake_banner(page)
-    for caption in ("System", "Bus voltages", "Inverter outputs", "Line flows"):  # FR-23
+    for caption in (
+        "System",
+        "Bus voltages",
+        "Inverter outputs",
+        "Line flows",
+    ):  # FR-23
         expect(page.get_by_role("table", name=caption)).to_be_visible()
     expect(page.get_by_role("table", name="System totals")).to_contain_text("ε_X")
 
     step(page, "Constraint check (M2)")
     _margins(page)
     page.get_by_role("button", name="Run M2").click()
-    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "INFEASIBLE")
+    expect(page.get_by_role("status", name="Status")).to_have_attribute(
+        "data-status", "INFEASIBLE"
+    )
     _fake_banner(page)
 
     # INFEASIBLE → back to the design with the limiting element marked (K22)
     page.get_by_role("table", name="Limiting constraints").get_by_role(
         "link", name="INV1", exact=True
     ).click()
-    expect(page.get_by_role("tab", name="Inverters")).to_have_attribute("aria-selected", "true")
+    expect(page.get_by_role("tab", name="Inverters")).to_have_attribute(
+        "aria-selected", "true"
+    )
     row = page.locator("tr[aria-current='true']")
     expect(row).to_have_count(1)
     row.get_by_label("Rating (kVA) of INV1").fill("50")
@@ -81,7 +94,9 @@ def test_f1_pipeline_infeasible_loop_to_report(server: Callable[[str], str], pag
     expect(page.get_by_test_id("outdated")).to_have_count(0)
 
 
-def test_f1_inadmissible_stops_the_pipeline(server: Callable[[str], str], page: Page) -> None:
+def test_f1_inadmissible_stops_the_pipeline(
+    server: Callable[[str], str], page: Page
+) -> None:
     enter_design(page, server("m1-inadmissible"), gui_snapshot())
     step(page, "Power flow (M1)")
     page.get_by_role("button", name="Run M1").click()
@@ -90,7 +105,9 @@ def test_f1_inadmissible_stops_the_pipeline(server: Callable[[str], str], page: 
     _fake_banner(page)
     step(page, "Constraint check (M2)")
     expect(page.get_by_role("button", name="Run M2")).to_be_disabled()
-    expect(page.get_by_test_id("m1-blocked")).to_contain_text("Run power flow (M1) first")
+    expect(page.get_by_test_id("m1-blocked")).to_contain_text(
+        "Run power flow (M1) first"
+    )
 
 
 def _saved_project(page: Page, base: str) -> dict[str, Any]:
@@ -135,7 +152,7 @@ def test_f3_fr_49_import_verify_rerun_in_another_project(
     base = server("default")
     enter_design(page, base, gui_snapshot())
     _run_m1(page)
-    page.get_by_role("link", name="Run history").click()
+    step(page, "Run history")
     runs = page.get_by_role("table", name="Runs").locator("tbody tr")
     expect(runs.first).to_contain_text("FAKE")
     with page.expect_download() as dl:
@@ -148,18 +165,24 @@ def test_f3_fr_49_import_verify_rerun_in_another_project(
     page.get_by_role("link", name="Microgrid design tool").click()
     page.get_by_label("Project name").fill("Other")
     page.get_by_role("button", name="Create project").click()
-    page.get_by_role("link", name="Run history").click()
+    step(page, "Run history")
     expect(page.get_by_text("No runs recorded yet.")).to_be_visible()
 
     page.get_by_label("Import RunRecord").set_input_files(exported)
-    expect(page.get_by_test_id("verify-result")).to_contain_text("The RunRecord is intact.")
+    expect(page.get_by_test_id("verify-result")).to_contain_text(
+        "The RunRecord is intact."
+    )
     expect(page.get_by_test_id("version-comparison")).to_contain_text("stored FAKE")
     expect(runs).to_have_count(1)
-    expect(page.get_by_role("region", name="Run detail")).to_contain_text(rec["snapshot_hash"])
+    expect(page.get_by_role("region", name="Run detail")).to_contain_text(
+        rec["snapshot_hash"]
+    )
 
     runs.first.get_by_role("button", name="Re-run").click()
     outcome = page.get_by_test_id("rerun-outcome")
     expect(outcome).to_contain_text("Reproduced")
     expect(outcome).to_contain_text("The original record is unchanged.")
     expect(runs).to_have_count(2)
-    expect(page.get_by_test_id(f"run-{rec['record_id']}")).to_contain_text(rec["result_hash"][:12])
+    expect(page.get_by_test_id(f"run-{rec['record_id']}")).to_contain_text(
+        rec["result_hash"][:12]
+    )

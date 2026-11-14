@@ -17,7 +17,7 @@ import { NumberField } from "../components/NumberField";
 import uiStyles from "../components/ui.module.css";
 import { UNSAVED_CONFIRM } from "../components/ProjectFileMenu";
 import { useProject, useProjectDispatch } from "../store";
-import { HOME } from "../components/PipelineStepper";
+import { HOME } from "../components/AreaNav";
 
 // Doc 13 §4 reference designs (prototype values until WP 1.6.1).
 const EXAMPLES: [string, string][] = [

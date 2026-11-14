@@ -14,7 +14,7 @@ import re
 from collections.abc import Callable
 from pathlib import Path
 
-from flows import enter_design, gui_snapshot, step
+from flows import enter_design, go_route, gui_snapshot, step
 from playwright.sync_api import Page, expect
 from test_network_m1_m2 import _margins, _run_m1
 
@@ -91,8 +91,7 @@ def test_ux_round_200_percent_zoom_after_every_analysis(
             wide[name] = over
 
     for r in ROUTES:
-        page.locator(f'a[href="/{r}/"]').first.click()
-        page.wait_for_url(f"**/{r}/")
+        go_route(page, r)
         page.locator("h1").first.wait_for()
         measure(r)
         if r == "power-flow":

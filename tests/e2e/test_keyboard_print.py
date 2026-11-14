@@ -37,14 +37,16 @@ def _press(page: Page, target: Locator, key: str = "Enter") -> None:
     page.keyboard.press(key)
 
 
-def test_dod_7_key_flow_by_keyboard_only(server: Callable[[str], str], page: Page) -> None:
+def test_dod_7_key_flow_by_keyboard_only(
+    server: Callable[[str], str], page: Page
+) -> None:
     page.goto(server("default") + "/")
     _type(page, page.get_by_label("Project name"), "Keyboard project")
     _type(page, page.get_by_label("Nominal voltage, line-to-line (kV)"), "0.4")
     _press(page, page.get_by_role("button", name="Create project"))
-    expect(page.get_by_role("heading", name="Workspace")).to_be_visible()
+    expect(page.get_by_role("heading", name="Model", level=1)).to_be_visible()
 
-    _press(page, step_link(page, "Network"))
+    _press(page, step_link(page, "Network", go=lambda t: _press(page, t)))
     for bus in ("B1", "B2"):
         _type(page, page.get_by_label("Bus id", exact=True), bus)
         page.keyboard.press("Enter")  # submits the add-bus form
@@ -57,7 +59,11 @@ def test_dod_7_key_flow_by_keyboard_only(server: Callable[[str], str], page: Pag
     page.keyboard.press("ArrowDown")
     expect(page.get_by_label("From bus of LN1")).to_have_value("B1")
     expect(page.get_by_label("To bus of LN1")).to_have_value("B2")
-    for label, value in (("R (Ω/km)", "0.1"), ("X (Ω/km)", "0.1"), ("Length (km)", "1")):
+    for label, value in (
+        ("R (Ω/km)", "0.1"),
+        ("X (Ω/km)", "0.1"),
+        ("Length (km)", "1"),
+    ):
         _type(page, page.get_by_label(f"{label} of LN1", exact=True), value)
 
     _press(page, page.get_by_role("tab", name="Inverters"))
@@ -71,20 +77,22 @@ def test_dod_7_key_flow_by_keyboard_only(server: Callable[[str], str], page: Pag
     ):
         _type(page, page.get_by_label(f"{label} of INV1", exact=True), value)
 
-    _press(page, step_link(page, "Loads"))
+    _press(page, step_link(page, "Loads", go=lambda t: _press(page, t)))
     _press(page, page.get_by_role("button", name="+ Add load"))
     row = page.get_by_test_id("load-L1")
     _type(page, row.get_by_label("P of L1 (kW)"), "5")
     _type(page, row.get_by_label("Q of L1 (kvar)"), "0")
 
-    _press(page, step_link(page, "Power flow (M1)"))
+    _press(page, step_link(page, "Power flow (M1)", go=lambda t: _press(page, t)))
     expect(page.get_by_text("No problems found.")).to_be_visible()
     _press(page, page.get_by_role("button", name="Run M1"))
-    expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
+    expect(page.get_by_role("status", name="Status")).to_have_attribute(
+        "data-status", "FEASIBLE"
+    )
 
-    _press(page, step_link(page, "Report"))
+    _press(page, step_link(page, "Report", go=lambda t: _press(page, t)))
     expect(page.get_by_role("table", name="Traceability")).to_contain_text("M1")
-    _press(page, page.get_by_role("link", name="Run history"))
+    _press(page, step_link(page, "Run history", go=lambda t: _press(page, t)))
     expect(page.get_by_role("table", name="Runs").locator("tbody tr")).to_have_count(1)
 
 

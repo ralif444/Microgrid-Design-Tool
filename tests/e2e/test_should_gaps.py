@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from flows import enter_design, gui_snapshot, step
+from flows import area_tab, enter_design, gui_snapshot, step, step_link
 from playwright.sync_api import Page, Route, expect
 from test_network_m1_m2 import _margins, _run_m1
 
@@ -54,8 +54,9 @@ def test_fr_45_in_progress_state_keeps_navigation(server: Callable[[str], str], 
     step(page, "Power flow (M1)")
     page.get_by_role("button", name="Run M1").click()
     expect(page.get_by_role("button", name="Running...")).to_be_visible()
-    for name in ("3 Network", "6 Constraint check (M2)"):
-        expect(page.get_by_role("link", name=name)).to_be_enabled()
+    for name in ("Model", "Studies"):
+        expect(area_tab(page, name)).to_be_enabled()
+    expect(step_link(page, "Constraint check (M2)")).to_be_enabled()
     assert held, "M1 request was not held"
     held[0].continue_()
     expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")

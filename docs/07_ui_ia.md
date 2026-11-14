@@ -445,7 +445,7 @@ DOC 7 COMPLETE
 - C5.4 first phase per key flow stated in §4.
 
 ## Change log 2026-11-14 (UI redesign, ADR-016)
-- §8 UI language and §9 #1: EN/ID switch replaces English labels with Indonesian glossary. Screens are laid out as a diagram workspace (four areas grouping the eight steps); the stepper, engine badge and 17 routes stay (manuscript 4.3.7). Dark theme added next to light.
+- §8 UI language and §9 #1: EN/ID switch replaces English labels with Indonesian glossary. Screens are laid out as a diagram workspace (four areas grouping the eight steps); the stepper, engine badge and 17 routes stay (manuscript 4.3.7). Dark theme added next to light. **Amended 2026-11-14 (user, Doc 14 D15, ADR-016 option B):** the four area tabs replace the stepper (P1, §2 global elements, §3). Each area lists its screens under the header with the stepper's done / stale / blocked states (Model: Diagram, Project, Loads, Sizing advice, Network, Constraints; Check: Diagram, Power flow, Constraint check; Studies: M3a–M4b, cable sizing, battery; Report: Report, Run history). The stale-M1 rule of §3.1 is unchanged; "the stepper shows steps 6 and 7 as blocked" now reads: Constraint check and the Studies row show Blocked. Opening or creating a Project lands on the Model diagram.
 
 ## Change log 2026-11-13 (battery round BESS-6, D-113)
 - §2 S-10: profile hour axis with fixed range, worst hour per key metric, first hour not FEASIBLE (Doc 12 P11, FR-78, FR-79).

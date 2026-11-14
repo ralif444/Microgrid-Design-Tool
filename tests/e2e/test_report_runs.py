@@ -34,7 +34,9 @@ def test_fr_58_fr_59_report_shows_verdict_constraints_hash_table_chart(
     _m1_m2(page)
     step(page, "Report")
     expect(page.get_by_test_id("verdict")).to_contain_text("INFEASIBLE")
-    expect(page.get_by_role("table", name="Limiting constraints")).to_contain_text("Violated by")
+    expect(page.get_by_role("table", name="Limiting constraints")).to_contain_text(
+        "Violated by"
+    )
     expect(page.get_by_role("img", name="Bus voltage (p.u.) bar chart")).to_be_visible()
     expect(page.get_by_role("table", name="Bus voltages")).to_be_visible()
     trace = page.get_by_role("table", name="Traceability")
@@ -53,7 +55,7 @@ def test_fr_49_fr_50_fr_53_runs_export_import_rerun_and_project_file(
     base = server("default")
     enter_design(page, base, gui_snapshot())
     _run_m1(page)
-    page.get_by_role("link", name="Run history").click()
+    step(page, "Run history")
     rows = page.get_by_role("table", name="Runs").locator("tbody tr")
     expect(rows).to_have_count(1)
 
@@ -66,7 +68,9 @@ def test_fr_49_fr_50_fr_53_runs_export_import_rerun_and_project_file(
     rec["result"]["payload"]["system_frequency_hz"] = 1.0
     bad.write_text(json.dumps(rec), encoding="utf-8")
     page.get_by_label("Import RunRecord").set_input_files(bad)
-    expect(page.get_by_test_id("verify-result")).to_contain_text("changed after it was created")
+    expect(page.get_by_test_id("verify-result")).to_contain_text(
+        "changed after it was created"
+    )
     expect(rows).to_have_count(1)
 
     rows.first.get_by_role("button", name="Re-run").click()
@@ -88,7 +92,7 @@ def test_fr_49_fr_50_fr_53_runs_export_import_rerun_and_project_file(
     page.once("dialog", lambda d: d.accept())  # K17: unsaved "Other" is discarded
     page.get_by_label("Open project file").set_input_files(saved)
     expect(page.get_by_test_id("project-name")).to_have_text("E2E project")
-    page.get_by_role("link", name="Run history").click()
+    step(page, "Run history")
     expect(rows).to_have_count(2)
 
 
@@ -99,10 +103,13 @@ def test_fr_83_compare_two_runs(server: Callable[[str], str], page: Page) -> Non
     page.get_by_role("tab", name="Lines").click()
     page.get_by_label("R (Ω/km) of LN1").fill("0.9")
     _run_m1(page)
-    page.get_by_role("link", name="Run history").click()
+    step(page, "Run history")
     rows = page.get_by_role("table", name="Runs").locator("tbody tr")
     expect(rows).to_have_count(2)
-    ids = [str(rows.nth(k).get_attribute("data-testid")).removeprefix("run-") for k in (0, 1)]
+    ids = [
+        str(rows.nth(k).get_attribute("data-testid")).removeprefix("run-")
+        for k in (0, 1)
+    ]
     page.get_by_label("First run").select_option(ids[0])
     page.get_by_label("Second run").select_option(ids[1])
     diff = page.get_by_role("table", name="Input differences")
@@ -116,7 +123,9 @@ def test_fr_85_example_opens_as_copy(server: Callable[[str], str], page: Page) -
     base = server("default")
     page.goto(base + "/")
     page.get_by_role("button", name="Open example D2:").click()
-    expect(page.get_by_test_id("project-name")).to_have_text(re.compile(r"^Example D2\s*\*unsaved"))
+    expect(page.get_by_test_id("project-name")).to_have_text(
+        re.compile(r"^Example D2\s*\*unsaved")
+    )
     step(page, "Network")
     page.get_by_role("tab", name="Inverters").click()
     expect(page.get_by_label("Rating (kVA) of INV2")).to_have_value("45")

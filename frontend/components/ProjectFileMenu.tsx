@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { getMeta, importProject } from "../api-client";
 import type { FileCheckResult, MetaInfo, ProjectFile } from "../api-types";
 import { toProjectFile, useProject, useProjectDispatch } from "../store";
-import { HOME } from "./PipelineStepper";
+import { HOME } from "./AreaNav";
 import { clearDraft, writeDraft } from "../store/draft";
 import { downloadJson, NOT_JSON, readJson } from "./files";
 import styles from "./ui.module.css";
