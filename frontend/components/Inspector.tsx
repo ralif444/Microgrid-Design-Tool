@@ -5,7 +5,7 @@
 // check, and "Edit in table" through `?focus=`. Focus moves in on open and back to the trigger on
 // close; Escape closes. It only displays stored values (guideline §1 rule 1).
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import styles from "./Inspector.module.css";
 import type { SldRow, SldSection } from "./sld/buildSldModel";
 import { useSldModel } from "./sld/useSldModel";
@@ -41,23 +41,38 @@ const SECTIONS: Record<SldSection["title"], { head?: string; label: string; none
   Issues: { head: "Issues", label: "Validation issues" },
 };
 
-export function Inspector({ target, onClose }: { target: ElementRef; onClose: () => void }) {
+export function Inspector({
+  target,
+  onClose,
+  docked = false,
+  edit,
+  focusKey = `${target.kind}:${target.id}`,
+}: {
+  target: ElementRef;
+  onClose: () => void;
+  /** W4 workspace: a column of the page instead of a panel over it. */
+  docked?: boolean;
+  /** W4 Model area: an edit form in place of the read-only inputs and the "Edit in table" link. */
+  edit?: ReactNode;
+  /** Focus moves in when this changes; the workspace keeps it when a Bus is renamed. */
+  focusKey?: string | number;
+}) {
   const { full, fake } = useSldModel();
   const head = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     const trigger = document.activeElement as HTMLElement | null;
     head.current?.focus();
     return () => trigger?.focus();
-  }, [target.kind, target.id]);
+  }, [focusKey]);
 
   const [word, list] = KIND[target.kind];
   const el = full[list].find((e) => e.id === target.id);
-  const edit = target.kind === "load" ? "/loads/" : `/network/?focus=${encodeURIComponent(target.id)}`;
+  const editHref = target.kind === "load" ? "/loads/" : `/network/?focus=${encodeURIComponent(target.id)}`;
 
   return (
     <aside
       aria-label={`Inspector: ${word} ${target.id}`}
-      className={`no-print ${styles.panel}`}
+      className={`no-print ${docked ? styles.docked : styles.panel}`}
       onKeyDown={(e) => {
         if (e.key === "Escape") onClose();
       }}
@@ -70,10 +85,11 @@ export function Inspector({ target, onClose }: { target: ElementRef; onClose: ()
           Close inspector
         </button>
       </div>
+      {edit}
       {!el ? (
-        <p>Not in the current design.</p>
+        !edit && <p>Not in the current design.</p>
       ) : (
-        el.sections.map((s) => {
+        el.sections.filter((s) => !(edit && s.title === "Design data") && !(edit && s.title === "Issues")).map((s) => {
           const t = SECTIONS[s.title];
           const empty = s.empty ? (s.empty.startsWith("No current") ? t.none : `${s.empty}.`) : !s.rows.length ? t.nothing : null;
           return (
@@ -89,9 +105,11 @@ export function Inspector({ target, onClose }: { target: ElementRef; onClose: ()
           <strong>FAKE engine:</strong> placeholder values, not engine results.
         </p>
       )}
-      <p>
-        <Link href={edit}>{target.kind === "load" ? "Edit in Loads" : "Edit in table"}</Link>
-      </p>
+      {!edit && (
+        <p>
+          <Link href={editHref}>{target.kind === "load" ? "Edit in Loads" : "Edit in table"}</Link>
+        </p>
+      )}
     </aside>
   );
 }

@@ -24,11 +24,24 @@ function inline(src: Element, dst: Element) {
   const cs = getComputedStyle(src);
   dst.setAttribute("style", STYLE.map((p) => `${p}:${cs.getPropertyValue(p)}`).join(";"));
   for (const a of ["class", "tabindex", "role", "aria-pressed", "aria-describedby"]) dst.removeAttribute(a);
+  for (const p of STYLE) if (dst.getAttribute(p)?.includes("var(")) dst.removeAttribute(p); // token attribute, value now in style
   for (let k = 0; k < src.children.length; k++) inline(src.children[k], dst.children[k]);
 }
 
 /** Serialises `svg` as drawn, at its viewBox size, with the caption lines appended below. */
 export function svgWithCaption(svg: SVGSVGElement, lines: string[]): string {
+  // the file always carries light-theme colours (it goes on white paper); restored before any paint
+  const root = document.documentElement;
+  const theme = root.dataset.theme;
+  delete root.dataset.theme;
+  try {
+    return serialise(svg, lines);
+  } finally {
+    if (theme) root.dataset.theme = theme;
+  }
+}
+
+function serialise(svg: SVGSVGElement, lines: string[]): string {
   const copy = svg.cloneNode(true) as SVGSVGElement;
   inline(svg, copy);
   const [x, y, w, h] = (svg.getAttribute("viewBox") ?? `0 0 ${svg.width.baseVal.value} ${svg.height.baseVal.value}`).split(/\s+/).map(Number);

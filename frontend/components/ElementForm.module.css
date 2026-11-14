@@ -1,0 +1,13 @@
+/* W4 inspector edit forms: one field per row, labels in a fixed column like NumberField (--field-label). */
+.form { display: grid; gap: var(--space-3); margin: var(--space-3) 0; --field-label: 9rem; }
+.field, .derived { display: grid; grid-template-columns: var(--field-label) auto; align-items: center; gap: var(--space-1) var(--space-3); }
+.field select, .field input { justify-self: start; }
+.error { grid-column: 2; color: var(--role-error-fg); font-size: var(--text-xs); }
+.derived { font-size: var(--text-sm); }
+.derived > :first-child { color: var(--cds-text-secondary); }
+.derived > :last-child { font-variant-numeric: var(--numeric); }
+.mode { display: flex; gap: var(--space-4); padding-left: calc(var(--field-label) + var(--space-3)); }
+.general { margin: 0; padding-left: var(--space-5); color: var(--role-error-fg); font-size: var(--text-sm); }
+.hint { margin: 0; color: var(--cds-text-secondary); font-size: var(--text-sm); }
+.form > p { margin: 0; }
+.delete { margin: var(--space-5) 0 0; padding-top: var(--space-4); border-top: var(--border-width) solid var(--color-border); }

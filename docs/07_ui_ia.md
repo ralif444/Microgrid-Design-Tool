@@ -410,7 +410,7 @@ Notation: `[ ]` button/field, `( )` option, `<..>` placeholder. Header and stepp
 
 | Topic | Decision |
 |---|---|
-| UI language | DECIDED (user 2026-10-17): English UI labels in v1; Indonesian glossary on S-17 (About) and Indonesian tooltips on domain terms. |
+| UI language | DECIDED (user 2026-11-14, ADR-016): English / Indonesian switch; labels and number format follow the language; Indonesian glossary kept. Supersedes the 2026-10-17 decision (English labels, Indonesian glossary on S-17 and tooltips). |
 | Keyboard | Every action reachable by keyboard; logical tab order; table cells editable with Enter/Escape; Run buttons focusable with visible focus ring; dialogs trap focus and return it on close. |
 | Colour is not the sole carrier | Every Status uses colour role + icon + word; plots use marker shapes and a table alternative (§6.5); near-limit and violated rows carry text badges. |
 | Other | Readable contrast and 200 percent zoom [ASSUMPTION], no formal WCAG claim [NEEDS SOURCE]; Status banners in a live region; plots have a data table; grayscale print still readable; no external fonts or CDN assets (NFR-03). |
@@ -419,7 +419,7 @@ Notation: `[ ]` button/field, `( )` option, `<..>` placeholder. Header and stepp
 
 | # | Item | Tag | → doc |
 |---|---|---|---|
-| 1 | UI language: English labels in v1, Indonesian glossary on S-17 and Indonesian tooltips on domain terms. | DECIDED (user 2026-10-17) | 9, 11 |
+| 1 | UI language: English / Indonesian switch (ADR-016); supersedes English labels with Indonesian glossary (2026-10-17). | DECIDED (user 2026-11-14) | 9, 11 |
 | 2 | Run buttons for dependent analyses are disabled when M1 is missing or stale; `DEPENDENCY_NOT_MET` arises only at the API. | DECIDED (user 2026-10-17) | 8 |
 | 3 | Staleness is a conservative UI flag set on any design edit; the service remains the final check. | DECIDED (user 2026-10-17) | 8 |
 | 4 | Network diagram: read-only first, selection syncs with the table; drag-to-edit and library choice not decided. | [ASSUMPTION] | 5, 8 |
@@ -443,6 +443,9 @@ DOC 7 COMPLETE
 ## Change log 2026-10-21 (user-approved change proposals from the proposal design checks)
 - C5.1 F3 outcome edge: Status equal and result_hash equal.
 - C5.4 first phase per key flow stated in §4.
+
+## Change log 2026-11-14 (UI redesign, ADR-016)
+- §8 UI language and §9 #1: EN/ID switch replaces English labels with Indonesian glossary. Screens are laid out as a diagram workspace (four areas grouping the eight steps); the stepper, engine badge and 17 routes stay (manuscript 4.3.7). Dark theme added next to light. **Amended 2026-11-14 (user, Doc 14 D15, ADR-016 option B):** the four area tabs replace the stepper (P1, §2 global elements, §3). Each area lists its screens under the header with the stepper's done / stale / blocked states (Model: Diagram, Project, Loads, Sizing advice, Network, Constraints; Check: Diagram, Power flow, Constraint check; Studies: M3a–M4b, cable sizing, battery; Report: Report, Run history). The stale-M1 rule of §3.1 is unchanged; "the stepper shows steps 6 and 7 as blocked" now reads: Constraint check and the Studies row show Blocked. Opening or creating a Project lands on the Model diagram.
 
 ## Change log 2026-11-13 (battery round BESS-6, D-113)
 - §2 S-10: profile hour axis with fixed range, worst hour per key metric, first hour not FEASIBLE (Doc 12 P11, FR-78, FR-79).

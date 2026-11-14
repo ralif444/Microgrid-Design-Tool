@@ -21,7 +21,9 @@ export function decorations(el: SldElement, isolated = false): Deco[] {
   const d: Deco[] = [];
   if (el.mark === "violated") d.push({ icon: "misuse", word: "Violated", tone: "negative" });
   if (el.mark === "limiting") d.push({ icon: "misuse", word: "Limiting", tone: "negative" });
-  if (el.mark === "near") d.push({ icon: "warn", word: "Near limit", tone: "neutral" });
+  if (el.mark === "near") d.push({ icon: "warn", word: "Near limit", tone: "caution" });
+  // W3: a bus shows its pass state beside the voltage; other elements stay quiet when they pass
+  if (el.mark === "pass" && el.kind === "bus") d.push({ icon: "check", word: "Pass", tone: "neutral" });
   if (el.issues.length) d.push({ icon: "alert", word: el.issues.length === 1 ? "Issue" : `${el.issues.length} issues`, tone: "error" });
   if (isolated) d.push({ icon: "warn", word: "not connected", tone: "caution" });
   return d;
@@ -71,6 +73,22 @@ function Stack({ x, y, lines, anchor = "start", first = styles.label }: { x: num
   );
 }
 
+/** W3: smallest element margin, a filled accent bar 4 high under the element (mockup phase 6). */
+function Tightest({ x, y, w }: { x: number; y: number; w: number }) {
+  return <rect x={x} y={y} width={w} height={4} className={styles.tight} data-testid="diagram-tightest" />;
+}
+
+/** W3: inverter loading, 50 x 5, fill = loading ratio clamped to 0–1; the number is in the label above. */
+function LoadingBar({ x, y, ratio, mark }: { x: number; y: number; ratio: number; mark: SldElement["mark"] }) {
+  const tone = mark === "violated" || mark === "limiting" ? styles.loadBad : mark === "near" ? styles.loadNear : styles.loadOk;
+  return (
+    <g aria-hidden="true">
+      <rect x={x} y={y} width={50} height={5} className={styles.track} />
+      <rect x={x} y={y} width={50 * Math.min(1, Math.max(0, ratio))} height={5} className={tone} />
+    </g>
+  );
+}
+
 const cls = (el: SldElement, emph: Emph, extra?: string) =>
   [styles.el, el.mark === "violated" || el.mark === "limiting" ? styles.marked : "", emph ? styles[emph] : "", extra ?? ""].filter(Boolean).join(" ");
 
@@ -96,6 +114,7 @@ export function BusSymbol({ el, box, emph, bind }: Common & { box: BusBox }) {
         />
       )}
       <rect x={box.x} y={box.barY - BAR_H / 2} width={box.w} height={BAR_H} className={styles.bar} />
+      {el.tightest && <Tightest x={box.x} y={box.barY + BAR_H / 2 + 3} w={box.w} />}
       <DecoLine x={box.x} y={top - LH} decos={decos} />
       <Stack x={box.x} y={top} lines={lines} first={styles.id} />
     </g>
@@ -126,6 +145,8 @@ export function InverterSymbol({ el, at, emph, bind }: Common & { at: Attach }) 
       <text x={x + s + 4} y={y + s / 2 + 4} className={styles.tag}>
         GFM
       </text>
+      {el.loading !== undefined && <LoadingBar x={x + s + 4} y={y + s / 2 + 10} ratio={el.loading} mark={el.mark} />}
+      {el.tightest && <Tightest x={x} y={y + s + 3} w={s} />}
       <DecoLine x={at.x} y={top - LH} decos={decos} anchor="middle" />
       <Stack x={at.x} y={top} lines={lines} anchor="middle" first={styles.id} />
     </g>
@@ -157,6 +178,7 @@ export function LineSymbol({ el, route, emph, bind }: Common & { route: LineRout
       <polyline points={pts} className={styles.conductor} />
       <Stack x={route.mid.x} y={route.mid.y + 4} lines={el.tags} anchor="middle" />
       <DecoLine x={route.mid.x} y={route.mid.y + 4 + el.tags.length * LH} decos={decorations(el)} anchor="middle" />
+      {el.tightest && <Tightest x={route.mid.x - 20} y={route.mid.y + 4 + (el.tags.length + (decorations(el).length ? 1 : 0)) * LH - 8} w={40} />}
     </g>
   );
 }
@@ -195,7 +217,7 @@ export function SystemBlock({ el, x, y, w, h, emph, bind }: Common & { x: number
 }
 
 /** HTML legend strip under the diagram (guideline §3): each symbol with its name. */
-export function SldLegend({ breakers = false }: { breakers?: boolean }) {
+export function SldLegend({ breakers = false, tightest = false }: { breakers?: boolean; tightest?: boolean }) {
   const item = (name: string, svg: ReactNode) => (
     <li key={name}>
       <svg width={44} height={36} viewBox="0 0 44 36" aria-hidden="true" focusable="false">
@@ -222,6 +244,7 @@ export function SldLegend({ breakers = false }: { breakers?: boolean }) {
         </>,
       )}
       {item("Line (series R–X)", <line x1={2} y1={18} x2={42} y2={18} className={styles.conductor} />)}
+      {tightest && item("Smallest element margin", <rect x={2} y={16} width={40} height={4} className={styles.tight} />)}
       {breakers &&
         item(
           "Circuit breaker (sizing result)",

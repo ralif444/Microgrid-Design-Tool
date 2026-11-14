@@ -2,15 +2,20 @@
 // Save / Open of the Project file (FR-54, FR-55, FR-57; Doc 9 D-47 K14, K17). A refused file
 // leaves the open Project as it was (NFR-16).
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getMeta, importProject } from "../api-client";
-import type { FileCheckResult, ProjectFile } from "../api-types";
+import type { FileCheckResult, MetaInfo, ProjectFile } from "../api-types";
 import { toProjectFile, useProject, useProjectDispatch } from "../store";
+import { HOME } from "./AreaNav";
+import { clearDraft, DRAFT_REPLACE, hasDraft, writeDraft } from "../store/draft";
 import { downloadJson, NOT_JSON, readJson } from "./files";
 import styles from "./ui.module.css";
 
 export const UNSAVED_CONFIRM = 
   "The open Project has unsaved changes. OK to discard them; Cancel to keep them (then Save first)."; // D-48 K23
+
+export const AUTOSAVE_OFF = "Autosave is off: this browser refused local storage. Use Save to keep your work.";
+const AUTOSAVE_DELAY_MS = 1000;
 
 export function FileCheckText({ fc }: { fc: FileCheckResult }) {
   return (
@@ -35,6 +40,28 @@ export function ProjectFileMenu() {
   const router = useRouter();
   const [note, setNote] = useState<FileCheckResult | string | null>(null);
 
+  // Autosave (plan F3): crash recovery only; Save and the unsaved flag keep their meaning. A saved or
+  // freshly loaded Project clears the draft; example mode is never autosaved.
+  const versions = useRef<MetaInfo | null>(null);
+  const warned = useRef(false);
+  useEffect(() => {
+    if (!state.project) return; // start-up: keep the draft for the restore offer on S-01
+    // the draft is cleared by Save and by Discard on S-01 only, so opening a file never drops it unasked
+    if (state.example || !state.unsaved) return;
+    const t = setTimeout(async () => {
+      if (!versions.current) {
+        const m = await getMeta();
+        if (!m.ok) return;
+        versions.current = m.data;
+      }
+      if (!writeDraft(state, versions.current) && !warned.current) {
+        warned.current = true;
+        setNote(AUTOSAVE_OFF);
+      }
+    }, AUTOSAVE_DELAY_MS);
+    return () => clearTimeout(t);
+  }, [state]);
+
   useEffect(() => {
     if (!state.unsaved) return;
     const guard = (e: BeforeUnloadEvent) => e.preventDefault();
@@ -49,12 +76,15 @@ export function ProjectFileMenu() {
     const file = toProjectFile(state, meta.data, now);
     downloadJson(`${file.project.name}.mgproj.json`, file);
     dispatch({ type: "projectSaved", modified_at: now });
+    clearDraft();
     setNote(null);
   }
 
   async function open(file: File | undefined) {
     if (!file) return;
     if (state.unsaved && !window.confirm(UNSAVED_CONFIRM)) return;
+    // with no Project open the draft is the one S-01 offers; an edit of the opened file would replace it
+    if (!state.project && hasDraft() && !window.confirm(DRAFT_REPLACE)) return;
     const read = await readJson(file);
     if (!read) return setNote(NOT_JSON);
     const r = await importProject(read.doc);
@@ -62,7 +92,7 @@ export function ProjectFileMenu() {
     setNote(r.data.file_check);
     if (!r.data.file_check.accepted || !r.data.project) return;
     dispatch({ type: "projectLoaded", file: r.data.project as unknown as ProjectFile });
-    router.push("/project/");
+    router.push(HOME);
   }
 
   return (

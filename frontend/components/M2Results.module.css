@@ -1,6 +1,15 @@
-.violated { display: inline-flex; align-items: center; gap: var(--space-1); color: var(--role-negative-fg); font-weight: var(--weight-semibold); }
-.violated > svg { fill: var(--role-negative-icon); }
-.near { margin: 0 0 0 var(--space-2); vertical-align: middle; }
+.unit { display: inline-block; min-width: 2.75em; padding-left: var(--space-1); text-align: left; color: var(--color-fg-muted); }
+/* normalised-margin bar: grey for pass, role colour when abnormal; the number beside it carries the value */
+.nm { display: inline-flex; align-items: center; gap: var(--space-2); }
+.track { display: inline-block; width: 4rem; height: 0.375rem; background: var(--color-border); }
+.fill { display: block; height: 100%; background: var(--color-fg-muted); }
+.fill[data-s="near"] { background: var(--role-caution-edge); }
+.status { display: inline-flex; align-items: center; gap: var(--space-1); white-space: nowrap; }
+.status > svg { fill: var(--color-fg-muted); }
+.status[data-s="near"] { color: var(--role-caution-fg); }
+.status[data-s="near"] > svg { fill: var(--role-caution-icon); }
+.status[data-s="violated"] { color: var(--role-negative-fg); font-weight: var(--weight-semibold); }
+.status[data-s="violated"] > svg { fill: var(--role-negative-icon); }
 .loadability {
   display: grid; grid-template-columns: max-content max-content; width: max-content; max-width: 100%; gap: var(--space-1) var(--space-6);
   margin: var(--space-2) 0 var(--space-6); font-size: var(--text-sm);
@@ -13,3 +22,4 @@
 /* the shared problems banner, with the attention edge and icon: limits missing, not a design error */
 .notEvaluated:global(.problems) { border-left-color: var(--role-attention-edge); }
 .notEvaluated:global(.problems) > svg { fill: var(--role-attention-icon); }
+@media print { .track { display: none; } .unit { min-width: 0; } } /* A4 width (FR-60); the numbers stay */

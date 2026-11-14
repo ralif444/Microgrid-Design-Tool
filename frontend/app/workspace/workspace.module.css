@@ -1,0 +1,61 @@
+/* W4 workspace (mockup workspace-mockup.html): bar over list | canvas | inspector, results drawer below.
+   Desktop only (user decision); the page uses the full width instead of the prose column. */
+:global(main):has(> .ws) { max-width: none; padding: var(--space-4) var(--space-5) var(--space-8); }
+
+.ws {
+  display: grid; grid-template-columns: 15rem minmax(0, 1fr) 24rem; grid-template-areas: "bar bar bar" "list canvas insp" "dock dock dock";
+  border: var(--border-width) solid var(--color-border); background: var(--cds-background);
+}
+.bar { grid-area: bar; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-4); border-bottom: var(--border-width) solid var(--color-border); }
+.bar h1 { margin: 0; font-size: var(--text-lg); }
+.spacer { flex: 1; }
+
+.list { grid-area: list; overflow: auto; padding: var(--space-3) 0; border-right: var(--border-width) solid var(--color-border); background: var(--cds-layer-01); }
+.list h2 { display: flex; justify-content: space-between; margin: var(--space-3) var(--space-4) var(--space-1); font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--cds-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+.list ul { list-style: none; margin: 0; padding: 0; }
+.list li > button {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); width: 100%; min-height: 2rem; padding: var(--space-1) var(--space-4);
+  border: 0; border-left: 3px solid transparent; background: none; color: var(--color-fg); text-align: left; cursor: pointer;
+}
+.list li > button:hover { background: var(--cds-layer-hover-01); }
+.list li > button[aria-pressed="true"] { background: var(--cds-layer-selected-01); border-left-color: var(--color-fg); font-weight: var(--weight-semibold); }
+.flag { display: inline-flex; align-items: center; gap: 2px; font-size: var(--text-xs); font-weight: normal; color: var(--role-caution-fg); }
+.flag > svg { fill: var(--role-caution-icon); }
+.flag[data-mark="violated"] { color: var(--role-negative-fg); }
+.flag[data-mark="violated"] > svg { fill: var(--role-negative-icon); }
+.add { margin: var(--space-1) var(--space-4) var(--space-2); font-size: var(--text-sm); }
+form.add { display: grid; justify-items: start; gap: var(--space-1); }
+/* "Add bus" is a list action like "+ Add inverter": tertiary, not the filled submit look of globals.css */
+.list form.add button[type="submit"]:not(:disabled):not(:hover) { background: transparent; border-color: var(--cds-button-primary); color: var(--cds-button-primary); }
+
+.canvas { grid-area: canvas; min-width: 0; padding: var(--space-3) var(--space-4); }
+.canvas h2 { font-size: var(--text-md); }
+.settings { margin: 0 0 var(--space-3); }
+.settings summary { cursor: pointer; font-size: var(--text-sm); }
+.settings form { display: grid; gap: var(--space-2); margin-top: var(--space-2); --field-label: 18rem; }
+.issues ul { margin: 0; }
+
+.insp { grid-area: insp; min-height: 0; border-left: var(--border-width) solid var(--color-border); background: var(--cds-layer-01); }
+.insp > aside { height: 100%; border-left: 0; box-sizing: border-box; }
+.empty { margin: 0; padding: var(--space-4); color: var(--cds-text-secondary); }
+
+.dock { grid-area: dock; border-top: var(--border-width) solid var(--color-border); background: var(--cds-layer-01); }
+.tabs { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-4); border-bottom: var(--border-width) solid var(--color-border); }
+.tabs [role="tab"] { padding: var(--space-2) var(--space-3); border: 0; border-bottom: 3px solid transparent; background: none; color: var(--color-fg); cursor: pointer; }
+.tabs [role="tab"][aria-selected="true"] { font-weight: var(--weight-semibold); border-bottom-color: var(--color-fg); }
+.panel { padding: var(--space-3) var(--space-4); }
+
+/* Desktop only, but 200 % zoom (Doc 7 §8) narrows the viewport: the inspector moves under the canvas,
+   then everything stacks, so the page never scrolls sideways. */
+/* a 1280 px laptop at 125 % scaling is 1024 px wide: narrower side panels keep the inspector beside the diagram */
+@media (max-width: 1100px) { .ws { grid-template-columns: 12rem minmax(0, 1fr) 19rem; } }
+@media (max-width: 900px) {
+  .ws { grid-template-columns: 12rem minmax(0, 1fr); grid-template-areas: "bar bar" "list canvas" "insp insp" "dock dock"; }
+  .insp { border-left: 0; border-top: var(--border-width) solid var(--color-border); }
+  .bar { flex-wrap: wrap; }
+}
+@media (max-width: 700px) {
+  :global(main):has(> .ws) { padding: var(--space-3) var(--space-3) var(--space-6); }
+  .ws { grid-template-columns: minmax(0, 1fr); grid-template-areas: "bar" "list" "canvas" "insp" "dock"; }
+  .list { border-right: 0; border-bottom: var(--border-width) solid var(--color-border); }
+}

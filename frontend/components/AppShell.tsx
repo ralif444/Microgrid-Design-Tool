@@ -1,17 +1,20 @@
 "use client";
-// App shell (Doc 7 §2 global elements; visual guidelines §5): Carbon Header in navy with the wordmark,
-// Project name with unsaved indicator, Run history, Catalogue, About (S-17), Save / Open and the engine kind badge
-// (P2); the 4 px signature gradient bar; the pipeline stepper strip (P1). In example mode (Doc 12 X9,
+// App shell (Doc 7 §2 global elements; ADR-016 option B): Carbon Header on the page surface with the
+// wordmark, Project name with unsaved indicator, the area tabs, Catalogue, About (S-17), Save / Open, the
+// theme switch and the engine kind badge (P2); below it the screens of the current area, which replace
+// the pipeline stepper (Doc 14 D15). In example mode (Doc 12 X9,
 // FR-99) a blue Tag "Example mode" (info, not a status colour) and "Leave example mode" sit by the badge.
 import { Header, HeaderName, Tag } from "@carbon/react";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { useProject, useProjectDispatch } from "../store";
 import styles from "./AppShell.module.css";
 import { EngineBadge } from "./EngineBadge";
-import { PipelineStepper } from "./PipelineStepper";
+import { AreaScreens, AreaTabs } from "./AreaNav";
 import { ProjectFileMenu } from "./ProjectFileMenu";
 import { Toggletip } from "./Term";
+import { LanguageSwitch } from "./Language";
+import { ThemeSwitch } from "./ThemeSwitch";
 
 // The visible mark is a dot; the text stays for assistive tech and tests.
 export function UnsavedFlag() {
@@ -38,10 +41,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             {unsaved && <UnsavedFlag />}
           </span>
         )}
+        {/* useSearchParams in a static export needs a Suspense boundary */}
+        {project && (
+          <Suspense fallback={null}>
+            <AreaTabs />
+          </Suspense>
+        )}
         <span className={styles.spacer} />
-        <Link href="/runs/" className={styles.util}>
-          Run history
-        </Link>
         <Link href="/catalogue/" className={styles.util}>
           Catalogue
         </Link>
@@ -49,6 +55,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           About
         </Link>
         <ProjectFileMenu />
+        <ThemeSwitch className={styles.seg} />
+        <LanguageSwitch className={styles.seg} />
         {example && (
           <span className={styles.example} data-testid="example-mode">
             <Tag type="blue" size="md">
@@ -65,12 +73,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
         <EngineBadge />
       </Header>
-      <div className={`no-print ${styles.below}`}>
-        <div className={styles.signature} aria-hidden="true" />
-        <div className={styles.strip}>
-          <PipelineStepper />
+      {project && (
+        <div className={`no-print ${styles.below}`}>
+          <div className={styles.strip}>
+            <Suspense fallback={null}>
+              <AreaScreens />
+            </Suspense>
+          </div>
         </div>
-      </div>
+      )}
       <main>{children}</main>
     </>
   );

@@ -96,6 +96,8 @@ export type ProjectAction =
   | { type: "bankRemoved"; inverterId: string }
   // Project file (D-47): load replaces the open Project; save clears the unsaved flag.
   | { type: "projectLoaded"; file: ProjectFile }
+  // Autosave restore (plan F3): like a load, but the work is still unsaved.
+  | { type: "draftRestored"; file: ProjectFile }
   // Example Project (Doc 12 FR-85): a new unsaved copy with its own id; the example stays as is.
   | { type: "exampleOpened"; file: ProjectFile; id: string; created_at: string }
   | { type: "projectSaved"; modified_at: string }
@@ -238,6 +240,8 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
       return { ...state, scenarios: state.scenarios.filter((x) => x.id !== action.id), unsaved: true };
     case "projectLoaded":
       return { ...fromProjectFile(action.file), unsaved: false, example: null };
+    case "draftRestored":
+      return { ...fromProjectFile(action.file), unsaved: true, example: null };
     case "exampleOpened": {
       const loaded = fromProjectFile(action.file);
       const { id, created_at } = action;
