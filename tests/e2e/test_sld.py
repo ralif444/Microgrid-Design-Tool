@@ -11,14 +11,14 @@ import xml.etree.ElementTree as ET
 from collections.abc import Callable
 from pathlib import Path
 
-from flows import enter_design, gui_snapshot
+from flows import enter_design, gui_snapshot, step
 from playwright.sync_api import Page, expect
 from test_network_m1_m2 import _margins, _run_m1
 
 
 def _open_diagram(page: Page, base: str) -> None:
     enter_design(page, base, gui_snapshot())
-    page.get_by_role("link", name="3 Network").click()
+    step(page, "Network")
     page.get_by_text("Diagram (read-only)").click()
 
 
@@ -67,7 +67,7 @@ def test_fr_98_view_as_table_has_one_row_per_element(
 
 def test_fr_96_m1_overlay_hides_after_an_edit(server: Callable[[str], str], page: Page) -> None:
     enter_design(page, server("default"), gui_snapshot())
-    page.get_by_role("link", name="5 Power flow (M1)").click()
+    step(page, "Power flow (M1)")
     note = page.get_by_test_id("sld-overlay-note")
     expect(note).to_contain_text("No power-flow result yet")
     _run_m1(page)
@@ -81,10 +81,10 @@ def test_fr_96_m1_overlay_hides_after_an_edit(server: Callable[[str], str], page
     show.click()
     expect(bus).to_contain_text("p.u.")
 
-    page.get_by_role("link", name="3 Network").click()
+    step(page, "Network")
     page.get_by_role("tab", name="Inverters").click()
     page.get_by_label("Rating (kVA) of INV1").fill("50")
-    page.get_by_role("link", name="5 Power flow (M1)").click()
+    step(page, "Power flow (M1)")
     expect(note).to_contain_text("Outdated: design changed after this run. Re-run M1.")
     expect(bus).not_to_contain_text("p.u.")
 
@@ -92,7 +92,7 @@ def test_fr_96_m1_overlay_hides_after_an_edit(server: Callable[[str], str], page
 def test_fr_96_m2_overlay_marks_violated_elements(server: Callable[[str], str], page: Page) -> None:
     enter_design(page, server("m2-infeasible"), gui_snapshot())
     _run_m1(page)
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     expect(page.get_by_test_id("sld-overlay-note")).to_contain_text("No current constraint check")
     _margins(page)
     page.get_by_role("button", name="Run M2").click()
@@ -108,7 +108,7 @@ def test_fr_97_report_figure_and_svg_download(server: Callable[[str], str], page
     enter_design(page, server("default"), gui_snapshot())
     _run_m1(page)
     record = page.get_by_test_id("record-id").inner_text()
-    page.get_by_role("link", name="8 Report").click()
+    step(page, "Report")
     figure = page.get_by_role("figure", name="Single-line diagram of the analysed design")
     expect(figure.get_by_test_id("diagram-bus-B1")).to_contain_text("p.u.")
     caption = figure.get_by_test_id("sld-caption")
@@ -129,7 +129,7 @@ def test_fr_95_tooltip_rows_equal_inspector_rows_with_units(
 ) -> None:
     enter_design(page, server("default"), gui_snapshot())
     _run_m1(page)
-    page.get_by_role("link", name="3 Network").click()
+    step(page, "Network")
     page.get_by_text("Diagram (read-only)").click()
     for name in ("Inverter INV1 at bus", "Bus B1", "Line LN1 from", "Load L1 at bus"):
         page.get_by_role("button", name=name).first.focus()

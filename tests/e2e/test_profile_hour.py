@@ -13,7 +13,7 @@ import re
 from collections.abc import Callable
 from pathlib import Path
 
-from flows import enter_design, gui_snapshot
+from flows import enter_design, gui_snapshot, step
 from playwright.sync_api import Page, expect
 from test_network_m1_m2 import _run_m1
 
@@ -25,7 +25,7 @@ LAM = [v / 25 for v in FIX["profile_pf_t_kw"]]
 
 def _sweep_with_profile(page: Page, base: str, tmp_path: Path, lam: list[float]) -> None:
     enter_design(page, base, gui_snapshot())
-    page.get_by_role("link", name="Sweep (M3b)").click()
+    step(page, "Sweep (M3b)")
     page.wait_for_url("**/sweep/")
     # no LoadProfile yet: the hour axis is not offered (K337)
     expect(page.locator("#axis-kind option[value=LOAD_PROFILE_HOUR]")).to_have_count(0)
@@ -41,7 +41,7 @@ def _sweep_with_profile(page: Page, base: str, tmp_path: Path, lam: list[float])
     page.get_by_label("Open project file").set_input_files(f)
     expect(page).to_have_url(re.compile(r"/project/$"))  # the import is done (FR-120 race)
     _run_m1(page)
-    page.get_by_role("link", name="Sweep (M3b)").click()
+    step(page, "Sweep (M3b)")
     page.wait_for_url("**/sweep/")
     page.get_by_text("M1 result: current").wait_for()
     page.get_by_label("Axis", exact=True).select_option("LOAD_PROFILE_HOUR")

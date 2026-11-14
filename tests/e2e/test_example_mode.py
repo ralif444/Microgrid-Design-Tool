@@ -9,6 +9,7 @@ from __future__ import annotations
 import re
 from collections.abc import Callable
 
+from flows import step
 from playwright.sync_api import Page, expect
 from test_network_m1_m2 import _run_m1
 
@@ -30,7 +31,7 @@ def test_fr_99_guided_example_enters_and_leaves_example_mode(
     page.keyboard.press("Escape")
     expect(page.get_by_role("note")).to_have_count(0)
     # The guided Project carries the Doc 3 §3.7 limits and the Doc 13 §4 scenarios.
-    page.get_by_role("link", name="4 Constraints").click()
+    step(page, "Constraints")
     expect(page.get_by_label("Bus voltage, lower limit")).to_have_value("0.95")
     page.get_by_role("button", name="Leave example mode").click()
     expect(mode).to_have_count(0)
@@ -63,7 +64,7 @@ def test_fr_100_s04_s06_s08_prefill_and_run_without_typing(
     page.goto(base + "/")
     page.get_by_role("button", name="Open guided example (D2)").click()
     page.wait_for_url("**/project/")
-    page.get_by_role("link", name="2 Sizing advice").click()
+    step(page, "Sizing advice")
     expect(page.get_by_label("Inverter margin m_inv (ratio)")).to_have_value("0.2")
     expect(page.get_by_label("Number of inverter units n (count)")).to_have_value("2")
     expect(page.get_by_label("Redundancy r (0 or 1) (count)")).to_have_value("0")
@@ -75,11 +76,11 @@ def test_fr_100_s04_s06_s08_prefill_and_run_without_typing(
     page.get_by_role("button", name="Run advice").click()
     expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
 
-    page.get_by_role("link", name="4 Constraints").click()
+    step(page, "Constraints")
     expect(page.get_by_test_id("example-constraints")).to_contain_text("Doc 3 §3.7")
 
     _run_m1(page)
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     expect(page.get_by_label("Inverter design margin m_inv (ratio)")).to_have_value("0.2")
     expect(_tags(page)).to_have_count(2)
     page.get_by_label("Line design margin m_line (ratio)").fill("0.3")
@@ -91,8 +92,8 @@ def test_fr_100_s04_s06_s08_prefill_and_run_without_typing(
     page.get_by_role("button", name="Run M2").click()
     expect(page.get_by_role("status", name="Status")).to_be_visible()
     # Back on the screen, the last M2 RunRecord wins over the example (K149 before example).
-    page.get_by_role("link", name="5 Power flow (M1)").click()
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Power flow (M1)")
+    step(page, "Constraint check (M2)")
     expect(page.get_by_label("Line design margin m_line (ratio)")).to_have_value("0.25")
     expect(_tags(page)).to_have_count(0)
 
@@ -102,14 +103,14 @@ def test_fr_101_normal_project_forms_stay_empty(server: Callable[[str], str], pa
     page.goto(base + "/")
     page.get_by_role("button", name="Open example D2:").click()
     page.wait_for_url("**/project/")
-    page.get_by_role("link", name="2 Sizing advice").click()
+    step(page, "Sizing advice")
     expect(page.get_by_label("Inverter margin m_inv (ratio)")).to_have_value("")
     expect(_tags(page)).to_have_count(0)
     expect(page.get_by_role("button", name="Reset to example values")).to_have_count(0)
-    page.get_by_role("link", name="4 Constraints").click()
+    step(page, "Constraints")
     expect(page.get_by_test_id("example-constraints")).to_have_count(0)
     _run_m1(page)
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     expect(page.get_by_label("Inverter design margin m_inv (ratio)")).to_have_value("")
     expect(_tags(page)).to_have_count(0)
     expect(page.get_by_test_id("example-guide")).to_have_count(0)
@@ -124,7 +125,7 @@ def test_fr_100_s09_to_s12_prefill_and_run(server: Callable[[str], str], page: P
     _run_m1(page)
     not_set = page.get_by_text("Not set in the example: enter a value.")
 
-    page.get_by_role("link", name="Sensitivity (M3a)", exact=True).click()
+    step(page, "Sensitivity (M3a)")
     expect(page.get_by_label("inverters/INV2/frequency_droop_hz_per_kw")).to_be_checked()
     expect(page.get_by_label("inverters/INV1/p_setpoint_kw")).not_to_be_checked()
     expect(page.get_by_label("Total line losses (kW)")).to_be_checked()
@@ -135,7 +136,7 @@ def test_fr_100_s09_to_s12_prefill_and_run(server: Callable[[str], str], page: P
     page.get_by_role("button", name="Run M3a").click()
     expect(page.get_by_role("status", name="Status")).to_be_visible()
 
-    page.get_by_role("link", name="Sweep (M3b)", exact=True).click()
+    step(page, "Sweep (M3b)")
     expect(page.get_by_label("Axis", exact=True)).to_have_value("LOAD_SCALE")
     expect(page.get_by_label("From (factor)")).to_have_value("1")
     expect(page.get_by_label("To (factor)")).to_have_value("4")
@@ -158,10 +159,10 @@ def test_fr_100_s09_to_s12_prefill_and_run(server: Callable[[str], str], page: P
     assert "include_eigenvalues" not in sent
     expect(page.get_by_role("status", name="Status")).to_be_visible()
 
-    page.get_by_role("link", name="Scenarios (M3c)", exact=True).click()
+    step(page, "Scenarios (M3c)")
     expect(page.get_by_test_id("example-scenarios")).to_contain_text("D2 base")
 
-    page.get_by_role("link", name="Envelope (M3d)", exact=True).click()
+    step(page, "Envelope (M3d)")
     expect(page.get_by_label("X axis: Axis", exact=True)).to_have_value("LOAD_SCALE")
     expect(page.get_by_label("X axis: To (factor)")).to_have_value("4")
     expect(page.get_by_label("Y axis: Axis", exact=True)).to_have_value("PARAMETER")
@@ -185,7 +186,7 @@ def test_fr_101_normal_sweep_sends_no_point_metrics(
     page.get_by_role("button", name="Open example D2:").click()
     page.wait_for_url("**/project/")  # the open navigates; clicking on before it lands is lost
     _run_m1(page)
-    page.get_by_role("link", name="Sweep (M3b)", exact=True).click()
+    step(page, "Sweep (M3b)")
     expect(page.get_by_label("Axis", exact=True)).to_have_value("PARAMETER")
     expect(page.get_by_label("Lowest damping ζ_min")).not_to_be_checked()
     expect(_tags(page)).to_have_count(0)
@@ -208,11 +209,11 @@ def test_fr_103_s13_runs_and_s14_offers_the_doc13_disturbances(
     _run_m1(page)
 
     # S-13: tau_in and the damping threshold stay empty (D-92 K231); Run needs no typing.
-    page.get_by_role("link", name="Small-signal (M4a)", exact=True).click()
+    step(page, "Small-signal (M4a)")
     page.get_by_role("button", name="Run M4a").click()
     expect(page.get_by_role("status", name="Status")).to_be_visible()
 
-    page.get_by_role("link", name="Transient (M4b)", exact=True).click()
+    step(page, "Transient (M4b)")
     preset = page.get_by_label("Example disturbance", exact=True)
     kind = page.get_by_label("Disturbance", exact=True)
     expect(preset).to_have_value("DR-01")  # first preset fills the form on arrival
@@ -264,7 +265,7 @@ def test_fr_101_normal_transient_form_starts_empty(
     page.get_by_role("button", name="Open example D2:").click()
     page.wait_for_url("**/project/")
     _run_m1(page)
-    page.get_by_role("link", name="Transient (M4b)", exact=True).click()
+    step(page, "Transient (M4b)")
     expect(page.get_by_label("Example disturbance", exact=True)).to_have_count(0)
     expect(page.get_by_label("Element", exact=True)).to_have_value("")
     expect(page.get_by_label("Start time (s)")).to_have_value("")
@@ -277,7 +278,7 @@ def test_fr_102_guidance_and_next_links_lead_through_the_pipeline(
     page.goto(base + "/")
     page.get_by_role("button", name="Open guided example (D2)").click()
     page.wait_for_url("**/project/")
-    page.get_by_role("link", name="1 Loads").click()
+    step(page, "Loads")
     guide = page.get_by_test_id("example-guide")
     expect(guide).to_contain_text("Example mode: this screen shows the guided example.")
     expect(guide).to_contain_text("Results on the Fake Engine are placeholders.")
@@ -357,7 +358,7 @@ def test_fr_104_run_the_whole_example_runs_in_order_and_opens_the_report(
     expect(page.get_by_test_id("example-report")).to_be_visible()
     # M3a, M3b and M3d are skipped: the example leaves a required field unset (D-92 K231)
     assert sent == ["PS", "M1", "M2", "M3c", "M4a", "M4b"]
-    page.get_by_role("link", name="2 Sizing advice").click()
+    step(page, "Sizing advice")
     expect(page.get_by_role("button", name="Accept")).to_be_visible()  # proposed, not accepted
 
 

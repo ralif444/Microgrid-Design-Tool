@@ -12,7 +12,7 @@ import json
 from collections.abc import Callable
 from pathlib import Path
 
-from flows import delete, enter_design, gui_snapshot
+from flows import delete, enter_design, gui_snapshot, step
 from playwright.sync_api import Page, expect
 from test_network_m1_m2 import _margins, _run_m1
 
@@ -56,7 +56,7 @@ def test_fr_64_to_fr_70_catalogue_into_network(server: Callable[[str], str], pag
     expect(page.get_by_test_id("file-check")).to_contain_text("The Catalogue was opened.")
     expect(entries.locator("tbody tr")).to_have_count(2)
 
-    page.get_by_role("link", name="3 Network").click()
+    step(page, "Network")
     page.get_by_role("tab", name="Lines").click()
     page.get_by_label("Element", exact=True).select_option("LN1")
     page.get_by_label("Catalogue entry").select_option("E1")
@@ -133,7 +133,7 @@ def test_fr_70_fr_71_fr_72_limit_tau_in_and_hint(
     page.get_by_label("Open catalogue file").set_input_files(_usable_catalogue(tmp_path / "c.json"))
     expect(page.get_by_role("table", name="Catalogue entries")).to_contain_text("usable")
 
-    page.get_by_role("link", name="3 Network").click()
+    step(page, "Network")
     _pick(page, "Lines", "LN1", "E2")  # FR-70: no confirmation
     page.get_by_role("button", name="Use in Project").click()
     expect(page.get_by_label("Current limit, optional (A) of LN1")).to_have_value("")
@@ -142,17 +142,17 @@ def test_fr_70_fr_71_fr_72_limit_tau_in_and_hint(
     expect(page.get_by_label("From catalogue (entry) of INV1")).to_have_text("E1")
 
     _run_m1(page)
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     _margins(page)
     page.get_by_role("button", name="Run M2").click()
     expect(page.get_by_role("list", name="Not evaluated")).to_contain_text("LN1")
 
-    page.get_by_role("link", name="Small-signal (M4a)").click()  # FR-71
+    step(page, "Small-signal (M4a)")  # FR-71
     expect(page.get_by_label("Inner-loop time constant τ_in, optional (s)")).to_have_value("0.002")
     expect(page.get_by_test_id("tau-in-source")).to_contain_text("E1")
     expect(page.get_by_test_id("tau-in-source")).to_contain_text("p. 1")
 
-    page.get_by_role("link", name="3 Network").click()
+    step(page, "Network")
     _pick(page, "Lines", "LN1", "E2")  # FR-70: confirmed
     page.get_by_label("Also use 100 A as the current limit").check()
     page.get_by_role("button", name="Use in Project").click()
@@ -161,7 +161,7 @@ def test_fr_70_fr_71_fr_72_limit_tau_in_and_hint(
         "datasheet reference conditions"
     )
 
-    page.get_by_role("link", name="2 Sizing advice").click()  # FR-72
+    step(page, "Sizing advice")  # FR-72
     page.get_by_label("Inverter margin m_inv (ratio)").fill("0.2")
     page.get_by_label("Number of inverter units n (count)").fill("2")
     page.get_by_label("Redundancy r (0 or 1) (count)").fill("0")

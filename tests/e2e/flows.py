@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Locator, Page, expect
 
 LINE_LABELS = {
     "from_bus_id": "From bus",
@@ -66,7 +66,7 @@ def create_project(page: Page, base: str, snap: dict[str, Any], name: str = "E2E
 def enter_design(page: Page, base: str, snap: dict[str, Any]) -> None:
     """Create a Project and enter `snap` through the screens (client-side navigation only)."""
     create_project(page, base, snap)
-    page.get_by_role("link", name="3 Network").click()
+    step(page, "Network")
     for bus in snap["buses"]:
         page.get_by_label("Bus id", exact=True).fill(bus["id"])
         page.get_by_role("button", name="Add bus").click()
@@ -80,7 +80,7 @@ def enter_design(page: Page, base: str, snap: dict[str, Any]) -> None:
         for inv in snap["inverters"]:
             page.get_by_role("button", name="+ Add inverter").click()
             _fill_row(page, INVERTER_LABELS, inv)
-    page.get_by_role("link", name="1 Loads").click()
+    step(page, "Loads")
     for ld in snap["loads"]:
         page.get_by_role("button", name="+ Add load").click()
         rid = ld["id"]
@@ -104,3 +104,33 @@ def gui_snapshot() -> dict[str, Any]:
     for k, ld in enumerate(snap["loads"], start=1):
         ld["id"] = f"L{k}"
     return snap
+
+
+# Stepper navigation (plan W4a): every test goes to a step through these two, so a new shell changes
+# only STEP_LINK. Keys are the step names of Doc 7 P1; values the accessible link names drawn today.
+STEP_LINK = {
+    "Project": "Project",
+    "Loads": "1 Loads",
+    "Sizing advice": "2 Sizing advice",
+    "Network": "3 Network",
+    "Constraints": "4 Constraints",
+    "Power flow (M1)": "5 Power flow (M1)",
+    "Constraint check (M2)": "6 Constraint check (M2)",
+    "Report": "8 Report",
+    "Sensitivity (M3a)": "Sensitivity (M3a)",
+    "Sweep (M3b)": "Sweep (M3b)",
+    "Scenarios (M3c)": "Scenarios (M3c)",
+    "Envelope (M3d)": "Envelope (M3d)",
+    "Small-signal (M4a)": "Small-signal (M4a)",
+    "Transient (M4b)": "Transient (M4b)",
+}
+
+
+def step_link(page: Page, name: str) -> Locator:
+    """The navigation link of a pipeline step."""
+    return page.get_by_role("link", name=STEP_LINK[name], exact=True)
+
+
+def step(page: Page, name: str) -> None:
+    """Go to a pipeline step (client-side navigation, so the Project stays open)."""
+    step_link(page, name).click()

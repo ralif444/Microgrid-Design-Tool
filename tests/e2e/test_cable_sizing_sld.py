@@ -12,7 +12,7 @@ import json
 from collections.abc import Callable
 from pathlib import Path
 
-from flows import enter_design, gui_snapshot
+from flows import enter_design, gui_snapshot, step
 from playwright.sync_api import Page, expect
 from test_cable_sizing import CAVEAT, FLAG_ON, TABLES
 from test_network_m1_m2 import _margins, _run_m1
@@ -27,7 +27,7 @@ PROV = {"manufacturer": "Test maker", "model": "T-1", "document": "Test sheet", 
 
 def _m1_m2(page: Page) -> None:
     _run_m1(page)
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     _margins(page)
     page.get_by_role("button", name="Run M2").click()
     expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
@@ -60,11 +60,11 @@ def test_fr_113_fr_114_sld_shows_breaker_symbols_after_run(
     diagram = page.get_by_role("region", name="Single-line diagram")
     expect(diagram.locator(BREAKERS)).to_have_count(0)  # no CB run yet
     expect(page.get_by_role("list", name="Diagram legend")).not_to_contain_text(LEGEND)
-    page.get_by_role("link", name="8 Report").click()
+    step(page, "Report")
     expect(page.get_by_role("heading", name=SECTION)).to_have_count(0)
 
     _run_cb(page)
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     for el in ("LN1", "INV1", "INV2"):
         expect(diagram.get_by_test_id(f"diagram-breaker-{el}")).to_be_visible()
     expect(page.get_by_role("list", name="Diagram legend")).to_contain_text(LEGEND)
@@ -73,10 +73,10 @@ def test_fr_113_fr_114_sld_shows_breaker_symbols_after_run(
     for text in ("Breaker INV1", "MCB", "I_n", "20 A", "I_Z", "10 mm²"):
         expect(tip).to_contain_text(text)
 
-    page.get_by_role("link", name="3 Network").click()
+    step(page, "Network")
     expect(page.get_by_test_id("diagram-breaker-INV1")).to_be_visible()
 
-    page.get_by_role("link", name="8 Report").click()
+    step(page, "Report")
     section = page.get_by_role("region", name=SECTION)
     expect(section).to_contain_text("IEC60364_OVERLOAD_PUIL2011")
     expect(section).to_contain_text(table_set_hash(json.loads(TABLES.read_text(encoding="utf-8"))))

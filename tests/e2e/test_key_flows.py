@@ -13,7 +13,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from flows import enter_design, gui_snapshot
+from flows import enter_design, gui_snapshot, step
 from playwright.sync_api import Page, expect
 from test_network_m1_m2 import _margins, _run_m1
 from test_report_runs import _m1_m2
@@ -41,7 +41,7 @@ def test_f1_pipeline_infeasible_loop_to_report(server: Callable[[str], str], pag
         page.get_by_role("link", name=name, exact=True).click()
         expect(page.get_by_test_id("engine-badge")).to_have_text("Engine: FAKE")
 
-    page.get_by_role("link", name="2 Sizing advice").click()
+    step(page, "Sizing advice")
     page.get_by_label("Inverter margin m_inv (ratio)").fill("0.2")
     page.get_by_label("Number of inverter units n (count)").fill("2")
     page.get_by_label("Redundancy r (0 or 1) (count)").fill("0")
@@ -55,7 +55,7 @@ def test_f1_pipeline_infeasible_loop_to_report(server: Callable[[str], str], pag
         expect(page.get_by_role("table", name=caption)).to_be_visible()
     expect(page.get_by_role("table", name="System totals")).to_contain_text("ε_X")
 
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     _margins(page)
     page.get_by_role("button", name="Run M2").click()
     expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "INFEASIBLE")
@@ -70,25 +70,25 @@ def test_f1_pipeline_infeasible_loop_to_report(server: Callable[[str], str], pag
     expect(row).to_have_count(1)
     row.get_by_label("Rating (kVA) of INV1").fill("50")
 
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     expect(page.get_by_test_id("m1-freshness")).to_have_text("M1 result: stale")
-    page.get_by_role("link", name="8 Report").click()
+    step(page, "Report")
     expect(page.get_by_test_id("outdated").first).to_be_visible()
 
     _m1_m2(page)
-    page.get_by_role("link", name="8 Report").click()
+    step(page, "Report")
     expect(page.get_by_test_id("verdict")).to_contain_text("INFEASIBLE")
     expect(page.get_by_test_id("outdated")).to_have_count(0)
 
 
 def test_f1_inadmissible_stops_the_pipeline(server: Callable[[str], str], page: Page) -> None:
     enter_design(page, server("m1-inadmissible"), gui_snapshot())
-    page.get_by_role("link", name="5 Power flow (M1)").click()
+    step(page, "Power flow (M1)")
     page.get_by_role("button", name="Run M1").click()
     banner = page.get_by_role("status", name="Status")
     expect(banner).to_have_attribute("data-status", "PHYSICALLY_INADMISSIBLE")
     _fake_banner(page)
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     expect(page.get_by_role("button", name="Run M2")).to_be_disabled()
     expect(page.get_by_test_id("m1-blocked")).to_contain_text("Run power flow (M1) first")
 

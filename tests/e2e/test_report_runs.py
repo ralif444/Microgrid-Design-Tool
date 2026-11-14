@@ -12,14 +12,14 @@ import re
 from collections.abc import Callable
 from pathlib import Path
 
-from flows import enter_design, gui_snapshot
+from flows import enter_design, gui_snapshot, step
 from playwright.sync_api import Page, expect
 from test_network_m1_m2 import _margins, _run_m1
 
 
 def _m1_m2(page: Page) -> None:
     _run_m1(page)
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     _margins(page)
     page.get_by_role("button", name="Run M2").click()
     expect(page.get_by_role("status", name="Status")).to_be_visible()
@@ -29,10 +29,10 @@ def test_fr_58_fr_59_report_shows_verdict_constraints_hash_table_chart(
     server: Callable[[str], str], page: Page
 ) -> None:
     enter_design(page, server("m2-infeasible"), gui_snapshot())
-    page.get_by_role("link", name="8 Report").click()
+    step(page, "Report")
     expect(page.get_by_text("No results yet.")).to_be_visible()
     _m1_m2(page)
-    page.get_by_role("link", name="8 Report").click()
+    step(page, "Report")
     expect(page.get_by_test_id("verdict")).to_contain_text("INFEASIBLE")
     expect(page.get_by_role("table", name="Limiting constraints")).to_contain_text("Violated by")
     expect(page.get_by_role("img", name="Bus voltage (p.u.) bar chart")).to_be_visible()
@@ -95,7 +95,7 @@ def test_fr_49_fr_50_fr_53_runs_export_import_rerun_and_project_file(
 def test_fr_83_compare_two_runs(server: Callable[[str], str], page: Page) -> None:
     enter_design(page, server("default"), gui_snapshot())
     _run_m1(page)
-    page.get_by_role("link", name="3 Network").click()
+    step(page, "Network")
     page.get_by_role("tab", name="Lines").click()
     page.get_by_label("R (Ω/km) of LN1").fill("0.9")
     _run_m1(page)
@@ -117,7 +117,7 @@ def test_fr_85_example_opens_as_copy(server: Callable[[str], str], page: Page) -
     page.goto(base + "/")
     page.get_by_role("button", name="Open example D2:").click()
     expect(page.get_by_test_id("project-name")).to_have_text(re.compile(r"^Example D2\s*\*unsaved"))
-    page.get_by_role("link", name="3 Network").click()
+    step(page, "Network")
     page.get_by_role("tab", name="Inverters").click()
     expect(page.get_by_label("Rating (kVA) of INV2")).to_have_value("45")
     page.get_by_label("Rating (kVA) of INV2").fill("50")

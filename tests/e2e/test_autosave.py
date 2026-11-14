@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from flows import create_project
+from flows import create_project, step
 from playwright.sync_api import Page, expect
 
 DRAFT = "localStorage.getItem('mgapp-draft')"
@@ -14,7 +14,7 @@ DRAFT = "localStorage.getItem('mgapp-draft')"
 
 def _edit_and_reload(page: Page, base: str) -> None:
     create_project(page, base, {"nominal_voltage_kv": 0.4}, name="Autosave project")
-    page.get_by_role("link", name="3 Network").click()
+    step(page, "Network")
     page.get_by_label("Bus id", exact=True).fill("B1")
     page.get_by_role("button", name="Add bus").click()
     page.wait_for_function(f"({DRAFT} ?? '').includes('\"B1\"')")
@@ -32,7 +32,7 @@ def test_f3_reload_offers_the_draft_and_restores_it_unsaved(
     offer.get_by_role("button", name="Restore unsaved work").click()
     expect(page.get_by_test_id("project-name")).to_contain_text("Autosave project")
     expect(page.get_by_test_id("project-name")).to_contain_text("*unsaved")
-    page.get_by_role("link", name="3 Network").click()
+    step(page, "Network")
     expect(page.get_by_role("button", name="Inspect B1")).to_be_visible()
 
 

@@ -9,13 +9,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from flows import delete, enter_design, gui_snapshot
+from flows import delete, enter_design, gui_snapshot, step
 from playwright.sync_api import Page, expect
 from test_loads_ps import _numeric_inputs_have_units
 
 
 def _run_m1(page: Page) -> None:
-    page.get_by_role("link", name="5 Power flow (M1)").click()
+    step(page, "Power flow (M1)")
     page.get_by_role("button", name="Run M1").click()
     expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
     expect(page.get_by_test_id("m1-freshness")).to_have_text("M1 result: current")
@@ -32,7 +32,7 @@ def test_fr_10_fr_19_fr_15_fr_24_fr_27_fr_40_network_to_m2(
     base = server("default")
     enter_design(page, base, gui_snapshot())
 
-    page.get_by_role("link", name="3 Network").click()
+    step(page, "Network")
     page.get_by_role("tab", name="Lines").click()
     expect(page.get_by_label("Total R, derived, read-only (Ω) of LN1")).to_have_text("0.1")
     _numeric_inputs_have_units(page)
@@ -47,7 +47,7 @@ def test_fr_10_fr_19_fr_15_fr_24_fr_27_fr_40_network_to_m2(
     delete(page, "B9")
     expect(page.get_by_text("No network-level problems found.")).to_be_visible()
 
-    page.get_by_role("link", name="4 Constraints").click()
+    step(page, "Constraints")
     _numeric_inputs_have_units(page)
     expect(page.get_by_test_id("not-evaluated-voltage_min_pu")).to_be_visible()
     page.get_by_label("Bus voltage, lower limit (p.u.)").fill("1.05")
@@ -56,12 +56,12 @@ def test_fr_10_fr_19_fr_15_fr_24_fr_27_fr_40_network_to_m2(
     page.get_by_label("Bus voltage, lower limit (p.u.)").fill("")
     page.get_by_label("Bus voltage, upper limit (p.u.)").fill("")
 
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     expect(page.get_by_role("button", name="Run M2")).to_be_disabled()
     expect(page.get_by_test_id("m1-blocked")).to_contain_text("Run power flow (M1) first")
 
     _run_m1(page)
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     _numeric_inputs_have_units(page)
     _margins(page)
     page.get_by_role("button", name="Run M2").click()
@@ -76,15 +76,15 @@ def test_fr_10_fr_19_fr_15_fr_24_fr_27_fr_40_network_to_m2(
     expect(page.get_by_text("solution existence, not a stability limit")).to_be_visible()
 
     # edit after M1 → stale; revert → current again (hash re-check, D-46)
-    page.get_by_role("link", name="1 Loads").click()
+    step(page, "Loads")
     page.get_by_test_id("load-L1").get_by_label("P of L1 (kW)").fill("6")
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     expect(page.get_by_test_id("m1-freshness")).to_have_text("M1 result: stale")
     expect(page.get_by_role("button", name="Run M2")).to_be_disabled()
     expect(page.get_by_test_id("m1-blocked")).to_contain_text("Re-run M1")
-    page.get_by_role("link", name="1 Loads").click()
+    step(page, "Loads")
     page.get_by_test_id("load-L1").get_by_label("P of L1 (kW)").fill("5")
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     expect(page.get_by_test_id("m1-freshness")).to_have_text("M1 result: current")
     # K147: margins come back from the last M2 RunRecord after leaving the screen
     expect(page.get_by_label("Inverter design margin m_inv (ratio)")).to_have_value("0.2")
@@ -96,7 +96,7 @@ def test_fr_25_infeasible_lists_limiting_constraints(
 ) -> None:
     enter_design(page, server("m2-infeasible"), gui_snapshot())
     _run_m1(page)
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     _margins(page)
     page.get_by_role("button", name="Run M2").click()
     expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "INFEASIBLE")
@@ -111,7 +111,7 @@ def test_fr_84_limiting_constraint_shortcut_to_m3a(
 ) -> None:
     enter_design(page, server("m2-infeasible"), gui_snapshot())
     _run_m1(page)
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     _margins(page)
     page.get_by_role("button", name="Run M2").click()
     # Fake limiting rows are bus voltage and inverter loading; the line case is a client test.

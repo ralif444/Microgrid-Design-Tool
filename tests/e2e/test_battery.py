@@ -11,7 +11,7 @@ import re
 from collections.abc import Callable
 from pathlib import Path
 
-from flows import delete, enter_design, gui_snapshot
+from flows import delete, enter_design, gui_snapshot, step
 from playwright.sync_api import Page, expect
 from test_catalogue import _provenance
 from test_network_m1_m2 import _run_m1
@@ -21,7 +21,7 @@ def test_fr_73_fr_74_battery_module_entry_and_hint(
     server: Callable[[str], str], page: Page
 ) -> None:
     enter_design(page, server("default"), gui_snapshot())
-    page.get_by_role("link", name="2 Sizing advice").click()
+    step(page, "Sizing advice")
     page.get_by_label("Inverter margin m_inv (ratio)").fill("0.2")
     page.get_by_label("Number of inverter units n (count)").fill("2")
     page.get_by_label("Redundancy r (0 or 1) (count)").fill("0")
@@ -52,7 +52,7 @@ def test_fr_73_fr_74_battery_module_entry_and_hint(
     page.get_by_label("C-rate: page or section").fill("p. 4")
     expect(page.get_by_role("note")).to_have_count(0)
 
-    page.get_by_role("link", name="2 Sizing advice").click()
+    step(page, "Sizing advice")
     page.get_by_role("button", name="Run advice").click()
     hint = page.get_by_role("region", name="Battery module hint")
     expect(hint.get_by_label("Module entry")).to_have_value("E1")
@@ -79,7 +79,7 @@ def test_fr_75_battery_bank_on_s05_saved_outside_the_design(
     row = page.get_by_role("table", name="Catalogue entries").locator("tbody tr").nth(0)
     expect(row).to_contain_text("usable")
 
-    page.get_by_role("link", name="3 Network").click()
+    step(page, "Network")
     page.get_by_role("tab", name="Inverters").click()
     form = page.get_by_role("form", name="Battery bank")
     form.get_by_label("Inverter", exact=True).select_option("INV1")
@@ -132,7 +132,7 @@ def _bank(page: Page, dod: str | None = None) -> None:
     ):
         page.get_by_label(f"{label} ({unit})").fill(value)
         page.get_by_label(f"{label}: page or section").fill("p. 3")
-    page.get_by_role("link", name="3 Network").click()
+    step(page, "Network")
     page.get_by_role("tab", name="Inverters").click()
     form = page.get_by_role("form", name="Battery bank")
     form.get_by_label("Inverter", exact=True).select_option("INV1")
@@ -199,7 +199,7 @@ def test_fr_120_depletion_chart_show_data_and_report_section(
     expect(page.get_by_role("table", name=f"{title} data").locator("tbody tr")).to_have_count(25)
     record = page.get_by_test_id("ba-record").locator("code").inner_text()
 
-    page.get_by_role("link", name="8 Report").click()
+    step(page, "Report")
     section = page.get_by_role("region", name="Battery adequacy (advice, discharge only)")
     expect(section).to_contain_text("Discharge only: recharging is not modelled.")
     expect(section).to_contain_text(f"RunRecord {record}")
