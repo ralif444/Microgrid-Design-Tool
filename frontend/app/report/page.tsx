@@ -16,7 +16,7 @@ import { ExampleGuide } from "../../components/ExampleForm";
 import { Icon } from "../../components/Icon";
 import { IndicatorPanel, indicatorText, useIndicatorRows } from "../../components/IndicatorPanel";
 import { M1Results } from "../../components/M1Results";
-import { num } from "../../components/format";
+import { fixed } from "../../components/format";
 import { ConstraintTable, KIND_WORDS, M2Results } from "../../components/M2Results";
 import { RequireProject } from "../../components/RequireProject";
 import { SldFigure } from "../../components/sld/SldFigure";
@@ -156,7 +156,7 @@ function Report() {
           <ul className={styles.sentences}>
             {limiting.map((c, k) => (
               <li key={k}>
-                {KIND_WORDS[c.kind] ?? c.kind} at {c.element_id}: {num(c.value)} {c.unit} against the limit {num(c.limit)} {c.unit}.
+                {KIND_WORDS[c.kind] ?? c.kind} at {c.element_id}: {fixed(c.value, c.unit)} {c.unit} against the limit {fixed(c.limit, c.unit)} {c.unit}.
               </li>
             ))}
           </ul>

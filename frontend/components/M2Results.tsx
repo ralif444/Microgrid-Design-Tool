@@ -10,7 +10,7 @@ import { AdvisoryPanel } from "./AdvisoryPanel";
 import { BarChart } from "./charts/BarChart";
 import { LoadabilityAxis } from "./charts/LoadabilityAxis";
 import { DataTable, type DataColumn } from "./DataTable";
-import { num } from "./format";
+import { fixed, num } from "./format";
 import { Icon } from "./Icon";
 import styles from "./M2Results.module.css";
 
@@ -45,8 +45,8 @@ export function ConstraintTable({ label, rows, shortcut = false }: { label: stri
       // D-48 K22: open the element's row in S-05
       cell: (c) => (c.element_id === "SYSTEM" ? c.element_id : <Link href={`/network/?focus=${encodeURIComponent(c.element_id)}`}>{c.element_id}</Link>),
     },
-    { key: "value", header: "Value", numeric: true, cell: (c) => c.value },
-    { key: "limit", header: "Limit", numeric: true, cell: (c) => c.limit },
+    { key: "value", header: "Value", numeric: true, cell: (c) => fixed(c.value, c.unit) },
+    { key: "limit", header: "Limit", numeric: true, cell: (c) => fixed(c.limit, c.unit) },
     { key: "unit", header: "Unit", cell: (c) => c.unit },
     {
       key: "margin",
@@ -57,11 +57,11 @@ export function ConstraintTable({ label, rows, shortcut = false }: { label: stri
         c.margin < 0 ? (
           <span className={styles.violated}>
             <Icon name="misuse" size={16} />
-            Violated by {num(-c.margin)} {c.unit}
+            Violated by {fixed(-c.margin, c.unit)} {c.unit}
           </span>
         ) : (
           <>
-            {num(c.margin)} {c.unit}
+            {fixed(c.margin, c.unit)} {c.unit}
             {nearLimit(c, marginWarn) && (
               <>
                 {" "}

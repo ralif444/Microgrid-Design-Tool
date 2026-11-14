@@ -51,7 +51,4 @@ Check: unit test for write, restore, version mismatch (draft ignored) and storag
 
 ## Decisions needed from you
 
-1. F2: confirmation dialog (planned) or undo instead.
-2. F2: also confirm scenario and bank removal?
-3. F3: ask before restoring (planned) or restore silently.
-4. F3: leave run records out of the draft (planned) or include them.
+None open (see the decisions line at the top).
