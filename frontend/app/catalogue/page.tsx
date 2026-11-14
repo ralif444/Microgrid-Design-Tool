@@ -9,6 +9,7 @@ import { NO_POWER_WARNING, noPowerCapability } from "../../components/battery";
 import { useCableSizingFlag } from "../../components/cable";
 import { block, BLOCK_KEY, ENTRY_FIELDS, ENTRY_OPTIONS, useCatalog } from "../../components/Catalog";
 import { downloadJson, NOT_JSON, readJson } from "../../components/files";
+import { CANNOT_UNDO, useConfirmDelete } from "../../components/ConfirmDelete";
 import { NumberField } from "../../components/NumberField";
 import { FileCheckText } from "../../components/ProjectFileMenu";
 import { nextId } from "../../store/reducer";
@@ -83,6 +84,7 @@ function EntryEditor({ e, onChange, x10 }: { e: CatalogEntry; onChange: (e: Cata
 }
 
 export default function CataloguePage() {
+  const { dialog, confirm } = useConfirmDelete();
   const { catalog, checks, setCatalog } = useCatalog();
   const [selected, setSelected] = useState<string | null>(null);
   const [note, setNote] = useState<FileCheckResult | string | null>(null);
@@ -177,7 +179,14 @@ export default function CataloguePage() {
                     <button type="button" onClick={() => setSelected(e.id)}>
                       Edit {e.id}
                     </button>{" "}
-                    <button type="button" onClick={() => setCatalog({ ...catalog, entries: entries.filter((x) => x.id !== e.id) })}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        confirm(`Delete ${e.id}?`, `Catalogue entry ${e.id} is removed; designs that used it keep their values. ${CANNOT_UNDO}`, () =>
+                          setCatalog({ ...catalog, entries: entries.filter((x) => x.id !== e.id) }),
+                        )
+                      }
+                    >
                       Delete {e.id}
                     </button>
                   </td>
@@ -195,6 +204,7 @@ export default function CataloguePage() {
           <EntryEditor e={sel} x10={x10} onChange={(n) => setCatalog({ ...catalog, entries: entries.map((x) => (x.id === sel.id ? n : x)) })} />
         </>
       )}
+      {dialog}
     </>
   );
 }

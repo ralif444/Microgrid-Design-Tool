@@ -19,6 +19,7 @@ import { useSldModel } from "../../components/sld/useSldModel";
 import { useValidation } from "../../components/useValidation";
 import { useProject, useProjectDispatch } from "../../store";
 import styles from "./network.module.css";
+import { CANNOT_UNDO, useConfirmDelete } from "../../components/ConfirmDelete";
 
 const times = (a: unknown, b: unknown) => (typeof a === "number" && typeof b === "number" ? a * b : null);
 
@@ -113,6 +114,7 @@ type BankDraft = { ns: number | null; np: number | null; eta: number | null; dod
 const NEW_BANK: BankDraft = { ns: null, np: null, eta: null, dod: null, soc: 1 };
 
 function BankPick() {
+  const { dialog, confirm } = useConfirmDelete();
   const { design, batteryBanks } = useProject();
   const dispatch = useProjectDispatch();
   const { catalog, checks } = useCatalog();
@@ -200,10 +202,12 @@ function BankPick() {
       {current && (
         <button
           type="button"
-          onClick={() => {
-            dispatch({ type: "bankRemoved", inverterId: inv });
-            setNote(`Battery bank of ${inv} removed.`);
-          }}
+          onClick={() =>
+            confirm(`Remove the battery bank of ${inv}?`, `The bank settings of ${inv} are removed; the inverter stays. ${CANNOT_UNDO}`, () => {
+              dispatch({ type: "bankRemoved", inverterId: inv });
+              setNote(`Battery bank of ${inv} removed.`);
+            })
+          }
         >
           Remove bank
         </button>
@@ -217,6 +221,7 @@ function BankPick() {
             .join("; ")}
         </p>
       )}
+      {dialog}
     </form>
   );
 }

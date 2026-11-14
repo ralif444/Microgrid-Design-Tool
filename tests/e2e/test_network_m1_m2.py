@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from flows import enter_design, gui_snapshot
+from flows import delete, enter_design, gui_snapshot
 from playwright.sync_api import Page, expect
 from test_loads_ps import _numeric_inputs_have_units
 
@@ -44,7 +44,7 @@ def test_fr_10_fr_19_fr_15_fr_24_fr_27_fr_40_network_to_m2(
     expect(page.get_by_role("list", name="Network issues")).to_contain_text(
         "This bus is not connected"
     )
-    page.get_by_role("button", name="Delete B9").click()
+    delete(page, "B9")
     expect(page.get_by_text("No network-level problems found.")).to_be_visible()
 
     page.get_by_role("link", name="4 Constraints").click()

@@ -45,6 +45,13 @@ def _fill_row(page: Page, labels: dict[str, str], row: dict[str, Any]) -> None:
             box.fill(str(row[field]))
 
 
+def delete(page: Page, name: str) -> None:
+    """Click "Delete <name>" and confirm the dialog (plan F2: every removal asks first)."""
+    page.get_by_role("button", name=f"Delete {name}", exact=True).click()
+    page.get_by_role("dialog").get_by_role("button", name="Delete", exact=True).click()
+    expect(page.get_by_role("dialog")).to_have_count(0)
+
+
 def create_project(page: Page, base: str, snap: dict[str, Any], name: str = "E2E project") -> None:
     page.goto(base + "/")
     page.get_by_label("Project name").fill(name)

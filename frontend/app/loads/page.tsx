@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { Load, ValidationIssue } from "../../api-types";
 import { ExampleGuide, ExampleNext } from "../../components/ExampleForm";
+import { CANNOT_UNDO, useConfirmDelete } from "../../components/ConfirmDelete";
 import { CellInput, CellSelect, DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
 import { Icon } from "../../components/Icon";
@@ -18,6 +19,7 @@ const where = (i: ValidationIssue) => [i.entity, i.id, i.field].filter(Boolean).
 type Mode = "Q" | "PF";
 
 function Loads() {
+  const { dialog, confirm } = useConfirmDelete();
   const { design } = useProject();
   const dispatch = useProjectDispatch();
   const issues = useValidation(design, "PS")?.issues ?? [];
@@ -130,7 +132,10 @@ function Loads() {
           rowTestId={(l) => `load-${l.id}`}
           rowErrors={(l) => rowIssues(l).map((i) => ({ field: i.field, message: i.message }))}
           actions={(l) => (
-            <button type="button" onClick={() => dispatch({ type: "rowRemoved", collection: "loads", id: l.id ?? "" })}>
+            <button
+              type="button"
+              onClick={() => confirm(`Delete ${l.id}?`, `Load ${l.id} is removed from the design. ${CANNOT_UNDO}`, () => dispatch({ type: "rowRemoved", collection: "loads", id: l.id ?? "" }))}
+            >
               Delete {l.id}
             </button>
           )}
@@ -154,6 +159,7 @@ function Loads() {
         {loads.length === 0 && " Needs at least one load."}
       </p>
       <ExampleNext screen="loads" ready={true} />
+      {dialog}
     </>
   );
 }

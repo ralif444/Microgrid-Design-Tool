@@ -8,6 +8,7 @@ import { useState } from "react";
 import type { M3cPayload } from "../../api-types";
 import { ExampleGuide, ExampleNext, nextReady } from "../../components/ExampleForm";
 import { BarChart } from "../../components/charts/BarChart";
+import { CANNOT_UNDO, useConfirmDelete } from "../../components/ConfirmDelete";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
 import { applyOverrides, fmt, nMinus1, InfeasibleNote, METRICS, numericPaths, unitOf, useDependentRun } from "../../components/Further";
@@ -75,6 +76,7 @@ function OverrideEditor({ sc, paths }: { sc: Scenario; paths: string[] }) {
 type Row = (typeof METRICS)[number];
 
 function Scenarios() {
+  const { dialog, confirm } = useConfirmDelete();
   const { example } = useProject();
   const { scenarios } = useProject();
   const dispatch = useProjectDispatch();
@@ -154,7 +156,7 @@ function Scenarios() {
             </label>
           </h2>
           <OverrideEditor sc={sc} paths={paths} />
-          <button type="button" onClick={() => dispatch({ type: "scenarioRemoved", id: sc.id })}>
+          <button type="button" onClick={() => confirm(`Delete ${sc.name}?`, `Scenario ${sc.name} and its changes are removed. ${CANNOT_UNDO}`, () => dispatch({ type: "scenarioRemoved", id: sc.id }))}>
             Delete {sc.name}
           </button>
         </section>
@@ -208,6 +210,7 @@ function Scenarios() {
       )}
       {!resp && <EmptyState title="Not compared yet.">Select two or more Scenarios and compare them, or run the N−1 check.</EmptyState>}
       <ExampleNext screen="scenarios" ready={nextReady(r?.status)} />
+      {dialog}
     </>
   );
 }

@@ -11,7 +11,7 @@ import re
 from collections.abc import Callable
 from pathlib import Path
 
-from flows import enter_design, gui_snapshot
+from flows import delete, enter_design, gui_snapshot
 from playwright.sync_api import Page, expect
 from test_catalogue import _provenance
 from test_network_m1_m2 import _run_m1
@@ -108,7 +108,7 @@ def test_fr_75_battery_bank_on_s05_saved_outside_the_design(
     ] == [("INV1", "E1")]
     assert "battery" not in json.dumps(doc["inverters"])  # outside the design data
 
-    page.get_by_role("button", name="Delete INV1").click()
+    delete(page, "INV1")
     expect(page.get_by_test_id("bank-list")).to_have_count(0)
 
 

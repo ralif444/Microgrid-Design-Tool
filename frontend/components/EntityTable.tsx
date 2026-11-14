@@ -4,6 +4,7 @@
 import { useState } from "react";
 import type { ValidationIssue } from "../api-types";
 import { busDependents, useProject, useProjectDispatch, type Collection } from "../store";
+import { CANNOT_UNDO, useConfirmDelete } from "./ConfirmDelete";
 import { DataTable, type DataColumn } from "./DataTable";
 import type { GlossaryKey } from "./glossary";
 import { Toast } from "./Toast";
@@ -34,7 +35,8 @@ export function EntityTable({
   /** FR-90 table path (UX-4, D-79): an "Inspect <id>" button per row opens the Inspector. */
   onInspect?: (id: string) => void;
 }) {
-  const { design } = useProject();
+  const { design, batteryBanks } = useProject();
+  const { dialog, confirm } = useConfirmDelete();
   const [refused, setRefused] = useState<string | null>(null);
   const dispatch = useProjectDispatch();
   const rows: Row[] = design[collection] ?? [];
@@ -85,7 +87,12 @@ export function EntityTable({
               // FR-11: refuse and name the dependents; the Bus stays
               if (deps.length) return setRefused(`Bus ${row.id} cannot be deleted: it is used by ${deps.join(", ")}.`);
               setRefused(null);
-              dispatch({ type: "rowRemoved", collection, id: row.id ?? "" });
+              const id = row.id ?? "";
+              // reducer.ts: removing an Inverter also removes its battery bank
+              const bank = collection === "inverters" && batteryBanks.some((b) => b.inverter_id === id) ? ` Its battery bank is removed too.` : "";
+              confirm(`Delete ${name(row, k)}?`, `${name(row, k)} is removed from the design.${bank} ${CANNOT_UNDO}`, () =>
+                dispatch({ type: "rowRemoved", collection, id }),
+              );
             }}
           >
             Delete {name(row, k)}
@@ -93,6 +100,7 @@ export function EntityTable({
           </>
         )}
       />
+      {dialog}
     </>
   );
 }

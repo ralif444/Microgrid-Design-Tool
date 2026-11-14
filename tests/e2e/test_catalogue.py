@@ -12,7 +12,7 @@ import json
 from collections.abc import Callable
 from pathlib import Path
 
-from flows import enter_design, gui_snapshot
+from flows import delete, enter_design, gui_snapshot
 from playwright.sync_api import Page, expect
 from test_network_m1_m2 import _margins, _run_m1
 
@@ -51,7 +51,7 @@ def test_fr_64_to_fr_70_catalogue_into_network(server: Callable[[str], str], pag
     saved = Path(dl.value.path())
     doc = json.loads(saved.read_text(encoding="utf-8"))
     assert [e["id"] for e in doc["entries"]] == ["E1", "E2"] and doc["schema_version"] == 1
-    page.get_by_role("button", name="Delete E2").click()
+    delete(page, "E2")
     page.get_by_label("Open catalogue file").set_input_files(saved)
     expect(page.get_by_test_id("file-check")).to_contain_text("The Catalogue was opened.")
     expect(entries.locator("tbody tr")).to_have_count(2)
