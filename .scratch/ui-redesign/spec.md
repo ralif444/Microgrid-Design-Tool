@@ -17,3 +17,8 @@ Basis: `docs/ui-ux-audit.md` (2026-11-13). Mockup: `docs/design/redesign-2026-11
 ## Open
 
 - `issues/01-indonesian-vocabulary.md`
+
+## Plans (not implemented)
+
+- `plan-workspace.md`: port the workspace to the app, stages W1 to W6
+- `plan-functional-items.md`: number input, delete confirmation, autosave
