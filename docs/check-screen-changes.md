@@ -308,6 +308,23 @@ Failures found and fixed (next step of the same hue, as planned in `w2-tokens.md
 
 Not in the mockup, from `@carbon/colors`: hover/pressed blue-70/80 (light), blue-30/20 (dark); dark danger button red-40/30/20 (keeps `text-on-color` #10202f readable); dark error fg/bg red-30/red-90; dark advisory purple-30; dark chart series teal-40, purple-40, magenta-40, yellow-40 (yellow-30 is Carbon support-warning, so not a series colour), series 2 = ink.
 
+## App: W3 Check screen inside the current routes (2026-11-14)
+
+Files: `frontend/components/CheckStrip.tsx` (new), `M2Results.tsx` (`ConstraintTable`, `marginStatus`), `M1Freshness.tsx`, `sld/buildSldModel.ts`, `sld/symbols.tsx`, `app/power-flow/page.tsx`, `app/constraint-check/page.tsx`. Presentation only; every value is read from the M1 / M2 payloads.
+
+- Status strip on S-07 and S-08 (phase 2): power flow chip, verdict chip (S-08), counts, system frequency, lowest bus voltage with its bus, total losses, λ_c (S-08), and the M1 freshness chip; its tooltip names the run time, engine and RunRecord. Colour only for "Not feasible" and a stale result.
+- M1 freshness badge is now a quiet chip on every screen that shows it (grey; attention amber when stale). Text and test id unchanged ("M1 result: current").
+- Margins table, "All evaluated margins" and "Limiting constraints" (phase 3): Constraint, Element, Value, Limit, Margin, Normalised margin (bar), Status; unit in a fixed slot, no Unit column; rows tightest first by the engine's `normalised_margin`; Status Pass / Near limit / Violated with icon. `margin_warn` from `/api/meta`.
+- Diagram (phase 4/6): a bus whose evaluated constraints all pass shows "Pass" with a tick; inverters have a 50 × 5 loading bar (grey, amber near limit, orange when violated or limiting); the element with the smallest element-level normalised margin gets a 4 px accent bar under it, with a legend entry. "Near limit" on the diagram now uses the caution colour (was neutral).
+
+Kept on purpose until W4 (the e2e suite reads them): the Status banner, the KPI tiles, the "Run M1" / "Run M2" buttons, the stepper.
+
+Not carried over from the mockup: row click selecting the element (the Element link to S-05 stays), "no limit" under line currents, the derived margins of the mockup (the engine's are used).
+
+Deviation: the strip counts a near-limit row as passing and names it ("2 pass, 1 near limit"), since it satisfies its limit.
+
+Added `pu` to the result decimals table (`format.ts`): margin rows spell the per-unit unit `pu`, other results `p.u.`.
+
 ## Blocked / needs logic change
 
 - Line current has no limit in the model (no ampacity), so lines show "no limit" and get no status. A line-loading status needs a model change (the planned X10 cable work).

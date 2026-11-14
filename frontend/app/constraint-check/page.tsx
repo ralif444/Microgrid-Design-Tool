@@ -3,16 +3,17 @@
 // (D-46 K11), optional storage settings; Run disabled unless the M1 result is current (§3.1). The
 // single-line diagram carries the M1 labels and M2 marks (Doc 12 FR-96) and opens the Inspector.
 import { useState } from "react";
-import type { M2Payload, RunRecord } from "../../api-types";
+import type { M1Payload, M2Payload, RunRecord } from "../../api-types";
 import Link from "next/link";
 import { EmptyState } from "../../components/EmptyState";
 import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
 import { asResponse } from "../../components/Further";
+import { CheckStrip } from "../../components/CheckStrip";
 import { Icon } from "../../components/Icon";
 import { Inspector, type ElementRef } from "../../components/Inspector";
 import { m2Kpis } from "../../components/kpi";
 import { KpiStrip } from "../../components/KpiStrip";
-import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
+import { M1BlockedNote } from "../../components/M1Freshness";
 import { ConstraintTable, M2Results } from "../../components/M2Results";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
@@ -55,6 +56,9 @@ function ConstraintCheck() {
   const report = useValidation(design);
   const fresh = m1Freshness(ref?.snapshot_hash ?? null, report);
   const resp = asResponse(latestRun(runRecords, "M2", report?.snapshot_hash ?? null));
+  const m1Run = latestRun(runRecords, "M1", report?.snapshot_hash ?? null);
+  const m1 = m1Run?.result.status === "FEASIBLE" ? (m1Run.result.payload as unknown as M1Payload) : null;
+  const m1Record = runRecords.find((x) => x.record_id === ref?.record_id) ?? null;
 
   async function run() {
     if (!ref) return;
@@ -70,8 +74,8 @@ function ConstraintCheck() {
     <>
       <div className={styles.head}>
         <h1>Constraint check (M2)</h1>
-        <M1FreshnessBadge f={fresh} />
       </div>
+      <CheckStrip fresh={fresh} m1={m1} m1Record={m1Record} m2={payload} />
       <ExampleGuide screen="constraint-check" />
       <M1BlockedNote f={fresh} />
       <form

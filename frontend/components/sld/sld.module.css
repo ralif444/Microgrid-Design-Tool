@@ -42,6 +42,14 @@
 .caution .deco { fill: var(--role-caution-fg); }
 .caution .icon { color: var(--role-caution-icon); }
 
+/* W3 overlay: loading bar (grey when fine, role colour when abnormal) and smallest-element-margin bar */
+.track { fill: var(--cds-border-subtle-01); }
+.loadOk { fill: var(--cds-text-secondary); }
+.loadNear { fill: var(--role-caution-edge); }
+.loadBad { fill: var(--role-negative-edge); }
+.tight { fill: var(--cds-interactive); }
+@media print { .tight { fill: var(--cds-text-primary); } }
+
 .legend { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-6); margin: var(--space-2) 0 0; padding: var(--space-2) var(--space-4); list-style: none;
   background: var(--cds-layer-01); color: var(--cds-text-primary); font-size: var(--text-sm); }
 .legend li { display: inline-flex; align-items: center; gap: var(--space-2); }

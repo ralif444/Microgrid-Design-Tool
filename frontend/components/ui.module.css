@@ -30,7 +30,13 @@
 .toastArea { position: fixed; right: var(--space-6); bottom: var(--space-6); z-index: 10; display: grid; gap: var(--space-2); max-width: 26rem; }
 .toast { margin: 0; box-shadow: none; } /* flat surfaces (guideline §11) */
 @media print { .toastArea { display: none; } }
-.fresh { margin: 0; }
+.fresh {
+  display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--space-1) var(--space-2); white-space: nowrap;
+  font-size: var(--text-sm); color: var(--role-info-fg); background: var(--role-info-bg); border: var(--border-width) solid var(--color-border);
+}
+.fresh > svg { fill: var(--role-info-icon); }
+.fresh[data-f="stale"] { color: var(--role-attention-fg); background: var(--role-attention-bg); border-color: var(--role-attention-edge); }
+.fresh[data-f="stale"] > svg { fill: var(--role-attention-icon); }
 .blocked {
   display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); max-width: var(--prose-max);
   margin: var(--space-3) 0; padding: var(--space-2) var(--space-4);

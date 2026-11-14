@@ -126,6 +126,25 @@ describe("SLD model (FR-94, FR-95)", () => {
     expect(value(m.system, "Checks", "Verdict")?.value).toBe("INFEASIBLE");
   });
 
+  it("W3: a passing element is marked pass, the smallest element margin is marked once, loading is copied", () => {
+    const bus = D2.buses![0].id!;
+    const inv = D2.inverters![0].id!;
+    const payload = {
+      verdict: "FEASIBLE",
+      // SYSTEM is tighter but has no element to mark
+      constraint_margins: [lc("SYSTEM", 0.01, 0.01), lc(bus, 0.9, 0.9), lc(inv, 0.3, 0.3)],
+      not_evaluated: [],
+      sizing_check: { per_inverter: [], per_line: [] },
+    } as unknown as M2Payload;
+    const m1 = { bus_results: [], inverter_results: [{ inverter_id: inv, p_kw: 1, q_kvar: 0, s_kva: 1, loading_ratio: 0.235 }], line_results: [] } as unknown as M1Payload;
+    const m = buildSldModel({ design: D2, m1, m2: { payload, limiting: [] }, marginWarn: 0.05 });
+    expect(m.buses.find((e) => e.id === bus)?.mark).toBe("pass");
+    const all = [...m.buses, ...m.inverters, ...m.lines];
+    expect(all.filter((e) => e.tightest).map((e) => e.id)).toEqual([inv]);
+    expect(m.inverters.find((e) => e.id === inv)?.loading).toBe(0.235);
+    expect(m.lines.every((e) => e.mark === null)).toBe(true); // no own constraint: no mark
+  });
+
   it("attaches validation issues to the element they name", () => {
     const bus = D2.buses![0].id!;
     const m = buildSldModel({

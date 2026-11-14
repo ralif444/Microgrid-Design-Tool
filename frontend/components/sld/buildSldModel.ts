@@ -12,8 +12,9 @@ export type SldRow = { label: string; value: string; unit?: string; note?: strin
 /** `empty` replaces the rows when there is no current run for the section. */
 /** "Sizing check" is advisory (Doc 3 §3.9, VISUAL §8), kept apart from the constraint checks. */
 export type SldSection = { title: "Design data" | "Results" | "Checks" | "Sizing check" | "Issues"; rows: SldRow[]; empty?: string };
-/** S-08 rules (Doc 12 §9 #17): violated `margin < 0`, limiting in `result.limiting_constraints`, near via `nearLimit`. */
-export type SldMark = "violated" | "limiting" | "near";
+/** S-08 rules (Doc 12 §9 #17): violated `margin < 0`, limiting in `result.limiting_constraints`, near via `nearLimit`;
+ * pass: every evaluated constraint of the element satisfied (W3). */
+export type SldMark = "violated" | "limiting" | "near" | "pass";
 
 export type SldElement = {
   kind: SldKind;
@@ -30,6 +31,10 @@ export type SldElement = {
   sections: SldSection[];
   mark: SldMark | null;
   issues: string[];
+  /** Inverter: M1 loading ratio, for the loading bar (W3). */
+  loading?: number;
+  /** S-08: the element with the smallest normalised margin among element-level constraints (W3). */
+  tightest?: boolean;
 };
 
 export type SldModel = {
@@ -80,7 +85,9 @@ function checks(id: string, m2: SldInput["m2"], marginWarn: number | null, extra
       ? "limiting"
       : own.some((c) => nearLimit(c, marginWarn))
         ? "near"
-        : null;
+        : own.length
+          ? "pass"
+          : null;
   return { section: { title: "Checks", rows: [...rows, ...extra] }, mark };
 }
 
@@ -191,6 +198,7 @@ export function buildSldModel({ design, m1 = null, m2 = null, issues = [], margi
         label: `Inverter ${i.id} at bus ${i.bus_id ?? "—"}, rated ${fmt(i.rated_kva) ?? "—"} kVA`,
         tags: [i.id, `${fmt(i.rated_kva) ?? "—"} kVA`, ...(r ? [`${fmt(r.p_kw)} kW`, `loading ${fmt(r.loading_ratio)}`] : [])],
         mark: c.mark,
+        ...(r ? { loading: r.loading_ratio } : {}),
       },
       "Inverter",
       [
@@ -290,6 +298,10 @@ export function buildSldModel({ design, m1 = null, m2 = null, issues = [], margi
       ],
     );
   });
+
+  // W3: smallest element-level normalised margin (the system frequency has no element to mark)
+  const tight = m2?.payload.constraint_margins.filter((c) => c.element_id !== "SYSTEM").reduce<LimitingConstraint | null>((a, c) => (a === null || c.normalised_margin < a.normalised_margin ? c : a), null);
+  for (const e of [...busEls, ...invEls, ...lineEls]) if (e.id === tight?.element_id) e.tightest = true;
 
   const topologyKey = JSON.stringify([
     buses.map((b) => b.id),

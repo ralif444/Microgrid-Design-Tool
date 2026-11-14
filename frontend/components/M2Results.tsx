@@ -1,7 +1,6 @@
 // M2 result parts (Doc 7 §5.1, §6.4): limiting constraints / margins, "not evaluated" list,
 // loadability, SizingCheck in an advisory panel separate from SizingAdvice (FR-25, FR-16, FR-24, FR-27).
 // With `charts` (S-08 and the S-16 report, Doc 12 X3 FR-88): the margin chart and the loadability axis.
-import { Tag } from "@carbon/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getMeta } from "../api-client";
@@ -11,12 +10,31 @@ import { BarChart } from "./charts/BarChart";
 import { LoadabilityAxis } from "./charts/LoadabilityAxis";
 import { DataTable, type DataColumn } from "./DataTable";
 import { fixed, num } from "./format";
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "./Icon";
 import styles from "./M2Results.module.css";
 
 // FR-26: a satisfied constraint with normalised margin below MARGIN_WARN (Eq. 4.18) is near its limit.
 export const nearLimit = (c: LimitingConstraint, marginWarn: number | null) =>
   marginWarn !== null && c.margin >= 0 && c.normalised_margin < marginWarn;
+
+// Row status of the margins table, the status strip and the diagram (ADR-016, W3); icon + word, never colour alone.
+export type MarginStatus = "violated" | "near" | "pass";
+export const marginStatus = (c: LimitingConstraint, marginWarn: number | null): MarginStatus =>
+  c.margin < 0 ? "violated" : nearLimit(c, marginWarn) ? "near" : "pass";
+export const STATUS_WORD: Record<MarginStatus, { icon: IconName; word: string }> = {
+  violated: { icon: "misuse", word: "Violated" },
+  near: { icon: "warn", word: "Near limit" },
+  pass: { icon: "check", word: "Pass" },
+};
+
+/** MARGIN_WARN from /api/meta (FR-26), or null until it arrives. */
+export function useMarginWarn(): number | null {
+  const [marginWarn, setMarginWarn] = useState<number | null>(null);
+  useEffect(() => {
+    void getMeta().then((m) => m.ok && setMarginWarn(m.data.limits.margin_warn));
+  }, []);
+  return marginWarn;
+}
 
 export const KIND_WORDS: Record<string, string> = {
   BUS_VOLTAGE_MIN: "Bus voltage, lower limit",
@@ -30,13 +48,19 @@ export const KIND_WORDS: Record<string, string> = {
 
 const fmt = (v: number | null | undefined) => (v === null || v === undefined ? "not available" : String(num(v)));
 
+// A number with its unit in a fixed-width slot, so values and units each share an edge (mockup phase 3).
+const withUnit = (text: string, unit: string) => (
+  <>
+    {text}
+    <span className={styles.unit}>{unit}</span>
+  </>
+);
+
 // `shortcut`: per-row link to M3a pre-filled for that constraint (Doc 12 FR-84), on S-08 only.
+// Rows tightest first (normalised margin); sorting only, the margins are the engine's (guideline §1 rule 1).
 export function ConstraintTable({ label, rows, shortcut = false }: { label: string; rows: LimitingConstraint[]; shortcut?: boolean }) {
-  const [marginWarn, setMarginWarn] = useState<number | null>(null);
-  useEffect(() => {
-    void getMeta().then((m) => m.ok && setMarginWarn(m.data.limits.margin_warn));
-  }, []);
-  // rows mix units (p.u., Hz, A, ratio), so the unit is its own column
+  const marginWarn = useMarginWarn();
+  const sorted = [...rows].sort((a, b) => a.normalised_margin - b.normalised_margin);
   const columns: DataColumn<LimitingConstraint>[] = [
     { key: "kind", header: "Constraint", cell: (c) => KIND_WORDS[c.kind] ?? c.kind },
     {
@@ -45,33 +69,42 @@ export function ConstraintTable({ label, rows, shortcut = false }: { label: stri
       // D-48 K22: open the element's row in S-05
       cell: (c) => (c.element_id === "SYSTEM" ? c.element_id : <Link href={`/network/?focus=${encodeURIComponent(c.element_id)}`}>{c.element_id}</Link>),
     },
-    { key: "value", header: "Value", numeric: true, cell: (c) => fixed(c.value, c.unit) },
-    { key: "limit", header: "Limit", numeric: true, cell: (c) => fixed(c.limit, c.unit) },
-    { key: "unit", header: "Unit", cell: (c) => c.unit },
+    { key: "value", header: "Value", numeric: true, cell: (c) => withUnit(fixed(c.value, c.unit), c.unit) },
+    { key: "limit", header: "Limit", numeric: true, cell: (c) => withUnit(fixed(c.limit, c.unit), c.unit) },
     {
       key: "margin",
       header: "Margin",
       term: "margin",
       numeric: true,
-      cell: (c) =>
-        c.margin < 0 ? (
-          <span className={styles.violated}>
-            <Icon name="misuse" size={16} />
-            Violated by {fixed(-c.margin, c.unit)} {c.unit}
+      cell: (c) => (c.margin < 0 ? withUnit(`Violated by ${fixed(-c.margin, c.unit)}`, c.unit) : withUnit(fixed(c.margin, c.unit), c.unit)),
+    },
+    {
+      key: "normalised",
+      header: "Normalised margin",
+      term: "nmargin",
+      numeric: true,
+      // bar: normalised margin clamped to 0–1, longer = more room; a violated row has an empty bar
+      cell: (c) => (
+        <span className={styles.nm}>
+          <span className={styles.track} aria-hidden="true">
+            <span className={styles.fill} data-s={marginStatus(c, marginWarn)} style={{ width: `${Math.min(1, Math.max(0, c.normalised_margin)) * 100}%` }} />
           </span>
-        ) : (
-          <>
-            {fixed(c.margin, c.unit)} {c.unit}
-            {nearLimit(c, marginWarn) && (
-              <>
-                {" "}
-                <Tag type="warm-gray" size="md" renderIcon={() => <Icon name="warn" />} className={styles.near}>
-                  Near limit
-                </Tag>
-              </>
-            )}
-          </>
-        ),
+          {fixed(c.normalised_margin, "ratio")}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      cell: (c) => {
+        const s = marginStatus(c, marginWarn);
+        return (
+          <span className={styles.status} data-s={s}>
+            <Icon name={STATUS_WORD[s].icon} size={16} />
+            {STATUS_WORD[s].word}
+          </span>
+        );
+      },
     },
   ];
   if (shortcut)
@@ -85,7 +118,7 @@ export function ConstraintTable({ label, rows, shortcut = false }: { label: stri
           </Link>
         ),
     });
-  return <DataTable label={label} caption={label} columns={columns} rows={rows} rowKey={(_, k) => k} rowName={(c) => c.element_id} rowViolated={(c) => c.margin < 0} />;
+  return <DataTable label={label} caption={label} columns={columns} rows={sorted} rowKey={(_, k) => k} rowName={(c) => c.element_id} rowViolated={(c) => c.margin < 0} />;
 }
 
 type InvSize = M2Payload["sizing_check"]["per_inverter"][number];

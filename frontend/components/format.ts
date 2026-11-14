@@ -14,7 +14,7 @@ export const parseNumber = (s: string, integer = false): number | null | undefin
 export const NOT_A_NUMBER = "Enter a number, for example 0.44 or 0,44.";
 
 // Results only (ADR-016, plan W1): fixed decimals per unit so result columns line up. Inputs keep `num`.
-const DP: Record<string, number> = { kW: 2, kvar: 2, kVA: 2, "p.u.": 4, deg: 2, Hz: 3, A: 1, ratio: 3, "pu of rating": 3 };
+const DP: Record<string, number> = { kW: 2, kvar: 2, kVA: 2, "p.u.": 4, pu: 4 /* margin rows spell it "pu" */, deg: 2, Hz: 3, A: 1, ratio: 3, "pu of rating": 3 };
 // A non-zero value that would keep fewer than 2 significant digits (0.043 kW at 2 decimals) falls back to `num`.
 export const fixed = (v: number, unit: string) => {
   const d = DP[unit];

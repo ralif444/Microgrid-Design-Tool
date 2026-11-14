@@ -1,0 +1,13 @@
+/* Status strip (ADR-016, W3): one quiet row; colour only when abnormal (Not feasible), always icon + word. */
+.strip {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4);
+  margin: var(--space-4) 0; padding: var(--space-2) var(--space-4);
+  background: var(--color-surface); border: var(--border-width) solid var(--color-border); font-size: var(--text-sm);
+}
+.chip { display: inline-flex; align-items: center; gap: var(--space-1); font-weight: var(--weight-semibold); color: var(--color-fg); white-space: nowrap; }
+.chip > svg { fill: var(--role-success-icon); }
+.chip[data-tone="negative"] { color: var(--role-negative-fg); }
+.chip[data-tone="negative"] > svg { fill: var(--role-negative-icon); }
+.fact { white-space: nowrap; font-variant-numeric: var(--numeric); }
+.label { color: var(--color-fg-muted); }
+.spacer { flex: 1; }
