@@ -60,7 +60,7 @@ function ConstraintCheck() {
           Constraint check <span className="code-label">(M2)</span>
         </h1>
       </div>
-      <CheckStrip fresh={fresh} m1={m1} m1Record={m1Record} m2={payload} />
+      <CheckStrip fresh={fresh} m1={m1} m1Record={m1Record} m2={payload} m2Record={payload ? (resp?.run_record ?? null) : null} />
       <ExampleGuide screen="constraint-check" />
       <M1BlockedNote f={fresh} />
       <form
@@ -98,7 +98,7 @@ function ConstraintCheck() {
           {w.message}
         </p>
       ))}
-      {r?.status === "INFEASIBLE" && <ConstraintTable label="Limiting constraints" rows={r.limiting_constraints ?? []} shortcut />}
+      {r?.status === "INFEASIBLE" && <ConstraintTable label="Limiting constraints" rows={r.limiting_constraints ?? []} shortcut note={false} />}
       <ResultsDiagram fresh={fresh} checks selected={inspect?.id ?? null} onSelect={setInspect} />
       {inspect && <Inspector target={inspect} onClose={() => setInspect(null)} />}
       {payload && resp && <M2Results p={payload} charts={{ record: resp.run_record }} />}

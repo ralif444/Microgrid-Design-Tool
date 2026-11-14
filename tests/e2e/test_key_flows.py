@@ -70,10 +70,9 @@ def test_f1_pipeline_infeasible_loop_to_report(server: Callable[[str], str], pag
     page.get_by_role("table", name="Limiting constraints").get_by_role(
         "link", name="INV1", exact=True
     ).click()
-    expect(page.get_by_role("tab", name="Inverters")).to_have_attribute("aria-selected", "true")
-    row = page.locator("tr[aria-current='true']")
-    expect(row).to_have_count(1)
-    row.get_by_label("Rating (kVA) of INV1").fill("50")
+    page.wait_for_url("**/workspace/?el=inverter:INV1")
+    insp = page.get_by_role("complementary", name="Inspector: Inverter INV1")
+    insp.get_by_label("Rating").fill("50")
 
     step(page, "Constraint check (M2)")
     expect(page.get_by_test_id("m1-freshness")).to_have_text("M1 result: stale")

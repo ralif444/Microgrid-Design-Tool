@@ -19,7 +19,7 @@ const tile = (k: ReturnType<typeof m2Kpis>, label: string) => k.find((t) => t.la
 describe("m2Kpis (FR-87)", () => {
   it("counts violations and not-evaluated items, picks the tightest margin", () => {
     const k = m2Kpis(p({}));
-    expect(tile(k, "Verdict")).toMatchObject({ value: "INFEASIBLE", icon: "misuse" });
+    expect(tile(k, "Verdict")).toMatchObject({ value: "Limits violated", icon: "misuse" });
     expect(tile(k, "Violated constraints").value).toBe(2);
     expect(tile(k, "Tightest constraint")).toMatchObject({ value: -0.1, detail: "normalised margin; Bus voltage, lower limit, B1" });
     expect(tile(k, "Not evaluated").value).toBe(1);

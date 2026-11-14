@@ -82,7 +82,7 @@ function Sweep() {
     {
       key: "l",
       header: "Limiting constraint",
-      cell: (pt) => (pt.limiting_constraint ? <ConstraintTable label={`Limiting constraint at ${fmt(pt.value)}`} rows={[pt.limiting_constraint]} /> : "—"),
+      cell: (pt) => (pt.limiting_constraint ? <ConstraintTable label={`Limiting constraint at ${fmt(pt.value)}`} rows={[pt.limiting_constraint]} note={false} /> : "—"),
     },
   ];
   return (

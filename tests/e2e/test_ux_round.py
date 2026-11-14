@@ -119,7 +119,7 @@ def test_fr_87_fr_88_constraint_check_kpis_and_charts(
     page.get_by_role("button", name="Run M2").click()
     expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "INFEASIBLE")
     kpis = page.get_by_role("region", name="Constraint check key figures")
-    expect(kpis).to_contain_text("INFEASIBLE")
+    expect(kpis).to_contain_text("Limits violated")
     expect(kpis).to_contain_text("Tightest constraint")
     expect(kpis).to_contain_text("solution-existence diagnostic, not a stability limit")
     expect(kpis).to_contain_text("FAKE engine: placeholder values, not engine results.")

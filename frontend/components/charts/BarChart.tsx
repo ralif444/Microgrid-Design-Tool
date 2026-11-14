@@ -27,6 +27,7 @@ export const BarChart = memo(function BarChart({
   categories,
   series,
   refs = [],
+  limits,
   dots = false,
   note,
   record,
@@ -42,6 +43,8 @@ export const BarChart = memo(function BarChart({
   categories: string[];
   series: BarSeries[];
   refs?: RefLine[];
+  /** per-category limit, drawn as a tick across that bar (each line's own limit, audit D-8) */
+  limits?: (number | null)[];
   dots?: boolean;
   note?: string;
   record?: RunRecord | null;
@@ -51,7 +54,7 @@ export const BarChart = memo(function BarChart({
   const band = dots ? BAR : BAR * series.length;
   const h = M.t + categories.length * (band + GAP) + M.b;
   const g = useMemo(() => {
-    const vals = [...series.flatMap((s) => s.values), ...refs.map((r) => r.value)];
+    const vals = [...series.flatMap((s) => s.values), ...refs.map((r) => r.value), ...(limits ?? [])];
     const fin = vals.filter((v): v is number => v !== null);
     const raw: [number, number] = dots ? niceDomain(vals) : [Math.min(0, ...fin), Math.max(0, ...fin)];
     const d: [number, number] = raw[0] === raw[1] ? [raw[0], raw[0] + 1] : raw;
@@ -60,7 +63,7 @@ export const BarChart = memo(function BarChart({
     // room left of the plot for the value labels of negative bars, so they never meet a category name
     const pad = !dots && fin.some((v) => v < 0) ? 36 : 0;
     return { sx: linearScale(dom, [labelWidth + pad, W - M.r]), ticks, zero: dots ? null : 0, lo: dom[0] };
-  }, [series, refs, dots, labelWidth]);
+  }, [series, refs, limits, dots, labelWidth]);
   const multi = series.length > 1;
   return (
     <ChartFrame
@@ -68,7 +71,7 @@ export const BarChart = memo(function BarChart({
       record={record}
       note={note}
       legend={series.map((s, k) => ({ name: s.name, swatch: <Swatch color={SERIES[k % SERIES.length]} dash={dots ? undefined : "bar"} marker={dots ? "circle" : undefined} filled /> }))}
-      data={{ columns: [categoryTitle, ...series.map((s) => (multi ? `${s.name}, ${valueTitle}` : valueTitle))], rows: categories.map((c, i) => [c, ...series.map((s) => s.values[i] ?? null)]) }}
+      data={{ columns: [categoryTitle, ...series.map((s) => (multi ? `${s.name}, ${valueTitle}` : valueTitle)), ...(limits ? [`Limit (${unit})`] : [])], rows: categories.map((c, i) => [c, ...series.map((s) => s.values[i] ?? null), ...(limits ? [limits[i] ?? null] : [])]) }}
     >
       <svg role="img" aria-label={`${valueTitle} ${dots ? "dot" : "bar"} chart, ${categories.length} ${dots ? "points" : "bars"}`} viewBox={`0 0 ${W} ${h}`} className="chart-svg">
         {negative && g.zero !== null && g.lo < 0 && (
@@ -94,6 +97,7 @@ export const BarChart = memo(function BarChart({
               <text x={labelWidth - 6} y={y0 + band / 2 + 4} textAnchor="end">
                 {c}
               </text>
+              {limits?.[i] != null && <line x1={g.sx(limits[i]!)} x2={g.sx(limits[i]!)} y1={y0 - 3} y2={y0 + band + 3} className="chart-ref" data-testid="bar-limit" />}
               {series.map((s, k) => {
                 const v = s.values[i] ?? null;
                 const y = dots ? y0 : y0 + k * BAR;

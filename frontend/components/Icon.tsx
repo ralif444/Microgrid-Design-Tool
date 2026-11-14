@@ -5,6 +5,7 @@ import {
   CircleDash,
   Close,
   ErrorFilled,
+  FlagFilled,
   Information,
   Link,
   ListBulleted,
@@ -29,6 +30,7 @@ const ICONS = {
   link: Link, // DEPENDENCY_NOT_MET
   info: Information, // NOT_APPLICABLE, notes
   warn: WarningAlt, // near limit
+  limiting: FlagFilled, // limiting constraint (own icon, audit D-19)
   ban: Locked, // blocked step
   dot: CircleDash, // not run yet
 } as const;

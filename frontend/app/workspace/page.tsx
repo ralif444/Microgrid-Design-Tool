@@ -32,6 +32,13 @@ import { ID_PREFIX, latestRun, m1Ref, nextId, useProject, useProjectDispatch } f
 import styles from "./workspace.module.css";
 
 type Selection = ElementRef | { kind: "limits" } | null;
+// `?el=inverter:INV1` (element links from the other screens, audit D-18) opens with that element selected.
+const KINDS = ["bus", "line", "inverter", "load"] as const;
+function parseEl(v: string | null): Selection {
+  const k = v?.indexOf(":") ?? -1;
+  const kind = v?.slice(0, k) as ElementRef["kind"];
+  return v && k > 0 && KINDS.includes(kind) ? { kind, id: v.slice(k + 1) } : null;
+}
 const MARK_WORD = { violated: "Violated", limiting: "Limiting", near: "Near limit" } as const;
 
 function ElementList({ selected, onSelect, editable }: { selected: Selection; onSelect: (s: Selection) => void; editable: boolean }) {
@@ -127,8 +134,9 @@ function ElementList({ selected, onSelect, editable }: { selected: Selection; on
 function Workspace() {
   const { design, runRecords } = useProject();
   const dispatch = useProjectDispatch();
-  const area = useSearchParams().get("area") === "check" ? "check" : "model";
-  const [sel, setSel] = useState<Selection>(null);
+  const search = useSearchParams();
+  const area = search.get("area") === "check" ? "check" : "model";
+  const [sel, setSel] = useState<Selection>(() => parseEl(search.get("el")));
   const [focusKey, setFocusKey] = useState(0);
   const [drawer, setDrawer] = useState(true);
   const [tab, setTab] = useState<"margins" | "pf">("margins");
@@ -146,6 +154,8 @@ function Workspace() {
   const ex = useExampleForm<M2Params>("constraint-check", lastM2Params(runRecords));
   const params = ex.values;
   const marginsSet = params.inverter_margin_ratio !== null && params.line_margin_ratio !== null;
+  // opened by the user, it stays open while they type (audit D-9); closed by default once margins are set
+  const [settingsOpen, setSettingsOpen] = useState(!marginsSet);
   const { busy, error, setError, call } = useAnalysisCall();
 
   const select = (s: Selection) => {
@@ -189,10 +199,10 @@ function Workspace() {
       <ElementList selected={sel} onSelect={select} editable={area === "model"} />
 
       <div className={styles.canvas}>
-        {area === "check" && <CheckStrip fresh={fresh} m1={m1} m1Record={m1Record} m2={m2} />}
+        {area === "check" && <CheckStrip fresh={fresh} m1={m1} m1Record={m1Record} m2={m2} m2Record={m2Resp?.run_record ?? null} />}
         {area === "check" && <M1BlockedNote f={fresh} />}
         {area === "check" && (
-          <details className={styles.settings} open={!marginsSet || undefined}>
+          <details className={styles.settings} open={settingsOpen || !marginsSet} onToggle={(e) => setSettingsOpen(e.currentTarget.open)}>
             <summary>Constraint check settings{marginsSet ? "" : ": enter both design margins to run M2"}</summary>
             <form aria-label="Constraint check settings" onSubmit={(e) => (e.preventDefault(), void runM2())}>
               {M2_FIELDS.map(([k, label, unit, step]) => (
@@ -297,9 +307,9 @@ function Workspace() {
               {tab === "margins" ? (
                 <>
                   {r2 && <StatusBanner type="M2" result={r2} />}
-                  {r2?.status === "INFEASIBLE" && <ConstraintTable label="Limiting constraints" rows={r2.limiting_constraints ?? []} shortcut />}
+                  {r2?.status === "INFEASIBLE" && <ConstraintTable label="Limiting constraints" rows={r2.limiting_constraints ?? []} shortcut note={false} onInspect={select} />}
                   {m2 && m2Resp ? (
-                    <M2Results p={m2} charts={{ record: m2Resp.run_record }} />
+                    <M2Results p={m2} charts={{ record: m2Resp.run_record }} onInspect={select} />
                   ) : (
                     !r2 && <EmptyState title="No current constraint check.">Run M2 on the current design to see the margins.</EmptyState>
                   )}
@@ -309,7 +319,7 @@ function Workspace() {
                 <>
                   {m1Resp && <StatusBanner type="M1" result={m1Resp.result} />}
                   {m1 && m1Resp ? (
-                    <M1Results p={m1} charts={{ limits: design.design_constraints, record: m1Resp.run_record }} onInspect={select} />
+                    <M1Results p={m1} charts={{ limits: design.design_constraints, record: m1Resp.run_record }} onInspect={select} check={{ design, m2 }} />
                   ) : (
                     !m1Resp && (
                       <EmptyState title="No current power flow.">Run M1 on the current design to see bus voltages, inverter outputs and line flows.</EmptyState>

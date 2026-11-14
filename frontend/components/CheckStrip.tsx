@@ -44,6 +44,7 @@ export function CheckStrip({
   m1,
   m1Record,
   m2,
+  m2Record,
 }: {
   fresh: Freshness;
   /** current FEASIBLE M1 payload, or null */
@@ -51,7 +52,10 @@ export function CheckStrip({
   m1Record: RunRecord | null;
   /** S-08 only: the current M2 payload, or null when not run on this design */
   m2?: M2Payload | null;
+  /** its RunRecord, to restate the design margins the check used (audit D-9) */
+  m2Record?: RunRecord | null;
 }) {
+  const used = m2Record?.parameters as { inverter_margin_ratio?: number; line_margin_ratio?: number } | undefined;
   const marginWarn = useMarginWarn();
   const lo = m1 && pick(m1.bus_results, (b) => b.voltage_pu);
   return (
@@ -62,6 +66,9 @@ export function CheckStrip({
           <>
             {m2.verdict === "FEASIBLE" ? <Chip icon="feasible">Feasible</Chip> : <Chip icon="misuse" tone="negative">Not feasible</Chip>}
             <span className={styles.fact}>{countsText(m2, marginWarn)}</span>
+            {typeof used?.inverter_margin_ratio === "number" && typeof used.line_margin_ratio === "number" && (
+              <Fact label="with m_inv" value={`${fixed(used.inverter_margin_ratio, "ratio")}, m_line ${fixed(used.line_margin_ratio, "ratio")}`} />
+            )}
           </>
         ) : (
           <Chip icon="dot">No current constraint check</Chip>

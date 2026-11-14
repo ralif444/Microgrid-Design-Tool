@@ -3,7 +3,7 @@
 // but never blocks it (Doc 7 P6): a run with problems returns INPUT_INVALID listing all issues.
 import Link from "next/link";
 import { useState } from "react";
-import type { M1Payload } from "../../api-types";
+import type { M2Payload, M1Payload } from "../../api-types";
 import { ExampleGuide, ExampleNext, nextReady } from "../../components/ExampleForm";
 import { EmptyState } from "../../components/EmptyState";
 import { asResponse } from "../../components/Further";
@@ -40,6 +40,8 @@ function PowerFlow() {
   }
 
   const payload = resp?.result.status === "FEASIBLE" ? (resp.result.payload as unknown as M1Payload) : null;
+  const r2 = latestRun(runRecords, "M2", report?.snapshot_hash ?? null)?.result;
+  const m2 = r2 && (r2.status === "FEASIBLE" || r2.status === "INFEASIBLE") ? (r2.payload as unknown as M2Payload) : null;
   return (
     <>
       <div className={styles.head}>
@@ -87,7 +89,7 @@ function PowerFlow() {
       {resp && <StatusBanner type="M1" result={resp.result} />}
       {payload && resp && <KpiStrip label="Power flow key figures" kpis={m1Kpis(payload)} record={resp.run_record} />}
       <ResultsDiagram fresh={fresh} selected={inspect?.id ?? null} onSelect={setInspect} />
-      {payload && resp && <M1Results p={payload} charts={{ limits: design.design_constraints, record: resp.run_record }} onInspect={setInspect} />}
+      {payload && resp && <M1Results p={payload} charts={{ limits: design.design_constraints, record: resp.run_record }} onInspect={setInspect} check={{ design, m2 }} />}
       {inspect && <Inspector target={inspect} onClose={() => setInspect(null)} />}
       {payload && <IndicatorPanel />}
       {resp && (

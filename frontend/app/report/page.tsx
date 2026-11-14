@@ -160,7 +160,7 @@ function Report() {
               </li>
             ))}
           </ul>
-          <ConstraintTable label="Limiting constraints" rows={limiting} />
+          <ConstraintTable label="Limiting constraints" rows={limiting} note={false} />
         </>
       )}
 
@@ -207,7 +207,7 @@ function Report() {
             />
           </div>
           {/* limits as the reported run saw them, so the reference lines match that run */}
-          {m1 && <M1Results p={m1p} charts={{ limits: (m1.snapshot as ProjectSnapshot | null)?.design_constraints, record: m1, voltage: false }} />}
+          {m1 && <M1Results p={m1p} charts={{ limits: (m1.snapshot as ProjectSnapshot | null)?.design_constraints, record: m1, voltage: false }} check={m1.snapshot ? { design: m1.snapshot as ProjectSnapshot, m2: m2?.snapshot_hash === m1.snapshot_hash ? m2p : null } : undefined} />}
         </>
       ) : (
         <p className={styles.muted}>No power flow (M1) result{m1 ? `: the latest run ended with “${statusWord("M1", m1.result)}”` : ""}.</p>

@@ -8,6 +8,10 @@ export interface BannerText {
   hint: string;
 }
 
+// One violated count for banner, KPI and strip (audit D-21): evaluated margins below zero.
+export const violatedCount = (p: { constraint_margins?: { margin: number }[] } | null | undefined) =>
+  p?.constraint_margins?.filter((c) => c.margin < 0).length ?? null;
+
 export function bannerText(type: AnalysisType, r: AnalysisResult): BannerText {
   const n = (r.diagnostics?.issues as unknown[] | undefined)?.length ?? 0;
   switch (r.status) {
@@ -36,7 +40,7 @@ export function bannerText(type: AnalysisType, r: AnalysisResult): BannerText {
     case "INFEASIBLE":
       return {
         role: "warning",
-        headline: `A valid operating point exists, but the design violates ${plural(r.limiting_constraints?.length ?? 0, "constraint")}.`,
+        headline: `A valid operating point exists, but the design violates ${plural(violatedCount(r.payload as never) ?? r.limiting_constraints?.length ?? 0, "constraint")}.`,
         hint: "Change the element named first, then re-run M1 and M2.",
       };
     case "SOLVER_FAILED":

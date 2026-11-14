@@ -4,6 +4,9 @@ import type { CatalogRef, DesignConstraints, Load, RunRecord } from "../api-type
 import { refText } from "./Catalog";
 import type { Column } from "./EntityTable";
 
+// An element the inspector can show (Inspector, workspace selection, element links).
+export type ElementRef = { kind: "bus" | "line" | "inverter" | "load"; id: string };
+
 const times = (a: unknown, b: unknown) => (typeof a === "number" && typeof b === "number" ? a * b : null);
 
 export const BUS_COLUMNS: Column[] = [{ field: "id", label: "Bus id", kind: "text" }];

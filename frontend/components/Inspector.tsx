@@ -10,7 +10,8 @@ import styles from "./Inspector.module.css";
 import type { SldRow, SldSection } from "./sld/buildSldModel";
 import { useSldModel } from "./sld/useSldModel";
 
-export type ElementRef = { kind: "bus" | "line" | "inverter" | "load"; id: string };
+import type { ElementRef } from "./elementFields";
+export type { ElementRef };
 
 const KIND = { bus: ["Bus", "buses"], line: ["Line", "lines"], inverter: ["Inverter", "inverters"], load: ["Load", "loads"] } as const;
 
