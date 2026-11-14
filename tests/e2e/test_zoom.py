@@ -8,13 +8,14 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from flows import enter_design, go_route, gui_snapshot
+from flows import area, enter_design, go_route, gui_snapshot
 from playwright.sync_api import Page
 from test_network_m1_m2 import _run_m1
 
 ROUTES = [
-    "project", "loads", "sizing", "network", "constraints", "power-flow", "constraint-check",
-    "sensitivity", "sweep", "scenarios", "envelope", "small-signal", "transient", "runs",
+    "workspace", "project", "loads", "sizing", "network", "constraints", "power-flow",
+    "constraint-check", "sensitivity", "sweep", "scenarios", "envelope", "small-signal",
+    "transient", "runs",
     "report", "catalogue",
 ]  # fmt: skip
 
@@ -36,6 +37,12 @@ def test_200_percent_zoom_no_sideways_page_scroll(server: Callable[[str], str], 
         go_route(page, r)
         page.locator("h1").first.wait_for()
         measure(r)
+        if r == "workspace":
+            elements = page.get_by_role("navigation", name="Elements")
+            elements.get_by_role("button", name="INV1").click()
+            measure("workspace inspector")
+            area(page, "Check")
+            measure("workspace check")
         if r == "network":
             for tab in ("Lines", "Inverters"):
                 page.get_by_role("tab", name=tab).click()

@@ -42,3 +42,16 @@ form.add { display: grid; justify-items: start; gap: var(--space-1); }
 .tabs [role="tab"] { padding: var(--space-2) var(--space-3); border: 0; border-bottom: 3px solid transparent; background: none; color: var(--color-fg); cursor: pointer; }
 .tabs [role="tab"][aria-selected="true"] { font-weight: var(--weight-semibold); border-bottom-color: var(--color-fg); }
 .panel { padding: var(--space-3) var(--space-4); }
+
+/* Desktop only, but 200 % zoom (Doc 7 §8) narrows the viewport: the inspector moves under the canvas,
+   then everything stacks, so the page never scrolls sideways. */
+@media (max-width: 1100px) {
+  .ws { grid-template-columns: 12rem minmax(0, 1fr); grid-template-areas: "bar bar" "list canvas" "insp insp" "dock dock"; }
+  .insp { border-left: 0; border-top: var(--border-width) solid var(--color-border); }
+  .bar { flex-wrap: wrap; }
+}
+@media (max-width: 700px) {
+  :global(main):has(> .ws) { padding: var(--space-3) var(--space-3) var(--space-6); }
+  .ws { grid-template-columns: minmax(0, 1fr); grid-template-areas: "bar" "list" "canvas" "insp" "dock"; }
+  .list { border-right: 0; border-bottom: var(--border-width) solid var(--color-border); }
+}

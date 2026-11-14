@@ -28,7 +28,7 @@ import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import { SOLVER, useAnalysisCall } from "../../components/useAnalysisCall";
 import { m1Freshness, useValidation } from "../../components/useValidation";
-import { latestRun, m1Ref, useProject, useProjectDispatch } from "../../store";
+import { ID_PREFIX, latestRun, m1Ref, nextId, useProject, useProjectDispatch } from "../../store";
 import styles from "./workspace.module.css";
 
 type Selection = ElementRef | { kind: "limits" } | null;
@@ -40,11 +40,17 @@ function ElementList({ selected, onSelect, editable }: { selected: Selection; on
   const { full } = useSldModel();
   const [busId, setBusId] = useState("");
   const firstBus = design.buses?.[0]?.id ?? null;
+  // a new element opens in the inspector at once; the id is the one the reducer will give it
+  const add = (collection: "inverters" | "lines" | "loads", kind: "inverter" | "line" | "load", row: Record<string, unknown>) => {
+    const id = nextId(ID_PREFIX[collection], design[collection] ?? []);
+    dispatch({ type: "rowAdded", collection, row });
+    onSelect({ kind, id });
+  };
   const groups = [
-    { title: "Inverters", kind: "inverter", list: full.inverters, add: () => dispatch({ type: "rowAdded", collection: "inverters", row: { bus_id: firstBus } }) },
+    { title: "Inverters", kind: "inverter", list: full.inverters, add: () => add("inverters", "inverter", { bus_id: firstBus }) },
     { title: "Buses", kind: "bus", list: full.buses, add: null },
-    { title: "Lines", kind: "line", list: full.lines, add: () => dispatch({ type: "rowAdded", collection: "lines", row: { from_bus_id: null, to_bus_id: null } }) },
-    { title: "Loads", kind: "load", list: full.loads, add: () => dispatch({ type: "rowAdded", collection: "loads", row: { bus_id: firstBus, p_kw: null, q_kvar: null } }) },
+    { title: "Lines", kind: "line", list: full.lines, add: () => add("lines", "line", { from_bus_id: null, to_bus_id: null }) },
+    { title: "Loads", kind: "load", list: full.loads, add: () => add("loads", "load", { bus_id: firstBus, p_kw: null, q_kvar: null }) },
   ] as const;
   const isSel = (kind: string, id?: string) => selected?.kind === kind && (!id || ("id" in selected && selected.id === id));
   return (
@@ -57,7 +63,8 @@ function ElementList({ selected, onSelect, editable }: { selected: Selection; on
           </h2>
           <ul>
             {g.list.map((e) => {
-              const flag = e.mark && e.mark !== "pass" ? MARK_WORD[e.mark] : e.issues.length ? `${e.issues.length} ${e.issues.length === 1 ? "issue" : "issues"}` : null;
+              const flag =
+                e.mark && e.mark !== "pass" ? MARK_WORD[e.mark] : e.issues.length ? `${e.issues.length} ${e.issues.length === 1 ? "issue" : "issues"}` : null;
               return (
                 <li key={e.id}>
                   <button type="button" aria-pressed={isSel(g.kind, e.id)} onClick={() => onSelect({ kind: g.kind, id: e.id })}>
@@ -79,6 +86,7 @@ function ElementList({ selected, onSelect, editable }: { selected: Selection; on
               onSubmit={(e) => {
                 e.preventDefault();
                 dispatch({ type: "rowAdded", collection: "buses", row: { id: busId.trim() } });
+                onSelect({ kind: "bus", id: busId.trim() });
                 setBusId("");
               }}
             >
@@ -161,7 +169,13 @@ function Workspace() {
         <button type="button" onClick={() => void runM1()} disabled={busy} aria-busy={busy || undefined}>
           Run M1
         </button>
-        <button type="button" className="primary" onClick={() => void runM2()} disabled={busy || fresh !== "current" || !marginsSet} aria-busy={busy || undefined}>
+        <button
+          type="button"
+          className="primary"
+          onClick={() => void runM2()}
+          disabled={busy || fresh !== "current" || !marginsSet}
+          aria-busy={busy || undefined}
+        >
           Run M2
         </button>
       </div>
@@ -176,7 +190,17 @@ function Workspace() {
             <summary>Constraint check settings{marginsSet ? "" : ": enter both design margins to run M2"}</summary>
             <form aria-label="Constraint check settings" onSubmit={(e) => (e.preventDefault(), void runM2())}>
               {M2_FIELDS.map(([k, label, unit, step]) => (
-                <NumberField key={k} id={k} label={label} unit={unit} step={step} value={params[k]} onChange={(v) => ex.set(k, v)} adornment={ex.tag(k, label)} note={ex.note(k)} />
+                <NumberField
+                  key={k}
+                  id={k}
+                  label={label}
+                  unit={unit}
+                  step={step}
+                  value={params[k]}
+                  onChange={(v) => ex.set(k, v)}
+                  adornment={ex.tag(k, label)}
+                  note={ex.note(k)}
+                />
               ))}
               {ex.resetButton}
             </form>
@@ -232,7 +256,12 @@ function Workspace() {
             onClose={() => setSel(null)}
             edit={
               area === "model" ? (
-                <ElementForm key={`${element.kind}:${element.id}`} target={element} onRename={(id) => setSel({ kind: "bus", id })} onDeleted={() => setSel(null)} />
+                <ElementForm
+                  key={`${element.kind}:${element.id}`}
+                  target={element}
+                  onRename={(id) => setSel({ kind: "bus", id })}
+                  onDeleted={() => setSel(null)}
+                />
               ) : undefined
             }
           />
@@ -263,7 +292,11 @@ function Workspace() {
                 <>
                   {r2 && <StatusBanner type="M2" result={r2} />}
                   {r2?.status === "INFEASIBLE" && <ConstraintTable label="Limiting constraints" rows={r2.limiting_constraints ?? []} shortcut />}
-                  {m2 && m2Resp ? <M2Results p={m2} charts={{ record: m2Resp.run_record }} /> : !r2 && <EmptyState title="No current constraint check.">Run M2 on the current design to see the margins.</EmptyState>}
+                  {m2 && m2Resp ? (
+                    <M2Results p={m2} charts={{ record: m2Resp.run_record }} />
+                  ) : (
+                    !r2 && <EmptyState title="No current constraint check.">Run M2 on the current design to see the margins.</EmptyState>
+                  )}
                   <ExampleNext screen="constraint-check" ready={nextReady(r2?.status)} />
                 </>
               ) : (
@@ -272,7 +305,9 @@ function Workspace() {
                   {m1 && m1Resp ? (
                     <M1Results p={m1} charts={{ limits: design.design_constraints, record: m1Resp.run_record }} onInspect={select} />
                   ) : (
-                    !m1Resp && <EmptyState title="No current power flow.">Run M1 on the current design to see bus voltages, inverter outputs and line flows.</EmptyState>
+                    !m1Resp && (
+                      <EmptyState title="No current power flow.">Run M1 on the current design to see bus voltages, inverter outputs and line flows.</EmptyState>
+                    )
                   )}
                   <ExampleNext screen="power-flow" ready={nextReady(m1Resp?.result.status)} />
                 </>

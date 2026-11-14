@@ -52,6 +52,12 @@ def test_w4_model_inspector_edits_the_design(server: Callable[[str], str], page:
     load.get_by_label("PF", exact=True).check()
     expect(load.get_by_label("Power factor")).to_be_visible()
     expect(load.locator("#insp-q_kvar")).to_have_count(0)
+    # a new element opens in the inspector at once
+    page.get_by_role("button", name="+ Add inverter").click()
+    expect(page.get_by_role("complementary", name="Inspector: Inverter INV3")).to_be_visible()
+    page.get_by_label("New bus id").fill("B9")
+    page.get_by_role("button", name="Add bus").click()
+    expect(page.get_by_role("complementary", name="Inspector: Bus B9")).to_be_visible()
     # the tables show the same design
     step(page, "Network")
     page.get_by_role("tab", name="Inverters").click()
