@@ -33,7 +33,8 @@ export function entryPreview(collection: "lines" | "inverters", patch: Row, row:
     });
   const ref = (patch.catalog_ref as { entry_id: string }).entry_id;
   const now = row.catalog_ref ? refText(row.catalog_ref as never) : "typed by hand";
-  return [...rows, ["Source", now, ref, now !== ref]];
+  const nowId = (row.catalog_ref as { entry_id?: string } | null | undefined)?.entry_id;
+  return [...rows, ["Source", now, ref, nowId !== ref]];
 }
 
 const entryName = (e: CatalogEntry) => [e.id, e.provenance?.manufacturer, e.provenance?.model].filter(Boolean).join(" ");

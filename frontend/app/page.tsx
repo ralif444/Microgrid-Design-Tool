@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getExample, getExampleSettings, getMeta, importProject } from "../api-client";
 import type { ProjectFile } from "../api-types";
-import { clearDraft, readDraft, type Draft } from "../store/draft";
+import { clearDraft, DRAFT_REPLACE, readDraft, type Draft } from "../store/draft";
 import { parseExampleSettings, type ExampleSettings } from "../store/example";
 import { CANNOT_UNDO, useConfirmDelete } from "../components/ConfirmDelete";
 import { Icon } from "../components/Icon";
@@ -47,8 +47,12 @@ export default function Home() {
     void getExampleSettings("guided-d2").then((s) => setGuided(s.ok ? parseExampleSettings(s.data) : null));
   }, []);
 
+  // a new Project is autosaved over the draft, so ask while the draft is still offered
+  const keepsDraft = () => !draft || window.confirm(DRAFT_REPLACE);
+
   async function openExample(key: string, settings?: ExampleSettings) {
     if (unsaved && !window.confirm(UNSAVED_CONFIRM)) return;
+    if (!settings && !keepsDraft()) return; // example mode is never autosaved
     const file = await getExample(key);
     const r = file.ok ? await importProject(file.data) : file;
     if (!r.ok) return setNote(r.message);
@@ -74,6 +78,7 @@ export default function Home() {
   function create(e: React.FormEvent) {
     e.preventDefault();
     if (unsaved && !window.confirm(UNSAVED_CONFIRM)) return;
+    if (!keepsDraft()) return;
     dispatch({
       type: "projectCreated",
       meta: {

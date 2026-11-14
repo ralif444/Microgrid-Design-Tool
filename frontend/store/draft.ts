@@ -31,6 +31,17 @@ export function readDraft(schemaVersion: number): Draft | null {
   }
 }
 
+/** True when a draft is stored (any version); used to ask before a new Project replaces it. */
+export function hasDraft(): boolean {
+  try {
+    return globalThis.localStorage.getItem(DRAFT_KEY) !== null;
+  } catch {
+    return false;
+  }
+}
+
+export const DRAFT_REPLACE = "Unsaved work is kept in this browser. Another Project replaces it once you edit. OK to continue; Cancel to restore it first on Start.";
+
 export function clearDraft(): void {
   try {
     globalThis.localStorage.removeItem(DRAFT_KEY);

@@ -168,22 +168,22 @@ export function AreaScreensView({ area, at, states, m1Missing = false }: { area:
   );
 }
 
-function useAreaNav() {
+function useArea() {
   const state = useProject();
-  const report = useValidation(state.design);
   const at = here(usePathname() ?? "/", useSearchParams().get("area"));
   const list = areas(useCableSizingFlag() === true, state.batteryBanks.length > 0);
-  const states = state.project ? stepStates(state, report) : STEPS.map(() => "todo" as StepState);
-  return { list, at, area: areaOf(list, at), states, m1Missing: !m1Ref(state.runRecords) };
+  return { state, list, at, area: areaOf(list, at) };
 }
 
 export function AreaTabs() {
-  const { list, area } = useAreaNav();
+  const { list, area } = useArea(); // tabs need no step states, so no validation request
   const { t } = useLanguage();
   return <AreaTabsView list={list.map((a) => ({ ...a, label: t(`area.${a.key}`) }))} current={area?.key ?? null} />;
 }
 
 export function AreaScreens() {
-  const { area, at, states, m1Missing } = useAreaNav();
-  return area ? <AreaScreensView area={area} at={at} states={states} m1Missing={m1Missing} /> : null;
+  const { state, area, at } = useArea();
+  const report = useValidation(state.design);
+  const states = state.project ? stepStates(state, report) : STEPS.map(() => "todo" as StepState);
+  return area ? <AreaScreensView area={area} at={at} states={states} m1Missing={!m1Ref(state.runRecords)} /> : null;
 }

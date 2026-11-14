@@ -30,8 +30,7 @@ export function countsText(p: M2Payload, marginWarn: number | null): string {
   const s = p.constraint_margins.map((c) => marginStatus(c, marginWarn));
   const n = (k: string) => s.filter((x) => x === k).length;
   return [
-    `${n("pass") + n("near")} pass`,
-    ...(n("near") ? [`${n("near")} near limit`] : []),
+    `${n("pass") + n("near")} pass${n("near") ? ` (${n("near")} near limit)` : ""}`,
     ...(n("violated") ? [`${n("violated")} violated`] : []),
     ...(p.not_evaluated.length ? [`${p.not_evaluated.length} not evaluated`] : []),
   ].join(", ");

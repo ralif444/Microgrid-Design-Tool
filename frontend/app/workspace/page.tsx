@@ -39,6 +39,7 @@ function ElementList({ selected, onSelect, editable }: { selected: Selection; on
   const dispatch = useProjectDispatch();
   const { full } = useSldModel();
   const [busId, setBusId] = useState("");
+  const [busNote, setBusNote] = useState<string | null>(null);
   const firstBus = design.buses?.[0]?.id ?? null;
   // a new element opens in the inspector at once; the id is the one the reducer will give it
   const add = (collection: "inverters" | "lines" | "loads", kind: "inverter" | "line" | "load", row: Record<string, unknown>) => {
@@ -85,14 +86,19 @@ function ElementList({ selected, onSelect, editable }: { selected: Selection; on
               className={styles.add}
               onSubmit={(e) => {
                 e.preventDefault();
-                dispatch({ type: "rowAdded", collection: "buses", row: { id: busId.trim() } });
-                onSelect({ kind: "bus", id: busId.trim() });
+                const id = busId.trim();
+                // rows are matched by id, so a blank or repeated id would edit and delete two buses at once
+                if (!id || (design.buses ?? []).some((b) => b.id === id)) return setBusNote(id ? `Bus ${id} already exists.` : "Enter a bus id.");
+                setBusNote(null);
+                dispatch({ type: "rowAdded", collection: "buses", row: { id } });
+                onSelect({ kind: "bus", id });
                 setBusId("");
               }}
             >
               <label htmlFor="ws-bus-id">New bus id</label>
               <input id="ws-bus-id" required value={busId} onChange={(e) => setBusId(e.target.value)} />
               <button type="submit">Add bus</button>
+              {busNote && <span role="alert">{busNote}</span>}
             </form>
           )}
           {editable && g.add && (

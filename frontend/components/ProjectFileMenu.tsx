@@ -7,7 +7,7 @@ import { getMeta, importProject } from "../api-client";
 import type { FileCheckResult, MetaInfo, ProjectFile } from "../api-types";
 import { toProjectFile, useProject, useProjectDispatch } from "../store";
 import { HOME } from "./AreaNav";
-import { clearDraft, writeDraft } from "../store/draft";
+import { clearDraft, DRAFT_REPLACE, hasDraft, writeDraft } from "../store/draft";
 import { downloadJson, NOT_JSON, readJson } from "./files";
 import styles from "./ui.module.css";
 
@@ -46,7 +46,8 @@ export function ProjectFileMenu() {
   const warned = useRef(false);
   useEffect(() => {
     if (!state.project) return; // start-up: keep the draft for the restore offer on S-01
-    if (state.example || !state.unsaved) return clearDraft();
+    // the draft is cleared by Save and by Discard on S-01 only, so opening a file never drops it unasked
+    if (state.example || !state.unsaved) return;
     const t = setTimeout(async () => {
       if (!versions.current) {
         const m = await getMeta();
@@ -75,12 +76,15 @@ export function ProjectFileMenu() {
     const file = toProjectFile(state, meta.data, now);
     downloadJson(`${file.project.name}.mgproj.json`, file);
     dispatch({ type: "projectSaved", modified_at: now });
+    clearDraft();
     setNote(null);
   }
 
   async function open(file: File | undefined) {
     if (!file) return;
     if (state.unsaved && !window.confirm(UNSAVED_CONFIRM)) return;
+    // with no Project open the draft is the one S-01 offers; an edit of the opened file would replace it
+    if (!state.project && hasDraft() && !window.confirm(DRAFT_REPLACE)) return;
     const read = await readJson(file);
     if (!read) return setNote(NOT_JSON);
     const r = await importProject(read.doc);

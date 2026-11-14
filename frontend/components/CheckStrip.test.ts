@@ -16,7 +16,7 @@ describe("margin status and strip counts (W3)", () => {
 
   it("counts near-limit rows as passing and leaves zero counts out", () => {
     const p = { constraint_margins: [lc(0.5, 0.5), lc(0.01, 0.02), lc(-1, -1)], not_evaluated: [{}, {}] } as unknown as M2Payload;
-    expect(countsText(p, 0.05)).toBe("2 pass, 1 near limit, 1 violated, 2 not evaluated");
+    expect(countsText(p, 0.05)).toBe("2 pass (1 near limit), 1 violated, 2 not evaluated");
     expect(countsText({ constraint_margins: [lc(0.5, 0.5)], not_evaluated: [] } as unknown as M2Payload, 0.05)).toBe("1 pass");
   });
 });

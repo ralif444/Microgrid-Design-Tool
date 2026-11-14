@@ -10,15 +10,17 @@ import styles from "./NumberField.module.css";
 export function useNumberText(value: number | null | undefined, onChange: (v: number | null) => void, integer = false) {
   const [text, setText] = useState(value == null ? "" : String(value));
   useEffect(() => {
-    if (parseNumber(text, integer) !== (value ?? null)) setText(value == null ? "" : String(value));
+    const p = parseNumber(text, integer);
+    // invalid text was sent as null: keep the text so the user sees what to fix
+    if (p !== (value ?? null) && !(p === undefined && value == null)) setText(value == null ? "" : String(value));
   }, [value]);
   return {
     text,
     bad: parseNumber(text, integer) === undefined,
     set: (s: string) => {
       setText(s);
-      const n = parseNumber(s, integer);
-      if (n !== undefined) onChange(n);
+      // text that is not a number clears the value, so a run never uses a number the field no longer shows
+      onChange(parseNumber(s, integer) ?? null);
     },
   };
 }

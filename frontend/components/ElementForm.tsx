@@ -4,7 +4,7 @@
 // same delete rules (useRowDelete: FR-11 Bus guard, F2 confirmation).
 import { useState } from "react";
 import type { Load, ValidationIssue } from "../api-types";
-import { useProject, useProjectDispatch, type Collection } from "../store";
+import { busDependents, useProject, useProjectDispatch, type Collection } from "../store";
 import { BUS_COLUMNS, CONSTRAINT_FIELDS, INVERTER_COLUMNS, LINE_COLUMNS, loadMode, modePatch, PF_DIRECTIONS, type LoadMode } from "./elementFields";
 import styles from "./ElementForm.module.css";
 import type { Column } from "./EntityTable";
@@ -71,9 +71,19 @@ function Choice({
 }
 
 // A Bus id is committed on blur or Enter, so the selection follows the new id once, not per keystroke.
-function BusId({ value, onCommit, error }: { value: string; onCommit: (v: string) => void; error: string | null }) {
+// A rename is refused when the id is taken (rows are matched by id) or the bus is in use: the reducer
+// does not carry the new id into lines, loads and inverters (same rule as the FR-11 delete guard).
+function BusId({ value, onCommit, error, refusal }: { value: string; onCommit: (v: string) => void; error: string | null; refusal: (v: string) => string | null }) {
   const [text, setText] = useState(value);
-  const commit = () => text.trim() && text.trim() !== value && onCommit(text.trim());
+  const [note, setNote] = useState<string | null>(null);
+  const commit = () => {
+    const v = text.trim();
+    if (!v || v === value) return setNote(null);
+    const why = refusal(v);
+    setNote(why);
+    if (!why) onCommit(v);
+  };
+  error = note ?? error;
   return (
     <span className={styles.field}>
       <label htmlFor="insp-id">Bus id</label>
@@ -125,7 +135,19 @@ export function ElementForm({ target, onRename, onDeleted }: { target: ElementRe
     }
     const f = c.field;
     if (c.kind === "text")
-      return <BusId key={`${f}-${target.id}`} value={target.id} error={messages(issues, f)} onCommit={(v) => (set({ [f]: v }), onRename(v))} />;
+      return (
+        <BusId
+          key={`${f}-${target.id}`}
+          value={target.id}
+          error={messages(issues, f)}
+          refusal={(v) => {
+            if ((design.buses ?? []).some((b) => b.id === v)) return `Bus ${v} already exists.`;
+            const deps = busDependents(design, target.id);
+            return deps.length ? `Bus ${target.id} cannot be renamed: it is used by ${deps.join(", ")}.` : null;
+          }}
+          onCommit={(v) => (set({ [f]: v }), onRename(v))}
+        />
+      );
     if (c.kind === "bus")
       return (
         <Choice key={f} id={`insp-${f}`} label={c.label} options={busOptions} value={row[f]} error={messages(issues, f)} onChange={(v) => set({ [f]: v })} />
