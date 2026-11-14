@@ -65,6 +65,7 @@ Apply the seven mockup phases to `/power-flow/` and `/constraint-check/` without
 - New shell: header with the four area tabs and the compact eight-step stepper (manuscript 4.3.7), element tree, diagram, inspector, results drawer. Model = `/network/` content plus loads and constraints in the inspector; Check = W3. Reuse `SingleLineDiagram`, `Inspector`, `EntityTable`.
 - Build it at a new route beside the old pages; switch the default and remove `PipelineStepper` only when the e2e suite passes on the new shell.
 - Stepper rules that must survive: stale-M1 blocking (FR-38, FR-40, FR-93), "Next: step" guidance (FR-102), inspector as side panel (FR-90, FR-91).
+- Done 2026-11-14 (W4a 8e053ef, W4b): `/workspace/` beside the step pages, opened by the header link "Workspace". Model: element list with add, editable inspector (bus, line, inverter, load, design limits; fields shared with the tables in `components/elementFields.ts`, delete rules in `useRowDelete`). Check: CheckStrip, M2 settings, results diagram, read-only inspector, results drawer (Margins, Power flow). Studies and Report link to their pages until W6. The default route and `PipelineStepper` are unchanged; the compact stepper waits for the default switch. Not in the workspace yet: catalogue pick and battery bank (still on `/network/`).
 
 ### W5. Language switch (medium; blocked)
 

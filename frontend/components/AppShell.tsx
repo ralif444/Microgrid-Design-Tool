@@ -1,6 +1,6 @@
 "use client";
 // App shell (Doc 7 §2 global elements; ADR-016 §3): Carbon Header on the page surface with the wordmark,
-// Project name with unsaved indicator, Run history, Catalogue, About (S-17), Save / Open and the engine kind badge
+// Project name with unsaved indicator, the W4 Workspace (beside the step pages), Run history, Catalogue, About (S-17), Save / Open and the engine kind badge
 // (P2), the theme switch; the pipeline stepper strip (P1). In example mode (Doc 12 X9,
 // FR-99) a blue Tag "Example mode" (info, not a status colour) and "Leave example mode" sit by the badge.
 import { Header, HeaderName, Tag } from "@carbon/react";
@@ -40,6 +40,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           </span>
         )}
         <span className={styles.spacer} />
+        {project && (
+          <Link href="/workspace/" className={styles.util}>
+            Workspace
+          </Link>
+        )}
         <Link href="/runs/" className={styles.util}>
           Run history
         </Link>

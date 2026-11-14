@@ -17,6 +17,27 @@ export type Column =
 
 type Row = { id?: string | null; [field: string]: unknown };
 
+/** Delete with the FR-11 Bus guard and the F2 confirmation; shared by the tables and the workspace inspector. */
+export function useRowDelete(collection: Collection, onDone?: () => void) {
+  const { design, batteryBanks } = useProject();
+  const { dialog, confirm } = useConfirmDelete();
+  const [refused, setRefused] = useState<string | null>(null);
+  const dispatch = useProjectDispatch();
+  function remove(id: string, name: string) {
+    const deps = collection === "buses" ? busDependents(design, id) : [];
+    // FR-11: refuse and name the dependents; the Bus stays
+    if (deps.length) return setRefused(`Bus ${id} cannot be deleted: it is used by ${deps.join(", ")}.`);
+    setRefused(null);
+    // reducer.ts: removing an Inverter also removes its battery bank
+    const bank = collection === "inverters" && batteryBanks.some((b) => b.inverter_id === id) ? ` Its battery bank is removed too.` : "";
+    confirm(`Delete ${name}?`, `${name} is removed from the design.${bank} ${CANNOT_UNDO}`, () => {
+      dispatch({ type: "rowRemoved", collection, id });
+      onDone?.();
+    });
+  }
+  return { dialog, refused, setRefused, remove };
+}
+
 export function EntityTable({
   collection,
   entity,
@@ -35,9 +56,8 @@ export function EntityTable({
   /** FR-90 table path (UX-4, D-79): an "Inspect <id>" button per row opens the Inspector. */
   onInspect?: (id: string) => void;
 }) {
-  const { design, batteryBanks } = useProject();
-  const { dialog, confirm } = useConfirmDelete();
-  const [refused, setRefused] = useState<string | null>(null);
+  const { design } = useProject();
+  const { dialog, refused, setRefused, remove } = useRowDelete(collection);
   const dispatch = useProjectDispatch();
   const rows: Row[] = design[collection] ?? [];
   const busIds = (design.buses ?? []).map((b) => b.id ?? "");
@@ -82,18 +102,7 @@ export function EntityTable({
           )}{" "}
           <button
             type="button"
-            onClick={() => {
-              const deps = collection === "buses" ? busDependents(design, row.id ?? "") : [];
-              // FR-11: refuse and name the dependents; the Bus stays
-              if (deps.length) return setRefused(`Bus ${row.id} cannot be deleted: it is used by ${deps.join(", ")}.`);
-              setRefused(null);
-              const id = row.id ?? "";
-              // reducer.ts: removing an Inverter also removes its battery bank
-              const bank = collection === "inverters" && batteryBanks.some((b) => b.inverter_id === id) ? ` Its battery bank is removed too.` : "";
-              confirm(`Delete ${name(row, k)}?`, `${name(row, k)} is removed from the design.${bank} ${CANNOT_UNDO}`, () =>
-                dispatch({ type: "rowRemoved", collection, id }),
-              );
-            }}
+            onClick={() => remove(row.id ?? "", name(row, k))}
           >
             Delete {name(row, k)}
           </button>

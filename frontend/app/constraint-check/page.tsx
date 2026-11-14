@@ -3,7 +3,7 @@
 // (D-46 K11), optional storage settings; Run disabled unless the M1 result is current (§3.1). The
 // single-line diagram carries the M1 labels and M2 marks (Doc 12 FR-96) and opens the Inspector.
 import { useState } from "react";
-import type { M1Payload, M2Payload, RunRecord } from "../../api-types";
+import type { M1Payload, M2Payload } from "../../api-types";
 import Link from "next/link";
 import { EmptyState } from "../../components/EmptyState";
 import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
@@ -15,6 +15,7 @@ import { m2Kpis } from "../../components/kpi";
 import { KpiStrip } from "../../components/KpiStrip";
 import { M1BlockedNote } from "../../components/M1Freshness";
 import { ConstraintTable, M2Results } from "../../components/M2Results";
+import { lastM2Params, M2_FIELDS, type M2Params } from "../../components/elementFields";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { ResultsDiagram } from "../../components/sld/ResultsDiagram";
@@ -24,24 +25,6 @@ import { SOLVER, useAnalysisCall } from "../../components/useAnalysisCall";
 import { m1Freshness, useValidation } from "../../components/useValidation";
 import { latestRun, m1Ref, useProject, useProjectDispatch } from "../../store";
 import styles from "./constraint-check.module.css";
-
-type M2Params = Record<
-  "inverter_margin_ratio" | "line_margin_ratio" | "autonomy_h" | "dc_efficiency_ratio" | "depth_of_discharge_ratio",
-  number | null
->;
-
-const FIELDS: [keyof M2Params, string, string, string][] = [
-  ["inverter_margin_ratio", "Inverter design margin m_inv", "ratio", "any"],
-  ["line_margin_ratio", "Line design margin m_line", "ratio", "any"],
-  ["autonomy_h", "Storage autonomy t_aut, optional", "h", "1"],
-  ["dc_efficiency_ratio", "DC efficiency η_dc, optional", "ratio", "any"],
-  ["depth_of_discharge_ratio", "Depth of discharge DoD, optional", "ratio", "any"],
-];
-
-function lastM2Params(runRecords: RunRecord[]): M2Params {
-  const last = runRecords.findLast((r) => r.analysis_type === "M2")?.parameters as Partial<M2Params> | undefined;
-  return Object.fromEntries(FIELDS.map(([k]) => [k, last?.[k] ?? null])) as M2Params;
-}
 
 function ConstraintCheck() {
   const { design, runRecords } = useProject();
@@ -86,7 +69,7 @@ function ConstraintCheck() {
           void run();
         }}
       >
-        {FIELDS.map(([k, label, unit, step]) => (
+        {M2_FIELDS.map(([k, label, unit, step]) => (
           <NumberField
             key={k}
             id={k}

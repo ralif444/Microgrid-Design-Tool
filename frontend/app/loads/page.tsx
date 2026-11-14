@@ -11,12 +11,12 @@ import { CellInput, CellSelect, DataTable, type DataColumn } from "../../compone
 import { EmptyState } from "../../components/EmptyState";
 import { Icon } from "../../components/Icon";
 import { RequireProject } from "../../components/RequireProject";
+import { loadMode, modePatch, PF_DIRECTIONS, type LoadMode } from "../../components/elementFields";
 import { useValidation } from "../../components/useValidation";
 import { useProject, useProjectDispatch } from "../../store";
 import styles from "./loads.module.css";
 
 const where = (i: ValidationIssue) => [i.entity, i.id, i.field].filter(Boolean).join(" / ");
-type Mode = "Q" | "PF";
 
 function Loads() {
   const { dialog, confirm } = useConfirmDelete();
@@ -26,12 +26,12 @@ function Loads() {
   const loads = design.loads ?? [];
   const buses: [string, string][] = (design.buses ?? []).map((b) => [b.id ?? "", b.id ?? ""]);
   // Q or PF per row is a screen choice, not data: both empty would otherwise read as Q.
-  const [modes, setModes] = useState<Record<string, Mode>>({});
-  const modeOf = (l: Load): Mode => modes[l.id ?? ""] ?? (l.power_factor != null || l.pf_direction != null ? "PF" : "Q");
+  const [modes, setModes] = useState<Record<string, LoadMode>>({});
+  const modeOf = (l: Load) => loadMode(l, modes[l.id ?? ""]);
   const set = (l: Load, patch: Partial<Load>) => dispatch({ type: "rowUpdated", collection: "loads", id: l.id ?? "", patch });
-  const choose = (l: Load, m: Mode) => {
+  const choose = (l: Load, m: LoadMode) => {
     setModes({ ...modes, [l.id ?? ""]: m });
-    set(l, m === "Q" ? { power_factor: null, pf_direction: null } : { q_kvar: null });
+    set(l, modePatch(m));
   };
   const rowIssues = (l: Load) => issues.filter((i) => i.entity === "Load" && i.id === l.id);
   const bad = (l: Load, f: string) => rowIssues(l).some((i) => i.field === f);
@@ -91,10 +91,7 @@ function Loads() {
         modeOf(l) === "PF" ? (
           <CellSelect
             label={`PF direction of ${l.id}`}
-            options={[
-              ["LAGGING", "lagging"],
-              ["LEADING", "leading"],
-            ]}
+            options={PF_DIRECTIONS}
             value={l.pf_direction}
             onChange={(v) => set(l, { pf_direction: v as Load["pf_direction"] })}
             invalid={bad(l, "pf_direction")}

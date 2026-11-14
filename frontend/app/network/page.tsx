@@ -5,12 +5,13 @@
 // EntityTable). Diagram and table rows open the Inspector (FR-90). Catalogue entries fill Lines and
 // Inverters (Doc 12 FR-66, FR-69, FR-70).
 import { useEffect, useState } from "react";
-import type { BatteryBank, CatalogRef } from "../../api-types";
+import type { BatteryBank } from "../../api-types";
 import { ExampleGuide, ExampleNext } from "../../components/ExampleForm";
-import { block, entryWarnings, fromEntry, refText, useCatalog } from "../../components/Catalog";
+import { block, entryWarnings, fromEntry, useCatalog } from "../../components/Catalog";
+import { BUS_COLUMNS, INVERTER_COLUMNS, LINE_COLUMNS } from "../../components/elementFields";
 import { EmptyState } from "../../components/EmptyState";
 import { NumberField } from "../../components/NumberField";
-import { EntityTable, type Column } from "../../components/EntityTable";
+import { EntityTable } from "../../components/EntityTable";
 import { Icon } from "../../components/Icon";
 import { Inspector, type ElementRef } from "../../components/Inspector";
 import { RequireProject } from "../../components/RequireProject";
@@ -20,34 +21,6 @@ import { useValidation } from "../../components/useValidation";
 import { useProject, useProjectDispatch } from "../../store";
 import styles from "./network.module.css";
 import { CANNOT_UNDO, useConfirmDelete } from "../../components/ConfirmDelete";
-
-const times = (a: unknown, b: unknown) => (typeof a === "number" && typeof b === "number" ? a * b : null);
-
-const LINE_COLUMNS: Column[] = [
-  { field: "from_bus_id", label: "From bus", kind: "bus" },
-  { field: "to_bus_id", label: "To bus", kind: "bus" },
-  { field: "r_ohm_per_km", label: "R", kind: "number", unit: "Ω/km" },
-  { field: "x_ohm_per_km", label: "X", kind: "number", unit: "Ω/km" },
-  { field: "length_km", label: "Length", kind: "number", unit: "km" },
-  { field: "current_limit_a", label: "Current limit, optional", kind: "number", unit: "A" },
-  { label: "Total R, derived, read-only", kind: "derived", unit: "Ω", value: (r) => times(r.r_ohm_per_km, r.length_km) },
-  { label: "Total X, derived, read-only", kind: "derived", unit: "Ω", value: (r) => times(r.x_ohm_per_km, r.length_km) },
-  { label: "From catalogue", kind: "derived", unit: "entry", value: (r) => refText(r.catalog_ref as CatalogRef | null) },
-];
-
-const INVERTER_COLUMNS: Column[] = [
-  { field: "bus_id", label: "Bus", kind: "bus" },
-  { field: "rated_kva", label: "Rating", kind: "number", unit: "kVA" },
-  { field: "frequency_droop_hz_per_kw", label: "P–f droop", kind: "number", unit: "Hz/kW", term: "mp" },
-  { field: "voltage_droop_kv_per_kvar", label: "Q–V droop", kind: "number", unit: "kV/kvar", term: "nq" },
-  { field: "frequency_setpoint_hz", label: "Frequency setpoint", kind: "number", unit: "Hz" },
-  { field: "voltage_setpoint_kv", label: "Voltage setpoint, line-to-line", kind: "number", unit: "kV" },
-  { field: "p_setpoint_kw", label: "P setpoint, optional", kind: "number", unit: "kW" },
-  { field: "q_setpoint_kvar", label: "Q setpoint, optional", kind: "number", unit: "kvar" },
-  { field: "tau_p_s", label: "τ_P, needed for M4", kind: "number", unit: "s" },
-  { field: "tau_q_s", label: "τ_Q, needed for M4", kind: "number", unit: "s" },
-  { label: "From catalogue", kind: "derived", unit: "entry", value: (r) => refText(r.catalog_ref as CatalogRef | null) },
-];
 
 // "Choose from catalogue" (Doc 12 §5 S-05): the server's guard decides; a refusal names why.
 function CatalogPick({ collection }: { collection: "lines" | "inverters" }) {
@@ -295,7 +268,7 @@ function Network() {
                 collection="buses"
                 entity="Bus"
                 label="Buses"
-                columns={[{ field: "id", label: "Bus id", kind: "text" }]}
+                columns={BUS_COLUMNS}
                 issues={issues}
                 focus={focus}
                 onInspect={(id) => open({ kind: "bus", id })}
