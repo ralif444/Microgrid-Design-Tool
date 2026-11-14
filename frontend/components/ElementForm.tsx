@@ -9,6 +9,7 @@ import { BUS_COLUMNS, CONSTRAINT_FIELDS, INVERTER_COLUMNS, LINE_COLUMNS, loadMod
 import styles from "./ElementForm.module.css";
 import type { Column } from "./EntityTable";
 import { useRowDelete } from "./EntityTable";
+import { BankPick, CatalogPick } from "./ElementSource";
 import type { ElementRef } from "./Inspector";
 import { NumberField } from "./NumberField";
 import { Toast } from "./Toast";
@@ -22,13 +23,37 @@ const OF: Record<ElementRef["kind"], [Collection, string, Column[]]> = {
   load: ["loads", "Load", []],
 };
 
-const messages = (issues: ValidationIssue[], field: string) => issues.filter((i) => i.field === field).map((i) => i.message).join(" ") || null;
+const messages = (issues: ValidationIssue[], field: string) =>
+  issues
+    .filter((i) => i.field === field)
+    .map((i) => i.message)
+    .join(" ") || null;
 
-function Choice({ id, label, options, value, onChange, error }: { id: string; label: string; options: [string, string][]; value: unknown; onChange: (v: string | null) => void; error: string | null }) {
+function Choice({
+  id,
+  label,
+  options,
+  value,
+  onChange,
+  error,
+}: {
+  id: string;
+  label: string;
+  options: [string, string][];
+  value: unknown;
+  onChange: (v: string | null) => void;
+  error: string | null;
+}) {
   return (
     <span className={styles.field}>
       <label htmlFor={id}>{label}</label>
-      <select id={id} value={(value as string) ?? ""} aria-invalid={error ? true : undefined} aria-describedby={error ? `${id}-error` : undefined} onChange={(e) => onChange(e.target.value || null)}>
+      <select
+        id={id}
+        value={(value as string) ?? ""}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${id}-error` : undefined}
+        onChange={(e) => onChange(e.target.value || null)}
+      >
         <option value="">(choose)</option>
         {options.map(([v, t]) => (
           <option key={v} value={v}>
@@ -90,14 +115,32 @@ export function ElementForm({ target, onRename, onDeleted }: { target: ElementRe
       const v = c.value(row);
       return (
         <span key={c.label} className={styles.derived}>
-          <span>{c.label}</span> <span>{v ?? "—"}{v != null && c.unit !== "entry" ? ` ${c.unit}` : ""}</span>
+          <span>{c.label}</span>{" "}
+          <span>
+            {v ?? "—"}
+            {v != null && c.unit !== "entry" ? ` ${c.unit}` : ""}
+          </span>
         </span>
       );
     }
     const f = c.field;
-    if (c.kind === "text") return <BusId key={`${f}-${target.id}`} value={target.id} error={messages(issues, f)} onCommit={(v) => (set({ [f]: v }), onRename(v))} />;
-    if (c.kind === "bus") return <Choice key={f} id={`insp-${f}`} label={c.label} options={busOptions} value={row[f]} error={messages(issues, f)} onChange={(v) => set({ [f]: v })} />;
-    return <NumberField key={f} id={`insp-${f}`} label={c.label} unit={c.unit} value={row[f] as number | null} error={messages(issues, f)} onChange={(v) => set({ [f]: v })} />;
+    if (c.kind === "text")
+      return <BusId key={`${f}-${target.id}`} value={target.id} error={messages(issues, f)} onCommit={(v) => (set({ [f]: v }), onRename(v))} />;
+    if (c.kind === "bus")
+      return (
+        <Choice key={f} id={`insp-${f}`} label={c.label} options={busOptions} value={row[f]} error={messages(issues, f)} onChange={(v) => set({ [f]: v })} />
+      );
+    return (
+      <NumberField
+        key={f}
+        id={`insp-${f}`}
+        label={c.label}
+        unit={c.unit}
+        value={row[f] as number | null}
+        error={messages(issues, f)}
+        onChange={(v) => set({ [f]: v })}
+      />
+    );
   };
 
   let body = columns.map(field);
@@ -106,7 +149,15 @@ export function ElementForm({ target, onRename, onDeleted }: { target: ElementRe
     const mode = loadMode(l, modes[target.id]);
     const choose = (m: LoadMode) => (setModes({ ...modes, [target.id]: m }), set(modePatch(m)));
     body = [
-      <Choice key="bus" id="insp-bus_id" label="Bus" options={busOptions} value={l.bus_id} error={messages(issues, "bus_id")} onChange={(v) => set({ bus_id: v })} />,
+      <Choice
+        key="bus"
+        id="insp-bus_id"
+        label="Bus"
+        options={busOptions}
+        value={l.bus_id}
+        error={messages(issues, "bus_id")}
+        onChange={(v) => set({ bus_id: v })}
+      />,
       <NumberField key="p" id="insp-p_kw" label="P" unit="kW" value={l.p_kw} error={messages(issues, "p_kw")} onChange={(v) => set({ p_kw: v })} />,
       <div key="mode" role="radiogroup" aria-label="Reactive power given as" className={styles.mode}>
         <label>
@@ -119,32 +170,57 @@ export function ElementForm({ target, onRename, onDeleted }: { target: ElementRe
       mode === "Q" ? (
         <NumberField key="q" id="insp-q_kvar" label="Q" unit="kvar" value={l.q_kvar} error={messages(issues, "q_kvar")} onChange={(v) => set({ q_kvar: v })} />
       ) : (
-        <NumberField key="pf" id="insp-power_factor" label="Power factor" unit="ratio" value={l.power_factor} error={messages(issues, "power_factor")} onChange={(v) => set({ power_factor: v })} />
+        <NumberField
+          key="pf"
+          id="insp-power_factor"
+          label="Power factor"
+          unit="ratio"
+          value={l.power_factor}
+          error={messages(issues, "power_factor")}
+          onChange={(v) => set({ power_factor: v })}
+        />
       ),
       ...(mode === "PF"
-        ? [<Choice key="dir" id="insp-pf_direction" label="PF direction" options={PF_DIRECTIONS} value={l.pf_direction} error={messages(issues, "pf_direction")} onChange={(v) => set({ pf_direction: v as Load["pf_direction"] })} />]
+        ? [
+            <Choice
+              key="dir"
+              id="insp-pf_direction"
+              label="PF direction"
+              options={PF_DIRECTIONS}
+              value={l.pf_direction}
+              error={messages(issues, "pf_direction")}
+              onChange={(v) => set({ pf_direction: v as Load["pf_direction"] })}
+            />,
+          ]
         : []),
     ];
   }
 
+  // three forms side by side, not nested: the edit fields, the catalogue entry, the battery bank
   return (
-    <form aria-label={`Edit ${entity} ${target.id}`} className={styles.form} onSubmit={(e) => e.preventDefault()}>
-      {body}
-      {general.length > 0 && (
-        <ul aria-label="Issues of this element" className={styles.general}>
-          {general.map((i, k) => (
-            <li key={k}>{i.message}</li>
-          ))}
-        </ul>
+    <>
+      <form aria-label={`Edit ${entity} ${target.id}`} className={styles.form} onSubmit={(e) => e.preventDefault()}>
+        {body}
+        {general.length > 0 && (
+          <ul aria-label="Issues of this element" className={styles.general}>
+            {general.map((i, k) => (
+              <li key={k}>{i.message}</li>
+            ))}
+          </ul>
+        )}
+        {refused && <Toast inline message={refused} onDismiss={() => setRefused(null)} />}
+      </form>
+      {(target.kind === "line" || target.kind === "inverter") && (
+        <CatalogPick collection={collection as "lines" | "inverters"} element={target.id} heading="h3" />
       )}
-      {refused && <Toast inline message={refused} onDismiss={() => setRefused(null)} />}
-      <p>
+      {target.kind === "inverter" && <BankPick inverter={target.id} />}
+      <p className={styles.delete}>
         <button type="button" onClick={() => remove(target.id, target.id)}>
           Delete {target.id}
         </button>
       </p>
       {dialog}
-    </form>
+    </>
   );
 }
 

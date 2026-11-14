@@ -8,6 +8,7 @@ from collections.abc import Callable
 
 from flows import area, enter_design, gui_snapshot, step, step_link, studies
 from playwright.sync_api import Page, expect
+from test_catalogue import _provenance
 
 
 def _open(page: Page, base: str) -> None:
@@ -117,3 +118,50 @@ def test_w6_area_tabs_replace_the_stepper(server: Callable[[str], str], page: Pa
     expect(page.get_by_role("main")).to_contain_text("M1")
     expect(step_link(page, "Report")).to_be_visible()
     assert not missing, f"404 responses: {missing}"
+
+
+def test_w4_inspector_catalogue_entry_and_battery_bank(
+    server: Callable[[str], str], page: Page
+) -> None:
+    """The S-05 catalogue pick and battery bank, in the inspector of the element they belong to."""
+    enter_design(page, server("default"), gui_snapshot())
+    page.get_by_role("link", name="Catalogue").click()
+    page.get_by_role("button", name="+ Add conductor entry").click()
+    _provenance(page)
+    for label, value in (("Resistance R", "0.5"), ("Reactance X", "0.3")):
+        page.get_by_label(f"{label} (Ω/km)").fill(value)
+        page.get_by_label(f"{label}: page or section").fill("p. 2")
+    page.get_by_role("button", name="+ Add battery module entry").click()
+    _provenance(page)
+    for label, unit, value in (
+        ("Nominal energy", "kWh", "5"),
+        ("Minimum DC voltage", "V", "44.8"),
+        ("Maximum DC voltage", "V", "57.6"),
+        ("C-rate", "1/h", "0.2"),
+    ):
+        page.get_by_label(f"{label} ({unit})").fill(value)
+        page.get_by_label(f"{label}: page or section").fill("p. 3")
+    area(page, "Model")
+    _pick(page, "LN1")
+    line = page.get_by_role("complementary", name="Inspector: Line LN1")
+    expect(line).to_contain_text("Now: typed by hand")
+    line.get_by_label("Catalogue entry").select_option("E1")
+    preview = line.get_by_role("table", name="What E1 changes in LN1")
+    expect(preview).to_contain_text("0.5")
+    line.get_by_role("button", name="Use in Project").click()
+    expect(line.get_by_role("status")).to_have_text("LN1 filled from E1.")
+    expect(line.locator("#insp-r_ohm_per_km")).to_have_value("0.5")
+    expect(line).to_contain_text("Now: from the Catalogue")
+    _pick(page, "INV1")
+    inv = page.get_by_role("complementary", name="Inspector: Inverter INV1")
+    expect(inv).to_contain_text("No battery bank.")
+    inv.get_by_role("button", name="Add battery bank").click()
+    bank = inv.get_by_role("form", name="Battery bank")
+    bank.get_by_label("Battery module").select_option("E2")
+    bank.get_by_label("Modules in series (count)").fill("8")
+    bank.get_by_label("Strings in parallel (count)").fill("2")
+    bank.get_by_role("button", name="Save bank").click()
+    expect(bank.get_by_test_id("bank-total")).to_have_text("16 modules × 5 kWh = 80 kWh nominal")
+    bank.get_by_role("button", name="Remove bank").click()
+    page.get_by_role("dialog").get_by_role("button", name="Delete", exact=True).click()
+    expect(inv).to_contain_text("No battery bank.")
