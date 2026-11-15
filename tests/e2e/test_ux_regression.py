@@ -20,7 +20,7 @@ from test_network_m1_m2 import _margins, _run_m1
 
 PALETTE = Path(__file__).parents[2] / "frontend" / "components" / "charts" / "palette.ts"
 ROUTES = [
-    "project", "loads", "sizing", "network", "constraints", "power-flow", "constraint-check",
+    "loads", "sizing", "network", "power-flow", "constraint-check",
     "sensitivity", "sweep", "scenarios", "envelope", "small-signal", "transient", "runs",
     "report", "catalogue", "about",
 ]  # fmt: skip

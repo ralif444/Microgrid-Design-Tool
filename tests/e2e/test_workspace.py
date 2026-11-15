@@ -173,3 +173,11 @@ def test_w4_inspector_catalogue_entry_and_battery_bank(
     bank.get_by_role("button", name="Remove bank").click()
     page.get_by_role("dialog").get_by_role("button", name="Delete", exact=True).click()
     expect(inv).to_contain_text("No battery bank.")
+
+
+def test_phase7_retired_screens_redirect(server: Callable[[str], str], page: Page) -> None:
+    # audit 2026-11-14 decision 4, Doc 14 D16: old links land on the workspace item
+    base = server("default")
+    for route, item in (("project", "system"), ("constraints", "limits")):
+        page.goto(f"{base}/{route}/")
+        page.wait_for_url(f"**/workspace/?el={item}")

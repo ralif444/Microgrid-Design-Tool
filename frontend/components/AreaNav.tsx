@@ -24,11 +24,11 @@ type Step = { n: number | null; label: string; href: string | null };
 // The pipeline order (Doc 7 P1), kept for the step states and the example's "Next" order (FR-102).
 
 export const STEPS: Step[] = [
-  { n: null, label: "Project", href: "/project/" },
+  { n: null, label: "Project", href: "/workspace/?el=system" },
   { n: 1, label: "Loads", href: "/loads/" },
   { n: 2, label: "Sizing advice", href: "/sizing/" },
   { n: 3, label: "Network", href: "/network/" },
-  { n: 4, label: "Constraints", href: "/constraints/" },
+  { n: 4, label: "Constraints", href: "/workspace/?el=limits" },
   { n: 5, label: "Power flow (M1)", href: "/power-flow/" },
   { n: 6, label: "Constraint check (M2)", href: "/constraint-check/" },
   { n: 7, label: "Further analyses", href: null },
@@ -113,11 +113,9 @@ export function areas(cableSizing = false, battery = false): Area[] {
       href: HOME,
       screens: [
         [HOME, "Diagram", null],
-        ["/project/", "Project", 0],
         ["/loads/", "Loads", 1],
         ["/sizing/", "Sizing advice", 2],
         ["/network/", "Network", 3],
-        ["/constraints/", "Constraints", 4],
       ],
     },
     {

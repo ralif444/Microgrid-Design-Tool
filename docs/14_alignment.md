@@ -86,6 +86,7 @@ Dokumen ini mendaftar semua perbedaan yang diketahui antara dokumen teknis (Doc 
 | D13 | 12 extensions | X10 cable and overload-protection sizing (Doc 12 §3.13) adds a protection-related feature, while the manuscript lists protection as out of scope. | out-of-scope list | KONFLIK (supervisor approval pending; behind a feature flag, off by default; Doc 9 K-07, D-100 K258) |
 | D14 | 12 extensions | X10 uses PUIL 2011 as its technical baseline, while Permen ESDM 7/2021 lists PUIL 2020. | — | KONFLIK (open; Doc 9 K-08, D-100 K259) |
 | D15 | 07 / ADR-016 | UI frame: the diagram workspace (areas Model, Check, Studies, Report) replaces the eight-step stepper; the redesign plan (`.scratch/ui-redesign/plan-workspace.md`) wins over the manuscript's UI description where they differ, including removing the stepper. Engine badge, stale-M1 rule (FR-38, FR-40, FR-93), the engine, data model and assumptions A1–A6 are unchanged. | 4.3.7 (stepper on every screen, 17 routes) | KONFLIK (user-decided 2026-11-14); ADR-016 option B; thesis text 4.3.7 to follow |
+| D16 | 07 / ADR-016 | The Project overview (S-02) and Design constraints (S-06) screens are retired: the workspace inspector edits the same fields ("Project and system", "Design limits"), and `/project/` and `/constraints/` redirect there. Loads (S-03) and Network (S-05) stay as table views reached from the workspace. No field, check or data changes. | 4.3.7 (S-02 and S-06 as own screens) | KONFLIK (user-decided 2026-11-14, audit decision 4); thesis text 4.3.7 to follow |
 
 ## Log
 
@@ -95,3 +96,4 @@ Dokumen ini mendaftar semua perbedaan yang diketahui antara dokumen teknis (Doc 
 | 2026-11-01 | Paket 0 of stage 1.1 (repo): D2, D3, D5, D6, D7 and B7 applied in the repository copies of Doc 04, 05_adr, 08, 09, 10. |
 | 2026-11-09 | D13 and D14 added (cable round X10-0, Doc 9 D-100). |
 | 2026-11-14 | D15 added: the user decided the workspace plan wins over manuscript 4.3.7 for the UI, stepper removal included. |
+| 2026-11-15 | D16 added: S-02 and S-06 retired into the workspace inspector (audit 2026-11-14 decision 4, Phase 7). |

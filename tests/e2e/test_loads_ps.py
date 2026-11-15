@@ -41,7 +41,7 @@ def test_fr_01_fr_03_fr_05_fr_06_fr_08_loads_to_sizing_advice(
     page.get_by_role("button", name="Create project").click()
     page.wait_for_url("**/workspace/")
     step(page, "Project")
-    expect(page.get_by_role("heading", name="Project overview")).to_be_visible()
+    expect(page.get_by_role("complementary", name="Inspector: Project and system")).to_be_visible()
     expect(page.get_by_test_id("project-name")).to_contain_text("E2E project")
     expect(page.get_by_role("table", name="Counts")).to_contain_text("Loads0")
     _numeric_inputs_have_units(page)

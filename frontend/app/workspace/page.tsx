@@ -3,11 +3,12 @@
 // `?area=` from the header tabs (AreaNav). Element list, diagram, inspector beside it (FR-90, FR-91) and,
 // in Check, the results drawer. Runs follow the S-07 / S-08 rules: M2 needs the current M1 (FR-38,
 // FR-40, FR-93). Studies and Report are their own routes under the same tabs.
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import type { M1Payload, M2Payload } from "../../api-types";
 import { CheckStrip, useSizingMarginNote } from "../../components/CheckStrip";
-import { ElementForm, LimitsForm } from "../../components/ElementForm";
+import { ElementForm, LimitsForm, SystemForm } from "../../components/ElementForm";
 import { issueWhere, lastM2Params, M2_FIELDS, type M2Params } from "../../components/elementFields";
 import { EmptyState } from "../../components/EmptyState";
 import { ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
@@ -31,10 +32,12 @@ import { m1Freshness, useValidationState } from "../../components/useValidation"
 import { ID_PREFIX, latestRun, m1Ref, nextId, useProject, useProjectDispatch } from "../../store";
 import styles from "./workspace.module.css";
 
-type Selection = ElementRef | { kind: "limits" } | null;
-// `?el=inverter:INV1` (element links from the other screens, audit D-18) opens with that element selected.
+type Selection = ElementRef | { kind: "limits" } | { kind: "system" } | null;
+// `?el=inverter:INV1` (element links from the other screens, audit D-18) opens with that element selected;
+// `?el=system` and `?el=limits` open the former Project and Constraints screens (audit Phase 7).
 const KINDS = ["bus", "line", "inverter", "load"] as const;
 function parseEl(v: string | null): Selection {
+  if (v === "system" || v === "limits") return { kind: v };
   const k = v?.indexOf(":") ?? -1;
   const kind = v?.slice(0, k) as ElementRef["kind"];
   return v && k > 0 && KINDS.includes(kind) ? { kind, id: v.slice(k + 1) } : null;
@@ -55,20 +58,36 @@ function ElementList({ selected, onSelect, editable }: { selected: Selection; on
     onSelect({ kind, id });
   };
   const groups = [
-    { title: "Inverters", kind: "inverter", list: full.inverters, add: () => add("inverters", "inverter", { bus_id: firstBus }) },
-    { title: "Buses", kind: "bus", list: full.buses, add: null },
-    { title: "Lines", kind: "line", list: full.lines, add: () => add("lines", "line", { from_bus_id: null, to_bus_id: null }) },
-    { title: "Loads", kind: "load", list: full.loads, add: () => add("loads", "load", { bus_id: firstBus, p_kw: null, q_kvar: null }) },
+    { title: "Inverters", kind: "inverter", list: full.inverters, add: () => add("inverters", "inverter", { bus_id: firstBus }), table: "/network/" },
+    { title: "Buses", kind: "bus", list: full.buses, add: null, table: "/network/" },
+    { title: "Lines", kind: "line", list: full.lines, add: () => add("lines", "line", { from_bus_id: null, to_bus_id: null }), table: "/network/" },
+    { title: "Loads", kind: "load", list: full.loads, add: () => add("loads", "load", { bus_id: firstBus, p_kw: null, q_kvar: null }), table: "/loads/" },
   ] as const;
   const isSel = (kind: string, id?: string) => selected?.kind === kind && (!id || ("id" in selected && selected.id === id));
   return (
     <nav aria-label="Elements" className={styles.list}>
+      <section aria-label="System">
+        <h2>
+          <span>System</span>
+        </h2>
+        <ul>
+          <li>
+            <button type="button" aria-pressed={isSel("system")} onClick={() => onSelect({ kind: "system" })}>
+              Project and system
+            </button>
+          </li>
+        </ul>
+      </section>
       {groups.map((g) => (
         <section key={g.title} aria-label={g.title}>
           <h2>
             <span>{g.title}</span>
             <span>{g.list.length}</span>
           </h2>
+          {/* bulk entry stays a table (audit Phase 7): the Loads and Network screens */}
+          <Link href={g.table} className={styles.tableView} aria-label={`Table view: ${g.title}`}>
+            Table view
+          </Link>
           <ul>
             {g.list.map((e) => {
               const flag =
@@ -175,7 +194,7 @@ function Workspace() {
     if (data) dispatch({ type: "runRecordAdded", record: data.run_record });
   }
 
-  const element = sel && sel.kind !== "limits" ? sel : null;
+  const element = sel && sel.kind !== "limits" && sel.kind !== "system" ? sel : null;
   const issues = report?.issues ?? [];
   const designIssues = issues.filter((i) => i.level === "topology" || !["Bus", "Line", "Inverter", "Load"].includes(i.entity ?? ""));
 
@@ -269,6 +288,17 @@ function Workspace() {
               </button>
             </div>
             <LimitsForm />
+            <ExampleNext screen="/workspace/?el=limits" ready />
+          </aside>
+        ) : sel?.kind === "system" ? (
+          <aside aria-label="Inspector: Project and system" className={`no-print ${inspectorStyles.docked}`}>
+            <div className={inspectorStyles.top}>
+              <h2>Project and system</h2>
+              <button type="button" onClick={() => setSel(null)}>
+                Close inspector
+              </button>
+            </div>
+            <SystemForm />
           </aside>
         ) : element ? (
           <Inspector

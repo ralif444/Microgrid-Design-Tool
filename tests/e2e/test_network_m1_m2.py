@@ -52,7 +52,9 @@ def test_fr_10_fr_19_fr_15_fr_24_fr_27_fr_40_network_to_m2(
     expect(page.get_by_test_id("not-evaluated-voltage_min_pu")).to_be_visible()
     page.get_by_label("Bus voltage, lower limit (p.u.)").fill("1.05")
     page.get_by_label("Bus voltage, upper limit (p.u.)").fill("0.95")
-    expect(page.get_by_text("The lower limit must be below the upper limit.")).to_be_visible()
+    expect(
+        page.get_by_text("The lower limit must be below the upper limit.", exact=True)
+    ).to_be_visible()
     page.get_by_label("Bus voltage, lower limit (p.u.)").fill("")
     page.get_by_label("Bus voltage, upper limit (p.u.)").fill("")
 

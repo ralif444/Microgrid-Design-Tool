@@ -9,6 +9,7 @@ import, verify, re-run (FR-49, FR-50, FR-52, FR-53, NFR-01); FR-23 M1 groups; Do
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -126,11 +127,13 @@ def test_f2_open_refused_skipped_and_stage_1_issues(
     expect(page.get_by_test_id("file-check")).to_contain_text("run_records[0]")
     page.wait_for_url("**/workspace/")
     step(page, "Project")
-    expect(page.get_by_role("heading", name="Project overview")).to_be_visible()
-    expect(page.get_by_role("list", name="Readiness issues")).to_contain_text(
+    expect(page.get_by_role("table", name="Counts")).to_contain_text("RunRecords0")
+    # stage-1 issues sit on their element (audit Phase 7: the former readiness list)
+    elements = page.get_by_role("navigation", name="Elements")
+    elements.get_by_role("button", name=re.compile(r"^L1")).click()
+    expect(page.get_by_role("complementary", name="Inspector: Load L1")).to_contain_text(
         "Power cannot be negative"
     )
-    expect(page.get_by_role("table", name="Counts")).to_contain_text("RunRecords0")
 
 
 def test_f3_fr_49_import_verify_rerun_in_another_project(

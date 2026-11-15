@@ -62,9 +62,10 @@ export const FIELD_NAME: Record<string, [string, string]> = Object.fromEntries([
 ]);
 // a nested path ("battery_banks[0].initial_soc_ratio") is named by its last field; the issue id names the element
 export const fieldName = (f: string) => FIELD_NAME[f]?.[0] ?? f.replace(/^.*\./, "").replace(/_/g, " ");
+const ENTITY_WORD: Record<string, string> = { parameters: "Settings", DesignConstraints: "Design limits", LoadProfile: "Load profile" };
 // Where an issue sits, in words (audit D-26): "INV3, Bus", "Project, Nominal frequency", "Design".
 export const issueWhere = (i: { entity?: string | null; id?: string | null; field?: string | null }) =>
-  [i.id ?? (i.entity === "parameters" ? "Settings" : i.entity), i.field && fieldName(i.field)].filter(Boolean).join(", ") || "Design";
+  [i.id ?? ENTITY_WORD[i.entity ?? ""] ?? i.entity, i.field && fieldName(i.field)].filter(Boolean).join(", ") || "Design";
 
 // S-03 (FR-03): Q or power factor per load. The choice is a screen state, not data: both empty reads as Q.
 export type LoadMode = "Q" | "PF";

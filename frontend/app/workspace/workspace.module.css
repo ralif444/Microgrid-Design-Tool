@@ -60,3 +60,4 @@ form.add { display: grid; justify-items: start; gap: var(--space-1); }
   .ws { grid-template-columns: minmax(0, 1fr); grid-template-areas: "bar" "list" "canvas" "insp" "dock"; }
   .list { border-right: 0; border-bottom: var(--border-width) solid var(--color-border); }
 }
+.tableView { display: inline-block; margin: 0 var(--space-4) var(--space-1); font-size: var(--text-xs); }

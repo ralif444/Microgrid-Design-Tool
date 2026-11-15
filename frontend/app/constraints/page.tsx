@@ -1,58 +1,11 @@
 "use client";
-// S-06 Design constraints (Doc 7 §2): no numeric defaults; an empty limit is "not evaluated"
-// (FR-15, FR-16, manuscript 4.2.4).
-import { ExampleGuide, ExampleNext } from "../../components/ExampleForm";
-import { CONSTRAINT_FIELDS } from "../../components/elementFields";
-import { NumberField } from "../../components/NumberField";
-import { RequireProject } from "../../components/RequireProject";
-import { useValidation } from "../../components/useValidation";
-import { useProject, useProjectDispatch } from "../../store";
+// Retired (audit 2026-11-14 Phase 7, decision 4; Doc 14 D16): the workspace edits these fields.
+// The route stays as a redirect so old links and bookmarks still land on them.
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-function Constraints() {
-  const { design, example } = useProject();
-  const dispatch = useProjectDispatch();
-  const c = design.design_constraints ?? {};
-  const issues = (useValidation(design)?.issues ?? []).filter((i) => i.entity === "DesignConstraints");
-  return (
-    <>
-      <h1>Design constraints</h1>
-      <ExampleGuide screen="constraints" runnable={false} />
-      <p>Every limit starts empty. An empty limit is not evaluated and is never counted as satisfied.</p>
-      {example && (
-        <p data-testid="example-constraints">
-          Example mode: these limits come from the guided example&apos;s Project file, as the study settings of the
-          reference designs, not values from a standard. Editing one changes the design like any other edit.
-        </p>
-      )}
-      {CONSTRAINT_FIELDS.map(([k, label, unit]) => (
-        <p key={k}>
-          <NumberField
-            id={k}
-            label={label}
-            unit={unit}
-            value={c[k]}
-            onChange={(v) => dispatch({ type: "constraintSet", field: k, value: v })}
-          />
-          {c[k] == null && <span data-testid={`not-evaluated-${k}`}> not evaluated</span>}
-          {issues
-            .filter((i) => i.field === k)
-            .map((i, n) => (
-              <span key={n} role="alert">
-                {" "}
-                {i.message}
-              </span>
-            ))}
-        </p>
-      ))}
-      <ExampleNext screen="constraints" ready={true} />
-    </>
-  );
-}
-
-export default function ConstraintsPage() {
-  return (
-    <RequireProject>
-      <Constraints />
-    </RequireProject>
-  );
+export default function Redirect() {
+  const router = useRouter();
+  useEffect(() => router.replace("/workspace/?el=limits"), [router]);
+  return <p>Opening the workspace…</p>;
 }
