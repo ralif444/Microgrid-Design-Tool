@@ -49,14 +49,16 @@ function OverrideEditor({ sc, paths }: { sc: Scenario; paths: string[] }) {
         ))}
       </ul>
       <p>
-        <label htmlFor={`path-${sc.id}`}>Change in {sc.name}</label>{" "}
+        <label htmlFor={`path-${sc.id}`}>
+          Parameter to change<span className="sr-only"> in {sc.name}</span>
+        </label>{" "}
         <select id={`path-${sc.id}`} value={path} onChange={(e) => setPath(e.target.value)}>
           <option value="">Choose…</option>
           <ParamOptions paths={paths} />
         </select>
       </p>
       <p>
-        <NumberField id={`value-${sc.id}`} label={`New value for ${sc.name}`} unit={path ? paramUnit(path) : "—"} value={value} onChange={setValue} />
+        <NumberField id={`value-${sc.id}`} label={<>New value<span className="sr-only"> for {sc.name}</span></>} unit={path ? paramUnit(path) : "—"} value={value} onChange={setValue} />
       </p>
       <button
         type="button"

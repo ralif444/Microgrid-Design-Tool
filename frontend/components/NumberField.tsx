@@ -37,7 +37,7 @@ export function NumberField({
   adornment,
   note,
 }: {
-  label: string;
+  label: ReactNode; // a string, or words with an sr-only part (Scenarios)
   unit: string;
   value: number | null | undefined;
   onChange: (v: number | null) => void;

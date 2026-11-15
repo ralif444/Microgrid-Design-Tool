@@ -19,3 +19,6 @@
 .kind { white-space: nowrap; }
 .list tr[aria-current="true"] { background: var(--cds-layer-selected-01); }
 .list tr[aria-current="true"] > th { box-shadow: inset 3px 0 0 var(--color-fg); }
+.list td:last-child { white-space: nowrap; } /* "Delete E1" never breaks mid-word */
+.list td:last-child > button { display: block; width: 100%; }
+.list details > summary { cursor: pointer; }

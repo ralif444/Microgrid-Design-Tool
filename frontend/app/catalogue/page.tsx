@@ -194,7 +194,19 @@ export default function CataloguePage() {
                   <td>{[e.provenance?.manufacturer, e.provenance?.model].filter(Boolean).join(" ") || "—"}</td>
                   <td className={styles.kind}>{keyValues(e)}</td>
                   <td>
-                    {!c ? "Checking…" : c.usable ? "Usable" : `Information only: ${c.reasons.map((r) => reasonText(e.kind, r)).join("; ")}`}
+                    {!c ? (
+                      "Checking…"
+                    ) : c.usable ? (
+                      "Usable"
+                    ) : c.reasons.length <= 2 ? (
+                      `Information only: ${c.reasons.map((r) => reasonText(e.kind, r)).join("; ")}`
+                    ) : (
+                      // a long list folds away; the count says how much is left to enter
+                      <details>
+                        <summary>Information only: {c.reasons.length} things to fix</summary>
+                        {c.reasons.map((r) => reasonText(e.kind, r)).join("; ")}
+                      </details>
+                    )}
                     {noPowerCapability(e) && ` (${NO_POWER_WARNING})`}
                   </td>
                   <td>
