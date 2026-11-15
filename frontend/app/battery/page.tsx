@@ -144,6 +144,9 @@ function Battery() {
             rowKey={(b) => b.inverter_id}
             rowName={(b) => b.inverter_id}
           />
+          <p className={further.source}>
+            Terms: autonomy <Tip k="aut" />, depth of discharge <Tip k="dod" />, C-rate <Tip k="c" />.
+          </p>
           <details className={styles.details}>
             <summary>Show details: capability, inverter power and DC-side power per bank</summary>
           <div className={`table-scroll ${table.scroll}`} role="region" aria-label="Battery power check, scrolls sideways" tabIndex={0}>
@@ -158,7 +161,7 @@ function Battery() {
                     Capability (kW)
                   </th>
                   <th scope="col">
-                    Capability from <Tip k="c" />
+                    Capability from
                   </th>
                   <th scope="col" className="num">
                     Inverter P (kW)
@@ -171,10 +174,10 @@ function Battery() {
                   </th>
                   <th scope="col">Power reason</th>
                   <th scope="col">
-                    Autonomy outcome <Tip k="aut" />
+                    Autonomy outcome
                   </th>
                   <th scope="col" className="num">
-                    Usable energy (kWh) <Tip k="dod" />
+                    Usable energy (kWh)
                   </th>
                   <th scope="col">Autonomy</th>
                 </tr>
