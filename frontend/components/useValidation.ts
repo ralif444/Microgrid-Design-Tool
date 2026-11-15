@@ -34,11 +34,12 @@ export function useValidationState(design: ProjectSnapshot, target: AnalysisType
   return { report, error, retry: () => setAttempt((n) => n + 1) };
 }
 
-export type Freshness = "missing" | "stale" | "current";
+export type Freshness = "missing" | "checking" | "stale" | "current";
 
 // Doc 7 §3.1 stale-M1 rule, decided by hash re-check (D-46): current iff the latest FEASIBLE M1
 // was run on the snapshot now in the store. The API still enforces it (FR-38, FR-40).
 export function m1Freshness(m1SnapshotHash: string | null, report: ValidationReport | null): Freshness {
   if (!m1SnapshotHash) return "missing";
+  if (!report) return "checking"; // the live check has not answered yet: neither current nor stale
   return report?.snapshot_hash === m1SnapshotHash ? "current" : "stale";
 }

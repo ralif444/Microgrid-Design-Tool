@@ -243,7 +243,7 @@ function Report() {
       <table aria-label="Model assumptions">
         <caption>Model assumptions (manuscript Tabel 1.1) and how each is handled</caption>
         <thead>
-          <tr><th>Assumption</th><th>Statement</th><th>Handling</th><th>Indicator values</th><th>RunRecord result hash</th></tr>
+          <tr><th>Assumption</th><th>Statement (as in the manuscript)</th><th>Handling</th><th>Indicator values</th><th>RunRecord result hash</th></tr>
         </thead>
         <tbody>
           {MODEL_ASSUMPTIONS.map(([n, text, handling]) => {

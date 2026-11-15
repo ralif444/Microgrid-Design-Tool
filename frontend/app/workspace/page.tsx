@@ -58,9 +58,9 @@ function ElementList({ selected, onSelect, editable }: { selected: Selection; on
     onSelect({ kind, id });
   };
   const groups = [
-    { title: "Inverters", kind: "inverter", list: full.inverters, add: () => add("inverters", "inverter", { bus_id: firstBus }), table: "/network/" },
+    { title: "Inverters", kind: "inverter", list: full.inverters, add: () => add("inverters", "inverter", { bus_id: firstBus }), table: "/network/?tab=Inverters" },
     { title: "Buses", kind: "bus", list: full.buses, add: null, table: "/network/" },
-    { title: "Lines", kind: "line", list: full.lines, add: () => add("lines", "line", { from_bus_id: null, to_bus_id: null }), table: "/network/" },
+    { title: "Lines", kind: "line", list: full.lines, add: () => add("lines", "line", { from_bus_id: null, to_bus_id: null }), table: "/network/?tab=Lines" },
     { title: "Loads", kind: "load", list: full.loads, add: () => add("loads", "load", { bus_id: firstBus, p_kw: null, q_kvar: null }), table: "/loads/" },
   ] as const;
   const isSel = (kind: string, id?: string) => selected?.kind === kind && (!id || ("id" in selected && selected.id === id));

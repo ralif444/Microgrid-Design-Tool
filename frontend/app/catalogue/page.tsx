@@ -13,6 +13,7 @@ import { CANNOT_UNDO, useConfirmDelete } from "../../components/ConfirmDelete";
 import { NumberField } from "../../components/NumberField";
 import { FileCheckText } from "../../components/ProjectFileMenu";
 import { nextId } from "../../store/reducer";
+import styles from "./catalogue.module.css";
 
 const PROVENANCE: [keyof NonNullable<CatalogEntry["provenance"]>, string][] = [
   ["manufacturer", "Manufacturer"],
@@ -47,23 +48,28 @@ function EntryEditor({ e, onChange, x10 }: { e: CatalogEntry; onChange: (e: Cata
       </fieldset>
       <fieldset>
         <legend>Values</legend>
+        {e.kind === "BATTERY_MODULE" && <p><em>All values {UNUSED.bess}.</em></p>}
         {ENTRY_FIELDS[e.kind].filter(([, , , use]) => x10 || use !== "x10").map(([k, label, unit, use]) => (
-          <p key={k}>
-            {ENTRY_OPTIONS[k] ? (
-              <>
-                <label htmlFor={`val-${k}`}>{label}</label>{" "}
-                <select id={`val-${k}`} value={(b[k] as string | null) ?? ""} onChange={(x) => setValue(k, x.target.value || null)}>
-                  <option value="">(choose)</option>
-                  {ENTRY_OPTIONS[k].map((o) => (
-                    <option key={o}>{o}</option>
-                  ))}
-                </select>
-              </>
-            ) : unit === null
-              ? text(`val-${k}`, label, b[k] as string | null, (v) => setValue(k, v))
-              : <NumberField id={`val-${k}`} label={label} unit={unit} value={b[k] as number | null} onChange={(v) => setValue(k, v)} />}
-            {(use === "model" || use === "bess") && unit !== null && <> {text(`src-${k}`, `${label}: page or section`, e.sources?.[k], (v) => setSource(k, v ?? ""))}</>}
-            {(use === "A2" || use === "A4" || use === "x10" || use === "bess") && <em> {UNUSED[use]}</em>}
+          <p key={k} className={styles.row}>
+            <span className={styles.pair}>
+              {ENTRY_OPTIONS[k] ? (
+                <>
+                  <label htmlFor={`val-${k}`}>{label}</label>
+                  <select id={`val-${k}`} value={(b[k] as string | null) ?? ""} onChange={(x) => setValue(k, x.target.value || null)}>
+                    <option value="">(choose)</option>
+                    {ENTRY_OPTIONS[k].map((o) => (
+                      <option key={o}>{o}</option>
+                    ))}
+                  </select>
+                </>
+              ) : unit === null
+                ? text(`val-${k}`, label, b[k] as string | null, (v) => setValue(k, v))
+                : <NumberField id={`val-${k}`} label={label} unit={unit} value={b[k] as number | null} onChange={(v) => setValue(k, v)} />}
+            </span>
+            {(use === "model" || use === "bess") && unit !== null && (
+              <span className={styles.pair}>{text(`src-${k}`, `${label}: page or section`, e.sources?.[k], (v) => setSource(k, v ?? ""))}</span>
+            )}
+            {(use === "A2" || use === "A4" || use === "x10") && <em>{UNUSED[use]}</em>}
           </p>
         ))}
         {noPowerCapability(e) && <p role="note">{NO_POWER_WARNING}</p>}

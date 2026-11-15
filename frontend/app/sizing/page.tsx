@@ -106,7 +106,7 @@ function InverterDrafts({ adviceId, plan }: { adviceId: string; plan: PsPayload[
   if (added)
     return (
       <p role="status">
-        {plural(added, "inverter draft")} added. <Link href="/network/">Complete them in Network</Link>
+        {plural(added, "inverter draft")} added. <Link href="/network/?tab=Inverters">Complete them in Network</Link>
       </p>
     );
   // not remembered after a reload (store only): name the rows that still lack a bus instead

@@ -36,9 +36,13 @@ function Network() {
     setFocus(t.id);
     if (t.kind !== "load") setTab(TAB_OF[t.kind]);
   };
-  // D-48 K22: ?focus=<id> from a limiting constraint opens the tab holding that element.
+  // D-48 K22: ?focus=<id> from a limiting constraint opens the tab holding that element;
+  // ?tab=<Tab> from the workspace "Table view" links opens that tab.
   useEffect(() => {
-    const id = new URLSearchParams(window.location.search).get("focus");
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get("tab");
+    if (t === "Lines" || t === "Inverters") setTab(t);
+    const id = params.get("focus");
     if (!id) return;
     setFocus(id);
     if (design.lines?.some((r) => r.id === id)) setTab("Lines");
