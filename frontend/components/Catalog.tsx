@@ -59,6 +59,38 @@ export const ENTRY_FIELDS: Record<CatalogEntry["kind"], EntryField[]> = {
   ],
 };
 
+export const PROVENANCE: [keyof NonNullable<CatalogEntry["provenance"]>, string][] = [
+  ["manufacturer", "Manufacturer"],
+  ["model", "Model"],
+  ["document", "Datasheet title or document id"],
+  ["revision", "Revision or date"],
+];
+
+// The server names fields by their keys ("sources.x_ohm_per_km (page or section) is missing"); show the labels.
+export function reasonText(kind: CatalogEntry["kind"], reason: string): string {
+  const labels: Record<string, string> = Object.fromEntries([
+    ...PROVENANCE,
+    ...ENTRY_FIELDS[kind].map(([k, l]) => [k, l.replace(/, optional$/, "")]),
+  ]);
+  return reason.replace(/(?:(?:sources|provenance)\.)?\b([a-z][a-z0-9_]*)\b( \(page or section\))?/g, (m, k: string, src?: string) =>
+    labels[k] ? labels[k] + (src ? ": page or section" : "") : m,
+  );
+}
+
+// The values a reader picks an entry by, for the Catalogue list (audit 2026-11-15); "—" when none is set.
+const KEY_FIELDS: Record<CatalogEntry["kind"], [string, string][]> = {
+  INVERTER: [["rated_kva", ""]],
+  CONDUCTOR: [["r_ohm_per_km", "R "], ["x_ohm_per_km", "X "], ["ampacity_a", ""]],
+  BREAKER: [["in_a", "I_n "]],
+  BATTERY_MODULE: [["energy_kwh", ""], ["voltage_min_v", "min "], ["voltage_max_v", "max "]],
+};
+export function keyValues(e: CatalogEntry): string {
+  const b = block(e);
+  const unit = Object.fromEntries(ENTRY_FIELDS[e.kind].map(([k, , u]) => [k, u]));
+  const parts = KEY_FIELDS[e.kind].filter(([k]) => typeof b[k] === "number").map(([k, pre]) => `${pre}${b[k]} ${unit[k]}`);
+  return parts.join(", ") || "—";
+}
+
 // Fields chosen from a list (contract enums, D-104).
 export const ENTRY_OPTIONS: Record<string, string[]> = { material: ["CU", "AL"], insulation: ["PVC", "XLPE"], class: ["MCB", "MCCB"] };
 export const BLOCK_KEY = { INVERTER: "inverter", CONDUCTOR: "conductor", BREAKER: "breaker", BATTERY_MODULE: "battery_module" } as const;
@@ -150,9 +182,38 @@ interface CatalogState {
 
 const Ctx = createContext<CatalogState>({ catalog: emptyCatalog(), checks: [], setCatalog: () => undefined });
 
+// Kept in this browser like the Project draft (audit O1), so a reload or restore does not empty it.
+// The file stays the record: "Save catalogue" writes it. Storage errors only turn this off.
+export const CATALOG_KEY = "mgapp-catalog";
+export function readStoredCatalog(): Catalog | null {
+  try {
+    const c = JSON.parse(globalThis.localStorage.getItem(CATALOG_KEY) ?? "null") as Catalog | null;
+    return c && Array.isArray(c.entries) ? c : null;
+  } catch {
+    return null;
+  }
+}
+function storeCatalog(c: Catalog) {
+  try {
+    if (c.entries.length) globalThis.localStorage.setItem(CATALOG_KEY, JSON.stringify(c));
+    else globalThis.localStorage.removeItem(CATALOG_KEY);
+  } catch {
+    // storage unavailable: the Catalogue lives in memory only
+  }
+}
+
 export function CatalogProvider({ children }: { children: ReactNode }) {
   const [catalog, setCatalog] = useState<Catalog>(emptyCatalog);
   const [checks, setChecks] = useState<EntryCheck[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    const c = readStoredCatalog(); // after mount: the static export renders without storage
+    if (c) setCatalog(c);
+    setLoaded(true);
+  }, []);
+  useEffect(() => {
+    if (loaded) storeCatalog(catalog);
+  }, [catalog, loaded]);
   useEffect(() => {
     let live = true;
     const t = setTimeout(() => {

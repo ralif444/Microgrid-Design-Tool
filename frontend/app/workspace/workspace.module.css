@@ -17,7 +17,7 @@
   display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-2); width: 100%; min-height: 2rem; padding: var(--space-1) var(--space-4);
   border: 0; border-left: 3px solid transparent; background: none; color: var(--color-fg); text-align: left; cursor: pointer;
 }
-.list li > button:hover { background: var(--cds-layer-hover-01); }
+.list li > button:hover, .list li > button:active { background: var(--cds-layer-hover-01); color: var(--color-fg); } /* beats the global primary-button hover */
 .list li > button[aria-pressed="true"] { background: var(--cds-layer-selected-01); border-left-color: var(--color-fg); font-weight: var(--weight-semibold); }
 .flag { display: inline-flex; align-items: center; gap: 2px; font-size: var(--text-xs); font-weight: normal; color: var(--role-caution-fg); }
 .flag > svg { fill: var(--role-caution-icon); }

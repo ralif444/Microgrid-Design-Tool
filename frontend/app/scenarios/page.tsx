@@ -4,6 +4,7 @@
 // reference (Doc 3 §6.6 default), explicit deltas, no ranking (4.2.5). Static N−1 check (Doc 12 FR-80).
 // UX-8 (Doc 12 X3): one bar chart per key metric across the scenarios (run order, no sorting, so no
 // ranking is implied); the comparison table with the payload deltas follows the charts.
+import { useKept } from "../../components/useKept";
 import { useState } from "react";
 import type { M3cPayload } from "../../api-types";
 import { ExampleGuide, ExampleNext, nextReady } from "../../components/ExampleForm";
@@ -48,14 +49,16 @@ function OverrideEditor({ sc, paths }: { sc: Scenario; paths: string[] }) {
         ))}
       </ul>
       <p>
-        <label htmlFor={`path-${sc.id}`}>Change in {sc.name}</label>{" "}
+        <label htmlFor={`path-${sc.id}`}>
+          Parameter to change<span className="sr-only"> in {sc.name}</span>
+        </label>{" "}
         <select id={`path-${sc.id}`} value={path} onChange={(e) => setPath(e.target.value)}>
           <option value="">Choose…</option>
           <ParamOptions paths={paths} />
         </select>
       </p>
       <p>
-        <NumberField id={`value-${sc.id}`} label={`New value for ${sc.name}`} unit={path ? paramUnit(path) : "—"} value={value} onChange={setValue} />
+        <NumberField id={`value-${sc.id}`} label={<>New value<span className="sr-only"> for {sc.name}</span></>} unit={path ? paramUnit(path) : "—"} value={value} onChange={setValue} />
       </p>
       <button
         type="button"
@@ -81,8 +84,8 @@ function Scenarios() {
   const { scenarios } = useProject();
   const dispatch = useProjectDispatch();
   const { design, fresh, busy, resp, stale, error, clearError, run, m2Infeasible } = useDependentRun("M3c");
-  const [selected, setSelected] = useState<string[]>([]);
-  const [name, setName] = useState("");
+  const [selected, setSelected] = useKept<string[]>("selected", []);
+  const [name, setName] = useKept("name", "");
   const [runLabels, setRunLabels] = useState<Record<string, string>>({});
   const inverterCount = design.inverters?.length ?? 0;
   const paths = numericPaths(design);
@@ -165,22 +168,25 @@ function Scenarios() {
           </button>
         </section>
       ))}
-      {chosen.length < 2 && <p>Select two or more Scenarios.</p>}
-      <p className={styles.actions}>
+      <p className={styles.run}>
         <button
           type="button"
           className="primary"
           disabled={busy || fresh !== "current" || chosen.length < 2}
           aria-busy={busy || undefined}
+          aria-describedby={chosen.length < 2 ? "compare-missing" : undefined}
           onClick={() => compare(chosen.map((s) => ({ scenario_id: s.id, label: s.name, project_snapshot: applyOverrides(design, s.overrides) })))}
         >
-          {busy ? "Running..." : "Compare"}
+          {busy ? "Running..." : "Compare scenarios"}
         </button>
+        {chosen.length < 2 && <span id="compare-missing">Missing: two or more selected Scenarios.</span>}
+      </p>
+      <p className={styles.run}>
         <button type="button" disabled={busy || fresh !== "current" || inverterCount < 2} onClick={() => compare(nMinus1(design))}>
           Run N−1 check (base plus one scenario per removed inverter)
         </button>
+        {inverterCount < 2 && <span>N−1 needs at least two inverters.</span>}
       </p>
-      {inverterCount < 2 && <p>N−1 needs at least two inverters.</p>}
       </div>
       <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}

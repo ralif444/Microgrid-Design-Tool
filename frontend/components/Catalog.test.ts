@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CatalogEntry } from "../api-types";
 import { initialState, projectReducer, type ProjectAction } from "../store";
-import { catalogHints, entryWarnings, fromEntry, refText, tauInSource } from "./Catalog";
+import { CATALOG_KEY, catalogHints, keyValues, entryWarnings, fromEntry, readStoredCatalog, reasonText, refText, tauInSource } from "./Catalog";
 
 const conductor: CatalogEntry = {
   id: "E1",
@@ -80,5 +80,38 @@ describe("τ_in pre-fill (Doc 12 FR-71, D-61 K116)", () => {
     expect(tauInSource([ref(inv("E1", 10, 0.002)), {}]).from?.tau_in_s).toBe(0.002);
     expect(tauInSource([ref(inv("E1", 10))])).toEqual({ from: null, conflict: false });
     expect(tauInSource([ref(inv("E1", 10, 0.002)), ref(inv("E2", 10, 0.003))])).toEqual({ from: null, conflict: true });
+  });
+});
+
+describe("reasonText", () => {
+  it("names fields by their labels, not their keys", () => {
+    expect(reasonText("CONDUCTOR", "sources.x_ohm_per_km (page or section) is missing")).toBe("Reactance X: page or section is missing");
+    expect(reasonText("CONDUCTOR", "provenance.document is missing")).toBe("Datasheet title or document id is missing");
+    expect(reasonText("INVERTER", "rated_kva is missing")).toBe("Rating is missing");
+    expect(reasonText("BATTERY_MODULE", "voltage_min_v is above voltage_max_v")).toBe("Minimum DC voltage is above Maximum DC voltage");
+    expect(reasonText("INVERTER", "not declared grid-forming with a datasheet reference, so it is information only")).toBe(
+      "not declared grid-forming with a datasheet reference, so it is information only",
+    );
+  });
+});
+
+describe("stored Catalogue (audit O1)", () => {
+  const withStorage = (s: unknown) => Object.defineProperty(globalThis, "localStorage", { value: s, configurable: true });
+  it("reads a stored Catalogue and ignores junk or missing storage", () => {
+    const m = new Map<string, string>();
+    withStorage({ getItem: (k: string) => m.get(k) ?? null });
+    m.set(CATALOG_KEY, JSON.stringify({ schema_version: 1, app_version: "", entries: [conductor] }));
+    expect(readStoredCatalog()?.entries[0].id).toBe("E1");
+    m.set(CATALOG_KEY, "{not json");
+    expect(readStoredCatalog()).toBeNull();
+    withStorage(undefined);
+    expect(readStoredCatalog()).toBeNull();
+  });
+});
+
+describe("keyValues", () => {
+  it("lists the set key values with units, or a dash", () => {
+    expect(keyValues(conductor)).toBe("R 0.5 Ω/km, X 0.3 Ω/km, 100 A");
+    expect(keyValues({ ...conductor, conductor: {} } as CatalogEntry)).toBe("—");
   });
 });

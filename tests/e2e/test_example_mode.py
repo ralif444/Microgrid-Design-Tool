@@ -135,7 +135,7 @@ def test_fr_100_s09_to_s12_prefill_and_run(server: Callable[[str], str], page: P
     expect(not_set).to_have_count(1)  # step_relative: no value given (D-92 K231)
     page.get_by_label("Step (ratio)").fill("0.01")  # a test value, not an example value
     expect(not_set).to_have_count(0)
-    page.get_by_role("button", name="Run M3a").click()
+    page.get_by_role("button", name="Run sensitivity").click()
     expect(page.get_by_role("status", name="Status")).to_be_visible()
 
     step(page, "Sweep (M3b)")
@@ -212,7 +212,7 @@ def test_fr_103_s13_runs_and_s14_offers_the_doc13_disturbances(
 
     # S-13: tau_in and the damping threshold stay empty (D-92 K231); Run needs no typing.
     step(page, "Small-signal (M4a)")
-    page.get_by_role("button", name="Run M4a").click()
+    page.get_by_role("button", name="Run small-signal analysis").click()
     expect(page.get_by_role("status", name="Status")).to_be_visible()
 
     step(page, "Transient (M4b)")
@@ -240,7 +240,7 @@ def test_fr_103_s13_runs_and_s14_offers_the_doc13_disturbances(
     expect(page.get_by_label("Element", exact=True)).to_have_value("INV2")
     expect(page.get_by_label("Simulation end (s)")).to_have_value("5")
     with page.expect_request("**/api/analyses/M4b") as req:
-        page.get_by_role("button", name="Run M4b").click()
+        page.get_by_role("button", name="Run transient simulation").click()
     sent = req.value.post_data_json["parameters"]
     assert sent["disturbance"] == {
         "kind": "INVERTER_OUTAGE",
@@ -310,14 +310,14 @@ def test_fr_102_guidance_and_next_links_lead_through_the_pipeline(
     page.get_by_label("Step (ratio)").fill(
         "0.01"
     )  # test values for the fields the example leaves empty
-    page.get_by_role("button", name="Run M3a").click()
+    page.get_by_role("button", name="Run sensitivity").click()
     go("Sweep (M3b)")
     page.get_by_label("Points (count)").fill("4")
     page.get_by_role("button", name="Run sweep").click()
     go("Scenarios (M3c)")
     for name in ("D2 base", "D2S load × 2.4", "D2H load × 4.0"):
         page.get_by_role("region", name=f"Scenario {name}").get_by_role("checkbox").check()
-    page.get_by_role("button", name="Compare").click()
+    page.get_by_role("button", name="Compare scenarios").click()
     go("Envelope (M3d)")
     page.get_by_label("X axis: Points (count)").fill("2")
     page.get_by_label("Y axis: Parameter").select_option("inverters/INV1/rated_kva")
@@ -326,9 +326,9 @@ def test_fr_102_guidance_and_next_links_lead_through_the_pipeline(
     page.get_by_label("Y axis: Points (count)").fill("2")
     page.get_by_role("button", name="Run envelope").click()
     go("Small-signal (M4a)")
-    page.get_by_role("button", name="Run M4a").click()
+    page.get_by_role("button", name="Run small-signal analysis").click()
     go("Transient (M4b)")
-    page.get_by_role("button", name="Run M4b").click()
+    page.get_by_role("button", name="Run transient simulation").click()
     expect(status).to_be_visible()
     go("Report")
     expect(page.get_by_test_id("example-report")).to_have_text(

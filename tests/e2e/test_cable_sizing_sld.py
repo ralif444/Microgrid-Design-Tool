@@ -130,7 +130,7 @@ def test_fr_115_catalogue_breaker_and_match(
     expect(page.get_by_role("button", name="+ Add breaker entry")).to_be_visible()
     page.get_by_label("Open catalogue file").set_input_files(file)
     entries = page.get_by_role("table", name="Catalogue entries")
-    expect(entries.locator("tbody tr").nth(1)).to_contain_text("usable")
+    expect(entries.locator("tbody tr").nth(1)).to_contain_text("Usable")
 
     _m1_m2(page)
     _run_cb(page)

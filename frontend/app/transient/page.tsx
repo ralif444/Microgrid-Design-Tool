@@ -3,7 +3,7 @@
 // simulation end, optional settling criteria without defaults (D-55 K90); time responses with a
 // data table; class in words, or "not set" without settling criteria.
 // UX-6 (Doc 12 X2, X3, X4): KPI strip, time responses with crosshair, start mark and final window.
-import { useState } from "react";
+import { useKept } from "../../components/useKept";
 import type { M4bPayload } from "../../api-types";
 import { LineChart } from "../../components/charts/LineChart";
 import { EmptyState } from "../../components/EmptyState";
@@ -55,16 +55,16 @@ function Transient() {
   const presets = example?.settings.screens.transient?.presets ?? [];
   const d0 = presets[0]?.fields.disturbance as Record<string, unknown> | undefined;
   const ex = useExampleForm("transient", {}, { onReset: () => presets[0] && apply(presets[0]) });
-  const [preset, setPreset] = useState(presets[0]?.id ?? "");
-  const [kind, setKindRaw] = useState<Kind>((d0?.kind as Kind) ?? "LOAD_STEP");
-  const [element, setElementRaw] = useState((d0?.element_id as string) ?? "");
-  const [reference, setReferenceRaw] = useState<Ref>((d0?.reference as Ref) ?? "P_SETPOINT");
-  const [magnitude, setMagnitudeRaw] = useState<number | null>((d0?.magnitude as number) ?? null);
-  const [magKvar, setMagKvarRaw] = useState<number | null>((d0?.magnitude_kvar as number) ?? null);
-  const [start, setStartRaw] = useState<number | null>((d0?.start_time_s as number) ?? null);
-  const [permanent, setPermanentRaw] = useState(d0 ? d0.duration_s === null : true);
-  const [duration, setDurationRaw] = useState<number | null>((d0?.duration_s as number) ?? null);
-  const [end, setEndRaw] = useState<number | null>(presets[0]?.fields.simulation_end_s ?? null);
+  const [preset, setPreset] = useKept("preset", presets[0]?.id ?? "");
+  const [kind, setKindRaw] = useKept<Kind>("kind", (d0?.kind as Kind) ?? "LOAD_STEP");
+  const [element, setElementRaw] = useKept("element", (d0?.element_id as string) ?? "");
+  const [reference, setReferenceRaw] = useKept<Ref>("reference", (d0?.reference as Ref) ?? "P_SETPOINT");
+  const [magnitude, setMagnitudeRaw] = useKept<number | null>("magnitude", (d0?.magnitude as number) ?? null);
+  const [magKvar, setMagKvarRaw] = useKept<number | null>("magKvar", (d0?.magnitude_kvar as number) ?? null);
+  const [start, setStartRaw] = useKept<number | null>("start", (d0?.start_time_s as number) ?? null);
+  const [permanent, setPermanentRaw] = useKept("permanent", d0 ? d0.duration_s === null : true);
+  const [duration, setDurationRaw] = useKept<number | null>("duration", (d0?.duration_s as number) ?? null);
+  const [end, setEndRaw] = useKept<number | null>("end", presets[0]?.fields.simulation_end_s ?? null);
   const own =
     <V,>(f: (v: V) => void) =>
     (v: V) => {
@@ -89,9 +89,9 @@ function Transient() {
     setPreset(pr.id);
   }
   const chosen = presets.find((x) => x.id === preset);
-  const [fBand, setFBand] = useState<number | null>(null);
-  const [vBand, setVBand] = useState<number | null>(null);
-  const [win, setWin] = useState<number | null>(null);
+  const [fBand, setFBand] = useKept<number | null>("fBand", null);
+  const [vBand, setVBand] = useKept<number | null>("vBand", null);
+  const [win, setWin] = useKept<number | null>("win", null);
 
   const onLoads = kind === "LOAD_STEP" || kind === "LOAD_SCALING";
   const elements = [
@@ -240,7 +240,7 @@ function Transient() {
         </fieldset>
         {presets.length > 0 && ex.resetButton}
         <RunButton
-          label="Run M4b"
+          label="Run transient simulation"
           busy={busy}
           fresh={fresh}
           missing={[

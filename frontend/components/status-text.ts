@@ -83,6 +83,12 @@ export function bannerText(type: AnalysisType, r: AnalysisResult): BannerText {
   }
 }
 
+// BA: no bank got a power or autonomy verdict, so "Advice ready" would overstate it (audit 2026-11-15 B3).
+const baNothingEvaluated = (r: AnalysisResult) => {
+  const banks = (r.payload as { banks?: { power: { outcome: string }; autonomy: { outcome: string } }[] } | null)?.banks ?? [];
+  return banks.length > 0 && banks.every((b) => b.power.outcome === "NOT_EVALUATED" && b.autonomy.outcome === "NOT_EVALUATED");
+};
+
 // Banner headline word (audit D-5): analyses without a constraint check get their own word, not "FEASIBLE".
 const CLASS_WORD: Record<string, string> = { STABLE: "Stable", MARGINAL: "Marginally stable", UNSTABLE: "Unstable" };
 export function statusWord(type: AnalysisType, r: AnalysisResult): string {
@@ -92,6 +98,7 @@ export function statusWord(type: AnalysisType, r: AnalysisResult): string {
       if (type === "M4a") return CLASS_WORD[(r.payload as { stability_class?: string } | null)?.stability_class ?? ""] ?? "Analysed";
       if (type === "M4b") return "Simulated";
       if (type === "M2") return "Meets the limits";
+      if (type === "BA" && baNothingEvaluated(r)) return "Not evaluated";
       if (type === "PS" || type === "CB" || type === "BA") return "Advice ready";
       return "Completed";
     case "INFEASIBLE":

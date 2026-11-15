@@ -2,6 +2,7 @@
 // Axis input shared by S-10 Sweep and S-12 Envelope (Doc 3 §6.5 Axis): PARAMETER, SCALE_FACTOR
 // (every element of the chosen kind that has the field, D-56 K98) or LOAD_SCALE λ; S-10 also offers
 // LOAD_PROFILE_HOUR when the design has a LoadProfile, with the range fixed to 0 … 23 (D-113 K337).
+import { useKept } from "./useKept";
 import { useEffect, useState, type ReactNode } from "react";
 import { getMeta } from "../api-client";
 import type { ProjectSnapshot } from "../api-types";
@@ -41,14 +42,14 @@ export function axisNeeds(needs: string[] | undefined, key: string): string[] {
 // SCALE_FACTOR example axis would also need its path or element set here.
 export function useAxis(design: ProjectSnapshot, prefix = "", example?: AxisExample, hourOk = false): AxisInput {
   const init = example?.ex?.value as { kind?: Kind; range_min?: number; range_max?: number; step_count?: number } | undefined;
-  const [tagged, setTagged] = useState(!!init);
-  const [kind, setKindRaw] = useState<Kind>(init?.kind ?? "PARAMETER");
-  const [path, setPath] = useState("");
-  const [coll, setColl] = useState<Coll>("inverters");
-  const [field, setField] = useState(FIELDS.inverters[0]);
-  const [lo, setLoRaw] = useState<number | null>(init?.range_min ?? null);
-  const [hi, setHiRaw] = useState<number | null>(init?.range_max ?? null);
-  const [steps, setSteps] = useState<number | null>(init?.step_count ?? null);
+  const [tagged, setTagged] = useKept(`${prefix}tagged`, !!init);
+  const [kind, setKindRaw] = useKept<Kind>(`${prefix}kind`, init?.kind ?? "PARAMETER");
+  const [path, setPath] = useKept(`${prefix}path`, "");
+  const [coll, setColl] = useKept<Coll>(`${prefix}coll`, "inverters");
+  const [field, setField] = useKept(`${prefix}field`, FIELDS.inverters[0]);
+  const [lo, setLoRaw] = useKept<number | null>(`${prefix}lo`, init?.range_min ?? null);
+  const [hi, setHiRaw] = useKept<number | null>(`${prefix}hi`, init?.range_max ?? null);
+  const [steps, setSteps] = useKept<number | null>(`${prefix}steps`, init?.step_count ?? null);
   // a typed kind or range is the user's, so the "Example" tag goes
   const setKind = (k: Kind) => (setKindRaw(k), setTagged(false));
   const setLo = (v: number | null) => (setLoRaw(v), setTagged(false));

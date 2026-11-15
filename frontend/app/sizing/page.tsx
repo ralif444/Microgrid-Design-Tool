@@ -47,6 +47,13 @@ function AdvicePanel({ a }: { a: SizingAdvice }) {
     <section className="advice" aria-label="Sizing advice">
       <p className="advice-tag">Advice (not design data)</p>
       <table aria-label="Advice values">
+        <thead>
+          <tr>
+            <th scope="col">Quantity</th>
+            <th scope="col">Value</th>
+            <th scope="col">Basis</th>
+          </tr>
+        </thead>
         <tbody>
           <tr>
             <th scope="row">Load apparent power</th>
@@ -114,7 +121,7 @@ function InverterDrafts({ adviceId, plan }: { adviceId: string; plan: PsPayload[
   return (
     <p>
       <button type="button" onClick={() => dispatch({ type: "draftsAdded", adviceId, count: plan.unit_count, ratedKva: plan.unit_rating_kva })}>
-        Add {plan.unit_count} inverter drafts of {plan.unit_rating_kva} kVA
+        Add {plural(plan.unit_count, "inverter draft")} of {plan.unit_rating_kva} kVA
       </button>
       {unplaced > 0 && ` ${plural(unplaced, "inverter")} without a bus already in the design.`}
     </p>
@@ -241,10 +248,13 @@ function Sizing() {
   const warnings = resp?.result.warnings?.filter((w) => w.code === "PROFILE_PEAK_ABOVE_LOADS") ?? [];
   return (
     <>
-      <h1>Sizing advice (PS)</h1>
+      <h1>
+        Sizing advice <span className="code-label">(power system parameters, PS)</span>
+      </h1>
       <ExampleGuide screen="sizing" />
       <form
         aria-label="Sizing advice settings"
+        style={{ "--field-label": "17rem" } as React.CSSProperties}
         onSubmit={(e) => {
           e.preventDefault();
           void run();
@@ -311,6 +321,11 @@ function Sizing() {
             </div>
           )}
           {latest.state === "ACCEPTED" && <InverterDrafts adviceId={latest.id} plan={latest.result.inverter_plan} />}
+          {latest.state === "SKIPPED" && (
+            <p role="status">
+              Skipped. Enter the inverters yourself in <Link href="/network/?tab=Inverters">Network</Link>.
+            </p>
+          )}
         </ResultSheet>
       )}
       <ExampleNext screen="sizing" ready={nextReady(resp?.result.status)} />

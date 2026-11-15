@@ -24,7 +24,7 @@ def test_fr_28_fr_29_fr_44_fr_30_fr_31_further_analyses(
     enter_design(page, server("default"), gui_snapshot())
 
     step(page, "Sensitivity (M3a)")
-    expect(page.get_by_role("button", name="Run M3a")).to_be_disabled()  # FR-39: no M1 yet
+    expect(page.get_by_role("button", name="Run sensitivity")).to_be_disabled()  # FR-39: no M1 yet
     expect(page.get_by_test_id("m1-blocked")).to_be_visible()
     _run_m1(page)
 
@@ -33,7 +33,7 @@ def test_fr_28_fr_29_fr_44_fr_30_fr_31_further_analyses(
     page.get_by_label("System frequency (Hz)").check()
     page.get_by_label("Step (ratio)").fill("0.01")
     _numeric_inputs_have_units(page)
-    page.get_by_role("button", name="Run M3a").click()
+    page.get_by_role("button", name="Run sensitivity").click()
     _status(page, "FEASIBLE")
     expect(page.get_by_role("table", name="Sensitivity of System frequency")).to_contain_text(
         "INV1, Rating (kVA)"
@@ -71,10 +71,10 @@ def test_fr_28_fr_29_fr_44_fr_30_fr_31_further_analyses(
     expect(page.get_by_role("list", name="Overrides of Bigger load")).to_contain_text(
         "L1, Active power P = 7 kW"
     )
-    expect(page.get_by_role("button", name="Compare")).to_be_disabled()
+    expect(page.get_by_role("button", name="Compare scenarios")).to_be_disabled()
     page.get_by_label("Base (0 changes)").check()
     page.get_by_label("Bigger load (1 change)").check()
-    page.get_by_role("button", name="Compare").click()
+    page.get_by_role("button", name="Compare scenarios").click()
     _status(page, "FEASIBLE")
     expect(page.get_by_role("table", name="Scenario comparison")).to_contain_text("Bigger load")
 

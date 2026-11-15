@@ -2,9 +2,12 @@
 // S-20 Battery adequacy (Doc 12 B2, B3, FR-116, FR-117, FR-119, FR-120; Doc 7 §2.5; ADR-015; Doc 9
 // D-109, D-110): start hour (prefilled 0) → Run gated on a current M1 → Status banner → fixed caveat →
 // one row per bank (power and autonomy) → depletion chart. Advice only.
-import { useState } from "react";
-import { AUTONOMY_OUTCOME, POWER_OUTCOME, type BaBank, type BaPayload } from "../../components/battery";
-import { autonomyText, SocChart } from "../../components/BatteryResults";
+import { useKept } from "../../components/useKept";
+import type { BatteryBank, RunRecord } from "../../api-types";
+import { AUTONOMY_OUTCOME, POWER_OUTCOME, valueSource, type BaBank, type BaPayload } from "../../components/battery";
+import { useCatalog } from "../../components/Catalog";
+import { autonomyText, BA_SUMMARY_COLUMNS, SocChart } from "../../components/BatteryResults";
+import { DataTable } from "../../components/DataTable";
 import { Toggletip } from "../../components/Term";
 import { EmptyState } from "../../components/EmptyState";
 import { fixedOr } from "../../components/format";
@@ -13,7 +16,7 @@ import { Icon } from "../../components/Icon";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
-import { ResultSheet } from "../../components/ResultSheet";
+import { basisRows, ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import { useProject } from "../../store";
@@ -76,9 +79,22 @@ function Row({ b }: { b: BaBank }) {
 }
 
 function Battery() {
-  const { batteryBanks } = useProject();
+  const { batteryBanks, sizingAdvice } = useProject();
+  const { catalog } = useCatalog();
+  const sizing = sizingAdvice.at(-1)?.ps_parameters;
+  // η_dc and DoD of each bank this run used, with where they came from (audit 2026-11-15 B2)
+  const bankBasis = (rec: RunRecord): [string, string][] =>
+    (((rec.parameters as { banks?: BatteryBank[] } | null)?.banks) ?? []).flatMap((b) => {
+      const modDod = catalog.entries.find((e) => e.id === b.module.catalog_ref.entry_id)?.battery_module?.recommended_dod_ratio;
+      const row = (name: string, v: number | null | undefined, s: string | null): [string, string] =>
+        [`${name} of ${b.inverter_id}`, v == null ? "not set" : `${fixedOr(v, "ratio")} (${s})`];
+      return [
+        row("DC efficiency η_dc", b.dc_efficiency_ratio, valueSource(b.dc_efficiency_ratio, sizing?.dc_efficiency_ratio)),
+        row("Depth of discharge", b.depth_of_discharge_ratio, valueSource(b.depth_of_discharge_ratio, sizing?.depth_of_discharge_ratio, modDod)),
+      ];
+    });
   const { fresh, busy, resp, stale, error, clearError, run } = useDependentRun("BA");
-  const [startHour, setStartHour] = useState<number | null>(0);
+  const [startHour, setStartHour] = useKept<number | null>("startHour", 0);
   const r = resp?.result;
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as BaPayload) : null;
   if (batteryBanks.length === 0)
@@ -112,7 +128,7 @@ function Battery() {
       {error && <Toast message={error} onDismiss={clearError} />}
       <OutOfDate show={stale} />
       {resp && r && (
-        <ResultSheet record={resp.run_record}>
+        <ResultSheet record={resp.run_record} basis={[...basisRows(resp.run_record), ...bankBasis(resp.run_record)]}>
           <StatusBanner type="BA" result={r} />
       {p && resp && (
         <>
@@ -120,6 +136,19 @@ function Battery() {
             <Icon name="warn" />
             {p.caveat_text}
           </p>
+          <DataTable
+            label="Battery adequacy summary"
+            caption="Battery adequacy per bank (Eq. 12.6 – 12.8, 12.14 – 12.18)"
+            columns={BA_SUMMARY_COLUMNS}
+            rows={p.banks}
+            rowKey={(b) => b.inverter_id}
+            rowName={(b) => b.inverter_id}
+          />
+          <p className={further.source}>
+            Terms: autonomy <Tip k="aut" />, depth of discharge <Tip k="dod" />, C-rate <Tip k="c" />.
+          </p>
+          <details className={styles.details}>
+            <summary>Show details: capability, inverter power and DC-side power per bank</summary>
           <div className={`table-scroll ${table.scroll}`} role="region" aria-label="Battery power check, scrolls sideways" tabIndex={0}>
             <table aria-label="Battery power check" className={table.table}>
               <caption>Power check (Eq. 12.6 – 12.8) and autonomy (Eq. 12.14 – 12.18) per bank, discharge only</caption>
@@ -132,7 +161,7 @@ function Battery() {
                     Capability (kW)
                   </th>
                   <th scope="col">
-                    Capability from <Tip k="c" />
+                    Capability from
                   </th>
                   <th scope="col" className="num">
                     Inverter P (kW)
@@ -145,10 +174,10 @@ function Battery() {
                   </th>
                   <th scope="col">Power reason</th>
                   <th scope="col">
-                    Autonomy outcome <Tip k="aut" />
+                    Autonomy outcome
                   </th>
                   <th scope="col" className="num">
-                    Usable energy (kWh) <Tip k="dod" />
+                    Usable energy (kWh)
                   </th>
                   <th scope="col">Autonomy</th>
                 </tr>
@@ -160,6 +189,7 @@ function Battery() {
               </tbody>
             </table>
           </div>
+          </details>
           <p className={further.source}>
             State of charge <Tip k="soc" /> per bank over the profile day; the flat line of each bank is its discharge limit 1 − DoD.
           </p>

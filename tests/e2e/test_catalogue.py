@@ -38,13 +38,13 @@ def test_fr_64_to_fr_70_catalogue_into_network(server: Callable[[str], str], pag
     page.get_by_label("Current-carrying capacity: page or section").fill("p. 3")
     expect(page.get_by_text("not used by the model (A4)")).to_be_visible()
     entries = page.get_by_role("table", name="Catalogue entries")
-    expect(entries.locator("tbody tr").nth(0)).to_contain_text("usable")
+    expect(entries.locator("tbody tr").nth(0)).to_contain_text("Usable")
 
     page.get_by_role("button", name="+ Add inverter entry").click()
     _provenance(page)
     page.get_by_label("Rating (kVA)").fill("10")
     expect(page.get_by_text("not used by the model (A2)").first).to_be_visible()
-    expect(entries.locator("tbody tr").nth(1)).to_contain_text("information only")
+    expect(entries.locator("tbody tr").nth(1)).to_contain_text("Information only")
 
     with page.expect_download() as dl:
         page.get_by_role("button", name="Save catalogue").click()
@@ -131,7 +131,7 @@ def test_fr_70_fr_71_fr_72_limit_tau_in_and_hint(
     enter_design(page, server("default"), gui_snapshot())
     page.get_by_role("link", name="Catalogue").click()
     page.get_by_label("Open catalogue file").set_input_files(_usable_catalogue(tmp_path / "c.json"))
-    expect(page.get_by_role("table", name="Catalogue entries")).to_contain_text("usable")
+    expect(page.get_by_role("table", name="Catalogue entries")).to_contain_text("Usable")
 
     step(page, "Network")
     _pick(page, "Lines", "LN1", "E2")  # FR-70: no confirmation

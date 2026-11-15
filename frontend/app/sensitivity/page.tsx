@@ -4,7 +4,8 @@
 // M2 limiting constraint via ?kind=&element= (Doc 12 FR-84); nothing runs until Run is pressed.
 // UX-8 (Doc 12 X3): one tornado chart per metric (normalised values in payload rank order; a null
 // is listed as not reported with its reason, never drawn); a status change is flagged with icon + word.
-import { useEffect, useState } from "react";
+import { useKept } from "../../components/useKept";
+import { useEffect } from "react";
 import type { M3aPayload, OutputMetric } from "../../api-types";
 import { BarChart } from "../../components/charts/BarChart";
 import { DataTable, type DataColumn } from "../../components/DataTable";
@@ -43,8 +44,8 @@ function Sensitivity() {
   const metrics = ex.values.output_metrics ?? [];
   const setPaths = (v: string[]) => ex.set("parameter_paths", v);
   const setMetrics = (v: OutputMetric[]) => ex.set("output_metrics", v);
-  const [stepKind, setStepKind] = useState<"step_relative" | "step_absolute">("step_relative");
-  const [step, setStep] = useState<number | null>(null);
+  const [stepKind, setStepKind] = useKept<"step_relative" | "step_absolute">("stepKind", "step_relative");
+  const [step, setStep] = useKept<number | null>("step", null);
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     const pre = shortcutPrefill(design, q.get("kind") ?? "", q.get("element") ?? "");
@@ -77,13 +78,21 @@ function Sensitivity() {
           void run({ parameters: { parameter_paths: paths, output_metrics: metrics, ...(step === null ? {} : { [stepKind]: step }) } });
         }}
       >
-        <fieldset className={styles.box}>
-          <legend>Parameters</legend>
+        <fieldset className={`${styles.box} ${styles.params}`}>
+          <legend>Parameters ({paths.length} selected)</legend>
           {ex.tag("parameter_paths", "Parameters")}
-          {numericPaths(design).map((pp) => (
-            <label key={pp}>
-              <input type="checkbox" checked={paths.includes(pp)} onChange={() => setPaths(toggle(paths, pp))} /> {paramLabel(pp)}
-            </label>
+          {/* grouped per element, bounded height (audit 2026-11-15 D14) */}
+          {[...Map.groupBy(numericPaths(design), (pp) => pp.split("/")[1])].map(([id, pps]) => (
+            <details key={id} open>
+              <summary>
+                {id} ({pps.filter((pp) => paths.includes(pp)).length} of {pps.length} selected)
+              </summary>
+              {pps.map((pp) => (
+                <label key={pp}>
+                  <input type="checkbox" checked={paths.includes(pp)} onChange={() => setPaths(toggle(paths, pp))} /> {paramLabel(pp)}
+                </label>
+              ))}
+            </details>
           ))}
         </fieldset>
         <fieldset className={styles.box}>
@@ -96,12 +105,14 @@ function Sensitivity() {
           ))}
         </fieldset>
         <fieldset className={styles.box}>
-          <legend>Step size (Eq. 4.17)</legend>
+          <legend>
+            Step size <span className="code-label">(Eq. 4.17)</span>
+          </legend>
           <label>
-            <input type="radio" checked={stepKind === "step_relative"} onChange={() => setStepKind("step_relative")} /> relative to the parameter value
+            <input type="radio" name="step-kind" checked={stepKind === "step_relative"} onChange={() => setStepKind("step_relative")} /> relative to the parameter value
           </label>
           <label>
-            <input type="radio" checked={stepKind === "step_absolute"} onChange={() => setStepKind("step_absolute")} /> absolute, in the parameter unit
+            <input type="radio" name="step-kind" checked={stepKind === "step_absolute"} onChange={() => setStepKind("step_absolute")} /> absolute, in the parameter unit
           </label>
           <NumberField
             id="step"
@@ -113,7 +124,7 @@ function Sensitivity() {
           />
         </fieldset>
         {ex.resetButton}
-        <RunButton label="Run M3a" busy={busy} fresh={fresh} missing={[!paths.length && "a parameter", !metrics.length && "an output metric", step === null && "the step"].filter((x): x is string => !!x)} />
+        <RunButton label="Run sensitivity" busy={busy} fresh={fresh} missing={[!paths.length && "a parameter", !metrics.length && "an output metric", step === null && "the step"].filter((x): x is string => !!x)} />
       </form>
       <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CatalogEntry } from "../api-types";
-import { admissibleSeries, moduleHint, noPowerCapability, socSeries } from "./battery";
+import { admissibleSeries, moduleHint, noPowerCapability, socSeries, valueSource } from "./battery";
 
 // Fictitious TEST ONLY module MOD-T1 and hand values of docs/BESS_VERIFICATION_FRAMEWORK.md §3.1, §3.2.
 const MOD_T1 = { energy_kwh: 5, voltage_min_v: 44.8, voltage_max_v: 57.6, discharge_power_kw: 2.5 };
@@ -51,5 +51,14 @@ describe("FR-120 depletion chart data", () => {
     expect(series[0].values.slice(0, 5)).toEqual([1, 0.9, 0.5, 0.1, null]);
     expect(series[1].name).toBe("INV1 discharge limit");
     expect(series[1].values[24]).toBeCloseTo(0.2, 12);
+  });
+});
+
+describe("valueSource (audit 2026-11-15 B2)", () => {
+  it("prefers the module datasheet, then Sizing, else the bank", () => {
+    expect(valueSource(0.8, 0.8, 0.8)).toBe("module datasheet");
+    expect(valueSource(0.8, 0.8, 0.9)).toBe("Sizing advice");
+    expect(valueSource(0.7, 0.8, 0.9)).toBe("entered on the bank");
+    expect(valueSource(null, 0.8)).toBeNull();
   });
 });

@@ -118,7 +118,7 @@ export function CellSelect({
       onChange={(e) => onChange(e.target.value || null)}
       onKeyDown={(e) => keys(e, () => onChange(start.current))}
     >
-      <option value="">(choose)</option>
+      <option value="">Choose…</option>
       {options.map(([v, t]) => (
         <option key={v} value={v}>
           {t}
