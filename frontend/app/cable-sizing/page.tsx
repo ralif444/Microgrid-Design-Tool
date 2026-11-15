@@ -66,7 +66,7 @@ function Select({ id, label, value, options, onChange }: { id: string; label: st
     <p>
       <label htmlFor={id}>{label}</label>{" "}
       <select id={id} value={value ?? ""} onChange={(e) => onChange(e.target.value || null)}>
-        <option value="">(choose)</option>
+        <option value="">Choose…</option>
         {options.map(([v, t]) => (
           <option key={v} value={v}>
             {t}

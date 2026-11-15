@@ -240,7 +240,7 @@ function Transient() {
         </fieldset>
         {presets.length > 0 && ex.resetButton}
         <RunButton
-          label="Run M4b"
+          label="Run transient simulation"
           busy={busy}
           fresh={fresh}
           missing={[

@@ -115,7 +115,7 @@ function Sensitivity() {
           />
         </fieldset>
         {ex.resetButton}
-        <RunButton label="Run M3a" busy={busy} fresh={fresh} missing={[!paths.length && "a parameter", !metrics.length && "an output metric", step === null && "the step"].filter((x): x is string => !!x)} />
+        <RunButton label="Run sensitivity" busy={busy} fresh={fresh} missing={[!paths.length && "a parameter", !metrics.length && "an output metric", step === null && "the step"].filter((x): x is string => !!x)} />
       </form>
       <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}

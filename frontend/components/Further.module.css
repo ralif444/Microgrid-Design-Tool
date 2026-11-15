@@ -8,7 +8,11 @@
   background: var(--color-surface-sunken); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-2);
 }
 .form p, .form fieldset { margin: 0; }
-.form button { margin-top: var(--space-2); }
+/* One control per row (audit 2026-11-15 round 3): a label + select row uses the same label column as
+   NumberField; a second pair wraps to its own row, notes and tags sit under the control. */
+.form p:has(> select) { display: grid; grid-template-columns: var(--field-cols, var(--field-label) auto); align-items: center; gap: var(--space-1) var(--space-3); }
+.form p:has(> select) > select { justify-self: start; max-width: 100%; }
+.form p:has(> select) > :not(label):not(select) { grid-column: -2; }
 .source { font-size: var(--text-sm); color: var(--color-fg-muted); }
 .facts { max-width: var(--prose-max); }
 .record { color: var(--color-fg-muted); font-size: var(--text-sm); max-width: var(--prose-max); }

@@ -165,22 +165,25 @@ function Scenarios() {
           </button>
         </section>
       ))}
-      {chosen.length < 2 && <p>Select two or more Scenarios.</p>}
-      <p className={styles.actions}>
+      <p className={styles.run}>
         <button
           type="button"
           className="primary"
           disabled={busy || fresh !== "current" || chosen.length < 2}
           aria-busy={busy || undefined}
+          aria-describedby={chosen.length < 2 ? "compare-missing" : undefined}
           onClick={() => compare(chosen.map((s) => ({ scenario_id: s.id, label: s.name, project_snapshot: applyOverrides(design, s.overrides) })))}
         >
-          {busy ? "Running..." : "Compare"}
+          {busy ? "Running..." : "Compare scenarios"}
         </button>
+        {chosen.length < 2 && <span id="compare-missing">Missing: two or more selected Scenarios.</span>}
+      </p>
+      <p className={styles.run}>
         <button type="button" disabled={busy || fresh !== "current" || inverterCount < 2} onClick={() => compare(nMinus1(design))}>
           Run N−1 check (base plus one scenario per removed inverter)
         </button>
+        {inverterCount < 2 && <span>N−1 needs at least two inverters.</span>}
       </p>
-      {inverterCount < 2 && <p>N−1 needs at least two inverters.</p>}
       </div>
       <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}

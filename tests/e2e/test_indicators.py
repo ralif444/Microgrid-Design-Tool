@@ -26,7 +26,7 @@ def test_fr_61_fr_62_fr_63_panel_and_checklist(server: Callable[[str], str], pag
     )
 
     step(page, "Small-signal (M4a)")
-    page.get_by_role("button", name="Run M4a").click()
+    page.get_by_role("button", name="Run small-signal analysis").click()
     rows = panel.locator("tbody tr")
     expect(rows).to_have_count(4)
     for k, (assumption, value) in enumerate(

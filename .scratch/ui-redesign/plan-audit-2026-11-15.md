@@ -1,6 +1,6 @@
 # Plan: audit 2026-11-15 follow-up (Catalogue, Sizing, battery bank, study inputs)
 
-Status: Phase A and B done; round 2 done (2026-11-15); rest of "Later" not started
+Status: Phase A and B done; rounds 2 and 3 done (2026-11-15); rest of "Later" not started
 
 Basis: `docs/ui-ux-audit-2026-11-15.md` and the user's answers of 2026-11-15:
 
@@ -29,8 +29,13 @@ Rules: no engine, Engine Port, equation or Project file format change. The bank 
 - Catalogue kept in this browser (`mgapp-catalog`) until its entries are deleted (O1).
 - Sizing basis names m_inv as the Sizing field does; bank total without float noise.
 
+## Round 3 (done)
+- Study forms: label + select rows use the NumberField label column, one control per row; notes and tags under the control.
+- Run buttons in words: "Run sensitivity", "Run small-signal analysis", "Run transient simulation", "Compare scenarios"; Scenarios get the "Missing:" line.
+- One placeholder spelling: "Choose…".
+
 ## Later (not started)
-- Study-form template (one control per row, Run row for all seven, word labels on Run buttons), Sensitivity grouping, catalogue list via DataTable with key values, battery 7-column table first, bank draft guard (O2), inputs kept across navigation (O4).
+- Sensitivity grouping, catalogue list via DataTable with key values, battery 7-column table first, bank draft guard (O2), inputs kept across navigation (O4).
 
 ## Checks
 vitest, typecheck, rebuild, live pass at 1024 and 375 px on Catalogue, inspector bank, Sizing, Sensitivity, Battery.

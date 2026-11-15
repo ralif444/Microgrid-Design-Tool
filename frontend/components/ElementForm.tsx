@@ -54,7 +54,7 @@ function Choice({
         aria-describedby={error ? `${id}-error` : undefined}
         onChange={(e) => onChange(e.target.value || null)}
       >
-        <option value="">(choose)</option>
+        <option value="">Choose…</option>
         {options.map(([v, t]) => (
           <option key={v} value={v}>
             {t}

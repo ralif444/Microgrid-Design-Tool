@@ -63,7 +63,7 @@ function EntryEditor({ e, onChange, x10 }: { e: CatalogEntry; onChange: (e: Cata
                     <span className={styles.text}>
                       <label htmlFor={`val-${k}`}>{label}</label>
                       <select id={`val-${k}`} value={(b[k] as string | null) ?? ""} onChange={(x) => setValue(k, x.target.value || null)}>
-                        <option value="">(choose)</option>
+                        <option value="">Choose…</option>
                         {ENTRY_OPTIONS[k].map((o) => (
                           <option key={o}>{o}</option>
                         ))}

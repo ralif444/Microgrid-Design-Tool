@@ -104,7 +104,7 @@ function SmallSignal() {
         <p>
           <NumberField id="damping-threshold" label="Damping pass threshold, optional" unit="ratio" value={threshold} onChange={setThreshold} />
         </p>
-        <RunButton label="Run M4a" busy={busy} fresh={fresh} missing={tauMissing(design)} />
+        <RunButton label="Run small-signal analysis" busy={busy} fresh={fresh} missing={tauMissing(design)} />
       </form>
       <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
@@ -132,7 +132,7 @@ function SmallSignal() {
       )}
         </ResultSheet>
       )}
-      {!resp && <EmptyState title="Not run yet.">Run M4a to see the eigenvalues, damping and the stability class.</EmptyState>}
+      {!resp && <EmptyState title="Not run yet.">Run the small-signal analysis to see the eigenvalues, damping and the stability class.</EmptyState>}
       </div>
       </div>
       <ExampleNext screen="small-signal" ready={nextReady(r?.status)} />
