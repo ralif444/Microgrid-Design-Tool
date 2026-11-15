@@ -77,13 +77,21 @@ function Sensitivity() {
           void run({ parameters: { parameter_paths: paths, output_metrics: metrics, ...(step === null ? {} : { [stepKind]: step }) } });
         }}
       >
-        <fieldset className={styles.box}>
-          <legend>Parameters</legend>
+        <fieldset className={`${styles.box} ${styles.params}`}>
+          <legend>Parameters ({paths.length} selected)</legend>
           {ex.tag("parameter_paths", "Parameters")}
-          {numericPaths(design).map((pp) => (
-            <label key={pp}>
-              <input type="checkbox" checked={paths.includes(pp)} onChange={() => setPaths(toggle(paths, pp))} /> {paramLabel(pp)}
-            </label>
+          {/* grouped per element, bounded height (audit 2026-11-15 D14) */}
+          {[...Map.groupBy(numericPaths(design), (pp) => pp.split("/")[1])].map(([id, pps]) => (
+            <details key={id} open>
+              <summary>
+                {id} ({pps.filter((pp) => paths.includes(pp)).length} of {pps.length} selected)
+              </summary>
+              {pps.map((pp) => (
+                <label key={pp}>
+                  <input type="checkbox" checked={paths.includes(pp)} onChange={() => setPaths(toggle(paths, pp))} /> {paramLabel(pp)}
+                </label>
+              ))}
+            </details>
           ))}
         </fieldset>
         <fieldset className={styles.box}>

@@ -241,6 +241,10 @@ export function BankPick({ inverter: fixed }: { inverter?: string }) {
     ["DoD", valueSource(d.dod, sizing?.depth_of_discharge_ratio, modDod)],
   ].flatMap(([k, v]) => (v && v !== "entered on the bank" ? [`${k} from ${v}`] : []));
   const sourceHint = src.length ? `${src.join("; ")}. Change a value here to override it for this bank.` : null;
+  // O2: say so while the form holds changes that Save bank has not stored yet
+  const unsaved = current
+    ? entryId !== "" || JSON.stringify(d) !== JSON.stringify(draftOf(current))
+    : entryId !== "" || d.ns !== null || d.np !== null;
   const head = fixed ? <h3>Battery bank</h3> : <h2>Battery bank (advice only; not part of the network model, A2)</h2>;
   if (fixed && !open)
     return (
@@ -296,6 +300,7 @@ export function BankPick({ inverter: fixed }: { inverter?: string }) {
       )}
       <p className={styles.actions}>
         <button type="submit">Save bank</button>
+        {unsaved && <span className={styles.hint} data-testid="bank-unsaved">Not saved yet.</span>}
         {current && (
           <button
             type="button"

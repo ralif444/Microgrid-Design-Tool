@@ -12,3 +12,5 @@
 .tag[data-role="negative"] svg { fill: var(--role-negative-icon); }
 .tag[data-role="neutral"] { background: var(--color-surface-sunken); color: var(--color-fg-muted); }
 .tag[data-role="neutral"] svg { fill: var(--color-fg-muted); }
+.details { margin: var(--space-3) 0; }
+.details > summary { cursor: pointer; font-size: var(--text-sm); }

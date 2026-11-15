@@ -6,7 +6,8 @@ import { useState } from "react";
 import type { BatteryBank, RunRecord } from "../../api-types";
 import { AUTONOMY_OUTCOME, POWER_OUTCOME, valueSource, type BaBank, type BaPayload } from "../../components/battery";
 import { useCatalog } from "../../components/Catalog";
-import { autonomyText, SocChart } from "../../components/BatteryResults";
+import { autonomyText, BA_SUMMARY_COLUMNS, SocChart } from "../../components/BatteryResults";
+import { DataTable } from "../../components/DataTable";
 import { Toggletip } from "../../components/Term";
 import { EmptyState } from "../../components/EmptyState";
 import { fixedOr } from "../../components/format";
@@ -135,6 +136,16 @@ function Battery() {
             <Icon name="warn" />
             {p.caveat_text}
           </p>
+          <DataTable
+            label="Battery adequacy summary"
+            caption="Battery adequacy per bank (Eq. 12.6 – 12.8, 12.14 – 12.18)"
+            columns={BA_SUMMARY_COLUMNS}
+            rows={p.banks}
+            rowKey={(b) => b.inverter_id}
+            rowName={(b) => b.inverter_id}
+          />
+          <details className={styles.details}>
+            <summary>Show details: capability, inverter power and DC-side power per bank</summary>
           <div className={`table-scroll ${table.scroll}`} role="region" aria-label="Battery power check, scrolls sideways" tabIndex={0}>
             <table aria-label="Battery power check" className={table.table}>
               <caption>Power check (Eq. 12.6 – 12.8) and autonomy (Eq. 12.14 – 12.18) per bank, discharge only</caption>
@@ -175,6 +186,7 @@ function Battery() {
               </tbody>
             </table>
           </div>
+          </details>
           <p className={further.source}>
             State of charge <Tip k="soc" /> per bank over the profile day; the flat line of each bank is its discharge limit 1 − DoD.
           </p>

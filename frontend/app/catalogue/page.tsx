@@ -7,7 +7,7 @@ import { getMeta, importCatalog } from "../../api-client";
 import type { CatalogEntry, FileCheckResult } from "../../api-types";
 import { NO_POWER_WARNING, noPowerCapability } from "../../components/battery";
 import { useCableSizingFlag } from "../../components/cable";
-import { block, BLOCK_KEY, ENTRY_FIELDS, ENTRY_OPTIONS, PROVENANCE, reasonText, useCatalog } from "../../components/Catalog";
+import { block, BLOCK_KEY, ENTRY_FIELDS, ENTRY_OPTIONS, keyValues, PROVENANCE, reasonText, useCatalog } from "../../components/Catalog";
 import { downloadJson, NOT_JSON, readJson } from "../../components/files";
 import { CANNOT_UNDO, useConfirmDelete } from "../../components/ConfirmDelete";
 import { NumberField } from "../../components/NumberField";
@@ -179,6 +179,7 @@ export default function CataloguePage() {
               <th>Id</th>
               <th>Kind</th>
               <th>Manufacturer and model</th>
+              <th>Key values</th>
               <th>Use in a Project</th>
               <th>Actions</th>
             </tr>
@@ -191,6 +192,7 @@ export default function CataloguePage() {
                   <th scope="row">{e.id}</th>
                   <td className={styles.kind}>{e.kind.toLowerCase().replace("_", " ")}</td>
                   <td>{[e.provenance?.manufacturer, e.provenance?.model].filter(Boolean).join(" ") || "—"}</td>
+                  <td className={styles.kind}>{keyValues(e)}</td>
                   <td>
                     {!c ? "Checking…" : c.usable ? "Usable" : `Information only: ${c.reasons.map((r) => reasonText(e.kind, r)).join("; ")}`}
                     {noPowerCapability(e) && ` (${NO_POWER_WARNING})`}

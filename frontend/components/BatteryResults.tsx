@@ -36,7 +36,8 @@ export function SocChart({ p, record }: { p: BaPayload; record: RunRecord }) {
   );
 }
 
-const COLUMNS: DataColumn<BaBank>[] = [
+// The 7-column summary of the Report, also shown first on S-20 (audit 2026-11-15).
+export const BA_SUMMARY_COLUMNS: DataColumn<BaBank>[] = [
   { key: "inv", header: "Inverter", cell: (b) => b.inverter_id },
   { key: "bank", header: "Bank", cell: (b) => `${b.bank.series_count} × ${b.bank.parallel_count}` },
   { key: "pow", header: "Power outcome", cell: (b) => POWER_OUTCOME[b.power.outcome].word },
@@ -65,7 +66,7 @@ export function BatteryReportSection({ record, n }: { record: RunRecord; n: numb
         Start hour {String(p.banks[0]?.autonomy.start_hour ?? "—")}; {p.hours.length} hourly power flow runs. RunRecord <code>{record.record_id}</code>, computed
         by the app{record.engine_kind ? ` from ${record.engine_kind} engine results` : ""}.
       </p>
-      <DataTable label="Battery adequacy results" caption="Battery adequacy per bank (Eq. 12.6 – 12.8, 12.14 – 12.18)" columns={COLUMNS} rows={p.banks} rowKey={(b) => b.inverter_id} rowName={(b) => b.inverter_id} />
+      <DataTable label="Battery adequacy results" caption="Battery adequacy per bank (Eq. 12.6 – 12.8, 12.14 – 12.18)" columns={BA_SUMMARY_COLUMNS} rows={p.banks} rowKey={(b) => b.inverter_id} rowName={(b) => b.inverter_id} />
       <SocChart p={p} record={record} />
     </section>
   );

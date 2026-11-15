@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CatalogEntry } from "../api-types";
 import { initialState, projectReducer, type ProjectAction } from "../store";
-import { CATALOG_KEY, catalogHints, entryWarnings, fromEntry, readStoredCatalog, reasonText, refText, tauInSource } from "./Catalog";
+import { CATALOG_KEY, catalogHints, keyValues, entryWarnings, fromEntry, readStoredCatalog, reasonText, refText, tauInSource } from "./Catalog";
 
 const conductor: CatalogEntry = {
   id: "E1",
@@ -106,5 +106,12 @@ describe("stored Catalogue (audit O1)", () => {
     expect(readStoredCatalog()).toBeNull();
     withStorage(undefined);
     expect(readStoredCatalog()).toBeNull();
+  });
+});
+
+describe("keyValues", () => {
+  it("lists the set key values with units, or a dash", () => {
+    expect(keyValues(conductor)).toBe("R 0.5 Ω/km, X 0.3 Ω/km, 100 A");
+    expect(keyValues({ ...conductor, conductor: {} } as CatalogEntry)).toBe("—");
   });
 });
