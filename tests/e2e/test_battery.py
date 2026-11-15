@@ -46,7 +46,7 @@ def test_fr_73_fr_74_battery_module_entry_and_hint(
     expect(page.get_by_role("note")).to_contain_text(warning)
     row = page.get_by_role("table", name="Catalogue entries").locator("tbody tr").nth(0)
     expect(row).to_contain_text("battery module")
-    expect(row).to_contain_text("usable")
+    expect(row).to_contain_text("Usable")
     expect(row).to_contain_text(warning)
     page.get_by_label("C-rate (1/h)").fill("0.2")
     page.get_by_label("C-rate: page or section").fill("p. 4")
@@ -77,14 +77,14 @@ def test_fr_75_battery_bank_on_s05_saved_outside_the_design(
         page.get_by_label(f"{label} ({unit})").fill(value)
         page.get_by_label(f"{label}: page or section").fill("p. 3")
     row = page.get_by_role("table", name="Catalogue entries").locator("tbody tr").nth(0)
-    expect(row).to_contain_text("usable")
+    expect(row).to_contain_text("Usable")
 
     step(page, "Network")
     page.get_by_role("tab", name="Inverters").click()
     form = page.get_by_role("form", name="Battery bank")
     form.get_by_label("Inverter", exact=True).select_option("INV1")
     form.get_by_label("Battery module").select_option("E1")
-    expect(form.get_by_label("Depth of discharge, optional (ratio)")).to_have_value("0.8")
+    expect(form.get_by_label("Depth of discharge (ratio)")).to_have_value("0.8")
     expect(form.get_by_label("Initial state of charge, optional (ratio)")).to_have_value("1")
     form.get_by_label("Modules in series (count)").fill("8")
     form.get_by_label("Strings in parallel (count)").fill("2")
@@ -139,9 +139,9 @@ def _bank(page: Page, dod: str | None = None) -> None:
     form.get_by_label("Battery module").select_option("E1")
     form.get_by_label("Modules in series (count)").fill("8")
     form.get_by_label("Strings in parallel (count)").fill("2")
-    form.get_by_label("DC efficiency η_dc, optional (ratio)").fill("0.95")
+    form.get_by_label("DC efficiency η_dc (ratio)").fill("0.95")
     if dod is not None:
-        form.get_by_label("Depth of discharge, optional (ratio)").fill(dod)
+        form.get_by_label("Depth of discharge (ratio)").fill(dod)
     form.get_by_role("button", name="Save bank").click()
 
 

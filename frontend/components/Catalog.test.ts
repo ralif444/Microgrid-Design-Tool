@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CatalogEntry } from "../api-types";
 import { initialState, projectReducer, type ProjectAction } from "../store";
-import { catalogHints, entryWarnings, fromEntry, refText, tauInSource } from "./Catalog";
+import { catalogHints, entryWarnings, fromEntry, reasonText, refText, tauInSource } from "./Catalog";
 
 const conductor: CatalogEntry = {
   id: "E1",
@@ -80,5 +80,17 @@ describe("τ_in pre-fill (Doc 12 FR-71, D-61 K116)", () => {
     expect(tauInSource([ref(inv("E1", 10, 0.002)), {}]).from?.tau_in_s).toBe(0.002);
     expect(tauInSource([ref(inv("E1", 10))])).toEqual({ from: null, conflict: false });
     expect(tauInSource([ref(inv("E1", 10, 0.002)), ref(inv("E2", 10, 0.003))])).toEqual({ from: null, conflict: true });
+  });
+});
+
+describe("reasonText", () => {
+  it("names fields by their labels, not their keys", () => {
+    expect(reasonText("CONDUCTOR", "sources.x_ohm_per_km (page or section) is missing")).toBe("Reactance X: page or section is missing");
+    expect(reasonText("CONDUCTOR", "provenance.document is missing")).toBe("Datasheet title or document id is missing");
+    expect(reasonText("INVERTER", "rated_kva is missing")).toBe("Rating is missing");
+    expect(reasonText("BATTERY_MODULE", "voltage_min_v is above voltage_max_v")).toBe("Minimum DC voltage is above Maximum DC voltage");
+    expect(reasonText("INVERTER", "not declared grid-forming with a datasheet reference, so it is information only")).toBe(
+      "not declared grid-forming with a datasheet reference, so it is information only",
+    );
   });
 });

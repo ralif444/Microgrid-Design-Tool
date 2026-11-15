@@ -54,6 +54,16 @@ export function moduleHint(
   return { verdict: "fit", series, moduleCount, ns, np, installedCount: ns * np, installedKwh, extraKwh: installedKwh - eNomKwh };
 }
 
+// Where a bank's η_dc or DoD came from (audit 2026-11-15, user decision 1). Not stored: derived by
+// comparing the bank value with the module's recommended value (DoD only, checked first) and Sizing.
+export type ValueSource = "module datasheet" | "Sizing advice" | "entered on the bank";
+export function valueSource(v: number | null | undefined, sizing: number | null | undefined, module?: number | null): ValueSource | null {
+  if (v == null) return null;
+  if (module != null && v === module) return "module datasheet";
+  if (sizing != null && v === sizing) return "Sizing advice";
+  return "entered on the bank";
+}
+
 // BA payload (Doc 12 B2 Eq. 12.6 – 12.8, B3 Eq. 12.14 – 12.18; ADR-015; guideline §4.2).
 export type BaPower = {
   outcome: "OK" | "SHORT" | "NOT_EVALUATED";

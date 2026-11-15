@@ -7,7 +7,7 @@ import { getMeta, importCatalog } from "../../api-client";
 import type { CatalogEntry, FileCheckResult } from "../../api-types";
 import { NO_POWER_WARNING, noPowerCapability } from "../../components/battery";
 import { useCableSizingFlag } from "../../components/cable";
-import { block, BLOCK_KEY, ENTRY_FIELDS, ENTRY_OPTIONS, useCatalog } from "../../components/Catalog";
+import { block, BLOCK_KEY, ENTRY_FIELDS, ENTRY_OPTIONS, PROVENANCE, reasonText, useCatalog } from "../../components/Catalog";
 import { downloadJson, NOT_JSON, readJson } from "../../components/files";
 import { CANNOT_UNDO, useConfirmDelete } from "../../components/ConfirmDelete";
 import { NumberField } from "../../components/NumberField";
@@ -15,16 +15,10 @@ import { FileCheckText } from "../../components/ProjectFileMenu";
 import { nextId } from "../../store/reducer";
 import styles from "./catalogue.module.css";
 
-const PROVENANCE: [keyof NonNullable<CatalogEntry["provenance"]>, string][] = [
-  ["manufacturer", "Manufacturer"],
-  ["model", "Model"],
-  ["document", "Datasheet title or document id"],
-  ["revision", "Revision or date"],
-];
-const UNUSED = {
-  A2: "not used by the model (A2)",
-  A4: "not used by the model (A4)",
-  x10: "used only for the cable sizing match (experimental)",
+// One caveat per screen (audit 2026-11-15, user decision 2); the source column says "recorded only".
+const CAVEAT = {
+  recorded: (codes: string[]) => `Recorded only: kept with the entry, not used by the model (${codes.join(", ")}).`,
+  x10: "Cable sizing only: used only for the cable sizing match (experimental).",
   bess: "used only by the battery advice, not by the network model (A2)",
 } as const;
 
@@ -34,12 +28,15 @@ function EntryEditor({ e, onChange, x10 }: { e: CatalogEntry; onChange: (e: Cata
     onChange({ ...e, [BLOCK_KEY[e.kind]]: { ...b, [k]: v } });
   const setSource = (k: string, v: string) => onChange({ ...e, sources: { ...e.sources, [k]: v } });
   const text = (id: string, label: string, value: string | null | undefined, set: (v: string | null) => void) => (
-    <>
-      <label htmlFor={id}>{label}</label> <input id={id} value={value ?? ""} onChange={(x) => set(x.target.value || null)} />
-    </>
+    <span className={styles.text}>
+      <label htmlFor={id}>{label}</label>
+      <input id={id} value={value ?? ""} onChange={(x) => set(x.target.value || null)} />
+    </span>
   );
+  const fields = ENTRY_FIELDS[e.kind].filter(([, , , use]) => x10 || use !== "x10");
+  const recorded = [...new Set(fields.flatMap(([, , , use]) => (use === "A2" || use === "A4" ? [use] : [])))];
   return (
-    <form aria-label={`Entry ${e.id}`} onSubmit={(x) => x.preventDefault()}>
+    <form aria-label={`Entry ${e.id}`} className={styles.editor} onSubmit={(x) => x.preventDefault()}>
       <fieldset>
         <legend>Provenance</legend>
         {PROVENANCE.map(([k, label]) => (
@@ -48,30 +45,47 @@ function EntryEditor({ e, onChange, x10 }: { e: CatalogEntry; onChange: (e: Cata
       </fieldset>
       <fieldset>
         <legend>Values</legend>
-        {e.kind === "BATTERY_MODULE" && <p><em>All values {UNUSED.bess}.</em></p>}
-        {ENTRY_FIELDS[e.kind].filter(([, , , use]) => x10 || use !== "x10").map(([k, label, unit, use]) => (
-          <p key={k} className={styles.row}>
-            <span className={styles.pair}>
-              {ENTRY_OPTIONS[k] ? (
-                <>
-                  <label htmlFor={`val-${k}`}>{label}</label>
-                  <select id={`val-${k}`} value={(b[k] as string | null) ?? ""} onChange={(x) => setValue(k, x.target.value || null)}>
-                    <option value="">(choose)</option>
-                    {ENTRY_OPTIONS[k].map((o) => (
-                      <option key={o}>{o}</option>
-                    ))}
-                  </select>
-                </>
-              ) : unit === null
-                ? text(`val-${k}`, label, b[k] as string | null, (v) => setValue(k, v))
-                : <NumberField id={`val-${k}`} label={label} unit={unit} value={b[k] as number | null} onChange={(v) => setValue(k, v)} />}
-            </span>
-            {(use === "model" || use === "bess") && unit !== null && (
-              <span className={styles.pair}>{text(`src-${k}`, `${label}: page or section`, e.sources?.[k], (v) => setSource(k, v ?? ""))}</span>
-            )}
-            {(use === "A2" || use === "A4" || use === "x10") && <em>{UNUSED[use]}</em>}
-          </p>
-        ))}
+        {e.kind === "BATTERY_MODULE" && <p className={styles.caveat}>All values {CAVEAT.bess}.</p>}
+        {recorded.length > 0 && <p className={styles.caveat}>{CAVEAT.recorded(recorded)}</p>}
+        {fields.some(([, , , use]) => use === "x10") && <p className={styles.caveat}>{CAVEAT.x10}</p>}
+        <table className={styles.values} aria-label={`Values of ${e.id}`}>
+          <thead>
+            <tr>
+              <th scope="col">Value</th>
+              <th scope="col">Source (page or section)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {fields.map(([k, label, unit, use]) => (
+              <tr key={k}>
+                <td>
+                  {ENTRY_OPTIONS[k] ? (
+                    <span className={styles.text}>
+                      <label htmlFor={`val-${k}`}>{label}</label>
+                      <select id={`val-${k}`} value={(b[k] as string | null) ?? ""} onChange={(x) => setValue(k, x.target.value || null)}>
+                        <option value="">(choose)</option>
+                        {ENTRY_OPTIONS[k].map((o) => (
+                          <option key={o}>{o}</option>
+                        ))}
+                      </select>
+                    </span>
+                  ) : unit === null ? (
+                    text(`val-${k}`, label, b[k] as string | null, (v) => setValue(k, v))
+                  ) : (
+                    <NumberField id={`val-${k}`} label={label} unit={unit} value={b[k] as number | null} onChange={(v) => setValue(k, v)} />
+                  )}
+                </td>
+                <td>
+                  {(use === "model" || use === "bess") && unit !== null ? (
+                    <input aria-label={`${label}: page or section`} value={e.sources?.[k] ?? ""} onChange={(x) => setSource(k, x.target.value)} />
+                  ) : (
+                    <span className={styles.muted}>{use === "x10" ? "cable sizing only" : use === "text" ? "—" : "recorded only"}</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
         {noPowerCapability(e) && <p role="note">{NO_POWER_WARNING}</p>}
         {e.kind === "INVERTER" && (
           <p>
@@ -159,7 +173,7 @@ export default function CataloguePage() {
       {entries.length === 0 ? (
         <p>The Catalogue is empty.</p>
       ) : (
-        <table aria-label="Catalogue entries">
+        <table aria-label="Catalogue entries" className={styles.list}>
           <thead>
             <tr>
               <th>Id</th>
@@ -175,10 +189,10 @@ export default function CataloguePage() {
               return (
                 <tr key={e.id} aria-current={e.id === selected ? "true" : undefined}>
                   <th scope="row">{e.id}</th>
-                  <td>{e.kind.toLowerCase().replace("_", " ")}</td>
+                  <td className={styles.kind}>{e.kind.toLowerCase().replace("_", " ")}</td>
                   <td>{[e.provenance?.manufacturer, e.provenance?.model].filter(Boolean).join(" ") || "—"}</td>
                   <td>
-                    {!c ? "checking…" : c.usable ? "usable" : `information only: ${c.reasons.join("; ")}`}
+                    {!c ? "Checking…" : c.usable ? "Usable" : `Information only: ${c.reasons.map((r) => reasonText(e.kind, r)).join("; ")}`}
                     {noPowerCapability(e) && ` (${NO_POWER_WARNING})`}
                   </td>
                   <td>

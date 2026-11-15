@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { AnalysisResult } from "../api-types";
-import { bannerText } from "./status-text";
+import { bannerText, statusWord } from "./status-text";
 
 const dep = (reason?: string) =>
   ({ status: "UNAVAILABLE", status_code: "DEPENDENCY_NOT_MET", message: "m", diagnostics: reason ? { dependency_reason: reason } : {} }) as unknown as AnalysisResult;
@@ -22,5 +22,14 @@ describe("M2 FEASIBLE headline (WP 1.7.4)", () => {
     expect(bannerText("M2", m2(0)).headline).toBe("The design meets all constraints.");
     expect(bannerText("M2", m2(13)).headline).toContain("13 checks had no limit");
     expect(bannerText("M2", m2(13)).headline).not.toContain("all constraints");
+  });
+});
+
+describe("BA headline (audit 2026-11-15 B3)", () => {
+  const ba = (power: string, autonomy: string) =>
+    ({ status: "FEASIBLE", status_code: "OK", message: "m", payload: { banks: [{ power: { outcome: power }, autonomy: { outcome: autonomy } }] } }) as unknown as AnalysisResult;
+  it("says Not evaluated only when no bank got a verdict", () => {
+    expect(statusWord("BA", ba("NOT_EVALUATED", "NOT_EVALUATED"))).toBe("Not evaluated");
+    expect(statusWord("BA", ba("OK", "NOT_EVALUATED"))).toBe("Advice ready");
   });
 });

@@ -2,6 +2,7 @@
 .panel, .docked { overflow-y: auto; padding: var(--space-4); background: var(--cds-layer-01); border-left: var(--border-width) solid var(--cds-border-strong-01); }
 .panel { position: fixed; top: 0; right: 0; bottom: 0; z-index: 8000; width: min(24rem, 100vw); }
 .docked { min-height: 0; } /* W4: the workspace grid sizes it */
+.panel, .docked { container: inspector / inline-size; } /* forms stack their labels below 28rem */
 .top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .top h2 { margin: 0; }
 .panel h3, .docked h3 { margin: var(--space-4) 0 var(--space-1); font-size: var(--text-md); }

@@ -34,6 +34,8 @@ const LABEL: Record<string, [string, string]> = Object.fromEntries([
   ["step_relative", ["Step, relative", "ratio"]],
   ["step_absolute", ["Step, absolute", "parameter unit"]],
   ["start_hour", ["Start hour", "h"]],
+  ["unit_count", ["Number of inverter units n", "count"]],
+  ["redundancy", ["Redundancy r", "count"]],
 ]);
 
 /** Scalar settings of the run and the limits it was checked against; nested settings stay in Run history. */

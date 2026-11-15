@@ -59,6 +59,24 @@ export const ENTRY_FIELDS: Record<CatalogEntry["kind"], EntryField[]> = {
   ],
 };
 
+export const PROVENANCE: [keyof NonNullable<CatalogEntry["provenance"]>, string][] = [
+  ["manufacturer", "Manufacturer"],
+  ["model", "Model"],
+  ["document", "Datasheet title or document id"],
+  ["revision", "Revision or date"],
+];
+
+// The server names fields by their keys ("sources.x_ohm_per_km (page or section) is missing"); show the labels.
+export function reasonText(kind: CatalogEntry["kind"], reason: string): string {
+  const labels: Record<string, string> = Object.fromEntries([
+    ...PROVENANCE,
+    ...ENTRY_FIELDS[kind].map(([k, l]) => [k, l.replace(/, optional$/, "")]),
+  ]);
+  return reason.replace(/(?:(?:sources|provenance)\.)?\b([a-z][a-z0-9_]*)\b( \(page or section\))?/g, (m, k: string, src?: string) =>
+    labels[k] ? labels[k] + (src ? ": page or section" : "") : m,
+  );
+}
+
 // Fields chosen from a list (contract enums, D-104).
 export const ENTRY_OPTIONS: Record<string, string[]> = { material: ["CU", "AL"], insulation: ["PVC", "XLPE"], class: ["MCB", "MCCB"] };
 export const BLOCK_KEY = { INVERTER: "inverter", CONDUCTOR: "conductor", BREAKER: "breaker", BATTERY_MODULE: "battery_module" } as const;

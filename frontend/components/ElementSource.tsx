@@ -8,7 +8,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { BatteryBank, CatalogEntry } from "../api-types";
-import { useProject, useProjectDispatch } from "../store";
+import { useProject, useProjectDispatch, type PsParameters } from "../store";
+import { valueSource } from "./battery";
 import { block, entryWarnings, fromEntry, refText, useCatalog } from "./Catalog";
 import { CANNOT_UNDO, useConfirmDelete } from "./ConfirmDelete";
 import styles from "./ElementSource.module.css";
@@ -160,7 +161,8 @@ export function CatalogPick({ collection, element: fixed, heading = "h2" }: { co
 
 type BankDraft = { ns: number | null; np: number | null; eta: number | null; dod: number | null; soc: number | null };
 const NEW_BANK: BankDraft = { ns: null, np: null, eta: null, dod: null, soc: 1 };
-const draftOf = (b: BatteryBank | null): BankDraft =>
+// A new bank pre-fills η_dc and DoD from the latest Sizing settings (audit 2026-11-15, user decision 1).
+const draftOf = (b: BatteryBank | null, sizing?: PsParameters): BankDraft =>
   b
     ? {
         ns: b.series_count,
@@ -169,27 +171,28 @@ const draftOf = (b: BatteryBank | null): BankDraft =>
         dod: b.depth_of_discharge_ratio ?? null,
         soc: b.initial_soc_ratio ?? null,
       }
-    : NEW_BANK;
+    : { ...NEW_BANK, eta: sizing?.dc_efficiency_ratio ?? null, dod: sizing?.depth_of_discharge_ratio ?? null };
 
 export function BankPick({ inverter: fixed }: { inverter?: string }) {
   const { dialog, confirm } = useConfirmDelete();
-  const { design, batteryBanks } = useProject();
+  const { design, batteryBanks, sizingAdvice } = useProject();
   const dispatch = useProjectDispatch();
   const { catalog, checks } = useCatalog();
+  const sizing = sizingAdvice.at(-1)?.ps_parameters;
   const modules = catalog.entries.filter((e) => e.kind === "BATTERY_MODULE" && checks.some((c) => c.entry_id === e.id && c.usable));
   const [chosen, setInv] = useState(fixed ? "" : (batteryBanks[0]?.inverter_id ?? ""));
   const inv = fixed ?? chosen;
   const current = batteryBanks.find((b) => b.inverter_id === inv) ?? null;
   const [entryId, setEntryId] = useState("");
-  const [d, setD] = useState<BankDraft>(draftOf(current));
+  const [d, setD] = useState<BankDraft>(draftOf(current, sizing));
   const [open, setOpen] = useState(!fixed || current !== null);
   const [note, setNote] = useState<string | null>(null);
-  const set = (patch: Partial<BankDraft>) => setD({ ...d, ...patch });
+  const set = (patch: Partial<BankDraft>) => setD((d) => ({ ...d, ...patch }));
   function chooseInverter(id: string) {
     setInv(id);
     setNote(null);
     setEntryId("");
-    setD(draftOf(batteryBanks.find((x) => x.inverter_id === id) ?? null));
+    setD(draftOf(batteryBanks.find((x) => x.inverter_id === id) ?? null, sizing));
   }
   function chooseModule(id: string) {
     setEntryId(id);
@@ -231,6 +234,12 @@ export function BankPick({ inverter: fixed }: { inverter?: string }) {
   // the module's nominal energy times the module count: arithmetic on entered values only
   const energy = (entryId ? modules.find((e) => e.id === entryId)?.battery_module?.energy_kwh : current?.module.energy_kwh) ?? null;
   const count = Number.isInteger(d.ns) && Number.isInteger(d.np) ? d.ns! * d.np! : null;
+  const modDod = catalog.entries.find((e) => e.id === (entryId || current?.module.catalog_ref.entry_id))?.battery_module?.recommended_dod_ratio;
+  const src = [
+    ["η_dc", valueSource(d.eta, sizing?.dc_efficiency_ratio)],
+    ["DoD", valueSource(d.dod, sizing?.depth_of_discharge_ratio, modDod)],
+  ].flatMap(([k, v]) => (v && v !== "entered on the bank" ? [`${k} from ${v}`] : []));
+  const sourceHint = src.length ? `${src.join("; ")}. Change a value here to override it for this bank.` : null;
   const head = fixed ? <h3>Battery bank</h3> : <h2>Battery bank (advice only; not part of the network model, A2)</h2>;
   if (fixed && !open)
     return (
@@ -275,8 +284,9 @@ export function BankPick({ inverter: fixed }: { inverter?: string }) {
       )}
       <NumberField id="bank-ns" label="Modules in series" unit="count" step="1" value={d.ns} onChange={(v) => set({ ns: v })} />
       <NumberField id="bank-np" label="Strings in parallel" unit="count" step="1" value={d.np} onChange={(v) => set({ np: v })} />
-      <NumberField id="bank-eta" label="DC efficiency η_dc, optional" unit="ratio" value={d.eta} onChange={(v) => set({ eta: v })} />
-      <NumberField id="bank-dod" label="Depth of discharge, optional" unit="ratio" value={d.dod} onChange={(v) => set({ dod: v })} />
+      <NumberField id="bank-eta" label="DC efficiency η_dc" unit="ratio" value={d.eta} onChange={(v) => set({ eta: v })} />
+      <NumberField id="bank-dod" label="Depth of discharge" unit="ratio" value={d.dod} onChange={(v) => set({ dod: v })} />
+      {sourceHint && <p className={styles.hint} data-testid="bank-source">{sourceHint}</p>}
       <NumberField id="bank-soc" label="Initial state of charge, optional" unit="ratio" value={d.soc} onChange={(v) => set({ soc: v })} />
       {fixed && count !== null && typeof energy === "number" && (
         <p className={styles.total} data-testid="bank-total">
@@ -292,7 +302,7 @@ export function BankPick({ inverter: fixed }: { inverter?: string }) {
               confirm(`Remove the battery bank of ${inv}?`, `The bank settings of ${inv} are removed; the inverter stays. ${CANNOT_UNDO}`, () => {
                 dispatch({ type: "bankRemoved", inverterId: inv });
                 setNote(`Battery bank of ${inv} removed.`);
-                if (fixed) (setOpen(false), setD(NEW_BANK), setEntryId(""));
+                if (fixed) (setOpen(false), setD(draftOf(null, sizing)), setEntryId(""));
               })
             }
           >

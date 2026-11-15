@@ -3,7 +3,9 @@
 // D-109, D-110): start hour (prefilled 0) → Run gated on a current M1 → Status banner → fixed caveat →
 // one row per bank (power and autonomy) → depletion chart. Advice only.
 import { useState } from "react";
-import { AUTONOMY_OUTCOME, POWER_OUTCOME, type BaBank, type BaPayload } from "../../components/battery";
+import type { BatteryBank, RunRecord } from "../../api-types";
+import { AUTONOMY_OUTCOME, POWER_OUTCOME, valueSource, type BaBank, type BaPayload } from "../../components/battery";
+import { useCatalog } from "../../components/Catalog";
 import { autonomyText, SocChart } from "../../components/BatteryResults";
 import { Toggletip } from "../../components/Term";
 import { EmptyState } from "../../components/EmptyState";
@@ -13,7 +15,7 @@ import { Icon } from "../../components/Icon";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
-import { ResultSheet } from "../../components/ResultSheet";
+import { basisRows, ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import { useProject } from "../../store";
@@ -76,7 +78,20 @@ function Row({ b }: { b: BaBank }) {
 }
 
 function Battery() {
-  const { batteryBanks } = useProject();
+  const { batteryBanks, sizingAdvice } = useProject();
+  const { catalog } = useCatalog();
+  const sizing = sizingAdvice.at(-1)?.ps_parameters;
+  // η_dc and DoD of each bank this run used, with where they came from (audit 2026-11-15 B2)
+  const bankBasis = (rec: RunRecord): [string, string][] =>
+    (((rec.parameters as { banks?: BatteryBank[] } | null)?.banks) ?? []).flatMap((b) => {
+      const modDod = catalog.entries.find((e) => e.id === b.module.catalog_ref.entry_id)?.battery_module?.recommended_dod_ratio;
+      const row = (name: string, v: number | null | undefined, s: string | null): [string, string] =>
+        [`${name} of ${b.inverter_id}`, v == null ? "not set" : `${fixedOr(v, "ratio")} (${s})`];
+      return [
+        row("DC efficiency η_dc", b.dc_efficiency_ratio, valueSource(b.dc_efficiency_ratio, sizing?.dc_efficiency_ratio)),
+        row("Depth of discharge", b.depth_of_discharge_ratio, valueSource(b.depth_of_discharge_ratio, sizing?.depth_of_discharge_ratio, modDod)),
+      ];
+    });
   const { fresh, busy, resp, stale, error, clearError, run } = useDependentRun("BA");
   const [startHour, setStartHour] = useState<number | null>(0);
   const r = resp?.result;
@@ -112,7 +127,7 @@ function Battery() {
       {error && <Toast message={error} onDismiss={clearError} />}
       <OutOfDate show={stale} />
       {resp && r && (
-        <ResultSheet record={resp.run_record}>
+        <ResultSheet record={resp.run_record} basis={[...basisRows(resp.run_record), ...bankBasis(resp.run_record)]}>
           <StatusBanner type="BA" result={r} />
       {p && resp && (
         <>

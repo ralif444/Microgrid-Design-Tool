@@ -96,12 +96,14 @@ function Sensitivity() {
           ))}
         </fieldset>
         <fieldset className={styles.box}>
-          <legend>Step size (Eq. 4.17)</legend>
+          <legend>
+            Step size <span className="code-label">(Eq. 4.17)</span>
+          </legend>
           <label>
-            <input type="radio" checked={stepKind === "step_relative"} onChange={() => setStepKind("step_relative")} /> relative to the parameter value
+            <input type="radio" name="step-kind" checked={stepKind === "step_relative"} onChange={() => setStepKind("step_relative")} /> relative to the parameter value
           </label>
           <label>
-            <input type="radio" checked={stepKind === "step_absolute"} onChange={() => setStepKind("step_absolute")} /> absolute, in the parameter unit
+            <input type="radio" name="step-kind" checked={stepKind === "step_absolute"} onChange={() => setStepKind("step_absolute")} /> absolute, in the parameter unit
           </label>
           <NumberField
             id="step"
