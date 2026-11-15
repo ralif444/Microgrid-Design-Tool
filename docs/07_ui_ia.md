@@ -150,7 +150,7 @@ Stepper steps: 1 Loads, 2 Sizing advice (optional, can be skipped), 3 Network, 4
 | S-10, S-12 Run | Valid M1 and requested point count within `SWEEP_CAP`. | Size indicator turns to error; request still sendable, result is `INPUT_INVALID` / `SWEEP_CAP_EXCEEDED` (F4). |
 | S-19 Run (flag on) | A valid M2 exists for the current design (Status FEASIBLE or INFEASIBLE, design not edited since). | Disabled button; "Run the constraint check (M2) first" or the stale banner. The API returns `UNAVAILABLE / DEPENDENCY_NOT_MET` (FR-111). |
 | S-20 Run | A valid M1 exists for the current design (Status FEASIBLE, design not edited since) and at least one BatteryBank. | Disabled button; "Run power flow (M1) first" or the stale banner. The API returns `UNAVAILABLE / DEPENDENCY_NOT_MET` (FR-116). |
-| S-11 Compare / S-15 Re-run | 2 or more Scenarios selected (up to `SCENARIO_CAP` [ASSUMPTION]) / a RunRecord with verified hash. | "Select two or more Scenarios." / Re-run hidden after failed verification (FR-50). |
+| S-11 Compare / S-15 Re-run | 2 or more Scenarios selected (up to `SCENARIO_CAP` [ASSUMPTION]) / a RunRecord with verified hash. | "Missing: two or more selected Scenarios." beside "Compare scenarios" / Re-run hidden after failed verification (FR-50). |
 | S-16 Report | At least one RunRecord with a result exists. | Empty state "No results yet. Run M1 and M2 first." |
 
 **Stale-M1 rule.** Any edit to design data (Buses, Lines, Loads, LoadProfile, Inverters, DesignConstraints, adopted SizingAdvice) after an M1 run marks that M1 result "stale" in the Project store. A stale banner appears on S-07, S-08 and S-09..S-14: "The design changed after the last power flow. Re-run M1 to continue." and the stepper shows steps 6 and 7 as blocked. The authoritative check is the application service (hash comparison, FR-38, FR-40); the UI flag is a conservative early warning. Editing and reverting a value leaves the flag set until M1 is re-run or the hash is re-checked [ASSUMPTION, see §9 item 3].
@@ -347,13 +347,13 @@ Notation: `[ ]` button/field, `( )` option, `<..>` placeholder. Header and stepp
 ### 6.6 Stability (S-13, S-14)
 ```
 +--------------------------------------------------------------+
-| Small-signal (M4a)          M1: <current>        [Run M4a]   |
+| Small-signal (M4a)  M1: <current>  [Run small-signal analysis] |
 | [Status banner]  Class: <STABLE | MARGINAL | UNSTABLE>       |
 | Indicators r_τ κ r_in ε_X  (validity not calibrated)         |
 | Eigenvalues, damping, dominant modes tables (<1/s>, <Hz>)    |
 | Transient (M4b)     Disturbance [<kind> v] element [<id> v]  |
 |   magnitude <kW> (load step only)  start <s>  duration <s>   |
-| [Run M4b]   [Status banner]   Class: <RECOVERED_STABLE | CRITERIA_VIOLATED | UNSTABLE>  Settled: <yes | no> |
+| [Run transient simulation]   [Status banner]   Class: <RECOVERED_STABLE | CRITERIA_VIOLATED | UNSTABLE>  Settled: <yes | no> |
 | Plot: system frequency <Hz> vs <s>   Plot: bus voltage <kV>  |
 ```
 - Regions: M4a and M4b are two screens (S-13, S-14) shown together here; each has Status banner, run control, results; M4b adds the disturbance form.
@@ -404,6 +404,8 @@ Notation: `[ ]` button/field, `( )` option, `<..>` placeholder. Header and stepp
 
 - The store exposes actions through a small interface so a library can replace Context + reducer without touching screens (ADR-005, [ASSUMPTION]). No server-state cache (ADR-010); no undo or redo in v1; field-level schema stays in Doc 3.
 - Browser autosave (localStorage) is a convenience only [ASSUMPTION]: written after edits, offered on S-01 as "Restore unsaved work", never treated as a saved Project; wrapped for failure (private mode, quota). It must not replace the export prompt (P7).
+- Study inputs kept across navigation (audit 2026-11-15 O4): the input fields of S-04, S-08 and the Studies screens keep their values when the user leaves and re-opens the screen. Memory only, per Project and screen (`useKept`); a reload or another Project starts empty; never in the Project file, the snapshot or a RunRecord. A new run still wins over kept typing (the example-form precedence below).
+- Catalogue in the browser (audit 2026-11-15 O1): the open Catalogue is also kept in localStorage (`mgapp-catalog`) and restored on load until its entries are deleted; the Catalogue file (FR-64) stays the record, and storage failure only turns this off.
 - Example mode (Doc 12 X9, D-92 K233): a UI-state slice `example` (null or {id, settings}) with actions `exampleEntered` and `exampleLeft`; screen forms read their initial value through `initialValue(screen, field)` with the precedence typed > last-RunRecord refill > example > empty. The slice is never part of the Project file, the canonical snapshot or a RunRecord.
 
 ## 8. Accessibility and language
@@ -443,6 +445,13 @@ DOC 7 COMPLETE
 ## Change log 2026-10-21 (user-approved change proposals from the proposal design checks)
 - C5.1 F3 outcome edge: Status equal and result_hash equal.
 - C5.4 first phase per key flow stated in §4.
+
+## Change log 2026-11-15 (UI/UX audit 2026-11-15, user decisions; Doc 14 D17)
+- Labels: words first, codes small after them (M-codes as suffixes, equation numbers in captions, basis and Report, not in form labels; an assumption number once per screen; PS spelled out on first use). Run buttons in words: "Run sensitivity", "Run small-signal analysis", "Run transient simulation", "Compare scenarios"; every study form shows "Missing: …" beside a disabled Run. One control per row in study forms; placeholder "Choose…".
+- Inspector: labels above inputs below 28rem (container query), width unchanged; below 40rem every form stacks its labels.
+- S-04 / S-05 battery bank: Sizing owns t_aut, η_dc and DoD; a new bank pre-fills η_dc from the latest Sizing settings and DoD from the module's recommended value (else Sizing), and can override; S-20 basis names each value's source (module datasheet, Sizing advice, entered on the bank), derived on screen, not stored. The O-8 split of m_inv (Sizing and M2 each own one) is kept.
+- S-18: values as a Value | Source table; status "Usable" / "Information only" with reasons in field labels, folded beyond two; a "Key values" column. S-20: the 7-column summary first, the full table under "Show details". S-09: parameters grouped per element.
+- §7: study inputs kept across navigation; Catalogue kept in the browser.
 
 ## Change log 2026-11-14 (UI redesign, ADR-016)
 - §8 UI language and §9 #1: EN/ID switch replaces English labels with Indonesian glossary. Screens are laid out as a diagram workspace (four areas grouping the eight steps); the stepper, engine badge and 17 routes stay (manuscript 4.3.7). Dark theme added next to light. **Amended 2026-11-14 (user, Doc 14 D15, ADR-016 option B):** the four area tabs replace the stepper (P1, §2 global elements, §3). Each area lists its screens under the header with the stepper's done / stale / blocked states (Model: Diagram, Project, Loads, Sizing advice, Network, Constraints; Check: Diagram, Power flow, Constraint check; Studies: M3a–M4b, cable sizing, battery; Report: Report, Run history). The stale-M1 rule of §3.1 is unchanged; "the stepper shows steps 6 and 7 as blocked" now reads: Constraint check and the Studies row show Blocked. Opening or creating a Project lands on the Model diagram.
