@@ -105,7 +105,7 @@ function EntryEditor({ e, onChange, x10 }: { e: CatalogEntry; onChange: (e: Cata
 
 export default function CataloguePage() {
   const { dialog, confirm } = useConfirmDelete();
-  const { catalog, checks, setCatalog } = useCatalog();
+  const { catalog, checks, checkError, setCatalog } = useCatalog();
   const [selected, setSelected] = useState<string | null>(null);
   const [note, setNote] = useState<FileCheckResult | string | null>(null);
   const entries = catalog.entries;
@@ -125,7 +125,16 @@ export default function CataloguePage() {
     const r = await importCatalog(read.doc);
     if (!r.ok) return setNote(r.message);
     setNote(r.data.file_check);
-    if (r.data.file_check.accepted && r.data.catalog) setCatalog(r.data.catalog as unknown as typeof catalog);
+    const next = r.data.catalog as unknown as typeof catalog | null;
+    if (!r.data.file_check.accepted || !next) return;
+    // O7: opening a file replaces every entry, which the browser now keeps, so ask first when there are some
+    if (entries.length === 0) return void (setCatalog(next), setSelected(null));
+    confirm(
+      "Replace the Catalogue?",
+      `Opening ${file.name} replaces every entry now in the Catalogue (${entries.length}) with its own (${next.entries.length}). Save the Catalogue first to keep the current ones. ${CANNOT_UNDO}`,
+      () => (setCatalog(next), setSelected(null)),
+      "Replace",
+    );
   }
 
   async function save() {
@@ -147,7 +156,14 @@ export default function CataloguePage() {
         </button>{" "}
         <label>
           Open catalogue file{" "}
-          <input type="file" accept=".json,application/json" onChange={(x) => void open(x.target.files?.[0])} />
+          <input
+            type="file"
+            accept=".json,application/json"
+            onChange={(x) => {
+              void open(x.target.files?.[0]);
+              x.target.value = ""; // the same file can be opened again (O7)
+            }}
+          />
         </label>
       </p>
       {note && (typeof note === "string" ? <p role="alert">{note}</p> : <FileCheckText fc={note} />)}
@@ -195,7 +211,7 @@ export default function CataloguePage() {
                   <td className={styles.kind}>{keyValues(e)}</td>
                   <td>
                     {!c ? (
-                      "Checking…"
+                      checkError ? `Not checked: ${checkError}` : "Checking…"
                     ) : c.usable ? (
                       "Usable"
                     ) : c.reasons.length <= 2 ? (

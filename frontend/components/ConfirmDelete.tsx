@@ -6,15 +6,18 @@
 import { Modal } from "@carbon/react";
 import { useRef, useState } from "react";
 
-type Ask = { title: string; body: string; onYes: () => void };
+type Ask = { title: string; body: string; onYes: () => void; yes: string };
 
 export const CANNOT_UNDO = "This cannot be undone.";
 
 export function useConfirmDelete() {
   const [ask, setAsk] = useState<Ask | null>(null);
   const back = useRef<HTMLElement | null>(null);
+  const cancel = useRef<(() => void) | null>(null);
   const close = (yes: boolean) => {
     if (yes) ask?.onYes();
+    else cancel.current?.();
+    cancel.current = null;
     setAsk(null);
     queueMicrotask(() => back.current?.isConnected && back.current.focus());
   };
@@ -24,7 +27,7 @@ export function useConfirmDelete() {
       danger
       size="xs"
       modalHeading={ask.title}
-      primaryButtonText="Delete"
+      primaryButtonText={ask.yes}
       secondaryButtonText="Cancel"
       selectorPrimaryFocus=".cds--btn--secondary"
       onRequestClose={() => close(false)}
@@ -33,9 +36,18 @@ export function useConfirmDelete() {
       <p>{ask.body}</p>
     </Modal>
   );
-  const confirm = (title: string, body: string, onYes: () => void) => {
+  // `yes`: the confirm word when the removal is a replacement ("Replace"); default "Delete"
+  const confirm = (title: string, body: string, onYes: () => void, yes = "Delete") => {
     back.current = document.activeElement as HTMLElement | null;
-    setAsk({ title, body, onYes });
+    cancel.current = null;
+    setAsk({ title, body, onYes, yes });
   };
-  return { dialog, confirm };
+  // the same dialog as a yes/no for a step that goes on (audit O9: no native confirm(), which a browser can suppress)
+  const yesNo = (title: string, body: string, yes: string) =>
+    new Promise<boolean>((res) => {
+      back.current = document.activeElement as HTMLElement | null;
+      setAsk({ title, body, onYes: () => res(true), yes });
+      cancel.current = () => res(false);
+    });
+  return { dialog, confirm, ask: yesNo };
 }

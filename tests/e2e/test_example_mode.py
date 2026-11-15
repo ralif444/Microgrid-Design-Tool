@@ -46,8 +46,8 @@ def test_fr_101_other_projects_leave_example_mode(server: Callable[[str], str], 
     page.wait_for_url("**/workspace/")
     expect(page.get_by_test_id("example-mode")).to_be_visible()
     page.get_by_role("link", name="Microgrid Design Tool").click()  # client-side: the store stays
-    page.once("dialog", lambda d: d.accept())  # unsaved-changes confirm (K17)
     page.get_by_role("button", name="Open example D2:").click()
+    page.get_by_role("dialog").get_by_role("button", name="Discard", exact=True).click()  # unsaved changes (K17, audit O9)
     page.wait_for_url("**/workspace/")
     expect(page.get_by_test_id("project-name")).to_have_text(re.compile(r"^Example D2"))
     expect(page.get_by_test_id("example-mode")).to_have_count(0)

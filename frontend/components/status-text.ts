@@ -12,6 +12,9 @@ export interface BannerText {
 export const violatedCount = (p: { constraint_margins?: { margin: number }[] } | null | undefined) =>
   p?.constraint_margins?.filter((c) => c.margin < 0).length ?? null;
 
+// M2 with no evaluated margin: "Feasible" would read as checked (audit 2026-11-15 E15)
+export const m2NothingChecked = (p: unknown) => ((p as { constraint_margins?: unknown[] } | null)?.constraint_margins ?? []).length === 0;
+
 export function bannerText(type: AnalysisType, r: AnalysisResult): BannerText {
   const n = (r.diagnostics?.issues as unknown[] | undefined)?.length ?? 0;
   switch (r.status) {
@@ -26,6 +29,8 @@ export function bannerText(type: AnalysisType, r: AnalysisResult): BannerText {
       if (type === "M2") {
         // WP 1.7.4: a check without a limit is not satisfied, so "all constraints" would overstate it.
         const skipped = ((r.payload as { not_evaluated?: unknown[] } | null)?.not_evaluated ?? []).length;
+        if (m2NothingChecked(r.payload))
+          return { role: "neutral", headline: "Nothing was checked: no limit is set, so every check was not evaluated.", hint: "Enter the limits on Constraints, then re-run M2." };
         const headline = skipped
           ? `The design meets every evaluated constraint; ${skipped === 1 ? "1 check had no limit and was" : `${skipped} checks had no limit and were`} not evaluated.`
           : "The design meets all constraints.";
@@ -97,7 +102,7 @@ export function statusWord(type: AnalysisType, r: AnalysisResult): string {
       if (type === "M1") return "Solved";
       if (type === "M4a") return CLASS_WORD[(r.payload as { stability_class?: string } | null)?.stability_class ?? ""] ?? "Analysed";
       if (type === "M4b") return "Simulated";
-      if (type === "M2") return "Meets the limits";
+      if (type === "M2") return m2NothingChecked(r.payload) ? "Not evaluated" : "Meets the limits";
       if (type === "BA" && baNothingEvaluated(r)) return "Not evaluated";
       if (type === "PS" || type === "CB" || type === "BA") return "Advice ready";
       return "Completed";

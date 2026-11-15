@@ -151,10 +151,10 @@ def test_f3_fr_49_import_verify_rerun_in_another_project(
     rec = json.loads(exported.read_text(encoding="utf-8"))
     assert len(rec) == 17  # FR-47 / FR-49: the whole record in one file
 
-    page.once("dialog", lambda d: d.accept())
     page.get_by_role("link", name="Microgrid design tool").click()
     page.get_by_label("Project name").fill("Other")
     page.get_by_role("button", name="Create project").click()
+    page.get_by_role("dialog").get_by_role("button", name="Discard", exact=True).click()  # unsaved changes (K17, audit O9)
     step(page, "Run history")
     expect(page.get_by_text("No runs recorded yet.")).to_be_visible()
 

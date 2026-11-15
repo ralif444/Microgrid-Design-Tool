@@ -452,6 +452,14 @@ DOC 7 COMPLETE
 - S-04 / S-05 battery bank: Sizing owns t_aut, η_dc and DoD; a new bank pre-fills η_dc from the latest Sizing settings and DoD from the module's recommended value (else Sizing), and can override; S-20 basis names each value's source (module datasheet, Sizing advice, entered on the bank), derived on screen, not stored. The O-8 split of m_inv (Sizing and M2 each own one) is kept.
 - S-18: values as a Value | Source table; status "Usable" / "Information only" with reasons in field labels, folded beyond two; a "Key values" column. S-20: the 7-column summary first, the full table under "Show details". S-09: parameters grouped per element.
 - §7: study inputs kept across navigation; Catalogue kept in the browser.
+- Out-of-scope items O3, O5 – O9 of the audit (its §10 lists the status of each):
+  - Discard and replace questions use the in-app dialog, not `confirm()`.
+  - Model shows the M1 outcome with a link to Check.
+  - M2 with no evaluated margin reads "Nothing checked: no limits set".
+  - Deep links point to the restore offer when unsaved work is kept.
+  - S-08 shows the accepted Sizing advice's m_inv, t_aut, η_dc and DoD, each with a copy button.
+  - S-18 asks before an opened file replaces entries and names a failed check.
+  - S-10 and S-12 name "To above From" and "at least 2 Points" before Run.
 
 ## Change log 2026-11-14 (UI redesign, ADR-016)
 - §8 UI language and §9 #1: EN/ID switch replaces English labels with Indonesian glossary. Screens are laid out as a diagram workspace (four areas grouping the eight steps); the stepper, engine badge and 17 routes stay (manuscript 4.3.7). Dark theme added next to light. **Amended 2026-11-14 (user, Doc 14 D15, ADR-016 option B):** the four area tabs replace the stepper (P1, §2 global elements, §3). Each area lists its screens under the header with the stepper's done / stale / blocked states (Model: Diagram, Project, Loads, Sizing advice, Network, Constraints; Check: Diagram, Power flow, Constraint check; Studies: M3a–M4b, cable sizing, battery; Report: Report, Run history). The stale-M1 rule of §3.1 is unchanged; "the stepper shows steps 6 and 7 as blocked" now reads: Constraint check and the Studies row show Blocked. Opening or creating a Project lands on the Model diagram.

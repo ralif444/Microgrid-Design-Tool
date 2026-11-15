@@ -38,7 +38,7 @@ export default function Home() {
   const [engine, setEngine] = useState<string | null>(null);
   const [guided, setGuided] = useState<ExampleSettings | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
-  const { dialog, confirm } = useConfirmDelete();
+  const { dialog, confirm, ask } = useConfirmDelete();
   useEffect(() => {
     void getMeta().then((m) => {
       setEngine(m.ok ? m.data.engine.engine_kind : null);
@@ -48,11 +48,11 @@ export default function Home() {
   }, []);
 
   // a new Project is autosaved over the draft, so ask while the draft is still offered
-  const keepsDraft = () => !draft || window.confirm(DRAFT_REPLACE);
+  const keepsDraft = async () => !draft || (await ask(...DRAFT_REPLACE));
 
   async function openExample(key: string, settings?: ExampleSettings) {
-    if (unsaved && !window.confirm(UNSAVED_CONFIRM)) return;
-    if (!settings && !keepsDraft()) return; // example mode is never autosaved
+    if (unsaved && !(await ask(...UNSAVED_CONFIRM))) return;
+    if (!settings && !(await keepsDraft())) return; // example mode is never autosaved
     const file = await getExample(key);
     const r = file.ok ? await importProject(file.data) : file;
     if (!r.ok) return setNote(r.message);
@@ -75,10 +75,10 @@ export default function Home() {
     router.push(HOME);
   }
 
-  function create(e: React.FormEvent) {
+  async function create(e: React.FormEvent) {
     e.preventDefault();
-    if (unsaved && !window.confirm(UNSAVED_CONFIRM)) return;
-    if (!keepsDraft()) return;
+    if (unsaved && !(await ask(...UNSAVED_CONFIRM))) return;
+    if (!(await keepsDraft())) return;
     dispatch({
       type: "projectCreated",
       meta: {
@@ -128,7 +128,7 @@ export default function Home() {
         </section>
       )}
       {dialog}
-      <form onSubmit={create} aria-label="New project">
+      <form onSubmit={(e) => void create(e)} aria-label="New project">
         <h2>New project</h2>
         <p>
           <label htmlFor="name">Project name</label>{" "}
