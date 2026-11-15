@@ -7,13 +7,25 @@ import { useEffect, useState } from "react";
 import { getMeta, rerunRunRecord, verifyRunRecord } from "../../api-client";
 import type { EngineComparison, FileCheckResult, MetaInfo, RerunResponse, RunRecord } from "../../api-types";
 import { jsonDiff } from "../../components/diff";
+import { DataTable, type DataColumn } from "../../components/DataTable";
 import { downloadJson, NOT_JSON, readJson } from "../../components/files";
 import { unitOf } from "../../components/Further";
 import { FileCheckText } from "../../components/ProjectFileMenu";
 import { RequireProject } from "../../components/RequireProject";
+import styles from "./runs.module.css";
 import { useProject, useProjectDispatch } from "../../store";
 
 const short = (h: string) => h.slice(0, 12);
+const id8 = (r: RunRecord) => r.record_id.slice(0, 8);
+
+const columns: DataColumn<RunRecord>[] = [
+  { key: "created_at", header: "Time", cell: (r) => <time dateTime={r.created_at} title={r.created_at}>{new Date(r.created_at).toLocaleString()}</time> },
+  { key: "analysis_type", header: "Type", cell: (r) => r.analysis_type },
+  { key: "status", header: "Status", cell: (r) => r.result.status },
+  { key: "status_code", header: "Code", cell: (r) => r.result.status_code },
+  { key: "engine", header: "Engine", cell: (r) => r.engine_kind ?? "engine not called" },
+  { key: "hash", header: "Hash", cell: (r) => <code title={r.result_hash}>{short(r.result_hash)}</code> },
+];
 
 function engineText(e: { engine_kind: string | null; engine_version: string | null; engine_git_commit: string | null }) {
   return e.engine_kind === null ? "engine not called" : `${e.engine_kind} ${e.engine_version} (${e.engine_git_commit})`;
@@ -198,7 +210,7 @@ function Runs() {
       <p>
         <label>
           <input type="checkbox" checked={hideInvalid} onChange={(e) => setHideInvalid(e.target.checked)} /> Hide
-          INPUT_INVALID
+          runs refused for invalid input
         </label>
         {hideInvalid && hidden > 0 && <span> ({hidden} hidden)</span>}{" "}
         <label>
@@ -222,35 +234,31 @@ function Runs() {
       {runRecords.length === 0 ? (
         <p>No runs recorded yet.</p>
       ) : (
-        <table aria-label="Runs">
-          <thead>
-            <tr><th>Time</th><th>Type</th><th>Status</th><th>Code</th><th>Engine</th><th>Hash</th><th>Actions</th></tr>
-          </thead>
-          <tbody>
-            {shown.map((r) => (
-              <tr key={r.record_id} data-testid={`run-${r.record_id}`}>
-                <td>{r.created_at}</td>
-                <td>{r.analysis_type}</td>
-                <td>{r.result.status}</td>
-                <td>{r.result.status_code}</td>
-                <td>{r.engine_kind ?? "engine not called"}</td>
-                <td><code title={r.result_hash}>{short(r.result_hash)}</code></td>
-                <td>
-                  <button type="button" onClick={() => setSelected(r.record_id)}>View</button>{" "}
-                  <button type="button" onClick={() => downloadJson(`${r.record_id}.mgrun.json`, r)}>Export</button>{" "}
-                  <button type="button" onClick={() => void doVerify(r)}>Verify</button>{" "}
-                  <button type="button" disabled={busy !== null} onClick={() => void doRerun(r)}>
-                    {busy === r.record_id ? "Re-running..." : "Re-run"}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className={`${styles.split} ${sel ? styles.withDetail : ""}`}>
+          <DataTable
+            label="Runs"
+            columns={columns}
+            rows={shown}
+            rowKey={(r) => r.record_id}
+            rowName={(r) => id8(r)}
+            rowTestId={(r) => `run-${r.record_id}`}
+            rowCurrent={(r) => r.record_id === selected}
+            actions={(r) => (
+              <>
+                <button type="button" aria-label={`View run ${id8(r)}`} onClick={() => setSelected(r.record_id)}>View</button>{" "}
+                <button type="button" aria-label={`Export run ${id8(r)}`} onClick={() => downloadJson(`${r.record_id}.mgrun.json`, r)}>Export</button>{" "}
+                <button type="button" aria-label={`Verify run ${id8(r)}`} onClick={() => void doVerify(r)}>Verify</button>{" "}
+                <button type="button" aria-label={`Re-run run ${id8(r)}`} disabled={busy !== null} onClick={() => void doRerun(r)}>
+                  {busy === r.record_id ? "Re-running..." : "Re-run"}
+                </button>
+              </>
+            )}
+          />
+          {sel && <div className={styles.detail}><Detail r={sel} meta={meta} /></div>}
+        </div>
       )}
       {runRecords.length >= 2 && <Compare runs={runRecords} />}
       {rerun && <Reproduction out={rerun} />}
-      {sel && <Detail r={sel} meta={meta} />}
     </>
   );
 }

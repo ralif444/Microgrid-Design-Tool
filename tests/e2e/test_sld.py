@@ -11,7 +11,7 @@ import xml.etree.ElementTree as ET
 from collections.abc import Callable
 from pathlib import Path
 
-from flows import enter_design, gui_snapshot, step
+from flows import enter_design, gui_snapshot, run_id, step
 from playwright.sync_api import Page, expect
 from test_network_m1_m2 import _margins, _run_m1
 
@@ -107,7 +107,7 @@ def test_fr_96_m2_overlay_marks_violated_elements(server: Callable[[str], str], 
 def test_fr_97_report_figure_and_svg_download(server: Callable[[str], str], page: Page) -> None:
     enter_design(page, server("default"), gui_snapshot())
     _run_m1(page)
-    record = page.get_by_test_id("record-id").inner_text()
+    record = run_id(page)
     step(page, "Report")
     figure = page.get_by_role("figure", name="Single-line diagram of the analysed design")
     expect(figure.get_by_test_id("diagram-bus-B1")).to_contain_text("p.u.")

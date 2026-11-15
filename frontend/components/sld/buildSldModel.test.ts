@@ -72,7 +72,7 @@ describe("SLD model (FR-94, FR-95)", () => {
     const m = buildSldModel({ design: D2, m1 });
     expect(m.buses.find((e) => e.id === b)!.tags).toEqual([b, "0.9750 p.u.", "-1.50 °"]); // result decimals (W1)
     expect(m.inverters.find((e) => e.id === i)!.tags).toContain("loading 0.820");
-    expect(value(m.system, "Results", "System frequency")).toMatchObject({ value: "49.9", unit: "Hz" });
+    expect(value(m.system, "Results", "System frequency")).toMatchObject({ value: "49.900", unit: "Hz" });
     // an element the run does not cover
     const other = m.buses.find((e) => e.id !== b)!;
     expect(section(other, "Results").empty).toBe("Not in this power-flow result");
@@ -121,7 +121,7 @@ describe("SLD model (FR-94, FR-95)", () => {
     const m = buildSldModel({ design, m2: { payload, limiting: [lc(c, 0.5, 0.5)] }, marginWarn: 0.05 });
     expect(m.inverters.map((e) => e.mark)).toEqual(["violated", "near"]);
     expect(m.lines.find((e) => e.id === c)?.mark).toBe("limiting");
-    expect(section(m.inverters[0], "Checks").rows[0].note).toMatch(/^violated; limit 1 ratio, margin -0.1 ratio$/);
+    expect(section(m.inverters[0], "Checks").rows[0].note).toMatch(/^violated; limit 1.000 ratio, margin -0.100 ratio$/);
     expect(value(m.buses.find((e) => e.id === "B1")!, "Checks", "Bus voltage, lower limit")).toMatchObject({ value: "—", note: "not evaluated: no limit set" });
     expect(value(m.system, "Checks", "Verdict")?.value).toBe("INFEASIBLE");
   });

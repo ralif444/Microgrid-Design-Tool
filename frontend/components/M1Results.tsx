@@ -2,12 +2,15 @@
 // values come from the Fake Engine. Power sharing per Doc 12 P9 (FR-81): advisory, not a constraint.
 // With `charts` (S-07, Doc 12 X3 FR-88) each table gets its chart; reference lines only for limits
 // the user set on S-06, otherwise the caption says the limit is not evaluated.
-import type { DesignConstraints, M1Payload, RunRecord } from "../api-types";
+import type { DesignConstraints, M1Payload, M2Payload, ProjectSnapshot, RunRecord } from "../api-types";
 import { AdvisoryPanel } from "./AdvisoryPanel";
 import { BarChart, type RefLine } from "./charts/BarChart";
 import { DataTable, type DataColumn } from "./DataTable";
-import { fixed } from "./format";
+import { fixed, fixedOr } from "./format";
+import { Icon } from "./Icon";
 import type { ElementRef } from "./Inspector";
+import { ElementLink, marginStatus, type MarginStatus, STATUS_WORD, useMarginWarn } from "./M2Results";
+import m2Styles from "./M2Results.module.css";
 
 type Bus = M1Payload["bus_results"][number];
 type Inv = M1Payload["inverter_results"][number];
@@ -61,21 +64,56 @@ const unset = (refs: RefLine[], what: string) => (refs.length ? undefined : `No 
 export type M1Charts = { limits: DesignConstraints | null | undefined; record: RunRecord; voltage?: false };
 type OnInspect = ((t: ElementRef) => void) | undefined;
 
-// S-07 only: the id cell becomes a button that opens the Inspector (FR-90); the text stays the id
+// The id cell selects the element: in the Inspector when `on` is given (FR-90), else via the workspace (audit D-18).
 const inspectable = <R,>(cols: DataColumn<R>[], kind: ElementRef["kind"], get: (r: R) => string, on: OnInspect): DataColumn<R>[] =>
-  on
-    ? cols.map((c) =>
-        c.key === "id"
-          ? { ...c, cell: (r) => <button type="button" className="inspect" aria-label={`Inspect ${get(r)}`} onClick={() => on({ kind, id: get(r) })}>{get(r)}</button> }
-          : c,
-      )
-    : cols;
+  cols.map((c) => (c.key === "id" ? { ...c, cell: (r) => <ElementLink target={{ kind, id: get(r) }} onInspect={on} /> } : c));
 
-export function M1Results({ p, charts, onInspect }: { p: M1Payload; charts?: M1Charts; onInspect?: OnInspect }) {
-  const c = charts?.limits ?? {};
+/** Limit and status beside the results (audit D-7): limits from the Project, status from the current M2 only. */
+export type M1Check = { design: ProjectSnapshot; m2: M2Payload | null };
+const ORDER: MarginStatus[] = ["violated", "near", "pass"];
+export function statusCell(id: string, kinds: string[], m2: M2Payload | null, marginWarn: number | null) {
+  if (!m2) return "Run the constraint check";
+  const own = m2.constraint_margins.filter((c) => c.element_id === id && kinds.includes(c.kind));
+  if (!own.length) return m2.not_evaluated.some((n) => n.element_id === id && kinds.includes(n.kind)) ? "Not evaluated" : "—";
+  if (marginWarn === null && own.every((c) => c.margin >= 0)) return "Checking";
+  const s = ORDER.find((k) => own.some((c) => marginStatus(c, marginWarn) === k)) ?? "pass";
+  return (
+    <span className={m2Styles.status} data-s={s}>
+      <Icon name={STATUS_WORD[s].icon} size={16} />
+      {STATUS_WORD[s].word}
+    </span>
+  );
+}
+const lineLimit = (d: ProjectSnapshot | undefined, limits: DesignConstraints, id: string) =>
+  d?.lines?.find((l) => l.id === id)?.current_limit_a ?? limits.line_current_limit_a ?? null;
+
+export function M1Results({ p, charts, onInspect, check }: { p: M1Payload; charts?: M1Charts; onInspect?: OnInspect; check?: M1Check }) {
+  const c = check?.design.design_constraints ?? charts?.limits ?? {};
+  const marginWarn = useMarginWarn();
+  const withCheck = <R,>(cols: DataColumn<R>[], limit: DataColumn<R>, id: (r: R) => string, kinds: string[]): DataColumn<R>[] =>
+    check ? [...cols, limit, { key: "status", header: "Status", cell: (r) => statusCell(id(r), kinds, check.m2, marginWarn) }] : cols;
+  const notSet = "not set";
+  const busCols = withCheck(
+    inspectable(BUSES, "bus", (b) => b.bus_id, onInspect),
+    { key: "lim", header: "Limits", unit: "p.u.", cell: () => `${fixedOr(c.voltage_min_pu, "p.u.", notSet)} – ${fixedOr(c.voltage_max_pu, "p.u.", notSet)}` },
+    (b) => b.bus_id,
+    ["BUS_VOLTAGE_MIN", "BUS_VOLTAGE_MAX"],
+  );
+  const invCols = withCheck(
+    inspectable(INVERTERS, "inverter", (i) => i.inverter_id, onInspect),
+    { key: "lim", header: "Loading limit", unit: "ratio", numeric: true, cell: () => fixedOr(c.inverter_loading_limit_ratio, "ratio", notSet) },
+    (i) => i.inverter_id,
+    ["INVERTER_LOADING"],
+  );
+  const lineCols = withCheck(
+    inspectable(LINES, "line", (l) => l.line_id, onInspect),
+    { key: "lim", header: "Current limit", unit: "A", numeric: true, cell: (l) => fixedOr(lineLimit(check?.design, c, l.line_id), "A", notSet) },
+    (l) => l.line_id,
+    ["LINE_CURRENT"],
+  );
+  const lineLimits = p.line_results.map((l) => lineLimit(check?.design, c, l.line_id));
   const vRefs = [...ref(c.voltage_min_pu, `min ${c.voltage_min_pu} p.u.`), ...ref(c.voltage_max_pu, `max ${c.voltage_max_pu} p.u.`)];
   const iRefs = ref(c.inverter_loading_limit_ratio, `limit ${c.inverter_loading_limit_ratio}`);
-  const lRefs = ref(c.line_current_limit_a, `limit ${c.line_current_limit_a} A`);
   const totals: Total[] = [
     ["System frequency", p.system_frequency_hz, "Hz"],
     ["Total load, active", p.total_load_kw, "kW"],
@@ -100,11 +138,11 @@ export function M1Results({ p, charts, onInspect }: { p: M1Payload; charts?: M1C
           dots
         />
       )}
-      <DataTable label="Bus voltages" caption="Bus voltages" columns={inspectable(BUSES, "bus", (b) => b.bus_id, onInspect)} rows={p.bus_results} rowKey={(b) => b.bus_id} rowName={(b) => b.bus_id} />
+      <DataTable label="Bus voltages" caption="Bus voltages" columns={busCols} rows={p.bus_results} rowKey={(b) => b.bus_id} rowName={(b) => b.bus_id} />
       <DataTable
         label="Inverter outputs"
         caption="Inverter outputs"
-        columns={inspectable(INVERTERS, "inverter", (i) => i.inverter_id, onInspect)}
+        columns={invCols}
         rows={p.inverter_results}
         rowKey={(i) => i.inverter_id}
         rowName={(i) => i.inverter_id}
@@ -145,12 +183,12 @@ export function M1Results({ p, charts, onInspect }: { p: M1Payload; charts?: M1C
           categoryTitle="Line"
           categories={p.line_results.map((l) => l.line_id)}
           series={[{ name: "Current", values: p.line_results.map((l) => l.current_a) }]}
-          refs={lRefs}
-          note={unset(lRefs, "line current limit")}
+          limits={lineLimits}
+          note={lineLimits.some((v) => v !== null) ? "Tick: each line's own current limit (the line's limit, else the Project limit)." : "No line current limit set: not evaluated."}
           record={charts.record}
         />
       )}
-      <DataTable label="Line flows" caption="Line flows" columns={inspectable(LINES, "line", (l) => l.line_id, onInspect)} rows={p.line_results} rowKey={(l) => l.line_id} rowName={(l) => l.line_id} />
+      <DataTable label="Line flows" caption="Line flows" columns={lineCols} rows={p.line_results} rowKey={(l) => l.line_id} rowName={(l) => l.line_id} />
     </section>
   );
 }

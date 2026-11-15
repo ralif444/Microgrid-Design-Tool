@@ -197,7 +197,12 @@ export function SingleLineDiagram({
         </div>
       )}
       {layout && layout.unplaced.length > 0 && <p className={styles.unplaced}>Not drawn (a Bus it needs is missing, or both ends are one Bus): {layout.unplaced.join(", ")}.</p>}
-      <SldLegend breakers={breakers.length > 0} tightest={[...drawing.buses, ...drawing.inverters, ...drawing.lines].some((e) => e.tightest)} />
+      <SldLegend
+        breakers={breakers.length > 0}
+        tightest={[...drawing.buses, ...drawing.inverters, ...drawing.lines].some((e) => e.tightest)}
+        checks={[drawing.system, ...drawing.buses, ...drawing.inverters, ...drawing.lines].some((e) => e.mark)}
+        loading={drawing.inverters.some((e) => e.loading !== undefined)}
+      />
       <button type="button" className={`no-print ${styles.tableToggle}`} aria-expanded={table} onClick={() => setTable(!table)}>
         View as table
       </button>

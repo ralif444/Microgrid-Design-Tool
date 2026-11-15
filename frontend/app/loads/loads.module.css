@@ -4,3 +4,4 @@
 .mode { display: inline-flex; gap: var(--space-3); white-space: nowrap; }
 .mode label { display: inline-flex; align-items: center; gap: var(--space-1); }
 .next { margin-top: var(--space-6); }
+.note { color: var(--color-fg-muted); margin: var(--space-2) 0; max-width: 72ch; }

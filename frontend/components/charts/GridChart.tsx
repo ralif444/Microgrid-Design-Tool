@@ -6,7 +6,7 @@
 // Row groups (e.g. per inverter) get a separator and a label. A null cell shows "—".
 import { memo } from "react";
 import type { RunRecord } from "../../api-types";
-import { num } from "../format";
+import { fixed } from "../format";
 import { ChartFrame } from "./ChartFrame";
 
 const CW = 64;
@@ -23,9 +23,12 @@ export const GridChart = memo(function GridChart({
   rows,
   note,
   record,
+  unit = "ratio",
 }: {
   title: string;
   rowTitle: string;
+  /** value unit for the cell labels (fixed decimals); participation factors are ratios */
+  unit?: string;
   columns: string[];
   rows: GridRow[];
   note?: string;
@@ -54,7 +57,7 @@ export const GridChart = memo(function GridChart({
                 <g key={j}>
                   <rect x={LW + j * CW + 1} y={y + 1} width={CW - 2} height={CH - 2} className="chart-cell" fillOpacity={v === null ? 0 : Math.min(1, Math.max(0, v)) * 0.45} />
                   <text x={LW + j * CW + CW / 2} y={y + CH / 2 + 4} textAnchor="middle">
-                    {v === null ? "—" : num(v)}
+                    {v === null ? "—" : fixed(v, unit)}
                   </text>
                 </g>
               ))}

@@ -1,4 +1,4 @@
-// Chart series colours in the order of VISUAL_DESIGN_GUIDELINES §9 (light: teal, navy, Carbon purple 60,
+// Chart series colours in the order of VISUAL_DESIGN_GUIDELINES §9 (light: the accent of the variant A mockup per audit §8, navy, Carbon purple 60,
 // magenta 60, yellow 50; dark: tokens.css). None is a status colour (guideline §1 rule 4); series also
 // differ by dash and marker. Feasibility markers use the status roles instead (§9, FEAS).
 export const SERIES = ["var(--series-1)", "var(--series-2)", "var(--series-3)", "var(--series-4)", "var(--series-5)"]; // tokens.css, per theme
@@ -13,3 +13,6 @@ export const FEAS = {
   infeasible: { marker: "cross" as Marker, color: "var(--role-negative-icon)", filled: false },
   unavailable: { marker: "dash" as Marker, color: "var(--cds-border-strong-01)", filled: false },
 };
+
+// Beyond five series the dash steps on by one per lap of the colours, so no two series share both (Phase 5).
+export const dashIndex = (k: number) => (k + Math.floor(k / SERIES.length)) % DASH.length;

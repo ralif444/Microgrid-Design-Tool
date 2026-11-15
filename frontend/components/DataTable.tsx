@@ -5,7 +5,7 @@
 // Each row and its error line share one <tbody>, so a row's test id covers its messages too.
 import { useRef, type KeyboardEvent, type ReactNode } from "react";
 import styles from "./DataTable.module.css";
-import { NOT_A_NUMBER, num } from "./format";
+import { NOT_A_NUMBER, fixed, num } from "./format";
 import { UNIT_TERM, type GlossaryKey } from "./glossary";
 import { Icon } from "./Icon";
 import { useNumberText } from "./NumberField";
@@ -32,8 +32,9 @@ export type RowError = { field?: string | null; message: string };
 
 export const headerText = (c: { header: string; unit?: string }) => (c.unit ? `${c.header} (${c.unit})` : c.header);
 
-function show(v: ReactNode): ReactNode {
-  return typeof v === "number" ? num(v) : v === null || v === undefined ? "—" : v;
+// a bare number in a column with a unit is a result: fixed decimals (audit 2026-11-14 decision 2)
+function show(v: ReactNode, unit?: string): ReactNode {
+  return typeof v === "number" ? (unit ? fixed(v, unit) : num(v)) : v === null || v === undefined ? "—" : v;
 }
 
 // Enter: same column, next row. Escape: restore the value the cell had on focus.
@@ -202,7 +203,7 @@ export function DataTable<R>({
                     {c.edit ? (
                       <EditCell row={r} edit={c.edit} name={`${headerText(c)} of ${rowName(r, k)}`} invalid={errors.some((x) => owner(x.field) === c)} />
                     ) : (
-                      show(c.cell?.(r))
+                      show(c.cell?.(r), c.unit)
                     )}
                   </td>
                 ))}

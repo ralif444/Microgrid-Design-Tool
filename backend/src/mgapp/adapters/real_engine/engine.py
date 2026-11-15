@@ -58,6 +58,7 @@ from mgapp.domain.payloads import (
     StorageEnergy,
     StorageStage,
     Verdict,
+    not_evaluated_message,
 )
 
 log = logging.getLogger("mgapp.real_engine")
@@ -368,8 +369,7 @@ class RealEngine:
             warnings.append(
                 Warning(
                     code=WarningCode.CONSTRAINT_NOT_EVALUATED,
-                    message=f"{len(r.not_evaluated)} check(s) not evaluated: their limit is "
-                    "empty. They are not counted as satisfied.",
+                    message=not_evaluated_message(len(r.not_evaluated)),
                     path="payload.not_evaluated",
                 )
             )

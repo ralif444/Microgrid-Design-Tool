@@ -6,7 +6,7 @@ import { useProject, latestRun } from "../store";
 import { AUTONOMY_OUTCOME, POWER_OUTCOME, socSeries, type BaBank, type BaPayload } from "./battery";
 import { LineChart } from "./charts/LineChart";
 import { DataTable, type DataColumn } from "./DataTable";
-import { fmt } from "./Further";
+import { fixedOr } from "./format";
 
 type SentBank = { inverter_id: string; depth_of_discharge_ratio?: number | null; initial_soc_ratio?: number | null };
 const sentBanks = (r: RunRecord) => ((r.parameters as { banks?: SentBank[] }).banks ?? []);
@@ -14,8 +14,8 @@ const sentBanks = (r: RunRecord) => ((r.parameters as { banks?: SentBank[] }).ba
 // Words for the autonomy cell: hours and clock hour, the end SoC, or the reason; never 0 or blank.
 export function autonomyText(b: BaBank): string {
   const a = b.autonomy;
-  if (a.outcome === "DEPLETED") return `${fmt(a.autonomy_h)} h, runs out during clock hour ${a.depletion_clock_hour}`;
-  if (a.outcome === "NOT_DEPLETED") return `lasts 24 h; end state of charge ${fmt(a.end_soc_ratio)}`;
+  if (a.outcome === "DEPLETED") return `${fixedOr(a.autonomy_h, "h")} h, runs out during clock hour ${a.depletion_clock_hour}`;
+  if (a.outcome === "NOT_DEPLETED") return `lasts 24 h; end state of charge ${fixedOr(a.end_soc_ratio, "ratio")}`;
   return `Not evaluated: ${a.reason}.`;
 }
 
@@ -40,9 +40,9 @@ const COLUMNS: DataColumn<BaBank>[] = [
   { key: "inv", header: "Inverter", cell: (b) => b.inverter_id },
   { key: "bank", header: "Bank", cell: (b) => `${b.bank.series_count} × ${b.bank.parallel_count}` },
   { key: "pow", header: "Power outcome", cell: (b) => POWER_OUTCOME[b.power.outcome].word },
-  { key: "margin", header: "Power margin", unit: "kW", numeric: true, cell: (b) => (b.power.reason ? `Not evaluated: ${b.power.reason}.` : fmt(b.power.margin_kw)) },
+  { key: "margin", header: "Power margin", unit: "kW", numeric: true, cell: (b) => (b.power.reason ? `Not evaluated: ${b.power.reason}.` : fixedOr(b.power.margin_kw, "kW")) },
   { key: "aut", header: "Autonomy outcome", cell: (b) => AUTONOMY_OUTCOME[b.autonomy.outcome].word },
-  { key: "use", header: "Usable energy", unit: "kWh", numeric: true, cell: (b) => fmt(b.autonomy.usable_energy_kwh) },
+  { key: "use", header: "Usable energy", unit: "kWh", numeric: true, cell: (b) => fixedOr(b.autonomy.usable_energy_kwh, "kWh") },
   { key: "text", header: "Autonomy", cell: autonomyText },
 ];
 

@@ -77,7 +77,9 @@ def test_fr_100_s04_s06_s08_prefill_and_run_without_typing(
     expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
 
     step(page, "Constraints")
-    expect(page.get_by_test_id("example-constraints")).to_contain_text("Doc 3 §3.7")
+    expect(page.get_by_test_id("example-constraints")).to_contain_text(
+        "study settings of the reference designs"
+    )
 
     _run_m1(page)
     step(page, "Constraint check (M2)")
@@ -126,8 +128,8 @@ def test_fr_100_s09_to_s12_prefill_and_run(server: Callable[[str], str], page: P
     not_set = page.get_by_text("Not set in the example: enter a value.")
 
     step(page, "Sensitivity (M3a)")
-    expect(page.get_by_label("inverters/INV2/frequency_droop_hz_per_kw")).to_be_checked()
-    expect(page.get_by_label("inverters/INV1/p_setpoint_kw")).not_to_be_checked()
+    expect(page.get_by_label("INV2, P–f droop (Hz/kW)")).to_be_checked()
+    expect(page.get_by_label("INV1, P setpoint (kW)")).not_to_be_checked()
     expect(page.get_by_label("Total line losses (kW)")).to_be_checked()
     expect(_tags(page)).to_have_count(2)
     expect(not_set).to_have_count(1)  # step_relative: no value given (D-92 K231)

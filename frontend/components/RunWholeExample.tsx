@@ -11,6 +11,7 @@ import type { AnalysisRequestBody, AnalysisType, PsPayload, RunRecord, Status } 
 import { adviceInputHash, m1Ref, useProject, useProjectDispatch, type ProjectState, type PsParameters } from "../store";
 import type { ExampleSettings } from "../store/example";
 import { applyOverrides } from "./Further";
+import { statusWord } from "./status-text";
 import { Icon, type IconName } from "./Icon";
 import { SOLVER } from "./useAnalysisCall";
 
@@ -30,7 +31,7 @@ const NO_PS: PsParameters = {
 };
 const OPTIONAL = ["settling"]; // M4b classifies without it (Doc 3 §6.9)
 
-type Outcome = { kind: "pending" | "running" | "skipped" | "error"; text?: string } | { kind: "done"; status: Status };
+type Outcome = { kind: "pending" | "running" | "skipped" | "error"; text?: string } | { kind: "done"; status: Status; word: string };
 
 // What the step sends, or null when the example leaves a required field empty.
 export function stepRequest(
@@ -113,7 +114,7 @@ export function RunWholeExample() {
           },
         });
       }
-      out[i] = { kind: "done", status: res.data.result.status };
+      out[i] = { kind: "done", status: res.data.result.status, word: statusWord(type, res.data.result) };
       show();
       if (res.data.result.status !== "FEASIBLE") {
         setStopped(label);
@@ -141,7 +142,7 @@ export function RunWholeExample() {
                 {label}:{" "}
                 {o.kind === "done" ? (
                   <>
-                    <Icon name={ICON[o.status] ?? "info"} size={16} /> {o.status}
+                    <Icon name={ICON[o.status] ?? "info"} size={16} /> {o.word}
                   </>
                 ) : o.kind === "running" ? (
                   "running…"

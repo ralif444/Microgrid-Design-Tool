@@ -42,9 +42,12 @@ describe("ADR-011 status banner roles and icons (Doc 7 §5)", () => {
 describe("ADR-016 option B area navigation", () => {
   it("puts every step screen in exactly one area", () => {
     const list = areas(true, true);
-    for (const p of ["/project/", "/loads/", "/sizing/", "/network/", "/constraints/", "/power-flow/", "/constraint-check/", "/sweep/", "/cable-sizing/", "/battery/", "/report/", "/runs/"])
+    for (const p of ["/loads/", "/sizing/", "/network/", "/power-flow/", "/constraint-check/", "/sweep/", "/cable-sizing/", "/battery/", "/report/", "/runs/"])
       expect(list.filter((a) => a === areaOf(list, p)).length, p).toBe(1);
     expect(areaOf(list, "/about/")).toBeNull();
+    // retired into the workspace inspector (audit Phase 7): redirects, not screens
+    expect(areaOf(list, "/project/")).toBeNull();
+    expect(areaOf(list, "/constraints/")).toBeNull();
   });
   it("reads the workspace area from ?area=", () => {
     const list = areas();

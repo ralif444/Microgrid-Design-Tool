@@ -8,6 +8,7 @@ Noted 2026-11-14 at the user's request ("we will draft it later on with all of o
 
 - **4.3.7 UI description.** The manuscript has an eight-step stepper on every screen and 17 routes. The app now has header area tabs (Model, Check, Studies, Report), a row of the area's screens, and an 18th route `/workspace/`, which is the landing page. Recorded as Doc 14 D15 (KONFLIK, user-decided 2026-11-14), ADR-016 option B, Doc 7 §9 amendment. The stepper's behaviour is kept elsewhere: stale-M1 blocking (FR-38, FR-40, FR-93) is shown on the Screens row (`step-6-blocked`) and in the Check area; the engine badge is unchanged.
 - **Doc 14 D4** still lists 17 routes from 4.3.7; the thesis text and D4 should be updated together.
+- **4.3.7 S-02 Project overview and S-06 Design constraints** (2026-11-15, audit decision 4, Doc 14 D16): no longer own screens. The workspace inspector edits the same fields ("Project and system": name, description, nominal kV and Hz, counts; "Design limits": every limit, empty = not evaluated). `/project/` and `/constraints/` redirect there. Loads and Network stay as table views for bulk entry, linked from the workspace element list ("Table view").
 
 ## New implementation to describe
 

@@ -8,7 +8,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import type { ValidationReport } from "../api-types";
 import type { ProjectState } from "../store";
-import { m1Ref, useProject } from "../store";
+import { m1Ref, studyRun, useProject } from "../store";
 import { useCableSizingFlag } from "./cable";
 import { Icon } from "./Icon";
 import styles from "./AreaNav.module.css";
@@ -24,11 +24,11 @@ type Step = { n: number | null; label: string; href: string | null };
 // The pipeline order (Doc 7 P1), kept for the step states and the example's "Next" order (FR-102).
 
 export const STEPS: Step[] = [
-  { n: null, label: "Project", href: "/project/" },
+  { n: null, label: "Project", href: "/workspace/?el=system" },
   { n: 1, label: "Loads", href: "/loads/" },
   { n: 2, label: "Sizing advice", href: "/sizing/" },
   { n: 3, label: "Network", href: "/network/" },
-  { n: 4, label: "Constraints", href: "/constraints/" },
+  { n: 4, label: "Constraints", href: "/workspace/?el=limits" },
   { n: 5, label: "Power flow (M1)", href: "/power-flow/" },
   { n: 6, label: "Constraint check (M2)", href: "/constraint-check/" },
   { n: 7, label: "Further analyses", href: null },
@@ -50,6 +50,30 @@ export const CABLE_SIZING: [string, string] = ["/cable-sizing/", "Cable and brea
 export const BATTERY: [string, string] = ["/battery/", "Battery adequacy"];
 
 const FURTHER_TYPES = new Set(["M3a", "M3b", "M3c", "M3d", "M4a", "M4b"]);
+
+// Studies overview (Phase 5): the analysis type behind each study screen.
+export const STUDIES_HOME = "/studies/";
+export const STUDY_TYPE: Record<string, string> = {
+  "/sensitivity/": "M3a",
+  "/sweep/": "M3b",
+  "/scenarios/": "M3c",
+  "/envelope/": "M3d",
+  "/small-signal/": "M4a",
+  "/transient/": "M4b",
+  "/battery/": "BA",
+};
+
+// Per-study mark, as the Model tabs: blocked without a current M1, else done / stale (an older run) / todo.
+export function studyStates(runRecords: ProjectState["runRecords"], report: ValidationReport | null): Record<string, StepState> {
+  const m1 = m1Freshness(m1Ref(runRecords)?.snapshot_hash ?? null, report);
+  const hash = report?.snapshot_hash ?? null;
+  return Object.fromEntries(
+    Object.entries(STUDY_TYPE).map(([h, t]) => {
+      const st = studyRun(runRecords, t, hash).state;
+      return [h, m1 !== "current" ? "blocked" : st === "current" ? "done" : st === "stale" ? "stale" : "todo"];
+    }),
+  );
+}
 
 // One state per STEPS entry; report is the live stage-1 check of the design now in the store.
 export function stepStates(
@@ -81,7 +105,7 @@ type Screen = [href: string, label: string, step: number | null];
 type Area = { key: AreaKey; label: string; href: string; screens: Screen[] };
 
 export function areas(cableSizing = false, battery = false): Area[] {
-  const studies: Screen[] = [...FURTHER, ...(cableSizing ? [CABLE_SIZING] : []), ...(battery ? [BATTERY] : [])].map(([h, l]) => [h, l, null]);
+  const studies: Screen[] = [[STUDIES_HOME, "Overview", null], ...[...FURTHER, ...(cableSizing ? [CABLE_SIZING] : []), ...(battery ? [BATTERY] : [])].map(([h, l]): Screen => [h, l, null])];
   return [
     {
       key: "model",
@@ -89,11 +113,9 @@ export function areas(cableSizing = false, battery = false): Area[] {
       href: HOME,
       screens: [
         [HOME, "Diagram", null],
-        ["/project/", "Project", 0],
         ["/loads/", "Loads", 1],
         ["/sizing/", "Sizing advice", 2],
         ["/network/", "Network", 3],
-        ["/constraints/", "Constraints", 4],
       ],
     },
     {
@@ -106,7 +128,7 @@ export function areas(cableSizing = false, battery = false): Area[] {
         ["/constraint-check/", "Constraint check (M2)", 6],
       ],
     },
-    { key: "studies", label: "Studies", href: FURTHER[0][0], screens: studies },
+    { key: "studies", label: "Studies", href: STUDIES_HOME, screens: studies },
     {
       key: "report",
       label: "Report",
@@ -135,9 +157,7 @@ export function AreaTabsView({ list, current }: { list: Area[]; current: AreaKey
   );
 }
 
-export function AreaScreensView({ area, at, states, m1Missing = false }: { area: Area; at: string; states: StepState[]; m1Missing?: boolean }) {
-  // the studies share one state, the stepper's step 7: shown once after the list
-  const studies = area.key === "studies" ? (states[7] ?? "todo") : null;
+export function AreaScreensView({ area, at, states, m1Missing = false, perScreen = {} }: { area: Area; at: string; states: StepState[]; m1Missing?: boolean; perScreen?: Record<string, StepState> }) {
   const flag = (state: StepState, testId?: string) =>
     (state === "stale" || state === "blocked") && (
       <Tag type={state === "stale" ? "warm-gray" : "cool-gray"} size="sm" renderIcon={() => <Icon name={state === "stale" ? "clock" : "ban"} />} className={styles.flag} data-testid={testId}>
@@ -149,12 +169,12 @@ export function AreaScreensView({ area, at, states, m1Missing = false }: { area:
     <nav aria-label="Screens" className={styles.screens}>
       <ul aria-label={area.label}>
         {area.screens.map(([h, label, step]) => {
-          const state = step === null ? null : (states[step] ?? "todo");
+          const state = step === null ? (perScreen[h] ?? null) : (states[step] ?? "todo");
           return (
             <li key={h} data-state={state ?? undefined}>
               <Link href={h} aria-current={h === at || (!h.startsWith(HOME) && at.startsWith(h)) ? "page" : undefined}>
                 {state === "done" && <Icon name="check" size={12} />}
-                {label}
+                <CodedLabel text={label} />
               </Link>
               {/* state words sit beside the link, so its name stays the screen name */}
               {state === "done" && <span className="sr-only">done</span>}
@@ -162,7 +182,6 @@ export function AreaScreensView({ area, at, states, m1Missing = false }: { area:
             </li>
           );
         })}
-        {studies && (studies === "stale" || studies === "blocked") && <li className={styles.note}>{flag(studies)}</li>}
       </ul>
     </nav>
   );
@@ -185,5 +204,18 @@ export function AreaScreens() {
   const { state, area, at } = useArea();
   const report = useValidation(state.design);
   const states = state.project ? stepStates(state, report) : STEPS.map(() => "todo" as StepState);
-  return area ? <AreaScreensView area={area} at={at} states={states} m1Missing={!m1Ref(state.runRecords)} /> : null;
+  const perScreen = area?.key === "studies" && state.project ? studyStates(state.runRecords, report) : {};
+  return area ? <AreaScreensView area={area} at={at} states={states} m1Missing={!m1Ref(state.runRecords)} perScreen={perScreen} /> : null;
+}
+
+// "Sensitivity (M3a)" → name, then the code as a smaller secondary label (audit D-26).
+export function CodedLabel({ text }: { text: string }) {
+  const m = /^(.*\S)\s+(\((?:M\d\w?|PS|CB|BA)\))$/.exec(text);
+  return m ? (
+    <>
+      {m[1]} <span className="code-label">{m[2]}</span>
+    </>
+  ) : (
+    <>{text}</>
+  );
 }

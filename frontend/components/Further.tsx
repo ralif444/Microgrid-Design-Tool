@@ -1,7 +1,11 @@
 "use client";
 // Shared parts of the further-analysis screens S-09..S-11 (Doc 7 §6.5, Doc 9 D-56).
 import type { AnalysisRequestBody, AnalysisResponse, AnalysisType, OutputMetric, ProjectSnapshot, RunRecord } from "../api-types";
-import { latestRun, m1Ref, useProject, useProjectDispatch } from "../store";
+import { m1Ref, studyRun, useProject, useProjectDispatch } from "../store";
+import { Icon } from "./Icon";
+import styles from "./Further.module.css";
+import { FIELD_NAME, fieldName } from "./elementFields";
+export { fieldName };
 import { num } from "./format";
 import { SOLVER, useAnalysisCall } from "./useAnalysisCall";
 import { m1Freshness, useValidation } from "./useValidation";
@@ -52,6 +56,29 @@ const SUFFIX: [string, string][] = [
   ["_kvar", "kvar"], ["_kw", "kW"], ["_kv", "kV"], ["_hz", "Hz"], ["_km", "km"], ["_s", "s"], ["_a", "A"],
 ];
 export const unitOf = (path: string) => SUFFIX.find(([s]) => path.endsWith(s))?.[1] ?? "1";
+
+// "inverters/INV1/rated_kva" → "INV1, Rating"; paramLabel adds the unit: "INV1, Rating (kVA)".
+export const paramName = (path: string) => {
+  const [, id, f] = path.split("/");
+  return f ? `${id}, ${fieldName(f)}` : path;
+};
+export const paramUnit = (path: string) => FIELD_NAME[path.split("/")[2] ?? ""]?.[1] ?? unitOf(path);
+export const paramLabel = (path: string) => `${paramName(path)} (${paramUnit(path)})`;
+
+// <option>s of a parameter picker, grouped per element; the value stays the path the request needs.
+export function ParamOptions({ paths }: { paths: string[] }) {
+  const groups = new Map<string, string[]>();
+  for (const pp of paths) groups.set(pp.split("/")[1], [...(groups.get(pp.split("/")[1]) ?? []), pp]);
+  return [...groups].map(([id, pps]) => (
+    <optgroup key={id} label={id}>
+      {pps.map((pp) => (
+        <option key={pp} value={pp}>
+          {paramLabel(pp)}
+        </option>
+      ))}
+    </optgroup>
+  ));
+}
 
 export function applyOverrides(d: ProjectSnapshot, overrides: { parameter_path: string; value: number }[]): ProjectSnapshot {
   let out = d;
@@ -105,14 +132,15 @@ export function useDependentRun(type: AnalysisType) {
   const report = useValidation(design);
   const fresh = m1Freshness(ref?.snapshot_hash ?? null, report);
   const { busy, error, setError, call } = useAnalysisCall();
-  const resp = asResponse(latestRun(runRecords, type, report?.snapshot_hash ?? null));
+  const shown = studyRun(runRecords, type, report?.snapshot_hash ?? null);
+  const resp = asResponse(shown.record);
   async function run(extra: Pick<AnalysisRequestBody, "parameters" | "scenarios">) {
     if (!ref) return;
     const data = await call(type, { project_snapshot: design, solver_config: SOLVER, depends_on: ref, ...extra });
     if (data) dispatch({ type: "runRecordAdded", record: data.run_record });
   }
   const clearError = () => setError(null);
-  return { design, fresh, busy, resp, error, clearError, run, m2Infeasible: lastM2Infeasible(runRecords) };
+  return { design, fresh, busy, resp, stale: shown.state === "stale", error, clearError, run, m2Infeasible: lastM2Infeasible(runRecords) };
 }
 
 // A stored RunRecord in the shape of a fresh response (Doc 12 X0, FR-93).
@@ -128,3 +156,30 @@ export function InfeasibleNote({ show }: { show: boolean }) {
 }
 
 export const fmt = (v: number | null | undefined) => (v === null || v === undefined ? "—" : String(num(v)));
+
+// O-3: an out-of-date result stays on screen, greyed after this band (Further.module.css), instead of "Not run yet."
+export function OutOfDate({ show }: { show: boolean }) {
+  return show ? (
+    <p role="note" className={styles.outOfDate} data-testid="out-of-date">
+      <Icon name="clock" /> Out of date: the design changed after this run. Re-run.
+    </p>
+  ) : null;
+}
+
+// Run gate (Phase 5): the button stays disabled until the form is complete, and says what is missing.
+export function RunButton({ label, busy, fresh, missing }: { label: string; busy: boolean; fresh: string; missing: string[] }) {
+  return (
+    <p className={styles.run}>
+      <button type="submit" className="primary" disabled={busy || fresh !== "current" || missing.length > 0} aria-busy={busy || undefined} aria-describedby={missing.length ? "run-missing" : undefined}>
+        {busy ? "Running..." : label}
+      </button>
+      {missing.length > 0 && <span id="run-missing">Missing: {missing.join(", ")}.</span>}
+    </p>
+  );
+}
+
+// M4a and M4b need τ_P and τ_Q on every inverter (Doc 3 §3.6); named for the Run button.
+export function tauMissing(d: ProjectSnapshot): string[] {
+  const ids = (d.inverters ?? []).filter((x) => x.tau_p_s == null || x.tau_q_s == null).map((x) => x.id);
+  return ids.length ? [`τ_P and τ_Q on ${ids.join(", ")}`] : [];
+}

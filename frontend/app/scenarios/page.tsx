@@ -11,11 +11,13 @@ import { BarChart } from "../../components/charts/BarChart";
 import { CANNOT_UNDO, useConfirmDelete } from "../../components/ConfirmDelete";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
-import { applyOverrides, fmt, nMinus1, InfeasibleNote, METRICS, numericPaths, unitOf, useDependentRun } from "../../components/Further";
+import { fixed, fixedOr, plural } from "../../components/format";
+import { applyOverrides, nMinus1, InfeasibleNote, OutOfDate, METRICS, numericPaths, ParamOptions, paramLabel, paramName, paramUnit, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
+import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import { useProject, useProjectDispatch, type Scenario } from "../../store";
@@ -38,9 +40,9 @@ function OverrideEditor({ sc, paths }: { sc: Scenario; paths: string[] }) {
       <ul aria-label={`Overrides of ${sc.name}`}>
         {sc.overrides.map((o) => (
           <li key={o.parameter_path}>
-            {o.parameter_path} = {o.value} {unitOf(o.parameter_path)}{" "}
+            {paramName(o.parameter_path)} = {o.value} {paramUnit(o.parameter_path)}{" "}
             <button type="button" onClick={() => set(sc.overrides.filter((x) => x !== o))}>
-              Remove {o.parameter_path}
+              Remove {paramLabel(o.parameter_path)}
             </button>
           </li>
         ))}
@@ -49,13 +51,11 @@ function OverrideEditor({ sc, paths }: { sc: Scenario; paths: string[] }) {
         <label htmlFor={`path-${sc.id}`}>Change in {sc.name}</label>{" "}
         <select id={`path-${sc.id}`} value={path} onChange={(e) => setPath(e.target.value)}>
           <option value="">Choose…</option>
-          {paths.map((pp) => (
-            <option key={pp}>{pp}</option>
-          ))}
+          <ParamOptions paths={paths} />
         </select>
       </p>
       <p>
-        <NumberField id={`value-${sc.id}`} label={`New value for ${sc.name}`} unit={path ? unitOf(path) : "—"} value={value} onChange={setValue} />
+        <NumberField id={`value-${sc.id}`} label={`New value for ${sc.name}`} unit={path ? paramUnit(path) : "—"} value={value} onChange={setValue} />
       </p>
       <button
         type="button"
@@ -80,7 +80,7 @@ function Scenarios() {
   const { example } = useProject();
   const { scenarios } = useProject();
   const dispatch = useProjectDispatch();
-  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M3c");
+  const { design, fresh, busy, resp, stale, error, clearError, run, m2Infeasible } = useDependentRun("M3c");
   const [selected, setSelected] = useState<string[]>([]);
   const [name, setName] = useState("");
   const [runLabels, setRunLabels] = useState<Record<string, string>>({});
@@ -102,18 +102,20 @@ function Scenarios() {
     ...results.map((s, k) => ({
       key: s.scenario_id,
       header: `${label(s.scenario_id)} (${s.status})`,
-      cell: ([m]: Row) => {
+      cell: ([m, , unit]: Row) => {
         const d = p?.deltas.find((x) => x.metric === m && x.scenario_id === s.scenario_id);
         const v = KEY[m] ? s.key_metrics[KEY[m]] : null;
         const rel = d?.relative_delta_ratio;
-        return `${KEY[m] ? fmt(v as number | null) : ""}${k > 0 && d ? ` (difference ${fmt(d.delta)} ${d.unit}${rel === null || rel === undefined ? "" : `, relative ${fmt(rel)} ratio`})` : ""}`;
+        return `${KEY[m] ? fixedOr(v as number | null, unit) : ""}${k > 0 && d ? ` (difference ${fixed(d.delta, d.unit)} ${d.unit}${rel === null || rel === undefined ? "" : `, relative ${fixed(rel, "ratio")} ratio`})` : ""}`;
       },
     })),
   ];
   return (
     <>
       <div className={styles.head}>
-        <h1>Scenarios and comparison (M3c)</h1>
+        <h1>
+          Scenarios and comparison <span className="code-label">(M3c)</span>
+        </h1>
         <M1FreshnessBadge f={fresh} />
       </div>
       <ExampleGuide screen="scenarios" />
@@ -121,10 +123,12 @@ function Scenarios() {
       <InfeasibleNote show={m2Infeasible} />
       {example && (
         <p data-testid="example-scenarios">
-          Example mode: the scenarios come from the guided example&apos;s Project file (designs D2S and D2H of Doc 13 §4). The
-          first, D2 base, is the reference of the comparison (Doc 3 §6.6).
+          Example mode: the scenarios come from the guided example&apos;s Project file (the stressed design D2S and the
+          near-limit design D2H of the validation plan). The first, D2 base, is the reference of the comparison.
         </p>
       )}
+      <div className={styles.study}>
+      <div>
       <form
         aria-label="New scenario"
         className={styles.form}
@@ -152,7 +156,7 @@ function Scenarios() {
                 checked={selected.includes(sc.id)}
                 onChange={() => setSelected(selected.includes(sc.id) ? selected.filter((x) => x !== sc.id) : [...selected, sc.id])}
               />{" "}
-              {sc.name} ({sc.overrides.length} change(s))
+              {sc.name} ({plural(sc.overrides.length, "change")})
             </label>
           </h2>
           <OverrideEditor sc={sc} paths={paths} />
@@ -177,8 +181,13 @@ function Scenarios() {
         </button>
       </p>
       {inverterCount < 2 && <p>N−1 needs at least two inverters.</p>}
+      </div>
+      <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
-      {r && <StatusBanner type="M3c" result={r} />}
+      <OutOfDate show={stale} />
+      {resp && r && (
+        <ResultSheet record={resp.run_record}>
+          <StatusBanner type="M3c" result={r} />
       {p && resp && (
         <>
           {charted.map(([m, text, unit]) => (
@@ -203,12 +212,13 @@ function Scenarios() {
             rowKey={([m]) => m}
             rowName={([, text]) => text}
           />
-          <p className={styles.record}>
-            RunRecord <code>{resp.run_record.record_id}</code>, engine {resp.run_record.engine_kind ?? "not called"}.
-          </p>
         </>
       )}
+        </ResultSheet>
+      )}
       {!resp && <EmptyState title="Not compared yet.">Select two or more Scenarios and compare them, or run the N−1 check.</EmptyState>}
+      </div>
+      </div>
       <ExampleNext screen="scenarios" ready={nextReady(r?.status)} />
       {dialog}
     </>

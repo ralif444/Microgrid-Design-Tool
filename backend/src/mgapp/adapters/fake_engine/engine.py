@@ -17,7 +17,7 @@ from typing import Any
 from mgapp.adapters.fake_engine import payloads
 from mgapp.domain.contract import AnalysisRequest, AnalysisResult, EngineIdentity, Warning
 from mgapp.domain.enums import AnalysisType, EngineKind, Status, StatusCode, WarningCode
-from mgapp.domain.payloads import Verdict
+from mgapp.domain.payloads import Verdict, not_evaluated_message
 from mgapp.domain.profile import HOUR_AXIS, hour_peak_warning
 
 # Version of the canned behaviour; bump when canned outputs change (RunRecord engine_version).
@@ -140,8 +140,7 @@ def build_result(
         warnings.append(
             Warning(
                 code=WarningCode.CONSTRAINT_NOT_EVALUATED,
-                message=f"{len(payload['not_evaluated'])} check(s) not evaluated: their limit is "
-                "empty. They are not counted as satisfied.",
+                message=not_evaluated_message(len(payload["not_evaluated"])),
                 path="payload.not_evaluated",
             )
         )

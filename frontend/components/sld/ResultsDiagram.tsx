@@ -27,7 +27,9 @@ export function ResultsDiagram({
   const [show, setShow] = useState(true);
   const on = show && fresh === "current" && sld.has.m1;
   const reason =
-    fresh === "stale"
+    fresh === "checking"
+      ? null
+      : fresh === "stale"
       ? "Outdated: design changed after this run. Re-run M1."
       : fresh === "missing"
         ? "No power-flow result yet. Run M1 to show results on the diagram."

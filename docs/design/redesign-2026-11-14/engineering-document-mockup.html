@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Engineering document identity</title>
+<!-- Mockup only (audit 2026-11-14, open question 5). Two variants of one result: the D2 constraint check.
+     Values are from the guided example D2 run on the real engine, 2026-11-14 (screens /constraint-check/
+     and /power-flow/); m_inv, m_line from guided-d2.example.json; near-limit 0.05 from /api/meta.
+     The M2 run id was not captured, so it is shown as a placeholder. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --canvas: #e4e7ea; --paper: #ffffff; --surface: #f7f8f9;
+  --ink: #1b2733; --ink-2: #5b6875; --rule: #c3c9cf; --rule-2: #d6dade; --frame: #1b2733;
+  --act: #1f5fbf; --act-soft: #dfe9f8;
+  --bad: #b53b0b; --warn: #8a5a0b; --warn-soft: #f6ead0;
+  --bar: #5b6875; --bar-track: #e4e7ea;
+  --sans: "IBM Plex Sans", system-ui, sans-serif; --cond: "IBM Plex Sans Condensed", var(--sans); --mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+:root[data-theme="dark"] {
+  --canvas: #1c2227; --paper: #2c343c; --surface: #252c33;
+  --ink: #e6eaed; --ink-2: #9aa6b2; --rule: #47525d; --rule-2: #39434c; --frame: #9aa6b2;
+  --act: #7fb0f5; --act-soft: #2b3d55; --bad: #f0834a; --warn: #e0b050; --warn-soft: #443619;
+  --bar: #9aa6b2; --bar-track: #39434c;
+}
+* { box-sizing: border-box; }
+html { background: var(--canvas); }
+body { margin: 0; font: 14px/1.45 var(--sans); color: var(--ink); background: var(--canvas); font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--act); outline-offset: 2px; }
+
+/* mockup chrome: not part of the proposal */
+.chrome { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding: 12px 24px; background: var(--surface); border-bottom: 1px solid var(--rule-2); }
+.chrome h1 { margin: 0; font-size: 15px; font-weight: 600; }
+.chrome p { margin: 0; color: var(--ink-2); font-size: 13px; flex: 1 1 320px; }
+.seg { display: inline-flex; border: 1px solid var(--rule); }
+.seg button { border: 0; background: none; padding: 6px 12px; font: inherit; color: var(--ink-2); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); font-weight: 500; }
+
+main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 64px; }
+.variant[hidden] { display: none; }
+.why { max-width: 70ch; margin: 0 0 16px; color: var(--ink-2); font-size: 13px; }
+.why b { color: var(--ink); font-weight: 600; }
+
+/* shared result vocabulary */
+.num { text-align: right; white-space: nowrap; }
+.u { color: var(--ink-2); font-size: 12px; margin-left: 3px; }
+table.data { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.data th { font: 500 12px/1.3 var(--cond); color: var(--ink-2); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--frame); vertical-align: bottom; }
+table.data th.num { text-align: right; }
+table.data td { padding: 5px 8px; border-bottom: 1px solid var(--rule-2); }
+table.data tr.tight td { background: var(--surface); }
+table.data tr.tight td:first-child { box-shadow: inset 3px 0 0 var(--ink); }
+.el { color: var(--act); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.meter { display: inline-grid; grid-template-columns: 64px auto; align-items: center; gap: 8px; }
+.meter i { position: relative; display: block; height: 6px; background: var(--bar-track); }
+.meter i b { position: absolute; inset: 0 auto 0 0; background: var(--bar); }
+.meter i s { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--warn); } /* near-limit line at 0.05 */
+.st { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.st svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2; }
+.ne { color: var(--ink-2); }
+
+/* ========== Variant A: drawing sheet ========== */
+.sheet { position: relative; background: var(--paper); border: 1px solid var(--frame); padding: 0; }
+.sheet::before { content: ""; position: absolute; inset: 6px; border: 2px solid var(--frame); pointer-events: none; }
+.sheet-body { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 0; padding: 18px; }
+.sheet-main { padding: 18px 22px 22px; border-right: 1px solid var(--rule); }
+.sheet-side { display: grid; grid-template-rows: auto 1fr auto; }
+
+.verdict { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; align-items: baseline; padding-bottom: 16px; border-bottom: 1px solid var(--frame); }
+.verdict .word { font: 600 28px/1.1 var(--cond); letter-spacing: 0.01em; }
+.verdict .word svg { width: 20px; height: 20px; margin-right: 8px; vertical-align: -2px; fill: none; stroke: currentColor; stroke-width: 2.4; }
+.verdict p { margin: 0; color: var(--ink-2); }
+.verdict p b { color: var(--ink); font-weight: 500; }
+
+.figs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0; border-bottom: 1px solid var(--rule); }
+.figs div { padding: 12px 14px 12px 0; }
+.figs div + div { padding-left: 14px; border-left: 1px solid var(--rule-2); }
+.figs dt { font: 500 12px/1.3 var(--cond); color: var(--ink-2); }
+.figs dd { margin: 2px 0 0; font-size: 20px; font-weight: 500; }
+.figs dd small { display: block; font-size: 12px; color: var(--ink-2); font-weight: 400; }
+
+.sec { margin-top: 20px; }
+.sec h3 { display: flex; align-items: baseline; gap: 10px; margin: 0 0 6px; font: 600 13px/1.3 var(--cond); }
+.sec h3 span { font-weight: 400; color: var(--ink-2); }
+.notev { margin: 8px 0 0; font-size: 13px; color: var(--ink-2); }
+
+.basis { padding: 14px 16px; border-bottom: 1px solid var(--rule); font-size: 13px; }
+.basis h4, .rev h4 { margin: 0 0 8px; font: 600 12px/1.3 var(--cond); color: var(--ink-2); }
+.basis dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 0; }
+.basis dt { color: var(--ink-2); }
+.basis dd { margin: 0; text-align: right; white-space: nowrap; }
+.basis .src { margin: 10px 0 0; font-size: 12px; color: var(--ink-2); }
+.rev { padding: 14px 16px; font-size: 12px; }
+.rev table { width: 100%; border-collapse: collapse; }
+.rev th { font: 500 11px var(--cond); color: var(--ink-2); text-align: left; padding: 3px 4px; border-bottom: 1px solid var(--rule); }
+.rev td { padding: 3px 4px; border-bottom: 1px solid var(--rule-2); }
+.rev .stale td { color: var(--ink-2); }
+
+.tblock { display: grid; grid-template-columns: 1fr 1fr; border-top: 2px solid var(--frame); font-size: 12px; }
+.tblock > div { padding: 6px 10px; border-bottom: 1px solid var(--rule); }
+.tblock > div:nth-child(odd) { border-right: 1px solid var(--rule); }
+.tblock .wide { grid-column: 1 / -1; border-right: 0 !important; }
+.tblock label { display: block; font: 500 10.5px/1.2 var(--cond); color: var(--ink-2); }
+.tblock b { display: block; font-weight: 500; font-size: 13px; }
+.tblock .title b { font: 600 16px/1.25 var(--cond); }
+.tblock .id { font-family: var(--mono); font-size: 12px; }
+.tblock .ph { color: var(--ink-2); font-family: var(--mono); }
+
+/* ========== Variant B: calculation sheet ========== */
+.calc { background: var(--paper); border: 1px solid var(--rule); }
+.calc-head { display: grid; grid-template-columns: 2fr 1.4fr 1fr 1fr 1fr; border-bottom: 2px solid var(--frame); font-size: 12px; }
+.calc-head > div { padding: 8px 12px; border-right: 1px solid var(--rule); }
+.calc-head > div:last-child { border-right: 0; }
+.calc-head label { display: block; font: 500 10.5px/1.2 var(--cond); color: var(--ink-2); }
+.calc-head b { font-weight: 500; font-size: 13px; }
+.calc-head .subject b { font: 600 15px/1.3 var(--cond); }
+.calc-body { display: grid; grid-template-columns: 132px minmax(0, 1fr); }
+.clause { display: contents; }
+.gutter { padding: 16px 12px 16px 16px; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule-2); font-size: 12px; color: var(--ink-2); }
+.gutter .n { display: block; font: 600 18px/1 var(--cond); color: var(--ink); margin-bottom: 6px; }
+.gutter .ref { display: block; margin-top: 2px; }
+.text { padding: 16px 22px 18px; border-bottom: 1px solid var(--rule-2); }
+.text h3 { margin: 0 0 8px; font: 600 14px/1.3 var(--cond); }
+.text p { margin: 0 0 6px; max-width: 75ch; }
+.stmt { font-size: 18px; font-weight: 500; }
+.stmt .st svg { width: 16px; height: 16px; }
+.given { display: grid; grid-template-columns: repeat(4, max-content); gap: 4px 28px; margin: 0; font-size: 13px; }
+.given dt { color: var(--ink-2); }
+.given dd { margin: 0 0 6px; font-size: 16px; font-weight: 500; }
+.calc-foot { display: flex; flex-wrap: wrap; gap: 6px 24px; padding: 8px 16px; font-size: 12px; color: var(--ink-2); border-top: 2px solid var(--frame); }
+.calc-foot .id { font-family: var(--mono); }
+
+@media (max-width: 900px) {
+  .sheet-body { grid-template-columns: minmax(0, 1fr); }
+  .sheet-main { border-right: 0; border-bottom: 1px solid var(--rule); }
+  .figs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .calc-head { grid-template-columns: 1fr 1fr; }
+  .calc-body { grid-template-columns: minmax(0, 1fr); }
+  .gutter { border-right: 0; border-bottom: 0; padding-bottom: 0; }
+  .given { grid-template-columns: repeat(2, max-content); }
+  .scroll { overflow-x: auto; }
+}
+@media print { .chrome, .why { display: none; } body, html { background: #fff; } }
+</style>
+</head>
+<body>
+<header class="chrome">
+  <h1>Engineering document identity: two variants</h1>
+  <p>Same result in both: the D2 constraint check (M2), real engine, 2026-11-14. The app header and the area tabs stay as they are; only the result surface changes.</p>
+  <div class="seg" role="group" aria-label="Variant">
+    <button type="button" data-v="a" aria-pressed="true">A. Drawing sheet</button>
+    <button type="button" data-v="b" aria-pressed="false">B. Calculation sheet</button>
+  </div>
+  <div class="seg" role="group" aria-label="Theme">
+    <button type="button" data-t="light" aria-pressed="true">Light</button>
+    <button type="button" data-t="dark" aria-pressed="false">Dark</button>
+  </div>
+</header>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ok" viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></symbol>
+  <symbol id="dash" viewBox="0 0 16 16"><path d="M4 8h8"/></symbol>
+</svg>
+
+<main>
+<!-- ================= A ================= -->
+<section class="variant" id="a" aria-label="Variant A, drawing sheet">
+  <p class="why"><b>A. Drawing sheet.</b> Borrowed from the single-line drawing the engineer already reads: a framed sheet, a title block that replaces the mono run id strings, and a revision table that is the run history of this result. Best when results are printed or put in the thesis as figures.</p>
+  <article class="sheet">
+    <div class="sheet-body">
+      <div class="sheet-main">
+        <div class="verdict">
+          <span class="word"><svg aria-hidden="true"><use href="#ok"/></svg>Feasible</span>
+          <p><b>Every evaluated limit is met.</b> 10 checks pass; 3 checks have no limit and were not evaluated.</p>
+        </div>
+
+        <dl class="figs">
+          <div><dt>Tightest margin</dt><dd>0.255<small>Frequency, lower limit, system</small></dd></div>
+          <div><dt>Lowest bus voltage</dt><dd>0.9858<span class="u">p.u.</span><small>at B2</small></dd></div>
+          <div><dt>System frequency</dt><dd>49.877<span class="u">Hz</span><small>limit 49.750 – 50.250 Hz</small></dd></div>
+          <div><dt>Constraint loadability λ<sub>c</sub></dt><dd>2.034<small>resolution 0.005</small></dd></div>
+        </dl>
+
+        <div class="sec">
+          <h3>Margins, tightest first <span>near limit below 0.05</span></h3>
+          <div class="scroll">
+          <table class="data">
+            <thead><tr><th>Constraint</th><th>Element</th><th class="num">Value</th><th class="num">Limit</th><th class="num">Margin</th><th>Normalised margin</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr class="tight"><td>Frequency, lower limit</td><td>System</td><td class="num">49.877<span class="u">Hz</span></td><td class="num">49.750<span class="u">Hz</span></td><td class="num">0.127<span class="u">Hz</span></td><td><span class="meter"><i><b style="width:25.5%"></b><s style="left:5%"></s></i>0.255</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+              <tr><td>Bus voltage, lower limit</td><td><span class="el">B2</span></td><td class="num">0.9858<span class="u">p.u.</span></td><td class="num">0.9500<span class="u">p.u.</span></td><td class="num">0.0358<span class="u">p.u.</span></td><td><span class="meter"><i><b style="width:35.8%"></b><s style="left:5%"></s></i>0.358</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+              <tr><td>Bus voltage, lower limit</td><td><span class="el">B3</span></td><td class="num">0.9881<span class="u">p.u.</span></td><td class="num">0.9500<span class="u">p.u.</span></td><td class="num">0.0381<span class="u">p.u.</span></td><td><span class="meter"><i><b style="width:38.1%"></b><s style="left:5%"></s></i>0.381</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+              <tr><td>Bus voltage, lower limit</td><td><span class="el">B1</span></td><td class="num">0.9886<span class="u">p.u.</span></td><td class="num">0.9500<span class="u">p.u.</span></td><td class="num">0.0386<span class="u">p.u.</span></td><td><span class="meter"><i><b style="width:38.6%"></b><s style="left:5%"></s></i>0.386</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+              <tr><td>Bus voltage, upper limit</td><td><span class="el">B1</span></td><td class="num">0.9886<span class="u">p.u.</span></td><td class="num">1.0500<span class="u">p.u.</span></td><td class="num">0.0614<span class="u">p.u.</span></td><td><span class="meter"><i><b style="width:61.4%"></b><s style="left:5%"></s></i>0.614</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+              <tr><td>Bus voltage, upper limit</td><td><span class="el">B3</span></td><td class="num">0.9881<span class="u">p.u.</span></td><td class="num">1.0500<span class="u">p.u.</span></td><td class="num">0.0619<span class="u">p.u.</span></td><td><span class="meter"><i><b style="width:61.9%"></b><s style="left:5%"></s></i>0.619</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+              <tr><td>Bus voltage, upper limit</td><td><span class="el">B2</span></td><td class="num">0.9858<span class="u">p.u.</span></td><td class="num">1.0500<span class="u">p.u.</span></td><td class="num">0.0642<span class="u">p.u.</span></td><td><span class="meter"><i><b style="width:64.2%"></b><s style="left:5%"></s></i>0.642</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+              <tr><td>Frequency, upper limit</td><td>System</td><td class="num">49.877<span class="u">Hz</span></td><td class="num">50.250<span class="u">Hz</span></td><td class="num">0.373<span class="u">Hz</span></td><td><span class="meter"><i><b style="width:74.5%"></b><s style="left:5%"></s></i>0.745</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+              <tr><td>Inverter loading</td><td><span class="el">INV1</span></td><td class="num">0.235<span class="u">ratio</span></td><td class="num">1.000<span class="u">ratio</span></td><td class="num">0.765<span class="u">ratio</span></td><td><span class="meter"><i><b style="width:76.5%"></b><s style="left:5%"></s></i>0.765</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+              <tr><td>Inverter loading</td><td><span class="el">INV2</span></td><td class="num">0.235<span class="u">ratio</span></td><td class="num">1.000<span class="u">ratio</span></td><td class="num">0.765<span class="u">ratio</span></td><td><span class="meter"><i><b style="width:76.5%"></b><s style="left:5%"></s></i>0.765</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+            </tbody>
+          </table>
+          </div>
+          <p class="notev"><span class="st ne"><svg aria-hidden="true"><use href="#dash"/></svg>Not evaluated, no limit given:</span> Line current limit (LN1, LN2), Power-balance tolerance. Enter them on Constraints to check them.</p>
+        </div>
+      </div>
+
+      <aside class="sheet-side" aria-label="Sheet data">
+        <div class="basis">
+          <h4>Basis of this check</h4>
+          <dl>
+            <dt>Inverter design margin m<sub>inv</sub></dt><dd>0.20</dd>
+            <dt>Line design margin m<sub>line</sub></dt><dd>0.20</dd>
+            <dt>Bus voltage band</dt><dd>0.95 – 1.05 p.u.</dd>
+            <dt>Frequency band</dt><dd>49.75 – 50.25 Hz</dd>
+            <dt>Inverter loading limit</dt><dd>1.00 of rating</dd>
+            <dt>Near-limit threshold</dt><dd>0.05</dd>
+            <dt>Operating point</dt><dd>M1, current</dd>
+          </dl>
+          <p class="src">Model: balanced 3-phase, islanded, grid-forming droop (assumptions A1–A6).</p>
+        </div>
+        <div class="rev">
+          <h4>Revisions of this result</h4>
+          <table>
+            <thead><tr><th>Rev</th><th>Date</th><th>Change</th><th>Verdict</th></tr></thead>
+            <tbody>
+              <tr><td>B</td><td>2026-11-14</td><td>Current design</td><td>Feasible</td></tr>
+              <tr class="stale"><td>A</td><td colspan="3">earlier run (illustration: rows come from Run history)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tblock">
+          <div class="wide title"><label>Sheet</label><b>Constraint check (M2)</b></div>
+          <div class="wide"><label>Project</label><b>Guided example D2</b></div>
+          <div><label>System</label><b>0.44 kV LL, 50 Hz</b></div>
+          <div><label>Engine</label><b>REAL 0.4.0</b></div>
+          <div><label>Run</label><b class="ph">········</b></div>
+          <div><label>Date</label><b>2026-11-14</b></div>
+          <div><label>App</label><b>0.1.0</b></div>
+          <div><label>Sheet</label><b class="ph">n of N</b></div>
+        </div>
+      </aside>
+    </div>
+  </article>
+</section>
+
+<!-- ================= B ================= -->
+<section class="variant" id="b" aria-label="Variant B, calculation sheet" hidden>
+  <p class="why"><b>B. Calculation sheet.</b> Borrowed from a hand calculation or a design-office calc pad: a header strip, numbered clauses, and a left gutter that says where each input came from. The page reads top to bottom as Given → Check → Result, so a student can follow it and an engineer can audit it.</p>
+  <article class="calc">
+    <div class="calc-head">
+      <div class="subject"><label>Subject</label><b>Constraint check (M2)</b></div>
+      <div><label>Project</label><b>Guided example D2</b></div>
+      <div><label>Engine</label><b>REAL 0.4.0</b></div>
+      <div><label>Date</label><b>2026-11-14</b></div>
+      <div><label>Status</label><b>Current</b></div>
+    </div>
+    <div class="calc-body">
+      <div class="clause">
+        <div class="gutter"><span class="n">1</span>Result</div>
+        <div class="text">
+          <h3>Verdict</h3>
+          <p class="stmt"><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Feasible.</span> Every evaluated limit is met.</p>
+          <p>10 checks pass. 3 checks have no limit and were not evaluated: Line current limit (LN1, LN2), Power-balance tolerance.</p>
+        </div>
+      </div>
+      <div class="clause">
+        <div class="gutter"><span class="n">2</span>Given<span class="ref">from Constraints and Check settings</span></div>
+        <div class="text">
+          <h3>Inputs used</h3>
+          <dl class="given">
+            <div><dt>m<sub>inv</sub></dt><dd>0.20</dd></div>
+            <div><dt>m<sub>line</sub></dt><dd>0.20</dd></div>
+            <div><dt>Bus voltage band</dt><dd>0.95 – 1.05 <span class="u">p.u.</span></dd></div>
+            <div><dt>Frequency band</dt><dd>49.75 – 50.25 <span class="u">Hz</span></dd></div>
+            <div><dt>Inverter loading limit</dt><dd>1.00 <span class="u">of rating</span></dd></div>
+            <div><dt>Near-limit threshold</dt><dd>0.05</dd></div>
+            <div><dt>Operating point</dt><dd>M1, current</dd></div>
+            <div><dt>Model</dt><dd>A1–A6</dd></div>
+          </dl>
+        </div>
+      </div>
+      <div class="clause">
+        <div class="gutter"><span class="n">3</span>Check<span class="ref">tightest first</span></div>
+        <div class="text scroll">
+          <h3>Margins</h3>
+          <table class="data">
+            <thead><tr><th>Constraint</th><th>Element</th><th class="num">Value</th><th class="num">Limit</th><th class="num">Margin</th><th>Normalised</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr class="tight"><td>Frequency, lower limit</td><td>System</td><td class="num">49.877<span class="u">Hz</span></td><td class="num">49.750<span class="u">Hz</span></td><td class="num">0.127<span class="u">Hz</span></td><td><span class="meter"><i><b style="width:25.5%"></b><s style="left:5%"></s></i>0.255</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+              <tr><td>Bus voltage, lower limit</td><td><span class="el">B2</span></td><td class="num">0.9858<span class="u">p.u.</span></td><td class="num">0.9500<span class="u">p.u.</span></td><td class="num">0.0358<span class="u">p.u.</span></td><td><span class="meter"><i><b style="width:35.8%"></b><s style="left:5%"></s></i>0.358</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+              <tr><td>Bus voltage, lower limit</td><td><span class="el">B3</span></td><td class="num">0.9881<span class="u">p.u.</span></td><td class="num">0.9500<span class="u">p.u.</span></td><td class="num">0.0381<span class="u">p.u.</span></td><td><span class="meter"><i><b style="width:38.1%"></b><s style="left:5%"></s></i>0.381</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+              <tr><td>Bus voltage, lower limit</td><td><span class="el">B1</span></td><td class="num">0.9886<span class="u">p.u.</span></td><td class="num">0.9500<span class="u">p.u.</span></td><td class="num">0.0386<span class="u">p.u.</span></td><td><span class="meter"><i><b style="width:38.6%"></b><s style="left:5%"></s></i>0.386</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+              <tr><td>Bus voltage, upper limit</td><td><span class="el">B1</span></td><td class="num">0.9886<span class="u">p.u.</span></td><td class="num">1.0500<span class="u">p.u.</span></td><td class="num">0.0614<span class="u">p.u.</span></td><td><span class="meter"><i><b style="width:61.4%"></b><s style="left:5%"></s></i>0.614</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+              <tr><td>Bus voltage, upper limit</td><td><span class="el">B3</span></td><td class="num">0.9881<span class="u">p.u.</span></td><td class="num">1.0500<span class="u">p.u.</span></td><td class="num">0.0619<span class="u">p.u.</span></td><td><span class="meter"><i><b style="width:61.9%"></b><s style="left:5%"></s></i>0.619</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+              <tr><td>Bus voltage, upper limit</td><td><span class="el">B2</span></td><td class="num">0.9858<span class="u">p.u.</span></td><td class="num">1.0500<span class="u">p.u.</span></td><td class="num">0.0642<span class="u">p.u.</span></td><td><span class="meter"><i><b style="width:64.2%"></b><s style="left:5%"></s></i>0.642</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+              <tr><td>Frequency, upper limit</td><td>System</td><td class="num">49.877<span class="u">Hz</span></td><td class="num">50.250<span class="u">Hz</span></td><td class="num">0.373<span class="u">Hz</span></td><td><span class="meter"><i><b style="width:74.5%"></b><s style="left:5%"></s></i>0.745</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+              <tr><td>Inverter loading</td><td><span class="el">INV1</span></td><td class="num">0.235<span class="u">ratio</span></td><td class="num">1.000<span class="u">ratio</span></td><td class="num">0.765<span class="u">ratio</span></td><td><span class="meter"><i><b style="width:76.5%"></b><s style="left:5%"></s></i>0.765</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+              <tr><td>Inverter loading</td><td><span class="el">INV2</span></td><td class="num">0.235<span class="u">ratio</span></td><td class="num">1.000<span class="u">ratio</span></td><td class="num">0.765<span class="u">ratio</span></td><td><span class="meter"><i><b style="width:76.5%"></b><s style="left:5%"></s></i>0.765</span></td><td><span class="st"><svg aria-hidden="true"><use href="#ok"/></svg>Pass</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="clause">
+        <div class="gutter"><span class="n">4</span>Headroom</div>
+        <div class="text">
+          <h3>How far the load can grow</h3>
+          <p>Constraint loadability λ<sub>c</sub> = <b>2.034</b> (resolution 0.005, Eq. 4.15): the largest load scale at which every point is still feasible.</p>
+          <p>Solution-existence diagnostic λ<sub>s</sub> = 20.456. This is not a stability limit.</p>
+        </div>
+      </div>
+    </div>
+    <div class="calc-foot"><span>Run <span class="id">········</span></span><span>App 0.1.0</span><span>Based on M1 of the current design</span><span>Page n of N in the report</span></div>
+  </article>
+</section>
+</main>
+
+<script>
+for (const b of document.querySelectorAll("[data-v]")) b.addEventListener("click", () => {
+  for (const x of document.querySelectorAll("[data-v]")) x.setAttribute("aria-pressed", String(x === b));
+  for (const s of document.querySelectorAll(".variant")) s.hidden = s.id !== b.dataset.v;
+});
+for (const b of document.querySelectorAll("[data-t]")) b.addEventListener("click", () => {
+  for (const x of document.querySelectorAll("[data-t]")) x.setAttribute("aria-pressed", String(x === b));
+  document.documentElement.dataset.theme = b.dataset.t;
+});
+</script>
+</body>
+</html>

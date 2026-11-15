@@ -13,13 +13,15 @@ import { FEAS } from "../../components/charts/palette";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
 import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
-import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
+import { fixedOr } from "../../components/format";
+import { fmt, InfeasibleNote, OutOfDate, RunButton, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
 import { m3bKpis } from "../../components/kpi";
 import { KpiStrip } from "../../components/KpiStrip";
 import { ConstraintTable } from "../../components/M2Results";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { RequireProject } from "../../components/RequireProject";
+import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import { HOUR_AXIS, worstHours, type Worst } from "../../components/profileHour";
@@ -53,7 +55,7 @@ type PointMetric = "LAMBDA_C" | "ZETA_MIN" | "RE_LAMBDA_DOM" | "INDICATORS";
 const OPTIONAL = new Set<Metric>(["max_q_sharing_error_pu", "lambda_c", "zeta_min", "re_lambda_dom_per_s", "r_tau", "kappa"]);
 
 function Sweep() {
-  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M3b");
+  const { design, fresh, busy, resp, stale, error, clearError, run, m2Infeasible } = useDependentRun("M3b");
   const { example } = useProject();
   const s = example?.settings.screens.sweep;
   const ax = useAxis(design, "", s && { ex: s.fields.axis ?? null, needs: axisNeeds(s.needs_value, "axis") }, !!design.load_profile);
@@ -69,7 +71,7 @@ function Sweep() {
   // the run's own axis decides the hour view, so a later form change does not relabel a result
   const ranHours = (resp?.run_record.parameters as { axis?: { kind?: string } } | undefined)?.axis?.kind === HOUR_AXIS.kind;
   const unit = ranHours ? "h" : ax.unit;
-  const xName = ranHours ? "hour" : ax.name;
+  const xName = ranHours ? "Hour" : ax.name;
 
   const r = resp?.result;
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as M3bPayload) : null;
@@ -77,22 +79,25 @@ function Sweep() {
   const columns: DataColumn<SweepPoint>[] = [
     { key: "v", header: ranHours ? "Hour" : "Value", unit, numeric: true, cell: (pt) => fmt(pt.value) },
     { key: "s", header: "Status", cell: (pt) => pt.status },
-    ...shown.map(([k, name, u]) => ({ key: k, header: name, unit: u, numeric: true, cell: (pt: SweepPoint) => fmt(pt.key_metrics[k]) })),
+    ...shown.map(([k, name, u]) => ({ key: k, header: name, unit: u, numeric: true, cell: (pt: SweepPoint) => fixedOr(pt.key_metrics[k], u) })),
     {
       key: "l",
       header: "Limiting constraint",
-      cell: (pt) => (pt.limiting_constraint ? <ConstraintTable label={`Limiting constraint at ${fmt(pt.value)}`} rows={[pt.limiting_constraint]} /> : "—"),
+      cell: (pt) => (pt.limiting_constraint ? <ConstraintTable label={`Limiting constraint at ${fmt(pt.value)}`} rows={[pt.limiting_constraint]} note={false} /> : "—"),
     },
   ];
   return (
     <>
       <div className={styles.head}>
-        <h1>Sweep (M3b)</h1>
+        <h1>
+          Sweep <span className="code-label">(M3b)</span>
+        </h1>
         <M1FreshnessBadge f={fresh} />
       </div>
       <ExampleGuide screen="sweep" />
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
+      <div className={styles.study}>
       <form
         aria-label="Sweep settings"
         className={styles.form}
@@ -130,12 +135,14 @@ function Sweep() {
         </fieldset>
         <SizeIndicator points={ax.steps} cap={cap} />
         {ex.resetButton}
-        <button type="submit" className="primary" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
-          {busy ? "Running..." : "Run sweep"}
-        </button>
+        <RunButton label="Run sweep" busy={busy} fresh={fresh} missing={ax.missing} />
       </form>
+      <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
-      {r && <StatusBanner type="M3b" result={r} />}
+      <OutOfDate show={stale} />
+      {resp && r && (
+        <ResultSheet record={resp.run_record}>
+          <StatusBanner type="M3b" result={r} />
       {(r?.warnings ?? [])
         .filter((w) => w.code === "PROFILE_PEAK_ABOVE_LOADS")
         .map((w, k) => (
@@ -163,12 +170,13 @@ function Sweep() {
           </p>
           <SweepPlot points={p.points} metric={KEY_METRICS.find(([k]) => k === metric) ?? KEY_METRICS[0]} xName={xName} xUnit={unit} first={p.first_infeasible_value} record={resp.run_record} />
           <DataTable label="Sweep points" caption="Sweep points" columns={columns} rows={p.points} rowKey={(_, k) => k} rowName={(pt) => fmt(pt.value)} />
-          <p className={styles.record}>
-            RunRecord <code>{resp.run_record.record_id}</code>, engine {resp.run_record.engine_kind ?? "not called"}.
-          </p>
         </>
       )}
+        </ResultSheet>
+      )}
       {!resp && <EmptyState title="No sweep run yet.">Choose an axis and run the sweep to see each point&apos;s status and key metrics.</EmptyState>}
+      </div>
+      </div>
       <ExampleNext screen="sweep" ready={nextReady(r?.status)} />
     </>
   );
@@ -185,8 +193,8 @@ function HourSummary({ points, fNominal }: { points: SweepPoint[]; fNominal: num
       caption="Worst hour per key metric (FEASIBLE hours only; frequency by its distance from the nominal)"
       columns={[
         { key: "m", header: "Key metric", cell: (w: Worst) => meta(w.metric)?.[1] ?? w.metric },
-        { key: "h", header: "Worst hour", unit: "h", numeric: true, cell: (w: Worst) => w.hour },
-        { key: "v", header: "Value there", numeric: true, cell: (w: Worst) => `${fmt(w.value)} ${meta(w.metric)?.[2] ?? ""}` },
+        { key: "h", header: "Worst hour", unit: "h", numeric: true, cell: (w: Worst) => String(w.hour) }, // a clock hour, not a duration: no decimals
+        { key: "v", header: "Value there", numeric: true, cell: (w: Worst) => `${fixedOr(w.value, meta(w.metric)?.[2] ?? "")} ${meta(w.metric)?.[2] ?? ""}` },
       ]}
       rows={rows}
       rowKey={(w) => w.metric}

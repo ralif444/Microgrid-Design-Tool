@@ -33,7 +33,7 @@ def test_fr_58_fr_59_report_shows_verdict_constraints_hash_table_chart(
     expect(page.get_by_text("No results yet.")).to_be_visible()
     _m1_m2(page)
     step(page, "Report")
-    expect(page.get_by_test_id("verdict")).to_contain_text("INFEASIBLE")
+    expect(page.get_by_test_id("verdict")).to_contain_text("Limits violated")
     expect(page.get_by_role("table", name="Limiting constraints")).to_contain_text("Violated by")
     expect(page.get_by_role("img", name="Bus voltage (p.u.) bar chart")).to_be_visible()
     expect(page.get_by_role("table", name="Bus voltages")).to_be_visible()
@@ -58,7 +58,7 @@ def test_fr_49_fr_50_fr_53_runs_export_import_rerun_and_project_file(
     expect(rows).to_have_count(1)
 
     with page.expect_download() as dl:
-        rows.first.get_by_role("button", name="Export").click()
+        rows.first.get_by_role("button", name="Export run").click()
     assert re.fullmatch(r"[0-9a-f]+\.mgrun\.json", dl.value.suggested_filename)
     rec = json.loads(Path(dl.value.path()).read_text(encoding="utf-8"))
 
@@ -69,7 +69,7 @@ def test_fr_49_fr_50_fr_53_runs_export_import_rerun_and_project_file(
     expect(page.get_by_test_id("verify-result")).to_contain_text("changed after it was created")
     expect(rows).to_have_count(1)
 
-    rows.first.get_by_role("button", name="Re-run").click()
+    rows.first.get_by_role("button", name="Re-run run").click()
     expect(page.get_by_test_id("rerun-outcome")).to_contain_text("Reproduced")
     expect(rows).to_have_count(2)
 
@@ -102,7 +102,8 @@ def test_fr_83_compare_two_runs(server: Callable[[str], str], page: Page) -> Non
     step(page, "Run history")
     rows = page.get_by_role("table", name="Runs").locator("tbody tr")
     expect(rows).to_have_count(2)
-    ids = [str(rows.nth(k).get_attribute("data-testid")).removeprefix("run-") for k in (0, 1)]
+    run_rows = page.locator('[data-testid^="run-"]')  # one tbody per run
+    ids = [str(run_rows.nth(k).get_attribute("data-testid")).removeprefix("run-") for k in (0, 1)]
     page.get_by_label("First run").select_option(ids[0])
     page.get_by_label("Second run").select_option(ids[1])
     diff = page.get_by_role("table", name="Input differences")

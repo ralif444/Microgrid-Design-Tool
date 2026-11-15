@@ -13,7 +13,7 @@ from playwright.sync_api import Page
 from test_network_m1_m2 import _run_m1
 
 ROUTES = [
-    "workspace", "project", "loads", "sizing", "network", "constraints", "power-flow",
+    "workspace", "loads", "sizing", "network", "power-flow",
     "constraint-check", "sensitivity", "sweep", "scenarios", "envelope", "small-signal",
     "transient", "runs",
     "report", "catalogue",

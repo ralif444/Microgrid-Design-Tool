@@ -6,7 +6,7 @@
 // A null λ is not drawn and is listed as "—" (guideline §1 rule 5).
 import { memo, useMemo } from "react";
 import type { M2Payload, RunRecord } from "../../api-types";
-import { num } from "../format";
+import { fixed, num } from "../format";
 import { ChartFrame } from "./ChartFrame";
 import { MarkerShape, Swatch } from "./marks";
 import { DASH, SERIES, type Marker } from "./palette";
@@ -70,7 +70,7 @@ export const LoadabilityAxis = memo(function LoadabilityAxis({ l, record }: { l:
                   <line x1={x} x2={x} y1={y + 10} y2={AXIS} stroke={SERIES[d.k]} strokeWidth={1.5} strokeDasharray={DASH[d.k]} />
                   <MarkerShape m={d.m} x={x} y={y + 2} color={SERIES[d.k]} filled r={4} />
                   <text x={right ? x - 8 : x + 8} y={y + 6} textAnchor={right ? "end" : "start"}>
-                    {d.name} = {num(d.v)}
+                    {d.name} = {fixed(d.v, "ratio")}
                   </text>
                 </g>
               );

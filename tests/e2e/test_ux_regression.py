@@ -20,7 +20,7 @@ from test_network_m1_m2 import _margins, _run_m1
 
 PALETTE = Path(__file__).parents[2] / "frontend" / "components" / "charts" / "palette.ts"
 ROUTES = [
-    "project", "loads", "sizing", "network", "constraints", "power-flow", "constraint-check",
+    "loads", "sizing", "network", "power-flow", "constraint-check",
     "sensitivity", "sweep", "scenarios", "envelope", "small-signal", "transient", "runs",
     "report", "catalogue", "about",
 ]  # fmt: skip
@@ -37,7 +37,7 @@ def _run_all(page: Page) -> None:
     page.get_by_role("button", name="Run M2").click()
     _ok(page)
     step(page, "Sensitivity (M3a)")
-    page.get_by_label("inverters/INV1/rated_kva").check()
+    page.get_by_label("INV1, Rating (kVA)").check()
     page.get_by_label("System frequency (Hz)").check()
     page.get_by_label("Step (ratio)").fill("0.01")
     page.get_by_role("button", name="Run M3a").click()

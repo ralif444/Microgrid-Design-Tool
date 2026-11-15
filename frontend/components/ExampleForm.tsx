@@ -140,7 +140,7 @@ export const nextReady = (status: Status | undefined) => status === "FEASIBLE" |
 // without a Run button.
 export function ExampleNext({ screen, ready }: { screen: string; ready: boolean }) {
   const { example } = useProject();
-  const i = ORDER.findIndex(([href]) => href === `/${screen}/`);
+  const i = ORDER.findIndex(([href]) => href === `/${screen}/` || href === screen); // screen: a key, or the workspace limits href
   const next = ORDER[i + 1];
   if (!example || !ready || i < 0 || !next) return null;
   return (

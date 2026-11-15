@@ -1,9 +1,10 @@
 "use client";
 // S-07 Power flow (M1) on the Project store design (D-46 K7). Readiness is shown before a run
 // but never blocks it (Doc 7 P6): a run with problems returns INPUT_INVALID listing all issues.
+import { issueWhere } from "../../components/elementFields";
 import Link from "next/link";
 import { useState } from "react";
-import type { M1Payload } from "../../api-types";
+import type { M2Payload, M1Payload } from "../../api-types";
 import { ExampleGuide, ExampleNext, nextReady } from "../../components/ExampleForm";
 import { EmptyState } from "../../components/EmptyState";
 import { asResponse } from "../../components/Further";
@@ -16,10 +17,12 @@ import { KpiStrip } from "../../components/KpiStrip";
 import { M1Results } from "../../components/M1Results";
 import { RequireProject } from "../../components/RequireProject";
 import { ResultsDiagram } from "../../components/sld/ResultsDiagram";
+import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import { SOLVER, useAnalysisCall } from "../../components/useAnalysisCall";
-import { m1Freshness, useValidation } from "../../components/useValidation";
+import { m1Freshness, useValidationState } from "../../components/useValidation";
+import { CheckFailed } from "../../components/M1Freshness";
 import { latestRun, m1Ref, useProject, useProjectDispatch } from "../../store";
 import styles from "./power-flow.module.css";
 
@@ -28,7 +31,8 @@ function PowerFlow() {
   const dispatch = useProjectDispatch();
   const { busy, error, setError, call } = useAnalysisCall();
   const [inspect, setInspect] = useState<ElementRef | null>(null);
-  const report = useValidation(design);
+  const check = useValidationState(design);
+  const report = check.report;
   const resp = asResponse(latestRun(runRecords, "M1", report?.snapshot_hash ?? null));
   const ref = m1Ref(runRecords);
   const fresh = m1Freshness(ref?.snapshot_hash ?? null, report);
@@ -40,10 +44,14 @@ function PowerFlow() {
   }
 
   const payload = resp?.result.status === "FEASIBLE" ? (resp.result.payload as unknown as M1Payload) : null;
+  const r2 = latestRun(runRecords, "M2", report?.snapshot_hash ?? null)?.result;
+  const m2 = r2 && (r2.status === "FEASIBLE" || r2.status === "INFEASIBLE") ? (r2.payload as unknown as M2Payload) : null;
   return (
     <>
       <div className={styles.head}>
-        <h1>Power flow (M1)</h1>
+        <h1>
+          Power flow <span className="code-label">(M1)</span>
+        </h1>
         <button type="button" className="primary" onClick={() => void run()} disabled={busy} aria-busy={busy || undefined}>
           {busy ? "Running..." : "Run M1"}
         </button>
@@ -51,7 +59,9 @@ function PowerFlow() {
       <CheckStrip fresh={fresh} m1={payload} m1Record={m1Record} />
       <ExampleGuide screen="power-flow" />
       <h2>Readiness</h2>
-      {report === null ? (
+      {check.error ? (
+        <CheckFailed error={check.error} onRetry={check.retry} />
+      ) : report === null ? (
         <p className={styles.checking}>Checking the design…</p>
       ) : report.valid ? (
         <p className="all-clear">
@@ -64,7 +74,7 @@ function PowerFlow() {
           <ul aria-label="Readiness warnings">
             {report.issues.map((i, k) => (
               <li key={k}>
-                {[i.entity, i.id, i.field].filter(Boolean).join(" / ") || "Design"}: {i.message}
+                {issueWhere(i)}: {i.message}
               </li>
             ))}
           </ul>
@@ -82,19 +92,16 @@ function PowerFlow() {
             The design changed after the last run. Run M1 again to see the results here.
           </EmptyState>
         ))}
-      {resp && <StatusBanner type="M1" result={resp.result} />}
-      {payload && resp && <KpiStrip label="Power flow key figures" kpis={m1Kpis(payload)} record={resp.run_record} />}
-      <ResultsDiagram fresh={fresh} selected={inspect?.id ?? null} onSelect={setInspect} />
-      {payload && resp && <M1Results p={payload} charts={{ limits: design.design_constraints, record: resp.run_record }} onInspect={setInspect} />}
-      {inspect && <Inspector target={inspect} onClose={() => setInspect(null)} />}
-      {payload && <IndicatorPanel />}
       {resp && (
-        <p className={styles.record}>
-          RunRecord <code data-testid="record-id">{resp.run_record.record_id}</code>, snapshot hash{" "}
-          <code data-testid="snapshot-hash">{resp.run_record.snapshot_hash}</code>, engine{" "}
-          {resp.run_record.engine_kind ?? "not called"}. Runs this session: {runRecords.length}.
-        </p>
+        <ResultSheet record={resp.run_record}>
+          <StatusBanner type="M1" result={resp.result} />
+          {payload && <KpiStrip label="Power flow key figures" kpis={m1Kpis(payload)} record={resp.run_record} />}
+          {payload && <M1Results p={payload} charts={{ limits: design.design_constraints, record: resp.run_record }} onInspect={setInspect} check={{ design, m2 }} />}
+          {payload && <IndicatorPanel />}
+        </ResultSheet>
       )}
+      <ResultsDiagram fresh={fresh} selected={inspect?.id ?? null} onSelect={setInspect} />
+      {inspect && <Inspector target={inspect} onClose={() => setInspect(null)} />}
       {payload && (
         <p className={styles.next}>
           <Link href="/constraint-check/">Continue to the constraint check (M2)</Link>

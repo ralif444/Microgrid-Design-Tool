@@ -10,7 +10,8 @@ import { axisNeeds, SizeIndicator, useAxis, useSweepCap } from "../../components
 import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
 import { ChartFrame } from "../../components/charts/ChartFrame";
 import { EmptyState } from "../../components/EmptyState";
-import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
+import { fixed, fixedOr } from "../../components/format";
+import { fmt, InfeasibleNote, OutOfDate, RunButton, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
 import { Icon, type IconName } from "../../components/Icon";
 import { m3dKpis } from "../../components/kpi";
@@ -18,6 +19,7 @@ import { KpiStrip } from "../../components/KpiStrip";
 import { KIND_WORDS } from "../../components/M2Results";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { RequireProject } from "../../components/RequireProject";
+import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { useProject } from "../../store";
 import { Toast } from "../../components/Toast";
@@ -29,11 +31,11 @@ const CELL: Record<string, [IconName, string, string]> = {
 const cell = (s: string): [IconName, string, string] => CELL[s] ?? ["warn", s.toLowerCase().replace(/_/g, " "), styles.other];
 const limiting = (g: SweepPoint) => {
   const c = g.limiting_constraint;
-  return c ? `${KIND_WORDS[c.kind] ?? c.kind}, ${c.element_id}, normalised margin ${fmt(c.normalised_margin)}` : "none";
+  return c ? `${KIND_WORDS[c.kind] ?? c.kind}, ${c.element_id}, normalised margin ${fixedOr(c.normalised_margin, "ratio")}` : "none";
 };
 
 function Envelope() {
-  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M3d");
+  const { design, fresh, busy, resp, stale, error, clearError, run, m2Infeasible } = useDependentRun("M3d");
   // Example mode (Doc 12 X9, D-92 K230/K231): X axis from the guided example, Y axis left to the user.
   const { example } = useProject();
   const s = example?.settings.screens.envelope;
@@ -48,12 +50,15 @@ function Envelope() {
   return (
     <>
       <div className={styles.head}>
-        <h1>Envelope (M3d)</h1>
+        <h1>
+          Envelope <span className="code-label">(M3d)</span>
+        </h1>
         <M1FreshnessBadge f={fresh} />
       </div>
       <ExampleGuide screen="envelope" />
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
+      <div className={styles.study}>
       <form
         aria-label="Envelope settings"
         className={styles.form}
@@ -72,23 +77,26 @@ function Envelope() {
         </fieldset>
         <SizeIndicator points={points} cap={cap} />
         {ex.resetButton}
-        <button type="submit" className="primary" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
-          {busy ? "Running..." : "Run envelope"}
-        </button>
+        <RunButton label="Run envelope" busy={busy} fresh={fresh} missing={[...x.missing, ...y.missing]} />
       </form>
+      <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
-      {r && <StatusBanner type="M3d" result={r} />}
+      <OutOfDate show={stale} />
+      {resp && r && (
+        <ResultSheet record={resp.run_record}>
+          <StatusBanner type="M3d" result={r} />
       {p && resp && <KpiStrip label="Envelope key figures" kpis={m3dKpis(p)} record={resp.run_record} />}
       {p && resp && (
         <>
-          <p data-testid="feasible-fraction">Feasible fraction: {fmt(p.feasible_fraction * 100)} % of {p.grid.length} points</p>
+          <p data-testid="feasible-fraction">Feasible fraction: {fixed(p.feasible_fraction * 100, "%")} % of {p.grid.length} points</p>
           <StatusGrid p={p} x={x} y={y} record={resp.run_record} />
-          <p className={styles.record}>
-            RunRecord <code>{resp.run_record.record_id}</code>, engine {resp.run_record.engine_kind ?? "not called"}.
-          </p>
         </>
       )}
+        </ResultSheet>
+      )}
       {!resp && <EmptyState title="No envelope run yet.">Choose two axes and run the envelope to see the status of every point.</EmptyState>}
+      </div>
+      </div>
       <ExampleNext screen="envelope" ready={nextReady(r?.status)} />
     </>
   );

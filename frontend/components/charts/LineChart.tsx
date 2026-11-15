@@ -5,10 +5,10 @@
 // Opt-in crosshair (Doc 12 X4, FR-89): snaps to the nearest real sample, lists every series there.
 import { memo, useContext, useId, useMemo, useState, type KeyboardEvent, type PointerEvent } from "react";
 import type { RunRecord } from "../../api-types";
-import { num } from "../format";
+import { fixed, num } from "../format";
 import { ChartFrame, ReportCharts, type LegendItem } from "./ChartFrame";
 import { MarkerShape, Swatch, type Mark } from "./marks";
-import { DASH, DASH_WORD, SERIES } from "./palette";
+import { DASH, DASH_WORD, dashIndex, SERIES } from "./palette";
 import styles from "./charts.module.css";
 import { linearScale, nearestIndex, niceDomain, niceTicks, splitAtNulls } from "./scale";
 
@@ -81,7 +81,7 @@ export const LineChart = memo(function LineChart({
     setAt(nearestIndex(x.map(g.sx), ((e.clientX - box.left) / box.width) * W));
   };
   const band = xband && x.length ? [Math.max(M.l, g.sx(xband.to) - (g.sx(xband.span) - g.sx(0))), g.sx(xband.to)] : null;
-  const items = legend ?? series.map((s, k) => ({ name: s.name, word: DASH_WORD[k % DASH.length], swatch: <Swatch color={SERIES[k % SERIES.length]} dash={DASH[k % DASH.length]} /> }));
+  const items = legend ?? series.map((s, k) => ({ name: s.name, word: DASH_WORD[dashIndex(k)], swatch: <Swatch color={SERIES[k % SERIES.length]} dash={DASH[dashIndex(k)]} /> }));
   return (
     <ChartFrame
       title={title}
@@ -154,7 +154,7 @@ export const LineChart = memo(function LineChart({
                     fill="none"
                     stroke={color}
                     strokeWidth="1.5"
-                    strokeDasharray={DASH[k % DASH.length]}
+                    strokeDasharray={DASH[dashIndex(k)]}
                     points={run.map((i) => `${g.sx(x[i])},${g.sy(s.values[i] as number)}`).join(" ")}
                   />
                   ),
@@ -191,7 +191,7 @@ export const LineChart = memo(function LineChart({
           </strong>
           {series.map((s) => (
             <span key={s.name}>
-              {s.name}: {s.values[at] === null || s.values[at] === undefined ? "—" : `${num(s.values[at] as number)} ${crosshair.unit}`}
+              {s.name}: {s.values[at] === null || s.values[at] === undefined ? "—" : `${fixed(s.values[at] as number, crosshair.unit)} ${crosshair.unit}`}
             </span>
           ))}
         </div>

@@ -20,7 +20,7 @@ describe("M2 FEASIBLE headline (WP 1.7.4)", () => {
     ({ status: "FEASIBLE", status_code: "OK", message: "m", payload: { not_evaluated: Array(notEvaluated).fill({}) } }) as unknown as AnalysisResult;
   it("does not claim every constraint is met when some had no limit", () => {
     expect(bannerText("M2", m2(0)).headline).toBe("The design meets all constraints.");
-    expect(bannerText("M2", m2(13)).headline).toContain("13 check(s) had no limit");
+    expect(bannerText("M2", m2(13)).headline).toContain("13 checks had no limit");
     expect(bannerText("M2", m2(13)).headline).not.toContain("all constraints");
   });
 });

@@ -57,9 +57,9 @@ export function SldFigure({ record }: { record: RunRecord }) {
         </>
       )}
       <figcaption data-testid="sld-caption" className={styles.caption}>
-        {record.analysis_type} · RunRecord {record.record_id} · snapshot {record.snapshot_hash.slice(0, 12)} · engine {record.engine_kind ?? "not called"}
-        {record.result.status !== "FEASIBLE" && ` · ${record.result.status}: no result labels`}
-        {fake && <strong> · {FAKE_CAPTION}</strong>}
+        {record.analysis_type}, RunRecord {record.record_id}, snapshot {record.snapshot_hash.slice(0, 12)}, engine {record.engine_kind ?? "not called"}
+        {record.result.status !== "FEASIBLE" && `; ${record.result.status}: no result labels`}
+        {fake && <strong>. {FAKE_CAPTION}</strong>}
       </figcaption>
       <SldLegend />
       <button

@@ -177,7 +177,7 @@ export function BankPick({ inverter: fixed }: { inverter?: string }) {
   const dispatch = useProjectDispatch();
   const { catalog, checks } = useCatalog();
   const modules = catalog.entries.filter((e) => e.kind === "BATTERY_MODULE" && checks.some((c) => c.entry_id === e.id && c.usable));
-  const [chosen, setInv] = useState("");
+  const [chosen, setInv] = useState(fixed ? "" : (batteryBanks[0]?.inverter_id ?? ""));
   const inv = fixed ?? chosen;
   const current = batteryBanks.find((b) => b.inverter_id === inv) ?? null;
   const [entryId, setEntryId] = useState("");

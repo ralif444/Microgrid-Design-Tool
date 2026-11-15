@@ -114,9 +114,11 @@ def test_w6_area_tabs_replace_the_stepper(server: Callable[[str], str], page: Pa
     expect(page.get_by_role("region", name="Check status")).to_contain_text("Power flow solved")
     expect(page.get_by_test_id("step-6-blocked")).to_have_count(0)
     further = studies(page)
-    expect(further.get_by_role("link", name="Sensitivity (M3a)")).to_have_attribute(
-        "aria-current", "page"
-    )
+    expect(further.get_by_role("link", name="Overview")).to_have_attribute("aria-current", "page")
+    studies_table = page.get_by_role("table", name="Studies")
+    expect(studies_table).to_contain_text("Which parameters move each output metric most?")
+    expect(studies_table.locator("tbody tr")).to_have_count(6)  # no battery bank in this Project
+    expect(studies_table).to_contain_text("Not run")
     step(page, "Transient (M4b)")
     expect(page.get_by_role("heading", name="Transient (M4b)", level=1)).to_be_visible()
     step(page, "Run history")
@@ -171,3 +173,11 @@ def test_w4_inspector_catalogue_entry_and_battery_bank(
     bank.get_by_role("button", name="Remove bank").click()
     page.get_by_role("dialog").get_by_role("button", name="Delete", exact=True).click()
     expect(inv).to_contain_text("No battery bank.")
+
+
+def test_phase7_retired_screens_redirect(server: Callable[[str], str], page: Page) -> None:
+    # audit 2026-11-14 decision 4, Doc 14 D16: old links land on the workspace item
+    base = server("default")
+    for route, item in (("project", "system"), ("constraints", "limits")):
+        page.goto(f"{base}/{route}/")
+        page.wait_for_url(f"**/workspace/?el={item}")

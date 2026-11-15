@@ -29,14 +29,14 @@ def test_fr_28_fr_29_fr_44_fr_30_fr_31_further_analyses(
     _run_m1(page)
 
     step(page, "Sensitivity (M3a)")
-    page.get_by_label("inverters/INV1/rated_kva").check()
+    page.get_by_label("INV1, Rating (kVA)").check()
     page.get_by_label("System frequency (Hz)").check()
     page.get_by_label("Step (ratio)").fill("0.01")
     _numeric_inputs_have_units(page)
     page.get_by_role("button", name="Run M3a").click()
     _status(page, "FEASIBLE")
     expect(page.get_by_role("table", name="Sensitivity of System frequency")).to_contain_text(
-        "inverters/INV1/rated_kva"
+        "INV1, Rating (kVA)"
     )
 
     step(page, "Sweep (M3b)")
@@ -69,11 +69,11 @@ def test_fr_28_fr_29_fr_44_fr_30_fr_31_further_analyses(
     page.get_by_label("New value for Bigger load (kW)").fill("7")
     page.get_by_role("button", name="Add change to Bigger load").click()
     expect(page.get_by_role("list", name="Overrides of Bigger load")).to_contain_text(
-        "loads/L1/p_kw = 7 kW"
+        "L1, Active power P = 7 kW"
     )
     expect(page.get_by_role("button", name="Compare")).to_be_disabled()
-    page.get_by_label("Base (0 change(s))").check()
-    page.get_by_label("Bigger load (1 change(s))").check()
+    page.get_by_label("Base (0 changes)").check()
+    page.get_by_label("Bigger load (1 change)").check()
     page.get_by_role("button", name="Compare").click()
     _status(page, "FEASIBLE")
     expect(page.get_by_role("table", name="Scenario comparison")).to_contain_text("Bigger load")
@@ -97,7 +97,7 @@ def test_fr_32_fr_44_envelope(server: Callable[[str], str], page: Page) -> None:
     _status(page, "FEASIBLE")
     expect(page.get_by_role("table", name="Envelope grid").locator("tbody tr")).to_have_count(2)
     expect(page.get_by_test_id("feasible-fraction")).to_have_text(
-        "Feasible fraction: 100 % of 4 points"
+        "Feasible fraction: 100.0 % of 4 points"
     )
 
     page.get_by_label("X axis: Points (count)").fill("40")
