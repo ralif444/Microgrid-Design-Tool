@@ -9,7 +9,7 @@ import { LineChart } from "../../components/charts/LineChart";
 import { EmptyState } from "../../components/EmptyState";
 import { ExampleGuide, ExampleNext, ExampleTag, nextReady, NotSet, useExampleForm } from "../../components/ExampleForm";
 import { fixedOr } from "../../components/format";
-import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
+import { fmt, InfeasibleNote, OutOfDate, RunButton, tauMissing, useDependentRun } from "../../components/Further";
 import { IndicatorPanel } from "../../components/IndicatorPanel";
 import { m4bKpis } from "../../components/kpi";
 import { KpiStrip } from "../../components/KpiStrip";
@@ -47,7 +47,7 @@ const CLASS_WORDS: Record<string, string> = {
 };
 
 function Transient() {
-  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M4b");
+  const { design, fresh, busy, resp, stale, error, clearError, run, m2Infeasible } = useDependentRun("M4b");
   // Example mode (Doc 12 X9 FR-103, D-92 K232): the Doc 13 §5 disturbances DR-01, TS-02, DR-02 as presets;
   // the first fills the form on arrival, choosing one refills it, any edit makes the values the user's.
   const { example } = useProject();
@@ -140,6 +140,7 @@ function Transient() {
       <ExampleGuide screen="transient" />
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
+      <div className={styles.study}>
       <form
         aria-label="Transient settings"
         className={styles.form}
@@ -237,11 +238,23 @@ function Transient() {
           <NumberField id="st-w" label="Final window" unit="s" value={win} onChange={setWin} />
         </fieldset>
         {presets.length > 0 && ex.resetButton}
-        <button type="submit" className="primary" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
-          {busy ? "Running..." : "Run M4b"}
-        </button>
+        <RunButton
+          label="Run M4b"
+          busy={busy}
+          fresh={fresh}
+          missing={[
+            !element && "Element",
+            kind !== "INVERTER_OUTAGE" && magnitude === null && (kind === "LOAD_SCALING" ? "Scaling factor" : "Step size"),
+            start === null && "Start time",
+            end === null && "Simulation end",
+            kind !== "INVERTER_OUTAGE" && !permanent && duration === null && "Duration",
+            ...tauMissing(design),
+          ].filter((x): x is string => !!x)}
+        />
       </form>
+      <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
+      <OutOfDate show={stale} />
       {r && <StatusBanner type="M4b" result={r} />}
       {p && resp && <KpiStrip label="Transient key figures" kpis={m4bKpis(p)} record={resp.run_record} />}
       {p && resp && (
@@ -283,6 +296,8 @@ function Transient() {
         </>
       )}
       {!resp && <EmptyState title="Not run yet.">Define a disturbance and run M4b to see the time responses and the transient class.</EmptyState>}
+      </div>
+      </div>
       <ExampleNext screen="transient" ready={nextReady(r?.status)} />
     </>
   );

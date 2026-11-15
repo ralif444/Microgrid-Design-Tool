@@ -8,7 +8,7 @@ import { autonomyText, SocChart } from "../../components/BatteryResults";
 import { Toggletip } from "../../components/Term";
 import { EmptyState } from "../../components/EmptyState";
 import { fixedOr } from "../../components/format";
-import { useDependentRun } from "../../components/Further";
+import { OutOfDate, RunButton, useDependentRun } from "../../components/Further";
 import { Icon } from "../../components/Icon";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
@@ -76,7 +76,7 @@ function Row({ b }: { b: BaBank }) {
 
 function Battery() {
   const { batteryBanks } = useProject();
-  const { fresh, busy, resp, error, clearError, run } = useDependentRun("BA");
+  const { fresh, busy, resp, stale, error, clearError, run } = useDependentRun("BA");
   const [startHour, setStartHour] = useState<number | null>(0);
   const r = resp?.result;
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as BaPayload) : null;
@@ -93,6 +93,7 @@ function Battery() {
         <M1FreshnessBadge f={fresh} />
       </div>
       <M1BlockedNote f={fresh} />
+      <div className={further.study}>
       <form
         aria-label="Battery adequacy settings"
         className={further.form}
@@ -104,11 +105,11 @@ function Battery() {
         <p>
           <NumberField id="ba-start-hour" label="Start hour" unit="h" step="1" value={startHour} onChange={setStartHour} />
         </p>
-        <button type="submit" className="primary" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
-          {busy ? "Running..." : "Run battery adequacy"}
-        </button>
+        <RunButton label="Run battery adequacy" busy={busy} fresh={fresh} missing={startHour === null ? ["Start hour"] : []} />
       </form>
+      <div className={further.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
+      <OutOfDate show={stale} />
       {r && <StatusBanner type="BA" result={r} />}
       {p && resp && (
         <>
@@ -167,6 +168,8 @@ function Battery() {
         </>
       )}
       {!resp && <EmptyState title="Not run yet.">Run the battery adequacy check after a current M1.</EmptyState>}
+      </div>
+      </div>
     </>
   );
 }

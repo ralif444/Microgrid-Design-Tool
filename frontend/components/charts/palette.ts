@@ -13,3 +13,6 @@ export const FEAS = {
   infeasible: { marker: "cross" as Marker, color: "var(--role-negative-icon)", filled: false },
   unavailable: { marker: "dash" as Marker, color: "var(--cds-border-strong-01)", filled: false },
 };
+
+// Beyond five series the dash steps on by one per lap of the colours, so no two series share both (Phase 5).
+export const dashIndex = (k: number) => (k + Math.floor(k / SERIES.length)) % DASH.length;

@@ -12,7 +12,7 @@ import { CANNOT_UNDO, useConfirmDelete } from "../../components/ConfirmDelete";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
 import { fixed, fixedOr, plural } from "../../components/format";
-import { applyOverrides, nMinus1, InfeasibleNote, METRICS, numericPaths, ParamOptions, paramLabel, paramName, paramUnit, useDependentRun } from "../../components/Further";
+import { applyOverrides, nMinus1, InfeasibleNote, OutOfDate, METRICS, numericPaths, ParamOptions, paramLabel, paramName, paramUnit, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
@@ -79,7 +79,7 @@ function Scenarios() {
   const { example } = useProject();
   const { scenarios } = useProject();
   const dispatch = useProjectDispatch();
-  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M3c");
+  const { design, fresh, busy, resp, stale, error, clearError, run, m2Infeasible } = useDependentRun("M3c");
   const [selected, setSelected] = useState<string[]>([]);
   const [name, setName] = useState("");
   const [runLabels, setRunLabels] = useState<Record<string, string>>({});
@@ -126,6 +126,8 @@ function Scenarios() {
           near-limit design D2H of the validation plan). The first, D2 base, is the reference of the comparison.
         </p>
       )}
+      <div className={styles.study}>
+      <div>
       <form
         aria-label="New scenario"
         className={styles.form}
@@ -178,7 +180,10 @@ function Scenarios() {
         </button>
       </p>
       {inverterCount < 2 && <p>N−1 needs at least two inverters.</p>}
+      </div>
+      <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
+      <OutOfDate show={stale} />
       {r && <StatusBanner type="M3c" result={r} />}
       {p && resp && (
         <>
@@ -210,6 +215,8 @@ function Scenarios() {
         </>
       )}
       {!resp && <EmptyState title="Not compared yet.">Select two or more Scenarios and compare them, or run the N−1 check.</EmptyState>}
+      </div>
+      </div>
       <ExampleNext screen="scenarios" ready={nextReady(r?.status)} />
       {dialog}
     </>

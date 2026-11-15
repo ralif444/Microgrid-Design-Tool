@@ -11,7 +11,7 @@ import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
 import { ExampleGuide, ExampleNext, nextReady, NotSet, useExampleForm } from "../../components/ExampleForm";
 import { fixedOr } from "../../components/format";
-import { InfeasibleNote, METRICS, numericPaths, paramLabel, shortcutPrefill, useDependentRun } from "../../components/Further";
+import { InfeasibleNote, METRICS, numericPaths, OutOfDate, paramLabel, RunButton, shortcutPrefill, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
 import { Icon } from "../../components/Icon";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
@@ -24,7 +24,7 @@ type Sens = M3aPayload["sensitivities"][number];
 const FLAG = "status differs between the two sides";
 
 function Sensitivity() {
-  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M3a");
+  const { design, fresh, busy, resp, stale, error, clearError, run, m2Infeasible } = useDependentRun("M3a");
   // Example mode (Doc 12 X9, D-92 K230): paths and metrics from the guided example; a path that does not
   // resolve on this Project is dropped (Doc 7 §2.3). The step stays the user's (D-92 K231).
   const ex = useExampleForm<{ parameter_paths: string[] | null; output_metrics: OutputMetric[] | null }>(
@@ -67,6 +67,7 @@ function Sensitivity() {
       <ExampleGuide screen="sensitivity" />
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
+      <div className={styles.study}>
       <form
         aria-label="Sensitivity settings"
         className={styles.form}
@@ -110,13 +111,12 @@ function Sensitivity() {
             note={ex.needs("step_relative") && step === null ? <NotSet /> : undefined}
           />
         </fieldset>
-        {paths.length === 0 && <p>Pick at least one parameter.</p>}
         {ex.resetButton}
-        <button type="submit" className="primary" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
-          {busy ? "Running..." : "Run M3a"}
-        </button>
+        <RunButton label="Run M3a" busy={busy} fresh={fresh} missing={[!paths.length && "a parameter", !metrics.length && "an output metric", step === null && "the step"].filter((x): x is string => !!x)} />
       </form>
+      <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
+      <OutOfDate show={stale} />
       {r && <StatusBanner type="M3a" result={r} />}
       {p &&
         resp &&
@@ -178,6 +178,8 @@ function Sensitivity() {
         </p>
       )}
       {!resp && <EmptyState title="Not run yet.">Pick parameters, output metrics and a step, then run M3a to rank the parameters by effect.</EmptyState>}
+      </div>
+      </div>
       <ExampleNext screen="sensitivity" ready={nextReady(r?.status)} />
     </>
   );

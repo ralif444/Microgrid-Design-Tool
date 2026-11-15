@@ -143,7 +143,7 @@ def test_f3_fr_49_import_verify_rerun_in_another_project(
     runs = page.get_by_role("table", name="Runs").locator("tbody tr")
     expect(runs.first).to_contain_text("FAKE")
     with page.expect_download() as dl:
-        runs.first.get_by_role("button", name="Export").click()
+        runs.first.get_by_role("button", name="Export run").click()
     exported = Path(dl.value.path())
     rec = json.loads(exported.read_text(encoding="utf-8"))
     assert len(rec) == 17  # FR-47 / FR-49: the whole record in one file
@@ -161,7 +161,7 @@ def test_f3_fr_49_import_verify_rerun_in_another_project(
     expect(runs).to_have_count(1)
     expect(page.get_by_role("region", name="Run detail")).to_contain_text(rec["snapshot_hash"])
 
-    runs.first.get_by_role("button", name="Re-run").click()
+    runs.first.get_by_role("button", name="Re-run run").click()
     outcome = page.get_by_test_id("rerun-outcome")
     expect(outcome).to_contain_text("Reproduced")
     expect(outcome).to_contain_text("The original record is unchanged.")

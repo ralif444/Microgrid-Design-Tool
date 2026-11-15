@@ -114,9 +114,11 @@ def test_w6_area_tabs_replace_the_stepper(server: Callable[[str], str], page: Pa
     expect(page.get_by_role("region", name="Check status")).to_contain_text("Power flow solved")
     expect(page.get_by_test_id("step-6-blocked")).to_have_count(0)
     further = studies(page)
-    expect(further.get_by_role("link", name="Sensitivity (M3a)")).to_have_attribute(
-        "aria-current", "page"
-    )
+    expect(further.get_by_role("link", name="Overview")).to_have_attribute("aria-current", "page")
+    studies_table = page.get_by_role("table", name="Studies")
+    expect(studies_table).to_contain_text("Which parameters move each output metric most?")
+    expect(studies_table.locator("tbody tr")).to_have_count(6)  # no battery bank in this Project
+    expect(studies_table).to_contain_text("Not run")
     step(page, "Transient (M4b)")
     expect(page.get_by_role("heading", name="Transient (M4b)", level=1)).to_be_visible()
     step(page, "Run history")

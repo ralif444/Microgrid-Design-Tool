@@ -11,7 +11,7 @@ import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../comp
 import { ChartFrame } from "../../components/charts/ChartFrame";
 import { EmptyState } from "../../components/EmptyState";
 import { fixed, fixedOr } from "../../components/format";
-import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
+import { fmt, InfeasibleNote, OutOfDate, RunButton, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
 import { Icon, type IconName } from "../../components/Icon";
 import { m3dKpis } from "../../components/kpi";
@@ -34,7 +34,7 @@ const limiting = (g: SweepPoint) => {
 };
 
 function Envelope() {
-  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M3d");
+  const { design, fresh, busy, resp, stale, error, clearError, run, m2Infeasible } = useDependentRun("M3d");
   // Example mode (Doc 12 X9, D-92 K230/K231): X axis from the guided example, Y axis left to the user.
   const { example } = useProject();
   const s = example?.settings.screens.envelope;
@@ -57,6 +57,7 @@ function Envelope() {
       <ExampleGuide screen="envelope" />
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
+      <div className={styles.study}>
       <form
         aria-label="Envelope settings"
         className={styles.form}
@@ -75,11 +76,11 @@ function Envelope() {
         </fieldset>
         <SizeIndicator points={points} cap={cap} />
         {ex.resetButton}
-        <button type="submit" className="primary" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
-          {busy ? "Running..." : "Run envelope"}
-        </button>
+        <RunButton label="Run envelope" busy={busy} fresh={fresh} missing={[...x.missing, ...y.missing]} />
       </form>
+      <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
+      <OutOfDate show={stale} />
       {r && <StatusBanner type="M3d" result={r} />}
       {p && resp && <KpiStrip label="Envelope key figures" kpis={m3dKpis(p)} record={resp.run_record} />}
       {p && resp && (
@@ -92,6 +93,8 @@ function Envelope() {
         </>
       )}
       {!resp && <EmptyState title="No envelope run yet.">Choose two axes and run the envelope to see the status of every point.</EmptyState>}
+      </div>
+      </div>
       <ExampleNext screen="envelope" ready={nextReady(r?.status)} />
     </>
   );

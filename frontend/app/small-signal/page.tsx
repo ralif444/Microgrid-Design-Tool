@@ -10,7 +10,7 @@ import { tauInSource } from "../../components/Catalog";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
 import { fixedOr } from "../../components/format";
-import { InfeasibleNote, useDependentRun } from "../../components/Further";
+import { InfeasibleNote, OutOfDate, RunButton, tauMissing, useDependentRun } from "../../components/Further";
 import { IndicatorPanel } from "../../components/IndicatorPanel";
 import { m4aKpis } from "../../components/kpi";
 import { KpiStrip } from "../../components/KpiStrip";
@@ -56,7 +56,7 @@ const EIGEN: DataColumn<EigRow>[] = [
 ];
 
 function SmallSignal() {
-  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M4a");
+  const { design, fresh, busy, resp, stale, error, clearError, run, m2Infeasible } = useDependentRun("M4a");
   const { from, conflict } = tauInSource(design.inverters ?? []);
   const [tauIn, setTauIn] = useState<number | null>(from?.tau_in_s ?? null);
   const [threshold, setThreshold] = useState<number | null>(null);
@@ -75,6 +75,7 @@ function SmallSignal() {
       <ExampleGuide screen="small-signal" />
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
+      <div className={styles.study}>
       <form
         aria-label="Small-signal settings"
         className={styles.form}
@@ -102,11 +103,11 @@ function SmallSignal() {
         <p>
           <NumberField id="damping-threshold" label="Damping pass threshold, optional" unit="ratio" value={threshold} onChange={setThreshold} />
         </p>
-        <button type="submit" className="primary" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
-          {busy ? "Running..." : "Run M4a"}
-        </button>
+        <RunButton label="Run M4a" busy={busy} fresh={fresh} missing={tauMissing(design)} />
       </form>
+      <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
+      <OutOfDate show={stale} />
       {r && <StatusBanner type="M4a" result={r} />}
       {p && resp && <KpiStrip label="Small-signal key figures" kpis={m4aKpis(p, thresholdGiven)} record={resp.run_record} />}
       {p && resp && (
@@ -130,6 +131,8 @@ function SmallSignal() {
         </>
       )}
       {!resp && <EmptyState title="Not run yet.">Run M4a to see the eigenvalues, damping and the stability class.</EmptyState>}
+      </div>
+      </div>
       <ExampleNext screen="small-signal" ready={nextReady(r?.status)} />
     </>
   );

@@ -14,7 +14,7 @@ import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
 import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
 import { fixedOr } from "../../components/format";
-import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
+import { fmt, InfeasibleNote, OutOfDate, RunButton, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
 import { m3bKpis } from "../../components/kpi";
 import { KpiStrip } from "../../components/KpiStrip";
@@ -54,7 +54,7 @@ type PointMetric = "LAMBDA_C" | "ZETA_MIN" | "RE_LAMBDA_DOM" | "INDICATORS";
 const OPTIONAL = new Set<Metric>(["max_q_sharing_error_pu", "lambda_c", "zeta_min", "re_lambda_dom_per_s", "r_tau", "kappa"]);
 
 function Sweep() {
-  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M3b");
+  const { design, fresh, busy, resp, stale, error, clearError, run, m2Infeasible } = useDependentRun("M3b");
   const { example } = useProject();
   const s = example?.settings.screens.sweep;
   const ax = useAxis(design, "", s && { ex: s.fields.axis ?? null, needs: axisNeeds(s.needs_value, "axis") }, !!design.load_profile);
@@ -96,6 +96,7 @@ function Sweep() {
       <ExampleGuide screen="sweep" />
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
+      <div className={styles.study}>
       <form
         aria-label="Sweep settings"
         className={styles.form}
@@ -133,11 +134,11 @@ function Sweep() {
         </fieldset>
         <SizeIndicator points={ax.steps} cap={cap} />
         {ex.resetButton}
-        <button type="submit" className="primary" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
-          {busy ? "Running..." : "Run sweep"}
-        </button>
+        <RunButton label="Run sweep" busy={busy} fresh={fresh} missing={ax.missing} />
       </form>
+      <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
+      <OutOfDate show={stale} />
       {r && <StatusBanner type="M3b" result={r} />}
       {(r?.warnings ?? [])
         .filter((w) => w.code === "PROFILE_PEAK_ABOVE_LOADS")
@@ -172,6 +173,8 @@ function Sweep() {
         </>
       )}
       {!resp && <EmptyState title="No sweep run yet.">Choose an axis and run the sweep to see each point&apos;s status and key metrics.</EmptyState>}
+      </div>
+      </div>
       <ExampleNext screen="sweep" ready={nextReady(r?.status)} />
     </>
   );

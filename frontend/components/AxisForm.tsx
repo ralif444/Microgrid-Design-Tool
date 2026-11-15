@@ -21,6 +21,7 @@ export interface AxisInput {
   steps: number | null;
   fields: ReactNode;
   reset: () => void; // back to the example axis (Doc 12 X9); no-op without one
+  missing: string[]; // what the axis still lacks, named for the Run button
 }
 
 // Example mode (Doc 12 X9, D-92): `ex` is the example axis, `needs` lists what the example leaves
@@ -147,7 +148,14 @@ export function useAxis(design: ProjectSnapshot, prefix = "", example?: AxisExam
       )}
     </>
   );
-  if (hour) return { axis: { ...HOUR_AXIS }, unit, name: "Hour", steps: HOUR_AXIS.step_count, fields, reset };
+  if (hour) return { axis: { ...HOUR_AXIS }, unit, name: "Hour", steps: HOUR_AXIS.step_count, fields, reset, missing: [] };
+  const missing = [
+    kind === "PARAMETER" && !path && "Parameter",
+    kind === "SCALE_FACTOR" && !elementSet.length && "Elements",
+    lo === null && "From",
+    hi === null && "To",
+    steps === null && "Points",
+  ].flatMap((m) => (m ? [`${prefix}${m}`] : []));
   return {
     axis: { ...shape, range_min: lo, range_max: hi, step_count: steps },
     unit,
@@ -160,6 +168,7 @@ export function useAxis(design: ProjectSnapshot, prefix = "", example?: AxisExam
     steps,
     fields,
     reset,
+    missing,
   };
 }
 

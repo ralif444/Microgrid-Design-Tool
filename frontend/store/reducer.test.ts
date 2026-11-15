@@ -4,6 +4,7 @@ import {
   adviceInputHash,
   initialState,
   latestRun,
+  studyRun,
   m1Ref,
   nextId,
   projectReducer,
@@ -144,6 +145,15 @@ describe("network and constraints", () => {
     const m3c = { ...rec("e", "M3c", "h-with-scenarios"), depends_on: { snapshot_hash: "h1" } } as unknown as RunRecord;
     expect(latestRun([m3c], "M3c", "h1")?.record_id).toBe("e");
     expect(latestRun([m3c], "M3c", "h-with-scenarios")).toBeNull();
+  });
+
+  it("studyRun keeps the latest run of a type on screen, marked out of date (O-3)", () => {
+    const rec = (id: string, analysis_type: string, hash: string) => ({ record_id: id, analysis_type, snapshot_hash: hash, result: { status: "FEASIBLE" } }) as unknown as RunRecord;
+    const runs = [rec("a", "M3a", "h1"), rec("b", "M3a", "h2")];
+    expect(studyRun(runs, "M3a", "h2")).toMatchObject({ state: "current", record: { record_id: "b" } });
+    expect(studyRun(runs, "M3a", "h3")).toMatchObject({ state: "stale", record: { record_id: "b" } });
+    expect(studyRun(runs, "M3b", "h3")).toEqual({ state: "none", record: null });
+    expect(studyRun(runs, "M3a", null)).toEqual({ state: "none", record: null }); // hash not known yet
   });
 });
 

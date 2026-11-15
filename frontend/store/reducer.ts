@@ -292,6 +292,16 @@ export function latestRun(runRecords: RunRecord[], type: string, current: string
   return runRecords.findLast((r) => r.analysis_type === type && hash(r) === current) ?? null;
 }
 
+// O-3: the run a study screen shows: the current one, else the latest of its type marked out of date.
+// Null while the design hash is not known yet, so nothing is called out of date before the check answers.
+export type StudyState = "current" | "stale" | "none";
+export function studyRun(runRecords: RunRecord[], type: string, current: string | null): { record: RunRecord | null; state: StudyState } {
+  if (current === null) return { record: null, state: "none" };
+  const now = latestRun(runRecords, type, current);
+  const last = now ?? runRecords.findLast((r) => r.analysis_type === type) ?? null;
+  return { record: last, state: now ? "current" : last ? "stale" : "none" };
+}
+
 // Latest FEASIBLE M1 as the dependency reference for M2 (Doc 3 §5.1 RunRecordRef), or null.
 export function m1Ref(runRecords: RunRecord[]): RunRecordRef | null {
   const rec = runRecords.findLast((r) => r.analysis_type === "M1" && r.result.status === "FEASIBLE");
