@@ -16,6 +16,7 @@ import { KpiStrip } from "../../components/KpiStrip";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
+import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import styles from "../../components/Further.module.css";
@@ -255,7 +256,9 @@ function Transient() {
       <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
       <OutOfDate show={stale} />
-      {r && <StatusBanner type="M4b" result={r} />}
+      {resp && r && (
+        <ResultSheet record={resp.run_record}>
+          <StatusBanner type="M4b" result={r} />
       {p && resp && <KpiStrip label="Transient key figures" kpis={m4bKpis(p)} record={resp.run_record} />}
       {p && resp && (
         <>
@@ -290,10 +293,9 @@ function Transient() {
               record={resp.run_record}
             />
           ))}
-          <p className={styles.record}>
-            RunRecord <code>{resp.run_record.record_id}</code>, engine {resp.run_record.engine_kind ?? "not called"}.
-          </p>
         </>
+      )}
+        </ResultSheet>
       )}
       {!resp && <EmptyState title="Not run yet.">Define a disturbance and run M4b to see the time responses and the transient class.</EmptyState>}
       </div>

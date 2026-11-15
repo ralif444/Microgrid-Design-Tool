@@ -21,6 +21,7 @@ import { KpiStrip } from "../../components/KpiStrip";
 import { ConstraintTable } from "../../components/M2Results";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { RequireProject } from "../../components/RequireProject";
+import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import { HOUR_AXIS, worstHours, type Worst } from "../../components/profileHour";
@@ -139,7 +140,9 @@ function Sweep() {
       <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
       <OutOfDate show={stale} />
-      {r && <StatusBanner type="M3b" result={r} />}
+      {resp && r && (
+        <ResultSheet record={resp.run_record}>
+          <StatusBanner type="M3b" result={r} />
       {(r?.warnings ?? [])
         .filter((w) => w.code === "PROFILE_PEAK_ABOVE_LOADS")
         .map((w, k) => (
@@ -167,10 +170,9 @@ function Sweep() {
           </p>
           <SweepPlot points={p.points} metric={KEY_METRICS.find(([k]) => k === metric) ?? KEY_METRICS[0]} xName={xName} xUnit={unit} first={p.first_infeasible_value} record={resp.run_record} />
           <DataTable label="Sweep points" caption="Sweep points" columns={columns} rows={p.points} rowKey={(_, k) => k} rowName={(pt) => fmt(pt.value)} />
-          <p className={styles.record}>
-            RunRecord <code>{resp.run_record.record_id}</code>, engine {resp.run_record.engine_kind ?? "not called"}.
-          </p>
         </>
+      )}
+        </ResultSheet>
       )}
       {!resp && <EmptyState title="No sweep run yet.">Choose an axis and run the sweep to see each point&apos;s status and key metrics.</EmptyState>}
       </div>

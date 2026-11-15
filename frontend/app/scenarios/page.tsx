@@ -17,6 +17,7 @@ import styles from "../../components/Further.module.css";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
+import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import { useProject, useProjectDispatch, type Scenario } from "../../store";
@@ -184,7 +185,9 @@ function Scenarios() {
       <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
       <OutOfDate show={stale} />
-      {r && <StatusBanner type="M3c" result={r} />}
+      {resp && r && (
+        <ResultSheet record={resp.run_record}>
+          <StatusBanner type="M3c" result={r} />
       {p && resp && (
         <>
           {charted.map(([m, text, unit]) => (
@@ -209,10 +212,9 @@ function Scenarios() {
             rowKey={([m]) => m}
             rowName={([, text]) => text}
           />
-          <p className={styles.record}>
-            RunRecord <code>{resp.run_record.record_id}</code>, engine {resp.run_record.engine_kind ?? "not called"}.
-          </p>
         </>
+      )}
+        </ResultSheet>
       )}
       {!resp && <EmptyState title="Not compared yet.">Select two or more Scenarios and compare them, or run the N−1 check.</EmptyState>}
       </div>

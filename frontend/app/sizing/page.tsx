@@ -10,6 +10,7 @@ import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../comp
 import { fixed, fixedOr, plural } from "../../components/format";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
+import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { SOLVER, useAnalysisCall } from "../../components/useAnalysisCall";
 import {
@@ -198,7 +199,7 @@ function ModuleHint({ eNomKwh }: { eNomKwh: number | null }) {
 }
 
 function Sizing() {
-  const { design, sizingAdvice } = useProject();
+  const { design, sizingAdvice, runRecords } = useProject();
   const dispatch = useProjectDispatch();
   // Last advice first, then the guided example (Doc 12 X9, D-92 K230), else empty.
   const ex = useExampleForm<PsParameters>("sizing", sizingAdvice.at(-1)?.ps_parameters ?? EMPTY);
@@ -275,7 +276,7 @@ function Sizing() {
         )}
       </form>
       {error && <p role="alert">{error}</p>}
-      {resp && <StatusBanner type="PS" result={resp.result} />}
+      {resp && resp.result.status !== "FEASIBLE" && <StatusBanner type="PS" result={resp.result} />}
       {warnings.map((w, k) => (
         <p key={k} role="alert">
           {w.message}
@@ -284,7 +285,8 @@ function Sizing() {
       {!latest ? (
         <p>No advice yet.</p>
       ) : (
-        <>
+        <ResultSheet record={runRecords.find((x) => x.record_id === latest.id) ?? resp?.run_record ?? null}>
+          {resp?.result.status === "FEASIBLE" && <StatusBanner type="PS" result={resp.result} />}
           {stale && (
             <p role="alert" data-testid="advice-stale">
               The loads or settings changed after this advice was made. Run the advice again.
@@ -309,7 +311,7 @@ function Sizing() {
             </div>
           )}
           {latest.state === "ACCEPTED" && <InverterDrafts adviceId={latest.id} plan={latest.result.inverter_plan} />}
-        </>
+        </ResultSheet>
       )}
       <ExampleNext screen="sizing" ready={nextReady(resp?.result.status)} />
     </>

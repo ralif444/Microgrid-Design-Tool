@@ -18,6 +18,7 @@ import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { eigenRows, M4aCharts, type EigRow } from "../../components/M4aCharts";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
+import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import styles from "../../components/Further.module.css";
@@ -108,7 +109,9 @@ function SmallSignal() {
       <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
       <OutOfDate show={stale} />
-      {r && <StatusBanner type="M4a" result={r} />}
+      {resp && r && (
+        <ResultSheet record={resp.run_record}>
+          <StatusBanner type="M4a" result={r} />
       {p && resp && <KpiStrip label="Small-signal key figures" kpis={m4aKpis(p, thresholdGiven)} record={resp.run_record} />}
       {p && resp && (
         <>
@@ -125,10 +128,9 @@ function SmallSignal() {
             <DataTable label="Dominant modes" caption="Dominant modes" columns={DOMINANT} rows={p.dominant_modes} rowKey={(d) => d.eigenvalue_index} rowName={(d) => `#${d.eigenvalue_index}`} />
           )}
           {eig.length > 0 && <DataTable label="Eigenvalues" caption="Eigenvalues and modes (Eq. 4.20)" columns={EIGEN} rows={eig} rowKey={(e) => e.k} rowName={(e) => `#${e.k}`} />}
-          <p className={styles.record}>
-            RunRecord <code>{resp.run_record.record_id}</code>, engine {resp.run_record.engine_kind ?? "not called"}.
-          </p>
         </>
+      )}
+        </ResultSheet>
       )}
       {!resp && <EmptyState title="Not run yet.">Run M4a to see the eigenvalues, damping and the stability class.</EmptyState>}
       </div>

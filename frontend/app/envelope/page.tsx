@@ -19,6 +19,7 @@ import { KpiStrip } from "../../components/KpiStrip";
 import { KIND_WORDS } from "../../components/M2Results";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { RequireProject } from "../../components/RequireProject";
+import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { useProject } from "../../store";
 import { Toast } from "../../components/Toast";
@@ -81,16 +82,17 @@ function Envelope() {
       <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
       <OutOfDate show={stale} />
-      {r && <StatusBanner type="M3d" result={r} />}
+      {resp && r && (
+        <ResultSheet record={resp.run_record}>
+          <StatusBanner type="M3d" result={r} />
       {p && resp && <KpiStrip label="Envelope key figures" kpis={m3dKpis(p)} record={resp.run_record} />}
       {p && resp && (
         <>
           <p data-testid="feasible-fraction">Feasible fraction: {fixed(p.feasible_fraction * 100, "%")} % of {p.grid.length} points</p>
           <StatusGrid p={p} x={x} y={y} record={resp.run_record} />
-          <p className={styles.record}>
-            RunRecord <code>{resp.run_record.record_id}</code>, engine {resp.run_record.engine_kind ?? "not called"}.
-          </p>
         </>
+      )}
+        </ResultSheet>
       )}
       {!resp && <EmptyState title="No envelope run yet.">Choose two axes and run the envelope to see the status of every point.</EmptyState>}
       </div>

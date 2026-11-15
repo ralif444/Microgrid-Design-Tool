@@ -187,3 +187,9 @@ def go_route(page: Page, route: str) -> None:
     else:
         page.get_by_role("banner").locator(f'a[href="/{route}/"]').first.click()
     page.wait_for_url(f"**/{route}/")
+
+
+def run_id(page: Page) -> str:
+    """Full RunRecord id of the first result sheet on screen (title block; audit §8)."""
+    expect(page.get_by_test_id("sheet-run").first).to_be_visible()
+    return page.get_by_test_id("sheet-run").first.get_attribute("title") or ""

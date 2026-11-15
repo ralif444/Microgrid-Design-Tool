@@ -17,6 +17,7 @@ import { Icon } from "../../components/Icon";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
+import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 
@@ -117,7 +118,9 @@ function Sensitivity() {
       <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
       <OutOfDate show={stale} />
-      {r && <StatusBanner type="M3a" result={r} />}
+      {resp && r && (
+        <ResultSheet record={resp.run_record}>
+          <StatusBanner type="M3a" result={r} />
       {p &&
         resp &&
         METRICS.filter(([m]) => p.sensitivities.some((s) => s.metric === m)).map(([m, label, unit]) => {
@@ -172,10 +175,7 @@ function Sensitivity() {
             </section>
           );
         })}
-      {p && resp && (
-        <p className={styles.record}>
-          RunRecord <code>{resp.run_record.record_id}</code>, engine {resp.run_record.engine_kind ?? "not called"}.
-        </p>
+        </ResultSheet>
       )}
       {!resp && <EmptyState title="Not run yet.">Pick parameters, output metrics and a step, then run M3a to rank the parameters by effect.</EmptyState>}
       </div>

@@ -17,6 +17,7 @@ import { KpiStrip } from "../../components/KpiStrip";
 import { M1Results } from "../../components/M1Results";
 import { RequireProject } from "../../components/RequireProject";
 import { ResultsDiagram } from "../../components/sld/ResultsDiagram";
+import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import { SOLVER, useAnalysisCall } from "../../components/useAnalysisCall";
@@ -91,19 +92,16 @@ function PowerFlow() {
             The design changed after the last run. Run M1 again to see the results here.
           </EmptyState>
         ))}
-      {resp && <StatusBanner type="M1" result={resp.result} />}
-      {payload && resp && <KpiStrip label="Power flow key figures" kpis={m1Kpis(payload)} record={resp.run_record} />}
-      <ResultsDiagram fresh={fresh} selected={inspect?.id ?? null} onSelect={setInspect} />
-      {payload && resp && <M1Results p={payload} charts={{ limits: design.design_constraints, record: resp.run_record }} onInspect={setInspect} check={{ design, m2 }} />}
-      {inspect && <Inspector target={inspect} onClose={() => setInspect(null)} />}
-      {payload && <IndicatorPanel />}
       {resp && (
-        <p className={styles.record}>
-          RunRecord <code data-testid="record-id">{resp.run_record.record_id}</code>, snapshot hash{" "}
-          <code data-testid="snapshot-hash">{resp.run_record.snapshot_hash}</code>, engine{" "}
-          {resp.run_record.engine_kind ?? "not called"}. Runs this session: {runRecords.length}.
-        </p>
+        <ResultSheet record={resp.run_record}>
+          <StatusBanner type="M1" result={resp.result} />
+          {payload && <KpiStrip label="Power flow key figures" kpis={m1Kpis(payload)} record={resp.run_record} />}
+          {payload && <M1Results p={payload} charts={{ limits: design.design_constraints, record: resp.run_record }} onInspect={setInspect} check={{ design, m2 }} />}
+          {payload && <IndicatorPanel />}
+        </ResultSheet>
       )}
+      <ResultsDiagram fresh={fresh} selected={inspect?.id ?? null} onSelect={setInspect} />
+      {inspect && <Inspector target={inspect} onClose={() => setInspect(null)} />}
       {payload && (
         <p className={styles.next}>
           <Link href="/constraint-check/">Continue to the constraint check (M2)</Link>

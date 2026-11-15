@@ -13,6 +13,7 @@ import { Icon } from "../../components/Icon";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
+import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import { useProject } from "../../store";
@@ -110,7 +111,9 @@ function Battery() {
       <div className={further.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
       <OutOfDate show={stale} />
-      {r && <StatusBanner type="BA" result={r} />}
+      {resp && r && (
+        <ResultSheet record={resp.run_record}>
+          <StatusBanner type="BA" result={r} />
       {p && resp && (
         <>
           <p data-testid="ba-caveat" className={styles.caveat}>
@@ -162,10 +165,12 @@ function Battery() {
           </p>
           <SocChart p={p} record={resp.run_record} />
           <p className={further.record} data-testid="ba-record">
-            RunRecord <code>{resp.run_record.record_id}</code>, computed by the app from {String(r?.diagnostics?.engine_calls ?? 0)} hourly power flow runs
+            Computed by the app from {String(r?.diagnostics?.engine_calls ?? 0)} hourly power flow runs
             {resp.run_record.engine_kind ? ` (${resp.run_record.engine_kind} engine)` : ""}.
           </p>
         </>
+      )}
+        </ResultSheet>
       )}
       {!resp && <EmptyState title="Not run yet.">Run the battery adequacy check after a current M1.</EmptyState>}
       </div>

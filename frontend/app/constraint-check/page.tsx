@@ -19,6 +19,7 @@ import { lastM2Params, M2_FIELDS, type M2Params } from "../../components/element
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { ResultsDiagram } from "../../components/sld/ResultsDiagram";
+import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import { SOLVER, useAnalysisCall } from "../../components/useAnalysisCall";
@@ -91,18 +92,22 @@ function ConstraintCheck() {
         </button>
       </form>
       {error && <Toast message={error} onDismiss={() => setError(null)} />}
-      {r && <StatusBanner type="M2" result={r} />}
-      {payload && resp && <KpiStrip label="Constraint check key figures" kpis={m2Kpis(payload)} record={resp.run_record} />}
-      {notices.map((w, k) => (
-        <p key={k} data-testid="m2-warning" className="problems">
-          <Icon name="warn" size={20} />
-          {w.message}
-        </p>
-      ))}
-      {r?.status === "INFEASIBLE" && <ConstraintTable label="Limiting constraints" rows={r.limiting_constraints ?? []} shortcut note={false} />}
+      {r && resp && (
+        <ResultSheet record={resp.run_record}>
+          <StatusBanner type="M2" result={r} />
+          {payload && <KpiStrip label="Constraint check key figures" kpis={m2Kpis(payload)} record={resp.run_record} />}
+          {notices.map((w, k) => (
+            <p key={k} data-testid="m2-warning" className="problems">
+              <Icon name="warn" size={20} />
+              {w.message}
+            </p>
+          ))}
+          {r.status === "INFEASIBLE" && <ConstraintTable label="Limiting constraints" rows={r.limiting_constraints ?? []} shortcut note={false} />}
+          {payload && <M2Results p={payload} charts={{ record: resp.run_record }} />}
+        </ResultSheet>
+      )}
       <ResultsDiagram fresh={fresh} checks selected={inspect?.id ?? null} onSelect={setInspect} />
       {inspect && <Inspector target={inspect} onClose={() => setInspect(null)} />}
-      {payload && resp && <M2Results p={payload} charts={{ record: resp.run_record }} />}
       {!resp &&
         fresh === "current" &&
         (runRecords.some((x) => x.analysis_type === "M2") ? (

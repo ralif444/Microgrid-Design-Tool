@@ -2,6 +2,9 @@
    fonts or CDNs (NFR-03); Carbon's reset and component styles come first (app/carbon.css).
    Component looks live in components/*.module.css; this sheet holds element defaults and the few
    global hooks screens still use. */
+/* IBM Plex Sans Condensed (OFL, app/fonts/LICENSE-IBM-Plex.txt): labels of the result sheets */
+@font-face { font-family: "IBM Plex Sans Condensed"; font-weight: 500; font-display: swap; src: url("./fonts/IBMPlexSansCondensed-Medium.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Sans Condensed"; font-weight: 600; font-display: swap; src: url("./fonts/IBMPlexSansCondensed-SemiBold.woff2") format("woff2"); }
 html { color-scheme: light; }
 body {
   margin: 0;
@@ -109,7 +112,7 @@ td, code { overflow-wrap: anywhere; }
   border: var(--border-width) var(--advisory-border-style) var(--role-advisory-edge);
   border-radius: var(--radius-3); background: var(--role-advisory-bg); padding: var(--space-3) var(--space-4); margin: var(--space-4) 0;
 }
-.advice-tag { color: var(--role-advisory-fg); font-weight: var(--weight-semibold); font-size: var(--text-xs); letter-spacing: 0.04em; text-transform: uppercase; }
+.advice-tag { color: var(--role-advisory-fg); font-weight: var(--weight-semibold); font-size: var(--text-xs); font-family: var(--font-cond); } /* sentence case (audit §8) */
 .fake-note { background: var(--role-caution-bg); color: var(--role-caution-fg); border-left: var(--banner-edge) solid var(--role-caution-border); padding: var(--space-1) var(--space-2); }
 .outdated { font-weight: var(--weight-semibold); color: var(--role-negative-fg); }
 tr.focus { outline: var(--focus-width) solid var(--focus-color); background: var(--role-info-bg); }

@@ -18,7 +18,7 @@ import xml.etree.ElementTree as ET
 from collections.abc import Callable
 from pathlib import Path
 
-from flows import enter_design, gui_snapshot, step
+from flows import enter_design, gui_snapshot, run_id, step
 from playwright.sync_api import Page, expect
 from test_network_m1_m2 import _margins, _run_m1
 
@@ -28,19 +28,19 @@ def test_fr_93_result_survives_leaving_and_hides_after_edit(
 ) -> None:
     enter_design(page, server("default"), gui_snapshot())
     _run_m1(page)
-    record = page.get_by_test_id("record-id").inner_text()
+    record = run_id(page)
 
     step(page, "Loads")
     step(page, "Power flow (M1)")
     expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
-    expect(page.get_by_test_id("record-id")).to_have_text(record)
+    expect(page.get_by_test_id("sheet-run")).to_have_attribute("title", record)
 
     step(page, "Network")
     page.get_by_role("tab", name="Inverters").click()
     page.get_by_label("Rating (kVA) of INV1").fill("50")
     step(page, "Power flow (M1)")
     expect(page.get_by_text("No result on this screen.")).to_be_visible()
-    expect(page.get_by_test_id("record-id")).to_have_count(0)
+    expect(page.get_by_test_id("sheet-run")).to_have_count(0)
 
 
 def test_fr_86_show_data_lists_the_payload_rows(server: Callable[[str], str], page: Page) -> None:
@@ -124,11 +124,9 @@ def test_fr_87_fr_88_constraint_check_kpis_and_charts(
     expect(kpis).to_contain_text("solution-existence diagnostic, not a stability limit")
     expect(kpis).to_contain_text("FAKE engine: placeholder values, not engine results.")
 
-    margins = page.get_by_role("img", name="Normalised margin (ratio) bar chart, 2 bars")
-    expect(margins).to_contain_text("Violated (margin < 0)")
     axis = page.get_by_role("img", name="Load scale λ (ratio) axis, 0 markers")
     expect(axis).to_be_visible()
-    for title in ("Normalised margin per constraint", "Loadability along the load scale λ"):
+    for title in ("Loadability along the load scale λ",):
         figure = page.get_by_role("figure").filter(has_text=title)
         expect(figure).to_contain_text("FAKE engine: placeholder, not an engine result")
     page.get_by_role("button", name="Show data: Loadability along the load scale λ").click()
@@ -295,7 +293,6 @@ def test_fr_88_report_charts_are_static_and_fit_a4(
     step(page, "Report")
     for name in (
         "Inverter loading",
-        "Normalised margin per constraint",
         "Loadability along the load scale λ",
         "Eigenvalues in the complex plane",
     ):
@@ -346,7 +343,7 @@ def test_fr_92_chart_svg_download_carries_the_caption(
 ) -> None:
     enter_design(page, server("default"), gui_snapshot())
     _run_m1(page)
-    record = page.get_by_test_id("record-id").inner_text()
+    record = run_id(page)
     with page.expect_download() as dl:
         page.get_by_role("button", name="Download SVG: Inverter loading").click()
     assert dl.value.suggested_filename == f"inverter-loading-{record}.svg"

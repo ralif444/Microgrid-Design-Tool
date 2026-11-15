@@ -201,7 +201,7 @@ export function SystemBlock({ el, x, y, w, h, emph, bind }: Common & { x: number
     <g className={cls(el, emph)} {...bind?.(el)} data-testid="diagram-system">
       <rect x={x} y={y} width={w} height={h} className={styles.block} />
       <text x={x + 10} y={y + 20} className={styles.id}>
-        {kv} · {hz}
+        {kv}, {hz}
       </text>
       <text x={x + 10} y={y + 20 + LH} className={styles.sec}>
         Balanced 3-phase, islanded
