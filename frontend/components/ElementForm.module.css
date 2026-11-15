@@ -15,4 +15,5 @@
   .form { --field-cols: 1fr; gap: var(--space-4); }
   .mode { padding-left: 0; flex-wrap: wrap; }
 }
+@media (max-width: 40rem) { .mode { padding-left: 0; flex-wrap: wrap; } }
 .delete { margin: var(--space-5) 0 0; padding-top: var(--space-4); border-top: var(--border-width) solid var(--color-border); }

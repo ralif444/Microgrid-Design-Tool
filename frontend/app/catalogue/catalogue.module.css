@@ -1,11 +1,20 @@
 /* Entry editor (audit 2026-11-15): one label column for every field, values and their sources as a table. */
 .editor { --field-label: 16rem; }
-.text { display: inline-grid; grid-template-columns: var(--field-label) auto; align-items: center; gap: var(--space-1) var(--space-3); }
+.text { display: inline-grid; grid-template-columns: var(--field-cols, var(--field-label) auto); align-items: center; gap: var(--space-1) var(--space-3); }
 .values { border-collapse: collapse; margin-top: var(--space-2); }
 .values th, .values td { padding: var(--space-1) var(--space-4) var(--space-1) 0; text-align: left; vertical-align: middle; border-bottom: var(--border-width) solid var(--color-border); }
 .values thead th { color: var(--cds-text-secondary); font-weight: normal; font-size: var(--text-sm); }
 .caveat, .muted { color: var(--cds-text-secondary); font-size: var(--text-sm); }
 .caveat { margin: 0 0 var(--space-1); }
+/* Phone width: one value per block, the source under it with its own caption */
+@media (max-width: 40rem) {
+  .values, .values tbody, .values tr, .values td { display: block; }
+  .values thead { display: none; }
+  .values td { border: 0; padding: var(--space-1) 0; }
+  .values tr { padding: var(--space-2) 0; border-bottom: var(--border-width) solid var(--color-border); }
+  .values td:last-child:has(input)::before { content: "Source (page or section)"; display: block; color: var(--cds-text-secondary); font-size: var(--text-sm); }
+  .values input, .text input, .text select { max-width: 100%; }
+}
 /* entries list: the kind stays on one line, the row being edited is marked */
 .kind { white-space: nowrap; }
 .list tr[aria-current="true"] { background: var(--cds-layer-selected-01); }

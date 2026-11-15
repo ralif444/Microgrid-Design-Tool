@@ -168,9 +168,38 @@ interface CatalogState {
 
 const Ctx = createContext<CatalogState>({ catalog: emptyCatalog(), checks: [], setCatalog: () => undefined });
 
+// Kept in this browser like the Project draft (audit O1), so a reload or restore does not empty it.
+// The file stays the record: "Save catalogue" writes it. Storage errors only turn this off.
+export const CATALOG_KEY = "mgapp-catalog";
+export function readStoredCatalog(): Catalog | null {
+  try {
+    const c = JSON.parse(globalThis.localStorage.getItem(CATALOG_KEY) ?? "null") as Catalog | null;
+    return c && Array.isArray(c.entries) ? c : null;
+  } catch {
+    return null;
+  }
+}
+function storeCatalog(c: Catalog) {
+  try {
+    if (c.entries.length) globalThis.localStorage.setItem(CATALOG_KEY, JSON.stringify(c));
+    else globalThis.localStorage.removeItem(CATALOG_KEY);
+  } catch {
+    // storage unavailable: the Catalogue lives in memory only
+  }
+}
+
 export function CatalogProvider({ children }: { children: ReactNode }) {
   const [catalog, setCatalog] = useState<Catalog>(emptyCatalog);
   const [checks, setChecks] = useState<EntryCheck[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    const c = readStoredCatalog(); // after mount: the static export renders without storage
+    if (c) setCatalog(c);
+    setLoaded(true);
+  }, []);
+  useEffect(() => {
+    if (loaded) storeCatalog(catalog);
+  }, [catalog, loaded]);
   useEffect(() => {
     let live = true;
     const t = setTimeout(() => {

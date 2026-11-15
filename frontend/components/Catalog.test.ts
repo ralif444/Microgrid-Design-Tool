@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CatalogEntry } from "../api-types";
 import { initialState, projectReducer, type ProjectAction } from "../store";
-import { catalogHints, entryWarnings, fromEntry, reasonText, refText, tauInSource } from "./Catalog";
+import { CATALOG_KEY, catalogHints, entryWarnings, fromEntry, readStoredCatalog, reasonText, refText, tauInSource } from "./Catalog";
 
 const conductor: CatalogEntry = {
   id: "E1",
@@ -92,5 +92,19 @@ describe("reasonText", () => {
     expect(reasonText("INVERTER", "not declared grid-forming with a datasheet reference, so it is information only")).toBe(
       "not declared grid-forming with a datasheet reference, so it is information only",
     );
+  });
+});
+
+describe("stored Catalogue (audit O1)", () => {
+  const withStorage = (s: unknown) => Object.defineProperty(globalThis, "localStorage", { value: s, configurable: true });
+  it("reads a stored Catalogue and ignores junk or missing storage", () => {
+    const m = new Map<string, string>();
+    withStorage({ getItem: (k: string) => m.get(k) ?? null });
+    m.set(CATALOG_KEY, JSON.stringify({ schema_version: 1, app_version: "", entries: [conductor] }));
+    expect(readStoredCatalog()?.entries[0].id).toBe("E1");
+    m.set(CATALOG_KEY, "{not json");
+    expect(readStoredCatalog()).toBeNull();
+    withStorage(undefined);
+    expect(readStoredCatalog()).toBeNull();
   });
 });

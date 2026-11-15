@@ -10,6 +10,7 @@ import { useState } from "react";
 import type { BatteryBank, CatalogEntry } from "../api-types";
 import { useProject, useProjectDispatch, type PsParameters } from "../store";
 import { valueSource } from "./battery";
+import { num } from "./format";
 import { block, entryWarnings, fromEntry, refText, useCatalog } from "./Catalog";
 import { CANNOT_UNDO, useConfirmDelete } from "./ConfirmDelete";
 import styles from "./ElementSource.module.css";
@@ -290,7 +291,7 @@ export function BankPick({ inverter: fixed }: { inverter?: string }) {
       <NumberField id="bank-soc" label="Initial state of charge, optional" unit="ratio" value={d.soc} onChange={(v) => set({ soc: v })} />
       {fixed && count !== null && typeof energy === "number" && (
         <p className={styles.total} data-testid="bank-total">
-          {count} modules × {energy} kWh = {count * energy} kWh nominal
+          {count} modules × {energy} kWh = {num(count * energy)} kWh nominal
         </p>
       )}
       <p className={styles.actions}>

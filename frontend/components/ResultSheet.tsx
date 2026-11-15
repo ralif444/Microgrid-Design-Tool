@@ -38,11 +38,14 @@ const LABEL: Record<string, [string, string]> = Object.fromEntries([
   ["redundancy", ["Redundancy r", "count"]],
 ]);
 
+// Sizing owns its own m_inv (O-8), so its basis uses the Sizing field's name.
+const PS_LABEL: Record<string, string> = { inverter_margin_ratio: "Inverter margin m_inv" };
+
 /** Scalar settings of the run and the limits it was checked against; nested settings stay in Run history. */
 export function basisRows(r: RunRecord): [string, string][] {
   const params = Object.entries((r.parameters ?? {}) as Record<string, unknown>)
     .filter(([k, v]) => LABEL[k] && typeof v === "number")
-    .map(([k, v]): [string, string] => [LABEL[k][0], `${fixed(v as number, LABEL[k][1])} ${LABEL[k][1]}`]);
+    .map(([k, v]): [string, string] => [(r.analysis_type === "PS" && PS_LABEL[k]) || LABEL[k][0], `${fixed(v as number, LABEL[k][1])} ${LABEL[k][1]}`]);
   const limits = r.analysis_type === "M2"
     ? CONSTRAINT_FIELDS.flatMap(([k, l, u]): [string, string][] => {
         const v = (r.snapshot as ProjectSnapshot | null)?.design_constraints?.[k];

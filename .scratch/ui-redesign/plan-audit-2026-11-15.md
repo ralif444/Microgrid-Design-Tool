@@ -1,6 +1,6 @@
 # Plan: audit 2026-11-15 follow-up (Catalogue, Sizing, battery bank, study inputs)
 
-Status: Phase A and B done (2026-11-15); "Later" not started
+Status: Phase A and B done; round 2 done (2026-11-15); rest of "Later" not started
 
 Basis: `docs/ui-ux-audit-2026-11-15.md` and the user's answers of 2026-11-15:
 
@@ -24,8 +24,13 @@ Rules: no engine, Engine Port, equation or Project file format change. The bank 
 - B3 Battery banner: when no bank was evaluated, the headline says so instead of "Advice ready" (uses the payload outcomes).
 - B4 Bank draft: functional state updates (E9).
 
+## Round 2 (done)
+- Phone width: labels stack above inputs below 40rem (`--field-cols` on :root); Catalogue values table becomes blocks with a source caption.
+- Catalogue kept in this browser (`mgapp-catalog`) until its entries are deleted (O1).
+- Sizing basis names m_inv as the Sizing field does; bank total without float noise.
+
 ## Later (not started)
-- Study-form template (one control per row, Run row for all seven, word labels on Run buttons), Sensitivity grouping, catalogue list via DataTable with key values, battery 7-column table first, 375 px stacking, catalogue persistence (O1), bank draft guard (O2), inputs kept across navigation (O4).
+- Study-form template (one control per row, Run row for all seven, word labels on Run buttons), Sensitivity grouping, catalogue list via DataTable with key values, battery 7-column table first, bank draft guard (O2), inputs kept across navigation (O4).
 
 ## Checks
 vitest, typecheck, rebuild, live pass at 1024 and 375 px on Catalogue, inspector bank, Sizing, Sensitivity, Battery.

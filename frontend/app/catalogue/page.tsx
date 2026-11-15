@@ -139,7 +139,7 @@ export default function CataloguePage() {
       <h1>Catalogue</h1>
       <p>
         A Catalogue is its own file, separate from any Project. Values copied into a Project stay there when the Catalogue
-        changes.
+        changes. The entries are also kept in this browser until you delete them; save the Catalogue to a file to keep or share it.
       </p>
       <p>
         <button type="button" onClick={() => void save()}>
