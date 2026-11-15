@@ -7,12 +7,12 @@ import type { M1Payload } from "../../api-types";
 import { ExampleGuide, ExampleNext, nextReady } from "../../components/ExampleForm";
 import { EmptyState } from "../../components/EmptyState";
 import { asResponse } from "../../components/Further";
+import { CheckStrip } from "../../components/CheckStrip";
 import { Icon } from "../../components/Icon";
 import { IndicatorPanel } from "../../components/IndicatorPanel";
 import { Inspector, type ElementRef } from "../../components/Inspector";
 import { m1Kpis } from "../../components/kpi";
 import { KpiStrip } from "../../components/KpiStrip";
-import { M1FreshnessBadge } from "../../components/M1Freshness";
 import { M1Results } from "../../components/M1Results";
 import { RequireProject } from "../../components/RequireProject";
 import { ResultsDiagram } from "../../components/sld/ResultsDiagram";
@@ -30,7 +30,9 @@ function PowerFlow() {
   const [inspect, setInspect] = useState<ElementRef | null>(null);
   const report = useValidation(design);
   const resp = asResponse(latestRun(runRecords, "M1", report?.snapshot_hash ?? null));
-  const fresh = m1Freshness(m1Ref(runRecords)?.snapshot_hash ?? null, report);
+  const ref = m1Ref(runRecords);
+  const fresh = m1Freshness(ref?.snapshot_hash ?? null, report);
+  const m1Record = runRecords.find((r) => r.record_id === ref?.record_id) ?? null;
 
   async function run() {
     const data = await call("M1", { project_snapshot: design, parameters: {}, solver_config: SOLVER });
@@ -42,11 +44,11 @@ function PowerFlow() {
     <>
       <div className={styles.head}>
         <h1>Power flow (M1)</h1>
-        <M1FreshnessBadge f={fresh} />
         <button type="button" className="primary" onClick={() => void run()} disabled={busy} aria-busy={busy || undefined}>
           {busy ? "Running..." : "Run M1"}
         </button>
       </div>
+      <CheckStrip fresh={fresh} m1={payload} m1Record={m1Record} />
       <ExampleGuide screen="power-flow" />
       <h2>Readiness</h2>
       {report === null ? (

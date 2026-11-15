@@ -85,6 +85,7 @@ Dokumen ini mendaftar semua perbedaan yang diketahui antara dokumen teknis (Doc 
 | D12 | Prototype `App.zip` | Validation package (cases, designs, tolerance policy, PSIM guide) is reusable prior art for stage 1.6; app code is reference only. | 4.3.8 | NO CHANGE (noted in Doc 13) |
 | D13 | 12 extensions | X10 cable and overload-protection sizing (Doc 12 §3.13) adds a protection-related feature, while the manuscript lists protection as out of scope. | out-of-scope list | KONFLIK (supervisor approval pending; behind a feature flag, off by default; Doc 9 K-07, D-100 K258) |
 | D14 | 12 extensions | X10 uses PUIL 2011 as its technical baseline, while Permen ESDM 7/2021 lists PUIL 2020. | — | KONFLIK (open; Doc 9 K-08, D-100 K259) |
+| D15 | 07 / ADR-016 | UI frame: the diagram workspace (areas Model, Check, Studies, Report) replaces the eight-step stepper; the redesign plan (`.scratch/ui-redesign/plan-workspace.md`) wins over the manuscript's UI description where they differ, including removing the stepper. Engine badge, stale-M1 rule (FR-38, FR-40, FR-93), the engine, data model and assumptions A1–A6 are unchanged. | 4.3.7 (stepper on every screen, 17 routes) | KONFLIK (user-decided 2026-11-14); ADR-016 option B; thesis text 4.3.7 to follow |
 
 ## Log
 
@@ -93,3 +94,4 @@ Dokumen ini mendaftar semua perbedaan yang diketahui antara dokumen teknis (Doc 
 | 2026-11-01 | Created; Doc 02, 03, 06, CLAUDE.md and agent rules aligned in the same session. |
 | 2026-11-01 | Paket 0 of stage 1.1 (repo): D2, D3, D5, D6, D7 and B7 applied in the repository copies of Doc 04, 05_adr, 08, 09, 10. |
 | 2026-11-09 | D13 and D14 added (cable round X10-0, Doc 9 D-100). |
+| 2026-11-14 | D15 added: the user decided the workspace plan wins over manuscript 4.3.7 for the UI, stepper removal included. |

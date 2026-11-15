@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from flows import enter_design, gui_snapshot
+from flows import enter_design, gui_snapshot, step
 from playwright.sync_api import Page, expect
 from test_loads_ps import _numeric_inputs_have_units
 from test_network_m1_m2 import _run_m1
@@ -22,17 +22,17 @@ def _status(page: Page, status: str) -> None:
 def test_fr_33_fr_34_stability_screens(server: Callable[[str], str], page: Page) -> None:
     enter_design(page, server("default"), gui_snapshot())
 
-    page.get_by_role("link", name="Small-signal (M4a)").click()
+    step(page, "Small-signal (M4a)")
     expect(page.get_by_role("button", name="Run M4a")).to_be_disabled()  # FR-39
     _run_m1(page)
-    page.get_by_role("link", name="Small-signal (M4a)").click()
+    step(page, "Small-signal (M4a)")
     _numeric_inputs_have_units(page)
     page.get_by_role("button", name="Run M4a").click()
     _status(page, "FEASIBLE")
     expect(page.get_by_test_id("stability-class")).to_contain_text("Stable")
     expect(page.get_by_role("table", name="Validity indicators")).to_be_visible()
 
-    page.get_by_role("link", name="Transient (M4b)").click()
+    step(page, "Transient (M4b)")
     kinds = page.get_by_label("Disturbance", exact=True).locator("option")
     expect(kinds).to_have_text(
         [
@@ -67,7 +67,7 @@ def test_transport_error_toast_returns_after_dismissal(
     """A transport failure that repeats shows its toast again after the first was dismissed."""
     enter_design(page, server("default"), gui_snapshot())
     _run_m1(page)
-    page.get_by_role("link", name="Small-signal (M4a)").click()
+    step(page, "Small-signal (M4a)")
     page.route(
         "**/api/analyses/M4a",
         lambda r: r.fulfill(status=500, content_type="application/json", body="{}"),

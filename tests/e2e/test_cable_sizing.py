@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
-from flows import enter_design, gui_snapshot
+from flows import enter_design, gui_snapshot, step, studies
 from playwright.sync_api import Page, expect
 from test_network_m1_m2 import _margins, _run_m1
 
@@ -25,7 +25,7 @@ CAVEAT = (
 def test_fr_105_screen_hidden_when_flag_off(server: Callable[..., str], page: Page) -> None:
     base = server("default")
     enter_design(page, base, gui_snapshot())
-    further = page.get_by_role("list", name="Further analyses")
+    further = studies(page)
     expect(further.get_by_role("link", name="Transient (M4b)")).to_be_visible()
     expect(further.get_by_role("link", name="Cable and breaker sizing")).to_have_count(0)
     page.goto(f"{base}/cable-sizing/")
@@ -35,9 +35,7 @@ def test_fr_105_screen_hidden_when_flag_off(server: Callable[..., str], page: Pa
 
 def test_fr_112_run_shows_caveat(server: Callable[..., str], page: Page) -> None:
     enter_design(page, server("default", env=FLAG_ON), gui_snapshot())
-    link = page.get_by_role("list", name="Further analyses").get_by_role(
-        "link", name="Cable and breaker sizing"
-    )
+    link = studies(page).get_by_role("link", name="Cable and breaker sizing")
     link.click()
     run = page.get_by_role("button", name="Run cable sizing")
     expect(run).to_be_disabled()  # no M2 yet (Doc 7 §3.1)
@@ -46,12 +44,12 @@ def test_fr_112_run_shows_caveat(server: Callable[..., str], page: Page) -> None
     )
 
     _run_m1(page)
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     _margins(page)
     page.get_by_role("button", name="Run M2").click()
     expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
 
-    link.click()
+    studies(page).get_by_role("link", name="Cable and breaker sizing").click()
     expect(run).to_be_disabled()  # no table file yet
     page.get_by_label("Load table file (JSON)").set_input_files(TABLES)
     expect(page.get_by_test_id("table-file")).to_contain_text("FAKE_TEST_ONLY")

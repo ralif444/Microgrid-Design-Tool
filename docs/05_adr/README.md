@@ -20,6 +20,7 @@ Folder ini berisi sepuluh catatan keputusan arsitektur (ADR) untuk aplikasi web 
 | [ADR-013](ADR-013-sld-layout.md) | Single-line diagram layout (elkjs) and dependencies | Accepted, option A approved by user 2026-11-03 | SLD guideline v2; FR-14, FR-94 – FR-98; NFR-03 |
 | [ADR-014](ADR-014-app-side-cable-sizing.md) | App-side computation of the cable sizing analysis (CB) | Accepted, option A approved by user 2026-11-09 | Cable guideline §0, §5; Doc 12 X10 (FR-105, FR-107, FR-111); D-100 |
 | [ADR-015](ADR-015-app-side-battery-adequacy.md) | App-side battery adequacy analysis (BA) that calls the Engine Port | Accepted, option A approved by user 2026-11-12 | BESS guideline §0, §4.2; Doc 12 B2, B3 (FR-76, FR-116, FR-117); D-106 |
+| [ADR-016](ADR-016-diagram-workspace.md) | Diagram workspace layout, EN/ID language switch, dark theme | Accepted, option A approved by user 2026-11-14 | Redesign decisions 2026-11-13; manuscript 4.3.7; Doc 07 §8 |
 
 ## Self-review
 - Weakest: ADR-002 (Vite margin) and ADR-005 (state library margin) are explicitly weak; ADR-010 shifts size and loss-of-work risk to the browser.

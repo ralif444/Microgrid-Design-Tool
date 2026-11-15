@@ -5,9 +5,10 @@
 // Each row and its error line share one <tbody>, so a row's test id covers its messages too.
 import { useRef, type KeyboardEvent, type ReactNode } from "react";
 import styles from "./DataTable.module.css";
-import { num } from "./format";
+import { NOT_A_NUMBER, num } from "./format";
 import { UNIT_TERM, type GlossaryKey } from "./glossary";
 import { Icon } from "./Icon";
+import { useNumberText } from "./NumberField";
 import { Term } from "./Term";
 
 type Edit<R> =
@@ -52,32 +53,43 @@ function keys(e: KeyboardEvent<HTMLInputElement | HTMLSelectElement>, restore: (
   next?.children[col]?.querySelector<HTMLElement>("input:not([type=radio]), select")?.focus();
 }
 
+type CellProps<V> = { label: string; value: V | undefined; onChange: (v: V) => void; invalid?: boolean };
+
 // Editable input for cells; also usable inside a custom `cell` renderer.
-export function CellInput<V extends string | number | null>({
-  label,
-  kind,
-  value,
-  onChange,
-  invalid = false,
-}: {
-  label: string;
-  kind: "number" | "text";
-  value: V | undefined;
-  onChange: (v: V) => void;
-  invalid?: boolean;
-}) {
-  const start = useRef<V | undefined>(undefined);
-  const parse = (s: string, n: number) => (kind === "text" ? s : s === "" ? null : n) as V;
+export function CellInput<V extends string | number | null>(p: CellProps<V> & { kind: "number" | "text" }) {
+  return p.kind === "number" ? <NumberCell {...(p as unknown as CellProps<number | null>)} /> : <TextCell {...(p as unknown as CellProps<string>)} />;
+}
+
+function TextCell({ label, value, onChange, invalid = false }: CellProps<string>) {
+  const start = useRef<string | undefined>(undefined);
   return (
     <input
       aria-label={label}
       aria-invalid={invalid || undefined}
-      type={kind}
-      step={kind === "number" ? "any" : undefined}
+      type="text"
       value={value ?? ""}
       onFocus={() => (start.current = value)}
-      onChange={(e) => onChange(parse(e.target.value, e.target.valueAsNumber))}
-      onKeyDown={(e) => keys(e, () => onChange((start.current ?? (kind === "text" ? "" : null)) as V))}
+      onChange={(e) => onChange(e.target.value)}
+      onKeyDown={(e) => keys(e, () => onChange(start.current ?? ""))}
+    />
+  );
+}
+
+// Locale-safe number cell (plan F1): dot or comma; text that is not a number is kept, flagged and not sent.
+function NumberCell({ label, value, onChange, invalid = false }: CellProps<number | null>) {
+  const start = useRef<number | null>(null);
+  const t = useNumberText(value, onChange);
+  return (
+    <input
+      aria-label={label}
+      aria-invalid={invalid || t.bad || undefined}
+      title={t.bad ? NOT_A_NUMBER : undefined}
+      type="text"
+      inputMode="decimal"
+      value={t.text}
+      onFocus={() => (start.current = value ?? null)}
+      onChange={(e) => t.set(e.target.value)}
+      onKeyDown={(e) => keys(e, () => t.set(start.current == null ? "" : String(start.current)))}
     />
   );
 }

@@ -18,7 +18,7 @@ import xml.etree.ElementTree as ET
 from collections.abc import Callable
 from pathlib import Path
 
-from flows import enter_design, gui_snapshot
+from flows import enter_design, gui_snapshot, step
 from playwright.sync_api import Page, expect
 from test_network_m1_m2 import _margins, _run_m1
 
@@ -30,15 +30,15 @@ def test_fr_93_result_survives_leaving_and_hides_after_edit(
     _run_m1(page)
     record = page.get_by_test_id("record-id").inner_text()
 
-    page.get_by_role("link", name="1 Loads").click()
-    page.get_by_role("link", name="5 Power flow (M1)").click()
+    step(page, "Loads")
+    step(page, "Power flow (M1)")
     expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
     expect(page.get_by_test_id("record-id")).to_have_text(record)
 
-    page.get_by_role("link", name="3 Network").click()
+    step(page, "Network")
     page.get_by_role("tab", name="Inverters").click()
     page.get_by_label("Rating (kVA) of INV1").fill("50")
-    page.get_by_role("link", name="5 Power flow (M1)").click()
+    step(page, "Power flow (M1)")
     expect(page.get_by_text("No result on this screen.")).to_be_visible()
     expect(page.get_by_test_id("record-id")).to_have_count(0)
 
@@ -46,7 +46,7 @@ def test_fr_93_result_survives_leaving_and_hides_after_edit(
 def test_fr_86_show_data_lists_the_payload_rows(server: Callable[[str], str], page: Page) -> None:
     enter_design(page, server("default"), gui_snapshot())
     _run_m1(page)
-    page.get_by_role("link", name="8 Report").click()
+    step(page, "Report")
     title = "Bus voltage magnitude from the latest power flow (M1)"
     expect(page.get_by_role("img", name="Bus voltage (p.u.) bar chart, 2 bars")).to_be_visible()
     # scoped to this figure: the report now has more charts, each with the FAKE caption (D-88, user)
@@ -96,11 +96,11 @@ def test_fr_90_inspector_opens_from_a_table_and_closes_on_escape(
     expect(panel).to_have_count(0)
     expect(trigger).to_be_focused()
 
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     _margins(page)
     page.get_by_role("button", name="Run M2").click()
     expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
-    page.get_by_role("link", name="5 Power flow (M1)").click()
+    step(page, "Power flow (M1)")
     page.get_by_role("button", name="Inspect INV1").click()
     panel = page.get_by_role("complementary", name="Inspector: Inverter INV1")
     expect(panel.get_by_role("definition").first).to_be_visible()
@@ -114,7 +114,7 @@ def test_fr_87_fr_88_constraint_check_kpis_and_charts(
 ) -> None:
     enter_design(page, server("m2-infeasible"), gui_snapshot())
     _run_m1(page)
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     _margins(page)
     page.get_by_role("button", name="Run M2").click()
     expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "INFEASIBLE")
@@ -140,7 +140,7 @@ def test_fr_87_fr_88_constraint_check_kpis_and_charts(
 def test_fr_87_fr_88_small_signal_kpis_and_plot(server: Callable[[str], str], page: Page) -> None:
     enter_design(page, server("default"), gui_snapshot())
     _run_m1(page)
-    page.get_by_role("link", name="Small-signal (M4a)").click()
+    step(page, "Small-signal (M4a)")
     page.get_by_label("Damping pass threshold, optional (ratio)").fill("0.05")
     page.get_by_role("button", name="Run M4a").click()
     expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
@@ -162,7 +162,7 @@ def test_fr_87_fr_88_fr_89_transient_kpis_and_crosshair(
 ) -> None:
     enter_design(page, server("default"), gui_snapshot())
     _run_m1(page)
-    page.get_by_role("link", name="Transient (M4b)").click()
+    step(page, "Transient (M4b)")
     page.get_by_label("Element", exact=True).select_option("L1")
     page.get_by_label("Step size (kW)").fill("1")
     page.get_by_label("Start time (s)").fill("0.1")
@@ -198,7 +198,7 @@ def test_fr_87_fr_88_fr_89_transient_kpis_and_crosshair(
 def test_fr_87_fr_88_fr_89_sweep_and_envelope(server: Callable[[str], str], page: Page) -> None:
     enter_design(page, server("default"), gui_snapshot())
     _run_m1(page)
-    page.get_by_role("link", name="Sweep (M3b)").click()
+    step(page, "Sweep (M3b)")
     page.get_by_label("Parameter", exact=True).select_option("inverters/INV1/rated_kva")
     page.get_by_label("From (kVA)").fill("5")
     page.get_by_label("To (kVA)").fill("15")
@@ -218,7 +218,7 @@ def test_fr_87_fr_88_fr_89_sweep_and_envelope(server: Callable[[str], str], page
     page.keyboard.press("End")
     expect(readout).to_contain_text("inverters/INV1/rated_kva 15 kVA")
 
-    page.get_by_role("link", name="Envelope (M3d)").click()
+    step(page, "Envelope (M3d)")
     page.get_by_label("X axis: Axis").select_option("LOAD_SCALE")
     page.get_by_label("X axis: From (factor)").fill("0.5")
     page.get_by_label("X axis: To (factor)").fill("1.5")
@@ -251,7 +251,7 @@ def test_fr_87_fr_88_fr_89_sweep_and_envelope(server: Callable[[str], str], page
 def test_fr_88_tornado_and_scenario_bars(server: Callable[[str], str], page: Page) -> None:
     enter_design(page, server("default"), gui_snapshot())
     _run_m1(page)
-    page.get_by_role("link", name="Sensitivity (M3a)").click()
+    step(page, "Sensitivity (M3a)")
     page.get_by_label("inverters/INV1/rated_kva").check()
     page.get_by_label("inverters/INV2/rated_kva").check()
     page.get_by_label("System frequency (Hz)").check()
@@ -265,7 +265,7 @@ def test_fr_88_tornado_and_scenario_bars(server: Callable[[str], str], page: Pag
     expect(tornado).to_contain_text("FAKE engine: placeholder, not an engine result")
     expect(tornado).to_contain_text("rank order")
 
-    page.get_by_role("link", name="Scenarios (M3c)").click()
+    step(page, "Scenarios (M3c)")
     page.get_by_role("button", name="Run N−1 check").click()
     expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
     bars = page.get_by_role("figure", name="System frequency per scenario")
@@ -285,14 +285,14 @@ def test_fr_88_report_charts_are_static_and_fit_a4(
 ) -> None:
     enter_design(page, server("m2-infeasible"), gui_snapshot())
     _run_m1(page)
-    page.get_by_role("link", name="6 Constraint check (M2)").click()
+    step(page, "Constraint check (M2)")
     _margins(page)
     page.get_by_role("button", name="Run M2").click()
     expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "INFEASIBLE")
-    page.get_by_role("link", name="Small-signal (M4a)").click()
+    step(page, "Small-signal (M4a)")
     page.get_by_role("button", name="Run M4a").click()
     expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
-    page.get_by_role("link", name="8 Report").click()
+    step(page, "Report")
     for name in (
         "Inverter loading",
         "Normalised margin per constraint",
@@ -356,3 +356,11 @@ def test_fr_92_chart_svg_download_carries_the_caption(
     assert "Inverter loading" in svg and f"RunRecord {record}" in svg and "Engine FAKE" in svg
     assert "FAKE ENGINE — not an engine result" in svg
     assert "class=" not in svg and "var(--" not in svg and "font-size:12px" in svg
+    # dark theme on screen: the file still carries light-theme colours (no dark ink #e6eaed) and the
+    # page keeps its theme
+    page.get_by_role("group", name="Theme").get_by_role("button", name="Dark").click()
+    with page.expect_download() as dark:
+        page.get_by_role("button", name="Download SVG: Inverter loading").click()
+    dark_svg = Path(dark.value.path()).read_text(encoding="utf-8")
+    assert "rgb(230, 234, 237)" not in dark_svg and "rgb(27, 39, 51)" in dark_svg
+    assert page.evaluate("document.documentElement.dataset.theme") == "dark"

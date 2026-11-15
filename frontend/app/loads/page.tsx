@@ -6,30 +6,32 @@ import Link from "next/link";
 import { useState } from "react";
 import type { Load, ValidationIssue } from "../../api-types";
 import { ExampleGuide, ExampleNext } from "../../components/ExampleForm";
+import { CANNOT_UNDO, useConfirmDelete } from "../../components/ConfirmDelete";
 import { CellInput, CellSelect, DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
 import { Icon } from "../../components/Icon";
 import { RequireProject } from "../../components/RequireProject";
+import { loadMode, modePatch, PF_DIRECTIONS, type LoadMode } from "../../components/elementFields";
 import { useValidation } from "../../components/useValidation";
 import { useProject, useProjectDispatch } from "../../store";
 import styles from "./loads.module.css";
 
 const where = (i: ValidationIssue) => [i.entity, i.id, i.field].filter(Boolean).join(" / ");
-type Mode = "Q" | "PF";
 
 function Loads() {
+  const { dialog, confirm } = useConfirmDelete();
   const { design } = useProject();
   const dispatch = useProjectDispatch();
   const issues = useValidation(design, "PS")?.issues ?? [];
   const loads = design.loads ?? [];
   const buses: [string, string][] = (design.buses ?? []).map((b) => [b.id ?? "", b.id ?? ""]);
   // Q or PF per row is a screen choice, not data: both empty would otherwise read as Q.
-  const [modes, setModes] = useState<Record<string, Mode>>({});
-  const modeOf = (l: Load): Mode => modes[l.id ?? ""] ?? (l.power_factor != null || l.pf_direction != null ? "PF" : "Q");
+  const [modes, setModes] = useState<Record<string, LoadMode>>({});
+  const modeOf = (l: Load) => loadMode(l, modes[l.id ?? ""]);
   const set = (l: Load, patch: Partial<Load>) => dispatch({ type: "rowUpdated", collection: "loads", id: l.id ?? "", patch });
-  const choose = (l: Load, m: Mode) => {
+  const choose = (l: Load, m: LoadMode) => {
     setModes({ ...modes, [l.id ?? ""]: m });
-    set(l, m === "Q" ? { power_factor: null, pf_direction: null } : { q_kvar: null });
+    set(l, modePatch(m));
   };
   const rowIssues = (l: Load) => issues.filter((i) => i.entity === "Load" && i.id === l.id);
   const bad = (l: Load, f: string) => rowIssues(l).some((i) => i.field === f);
@@ -89,10 +91,7 @@ function Loads() {
         modeOf(l) === "PF" ? (
           <CellSelect
             label={`PF direction of ${l.id}`}
-            options={[
-              ["LAGGING", "lagging"],
-              ["LEADING", "leading"],
-            ]}
+            options={PF_DIRECTIONS}
             value={l.pf_direction}
             onChange={(v) => set(l, { pf_direction: v as Load["pf_direction"] })}
             invalid={bad(l, "pf_direction")}
@@ -130,7 +129,10 @@ function Loads() {
           rowTestId={(l) => `load-${l.id}`}
           rowErrors={(l) => rowIssues(l).map((i) => ({ field: i.field, message: i.message }))}
           actions={(l) => (
-            <button type="button" onClick={() => dispatch({ type: "rowRemoved", collection: "loads", id: l.id ?? "" })}>
+            <button
+              type="button"
+              onClick={() => confirm(`Delete ${l.id}?`, `Load ${l.id} is removed from the design. ${CANNOT_UNDO}`, () => dispatch({ type: "rowRemoved", collection: "loads", id: l.id ?? "" }))}
+            >
               Delete {l.id}
             </button>
           )}
@@ -154,6 +156,7 @@ function Loads() {
         {loads.length === 0 && " Needs at least one load."}
       </p>
       <ExampleNext screen="loads" ready={true} />
+      {dialog}
     </>
   );
 }

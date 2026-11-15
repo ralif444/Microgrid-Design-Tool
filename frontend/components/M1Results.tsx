@@ -6,6 +6,7 @@ import type { DesignConstraints, M1Payload, RunRecord } from "../api-types";
 import { AdvisoryPanel } from "./AdvisoryPanel";
 import { BarChart, type RefLine } from "./charts/BarChart";
 import { DataTable, type DataColumn } from "./DataTable";
+import { fixed } from "./format";
 import type { ElementRef } from "./Inspector";
 
 type Bus = M1Payload["bus_results"][number];
@@ -14,12 +15,12 @@ type Share = M1Payload["sharing"][number];
 type Line = M1Payload["line_results"][number];
 type Total = [string, number, string];
 
-const n = <R,>(key: string, header: string, unit: string, get: (r: R) => number): DataColumn<R> => ({ key, header, unit, numeric: true, cell: get });
+const n = <R,>(key: string, header: string, unit: string, get: (r: R) => number): DataColumn<R> => ({ key, header, unit, numeric: true, cell: (r) => fixed(get(r), unit) });
 const id = <R,>(header: string, get: (r: R) => string): DataColumn<R> => ({ key: "id", header, cell: (r) => <strong>{get(r)}</strong> });
 
 const TOTALS: DataColumn<Total>[] = [
   { key: "q", header: "Quantity", cell: (t) => t[0] },
-  { key: "v", header: "Value", numeric: true, cell: (t) => t[1] },
+  { key: "v", header: "Value", numeric: true, cell: (t) => fixed(t[1], t[2]) },
   { key: "u", header: "Unit", cell: (t) => t[2] },
 ];
 const BUSES: DataColumn<Bus>[] = [

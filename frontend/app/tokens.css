@@ -1,7 +1,7 @@
-/* App tokens bridged to the Carbon theme (ADR-012, visual guidelines v1 §3–§5). The names stay so the
-   existing component modules keep working; values now come from Carbon's --cds-* custom properties
-   (app/carbon.css) or the guideline. Status roles (--role-*) are reworked in step (b).
-   Contrast ratios below are for the role colours (WCAG 2.x formula), against white. */
+/* App tokens bridged to the Carbon theme (ADR-012, ADR-016 §3). The names stay so the existing
+   component modules keep working; values come from Carbon's --cds-* custom properties (app/carbon.css,
+   light on :root, dark under [data-theme="dark"]) or the mockup. Contrast ratios for every pair in both
+   themes: docs/check-screen-changes.md. */
 
 :root {
   /* ---- Neutral scale (cool grey) ---- */
@@ -19,54 +19,48 @@
   --n-900: #16191f;   /* body text 17.60:1, 16.28:1 on --n-50 */
 
   /* ---- Semantic surfaces and text ---- */
-  --color-page:          var(--cds-background);      /* warm page #F4F2EE */
+  --color-page:          var(--cds-background);      /* surface */
   --color-bg:            var(--cds-layer-01);        /* white layers: tables, panels, forms */
   --color-surface:       var(--cds-layer-01);
   --color-surface-sunken:var(--cds-layer-02);
   --color-surface-hover: var(--cds-layer-hover-01);
-  --color-fg:            var(--cds-text-primary);    /* navy #0B1F44 */
-  --color-fg-muted:      var(--cds-text-secondary);  /* #4A5468 */
+  --color-fg:            var(--cds-text-primary);    /* ink */
+  --color-fg-muted:      var(--cds-text-secondary);  /* ink-2 */
   --color-fg-subtle:     var(--cds-text-secondary);  /* text-helper #6F6F6F is 4.47:1 on the page bg, too low */
   --color-border:        var(--cds-border-subtle-01);
   --color-border-strong: var(--cds-border-strong-01);
-  --color-link:          var(--cds-link-primary);    /* teal #00737D */
+  --color-link:          var(--cds-link-primary);    /* act */
 
-  /* ---- App tokens not in Carbon (guideline §3.1, §5) ---- */
-  --mdt-header-bg: #0b1f44;          /* brand navy */
-  --mdt-header-fg: #ffffff;          /* 16:1 on navy */
-  --mdt-header-fg-muted: #d6dbe4;    /* 11.7:1 on navy */
-  --mdt-header-rule: #4a5a7a;         /* divider only, not text */
-  --mdt-header-hover: #1d3461;
-  --mdt-header-focus: #5dc4cc;       /* brand-teal-300, 7.9:1 on navy */
-  --mdt-gradient: linear-gradient(90deg, #0e9aa7, #7ed957); /* signature accent only, never text */
+  /* ---- App tokens not in Carbon (ADR-016 §3, mockup) ---- */
+  --color-canvas: #e4e7ea;   /* diagram canvas (mockup canvas) */
+  /* Chart series (guideline §9), never a status colour; series also differ by dash and marker. */
+  --series-1: #00737d; --series-2: #0b1f44; --series-3: #8a3ffc; --series-4: #d02670; --series-5: #b28600;
 
-  /* ---- Colour ROLES (guideline §7.2, ADR-012). Each role: edge (left border, the §7.2 token),
-     icon (banner icon, >= 3:1 on white), fg (coloured text and small icons: Carbon 70 step, >= 7:1 on
-     white, tint and page), bg (tint for chips and rows: Carbon 10 step). Values from @carbon/colors.
-     Status is always colour + icon + word. ---- */
-  /* success: FEASIBLE — CheckmarkFilled */
-  --role-success-edge: var(--cds-support-success); --role-success-icon: var(--cds-support-success); /* 3.35:1 */
-  --role-success-fg: #0e6027;  --role-success-bg: #defbe6;  /* green-70 7.7:1 / green-10 */
-  /* negative: INFEASIBLE, violated constraint rows — Misuse. Icon one step darker than the token
-     (#FF832B is 2.46:1), owner decision 2026-11-03 */
-  --role-negative-edge: var(--cds-support-caution-major); --role-negative-icon: #ba4e00; /* orange-60 5.0:1 */
-  --role-negative-fg: #8a3800; --role-negative-bg: #fff2e8; /* orange-70 7.9:1 / orange-10 */
+  /* ---- Colour ROLES (ADR-016 §3, W2: "Quiet panel"). Colour only when something is abnormal; status
+     is always icon + word. Each role: edge (left border), icon, fg (coloured text), bg (tint).
+     Values: mockup (bad, warn, ink-2, surface) or @carbon/colors; ratios in docs/check-screen-changes.md. ---- */
+  /* success: FEASIBLE — CheckmarkFilled, quiet grey (owner decision 2026-11-14) */
+  --role-success-edge: var(--cds-text-secondary); --role-success-icon: var(--cds-text-secondary);
+  --role-success-fg: var(--cds-text-secondary); --role-success-bg: var(--cds-background);
+  /* negative: INFEASIBLE, violated constraint rows — Misuse (mockup bad / bad-soft) */
+  --role-negative-edge: #b53b0b; --role-negative-icon: #b53b0b;
+  --role-negative-fg: #b53b0b; --role-negative-bg: #fbe6dc;
   /* error: SOLVER_FAILED, PHYSICALLY_INADMISSIBLE, ENGINE_ERROR, input field errors — own icons */
-  --role-error-edge: var(--cds-support-error); --role-error-icon: var(--cds-support-error); /* 5.0:1 */
-  --role-error-fg: #a2191f;    --role-error-bg: #fff1f1;    /* red-70 7.8:1 / red-10 */
-  /* caution: INPUT_INVALID, SWEEP_CAP_EXCEEDED, Fake note — ListBulleted. Icon one step darker than
-     the token (#F1C21B is 1.68:1), owner decision 2026-11-03 */
-  --role-caution-edge: var(--cds-support-warning); --role-caution-icon: #8e6a00; /* yellow-60 5.0:1 */
-  --role-caution-fg: #684e00;  --role-caution-bg: #fcf4d6;  /* yellow-70 7.8:1 / yellow-10 */
-  /* attention: UNAVAILABLE TIMEOUT / DEPENDENCY_NOT_MET, stale M1 — Time / Link */
-  --role-attention-edge: var(--cds-support-info); --role-attention-icon: var(--cds-support-info); /* 7.8:1 */
-  --role-attention-fg: #0043ce; --role-attention-bg: #edf5ff; /* blue-70 / blue-10 */
+  --role-error-edge: var(--cds-support-error); --role-error-icon: var(--cds-support-error);
+  --role-error-fg: #a2191f;    --role-error-bg: #fff1f1;    /* red-70 / red-10 */
+  /* caution: INPUT_INVALID, SWEEP_CAP_EXCEEDED, Fake note — ListBulleted (mockup warn / warn-soft) */
+  --role-caution-edge: #8a5a0b; --role-caution-icon: #8a5a0b;
+  --role-caution-fg: #8a5a0b;  --role-caution-bg: #f6ead0;
+  /* attention: UNAVAILABLE TIMEOUT / DEPENDENCY_NOT_MET, stale M1 — Time / Link; same as caution
+     (owner decision 2026-11-14, mockup stale chip) */
+  --role-attention-edge: var(--role-caution-edge); --role-attention-icon: var(--role-caution-icon);
+  --role-attention-fg: var(--role-caution-fg); --role-attention-bg: var(--role-caution-bg);
   /* info: UNAVAILABLE NOT_APPLICABLE, notes, "not evaluated" — Information */
-  --role-info-edge: var(--cds-border-strong-01); --role-info-icon: var(--cds-border-strong-01); /* 3.3:1 */
-  --role-info-fg: var(--cds-text-secondary); --role-info-bg: #f4f4f4; /* 6.8:1 on page / gray-10 */
+  --role-info-edge: var(--cds-border-strong-01); --role-info-icon: var(--cds-border-strong-01);
+  --role-info-fg: var(--cds-text-secondary); --role-info-bg: var(--cds-background);
   /* advisory: SizingAdvice (PS), SizingCheck (M2) — 1 px dashed outline on layer-02, purple Tag (§8) */
   --role-advisory-edge: var(--cds-border-strong-01); --role-advisory-bg: var(--cds-layer-02);
-  --role-advisory-fg: #6929c4; /* purple-70 7.7:1 */
+  --role-advisory-fg: #6929c4; /* purple-70 */
   --advisory-border-style: dashed;
   /* old name kept for the screen modules until step (c) */
   --role-success-border: var(--role-success-edge); --role-negative-border: var(--role-negative-edge);
@@ -120,10 +114,25 @@
   --shadow-1: none;  /* flat surfaces */
 
   /* ---- Focus ring (visible everywhere, independent of status hues) ---- */
-  --focus-color: var(--cds-focus);  /* teal, 5.6:1 on white */
+  --focus-color: var(--cds-focus);  /* act */
   --focus-width: 2px;
   --focus-offset: 2px;
   --focus-ring: 0 0 0 var(--focus-offset) var(--color-bg), 0 0 0 calc(var(--focus-offset) + var(--focus-width)) var(--focus-color);
+}
+
+/* Dark theme (ADR-016 §3): mockup dark values and @carbon/colors 30/90 steps. Screen only, so print
+   always uses the light values and the print block below. Set on <html> by layout.tsx. */
+@media screen {
+  [data-theme="dark"] {
+    --color-canvas: #1c2227;
+    --series-1: #08bdba; --series-2: #e6eaed; --series-3: #be95ff; --series-4: #ff7eb6; --series-5: #d2a106; /* teal-40, ink, purple-40, magenta-40, yellow-40 */
+    --role-negative-edge: #f0834a; --role-negative-icon: #f0834a;
+    --role-negative-fg: #f0834a; --role-negative-bg: #4a2c1e;
+    --role-error-fg: #ffb3b8; --role-error-bg: #520408;   /* red-30 / red-90 */
+    --role-caution-edge: #e0b050; --role-caution-icon: #e0b050;
+    --role-caution-fg: #e0b050; --role-caution-bg: #443619;
+    --role-advisory-fg: #d4bbff; /* purple-30 */
+  }
 }
 
 /* Print variant (FR-60): grayscale-safe, no tints; roles stay readable by icon + word + border style. */

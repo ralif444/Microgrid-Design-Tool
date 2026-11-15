@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { SERIES } from "./palette";
 import { linearScale, nearestIndex, niceDomain, niceTicks, splitAtNulls } from "./scale";
@@ -36,9 +37,15 @@ describe("chart scale (FR-86)", () => {
   });
 
   it("uses no status colour for a series (guideline §1 rule 4)", () => {
-    // @carbon/colors support and status-icon values used in tokens.css (green, red, orange, yellow, blue)
-    const status = ["#24a148", "#198038", "#da1e28", "#ff832b", "#ba4e00", "#8a3800", "#f1c21b", "#8e6a00", "#0043ce"];
-    expect(SERIES.filter((c) => status.includes(c.toLowerCase()))).toEqual([]);
-    expect(new Set(SERIES).size).toBe(SERIES.length);
+    // series values per theme from tokens.css; status: @carbon/colors support values and the role colours
+    const css = readFileSync(new URL("../../app/tokens.css", import.meta.url), "utf8");
+    const series = [...css.matchAll(/--series-\d: (#[0-9a-f]{6})/g)].map((m) => m[1]);
+    const status = ["#24a148", "#42be65", "#198038", "#da1e28", "#fa4d56", "#ff832b", "#f1c21b", "#0043ce", "#4589ff",
+      "#b53b0b", "#f0834a", "#8a5a0b", "#e0b050", "#a2191f", "#ffb3b8"];
+    expect(SERIES).toEqual([1, 2, 3, 4, 5].map((k) => `var(--series-${k})`));
+    expect(series).toHaveLength(10); // light and dark
+    expect(series.filter((c) => status.includes(c))).toEqual([]);
+    expect(new Set(series.slice(0, 5)).size).toBe(5);
+    expect(new Set(series.slice(5)).size).toBe(5);
   });
 });

@@ -1,4 +1,5 @@
-// Carbon v11 with the custom light theme of the visual guidelines §3.2 (ADR-012).
+// Carbon v11 with the "Quiet panel" light and dark themes (ADR-012, ADR-016 §3; values from the mockup
+// docs/design/redesign-2026-11-13/workspace-mockup.html, hover/pressed steps from @carbon/colors, W2).
 // Compiled by the sass CLI to app/carbon.css before every build ("prebuild"; generated, not in git):
 // Turbopack cannot resolve Carbon's relative partials inside node_modules.
 // Fonts: Carbon's own @font-face is off; IBM Plex is served from @ibm/plex-* (layout.tsx), so the
@@ -8,39 +9,76 @@
   $css--font-face: false
 );
 @use '@carbon/styles/scss/themes';
+// mockup light: surface #f7f8f9, raised #fff, ink #1b2733, ink-2 #5b6875, rule-2 #d6dade, act #1f5fbf
+$light: (
+    background: #f7f8f9,
+    layer-01: #ffffff,
+    layer-02: #f7f8f9,
+    layer-hover-01: #e8ebee, // mockup rule-2 #d6dade gave ink-2 4.06:1; lighter step (W2 contrast fix)
+    field-01: #ffffff,
+    text-primary: #1b2733,
+    text-secondary: #5b6875,
+    icon-primary: #1b2733,
+    border-subtle-01: #d6dade,
+    border-strong-01: #5b6875,
+    interactive: #1f5fbf,
+    button-primary: #1f5fbf,
+    button-primary-hover: #0043ce, // blue-70
+    button-primary-active: #002d9c, // blue-80
+    link-primary: #1f5fbf,
+    link-primary-hover: #0043ce,
+    focus: #1f5fbf,
+    border-interactive: #1f5fbf,
+    background-brand: #1f5fbf,
+    text-on-color: #ffffff,
+    layer-selected-01: #dfe9f8,
+    highlight: #dfe9f8,
+);
+
+// mockup dark on Carbon g100: surface #252c33, raised #2c343c, ink #e6eaed, ink-2 #9aa6b2,
+// rule-2 #39434c, act #7fb0f5, act-ink #10202f, act-soft #2b3d55
+$dark: (
+    background: #252c33,
+    layer-01: #2c343c,
+    layer-02: #252c33,
+    layer-hover-01: #343c44, // mockup rule-2 #39434c gave ink-2 4.07:1; darker step (W2 contrast fix)
+    field-01: #2c343c,
+    field-02: #2c343c,
+    text-primary: #e6eaed,
+    text-secondary: #9aa6b2,
+    icon-primary: #e6eaed,
+    border-subtle-01: #39434c,
+    border-strong-01: #9aa6b2,
+    interactive: #7fb0f5,
+    button-primary: #7fb0f5,
+    button-primary-hover: #a6c8ff, // blue-30
+    button-primary-active: #d0e2ff, // blue-20
+    // danger buttons carry text-on-color (dark ink here): red-40 / red-30 / red-20 keep it readable
+    button-danger-primary: #ff8389,
+    button-danger-hover: #ffb3b8,
+    button-danger-active: #ffd7d9,
+    link-primary: #7fb0f5,
+    link-primary-hover: #a6c8ff,
+    focus: #7fb0f5,
+    border-interactive: #7fb0f5,
+    background-brand: #7fb0f5,
+    text-on-color: #10202f,
+    layer-selected-01: #273750, // mockup act-soft #2b3d55 gave ink-2 4.46:1; darker step (W2 contrast fix)
+    highlight: #273750,
+);
+
 @use '@carbon/styles/scss/theme' with (
-  $theme: map.merge(
-    themes.$white,
-    (
-      background: #f4f2ee,
-      layer-01: #ffffff,
-      layer-02: #faf9f7,
-      field-01: #ffffff,
-      text-primary: #0b1f44,
-      text-secondary: #4a5468,
-      icon-primary: #0b1f44,
-      interactive: #00737d,
-      button-primary: #00737d,
-      button-primary-hover: #005f67,
-      button-primary-active: #004b52,
-      link-primary: #00737d,
-      link-primary-hover: #005f67,
-      focus: #00737d,
-      border-interactive: #00737d,
-      background-brand: #00737d,
-      layer-selected-01: #e6f2f3,
-      highlight: #e6f2f3,
-    )
-  )
+  $theme: map.merge(themes.$white, $light)
 );
 @use '@carbon/styles'; // same styles @carbon/react ships; its own scss entry did not pass the theme through
 
-// Carbon v11 emits theme tokens only where asked: the whole app uses the custom light theme.
-:root {
-  @include theme.theme();
-  // theme.theme() then emits the Button component tokens from Carbon white (blue) over the map
-  // values above; set them back from the same map (§3.2 values, nothing new).
-  @each $t in (button-primary, button-primary-hover, button-primary-active) {
-    --cds-#{$t}: #{map.get(theme.$theme, $t)};
-  }
+// Carbon picks component tokens (Tag, Button, Notification) only for a stock theme map, so emit the
+// stock theme first and the overrides after it.
+@mixin -tokens($base, $overrides) {
+  @include theme.theme($base);
+  @each $t, $v in $overrides { --cds-#{$t}: #{$v}; }
 }
+
+:root { @include -tokens(themes.$white, $light); }
+// Screen only: print always uses the light theme and the print block of tokens.css.
+@media screen { [data-theme="dark"] { @include -tokens(themes.$g100, $dark); } }

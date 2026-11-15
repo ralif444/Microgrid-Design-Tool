@@ -3,7 +3,7 @@
 // the rows that tooltip, inspector and "View as table" all read. No layout, no store, and no physics:
 // values are copied from the Project or a payload and only rounded for display (`num`, R1, R2).
 import type { BatteryBank, LimitingConstraint, M1Payload, M2Payload, ProjectSnapshot, ValidationIssue } from "../../api-types";
-import { num } from "../format";
+import { fixed, num } from "../format";
 import { KIND_WORDS, nearLimit } from "../M2Results";
 
 export type SldKind = "system" | "bus" | "inverter" | "load" | "line";
@@ -12,8 +12,9 @@ export type SldRow = { label: string; value: string; unit?: string; note?: strin
 /** `empty` replaces the rows when there is no current run for the section. */
 /** "Sizing check" is advisory (Doc 3 §3.9, VISUAL §8), kept apart from the constraint checks. */
 export type SldSection = { title: "Design data" | "Results" | "Checks" | "Sizing check" | "Issues"; rows: SldRow[]; empty?: string };
-/** S-08 rules (Doc 12 §9 #17): violated `margin < 0`, limiting in `result.limiting_constraints`, near via `nearLimit`. */
-export type SldMark = "violated" | "limiting" | "near";
+/** S-08 rules (Doc 12 §9 #17): violated `margin < 0`, limiting in `result.limiting_constraints`, near via `nearLimit`;
+ * pass: every evaluated constraint of the element satisfied (W3). */
+export type SldMark = "violated" | "limiting" | "near" | "pass";
 
 export type SldElement = {
   kind: SldKind;
@@ -30,6 +31,10 @@ export type SldElement = {
   sections: SldSection[];
   mark: SldMark | null;
   issues: string[];
+  /** Inverter: M1 loading ratio, for the loading bar (W3). */
+  loading?: number;
+  /** S-08: the element with the smallest normalised margin among element-level constraints (W3). */
+  tightest?: boolean;
 };
 
 export type SldModel = {
@@ -57,6 +62,8 @@ const NO_M1 = "No current power-flow result";
 const NO_M2 = "No current constraint check";
 
 const fmt = (v: number | null | undefined) => (v === null || v === undefined ? null : String(num(v)));
+// result labels on the diagram use the fixed result decimals (plan W1); inputs and inspector rows keep `fmt`
+const res = (v: number | null | undefined, unit: string) => (v === null || v === undefined ? "—" : fixed(v, unit));
 const row = (label: string, v: number | null | undefined, unit: string, missing = "not entered"): SldRow =>
   fmt(v) === null ? { label, value: "—", unit, note: missing } : { label, value: fmt(v)!, unit };
 const byId = <T extends { id?: string | null }>(xs: T[] | undefined) =>
@@ -80,7 +87,9 @@ function checks(id: string, m2: SldInput["m2"], marginWarn: number | null, extra
       ? "limiting"
       : own.some((c) => nearLimit(c, marginWarn))
         ? "near"
-        : null;
+        : own.length
+          ? "pass"
+          : null;
   return { section: { title: "Checks", rows: [...rows, ...extra] }, mark };
 }
 
@@ -120,7 +129,7 @@ export function buildSldModel({ design, m1 = null, m2 = null, issues = [], margi
     tags: [
       `${fmt(design.nominal_voltage_kv) ?? "—"} kV LL`,
       `${fmt(design.nominal_frequency_hz) ?? "—"} Hz nominal`,
-      ...(m1 ? [`${fmt(m1.system_frequency_hz)} Hz system`] : []),
+      ...(m1 ? [`${res(m1.system_frequency_hz, "Hz")} Hz system`] : []),
     ],
     sections: [
       {
@@ -156,7 +165,7 @@ export function buildSldModel({ design, m1 = null, m2 = null, issues = [], margi
         id: b.id,
         name: b.name ?? undefined,
         label: `Bus ${b.id}${b.name ? ` (${b.name})` : ""}, ${count(nInv, "inverter")}, ${count(nLoad, "load")}, ${count(nLine, "line")}${alone ? ", not connected" : ""}`,
-        tags: [b.id, ...(r ? [`${fmt(r.voltage_pu)} p.u.`, `${fmt(r.angle_deg)} °`] : [])],
+        tags: [b.id, ...(r ? [`${res(r.voltage_pu, "p.u.")} p.u.`, `${res(r.angle_deg, "deg")} °`] : [])],
         mark: c.mark,
       },
       "Bus",
@@ -189,8 +198,9 @@ export function buildSldModel({ design, m1 = null, m2 = null, issues = [], margi
         id: i.id,
         busId: i.bus_id ?? undefined,
         label: `Inverter ${i.id} at bus ${i.bus_id ?? "—"}, rated ${fmt(i.rated_kva) ?? "—"} kVA`,
-        tags: [i.id, `${fmt(i.rated_kva) ?? "—"} kVA`, ...(r ? [`${fmt(r.p_kw)} kW`, `loading ${fmt(r.loading_ratio)}`] : [])],
+        tags: [i.id, `${fmt(i.rated_kva) ?? "—"} kVA`, ...(r ? [`${res(r.p_kw, "kW")} kW`, `loading ${res(r.loading_ratio, "ratio")}`] : [])],
         mark: c.mark,
+        ...(r ? { loading: r.loading_ratio } : {}),
       },
       "Inverter",
       [
@@ -261,7 +271,7 @@ export function buildSldModel({ design, m1 = null, m2 = null, issues = [], margi
         from: l.from_bus_id ?? undefined,
         to: l.to_bus_id ?? undefined,
         label: `Line ${l.id} from ${l.from_bus_id ?? "—"} to ${l.to_bus_id ?? "—"}`,
-        tags: [l.id, ...(r ? [`${fmt(r.current_a)} A`] : [])],
+        tags: [l.id, ...(r ? [`${res(r.current_a, "A")} A`] : [])],
         mark: c.mark,
       },
       "Line",
@@ -290,6 +300,10 @@ export function buildSldModel({ design, m1 = null, m2 = null, issues = [], margi
       ],
     );
   });
+
+  // W3: smallest element-level normalised margin (the system frequency has no element to mark)
+  const tight = m2?.payload.constraint_margins.filter((c) => c.element_id !== "SYSTEM").reduce<LimitingConstraint | null>((a, c) => (a === null || c.normalised_margin < a.normalised_margin ? c : a), null);
+  for (const e of [...busEls, ...invEls, ...lineEls]) if (e.id === tight?.element_id) e.tightest = true;
 
   const topologyKey = JSON.stringify([
     buses.map((b) => b.id),

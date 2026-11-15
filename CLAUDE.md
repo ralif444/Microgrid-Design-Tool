@@ -1,6 +1,6 @@
 # Microgrid Design Web App
 
-Local, single-user web app for early design of islanded AC microgrids with grid-forming droop inverters (steady-state and stability analysis). Source of truth: the final seminar-proposal manuscript `Seminar.pdf` (28-10-2026). Engineering doc set in `docs/`: Docs 01–11 (contracts, API, UI, architecture, tests, roadmap; Docs 02, 03, 06 aligned with the manuscript on 2026-11-01), Doc 12 (post-proposal extensions, merged at stage 1.5), Doc 13 (PSIM validation basis), Doc 14 (alignment list: what still differs from the manuscript). On any conflict the manuscript wins, except user decisions recorded in Doc 14 as KONFLIK (user-decided).
+Local, single-user web app for early design of islanded AC microgrids with grid-forming droop inverters (steady-state and stability analysis). Source of truth: the final seminar-proposal manuscript `Seminar.pdf` (28-10-2026). Engineering doc set in `docs/`: Docs 01–11 (contracts, API, UI, architecture, tests, roadmap; Docs 02, 03, 06 aligned with the manuscript on 2026-11-01), Doc 12 (post-proposal extensions, merged at stage 1.5), Doc 13 (PSIM validation basis), Doc 14 (alignment list: what still differs from the manuscript). On any conflict the manuscript wins, except user decisions recorded in Doc 14 as KONFLIK (user-decided). For the UI, the redesign plan (`.scratch/ui-redesign/plan-workspace.md`, ADR-016 option B) wins over the manuscript, stepper removal included (Doc 14 D15).
 
 Rules:
 - The engine sits behind the Engine Port; the app never imports engine internals. Fake Engine first.

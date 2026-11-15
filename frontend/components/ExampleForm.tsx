@@ -12,7 +12,7 @@ import { useProject } from "../store";
 import { initialValue } from "../store/example";
 import styles from "./ExampleForm.module.css";
 import { Icon } from "./Icon";
-import { FURTHER, STEPS } from "./PipelineStepper";
+import { FURTHER, STEPS } from "./AreaNav";
 import banner from "./StatusBanner.module.css";
 import { Toggletip } from "./Term";
 

@@ -77,9 +77,8 @@ td input:not([type="radio"], [type="checkbox"]), td select { background: var(--c
 input:disabled, select:disabled { color: var(--cds-text-disabled); border-bottom-color: transparent; cursor: not-allowed; }
 input[aria-invalid="true"], select[aria-invalid="true"] { outline: 2px solid var(--role-error-edge); outline-offset: -2px; }
 /* hideSteppers: engineering values are typed, not stepped */
-input[type="number"] { appearance: textfield; -moz-appearance: textfield; }
-input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-input[type="number"] { width: 8em; text-align: right; font-variant-numeric: var(--numeric); }
+/* Number inputs are text inputs with inputmode="decimal" (plan F1: dot or comma accepted). */
+input[inputmode="decimal"] { width: 8em; text-align: right; font-variant-numeric: var(--numeric); }
 input[type="radio"], input[type="checkbox"] { accent-color: var(--color-link); }
 input[type="file"]::file-selector-button {
   font: inherit; min-height: var(--control-height); padding: 0 var(--space-3); margin-right: var(--space-2);

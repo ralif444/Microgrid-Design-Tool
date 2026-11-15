@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from flows import enter_design, gui_snapshot
+from flows import delete, enter_design, gui_snapshot, step
 from playwright.sync_api import Page, expect
 from test_loads_ps import _numeric_inputs_have_units
 from test_network_m1_m2 import _run_m1
@@ -23,12 +23,12 @@ def test_fr_28_fr_29_fr_44_fr_30_fr_31_further_analyses(
 ) -> None:
     enter_design(page, server("default"), gui_snapshot())
 
-    page.get_by_role("link", name="Sensitivity (M3a)").click()
+    step(page, "Sensitivity (M3a)")
     expect(page.get_by_role("button", name="Run M3a")).to_be_disabled()  # FR-39: no M1 yet
     expect(page.get_by_test_id("m1-blocked")).to_be_visible()
     _run_m1(page)
 
-    page.get_by_role("link", name="Sensitivity (M3a)").click()
+    step(page, "Sensitivity (M3a)")
     page.get_by_label("inverters/INV1/rated_kva").check()
     page.get_by_label("System frequency (Hz)").check()
     page.get_by_label("Step (ratio)").fill("0.01")
@@ -39,7 +39,7 @@ def test_fr_28_fr_29_fr_44_fr_30_fr_31_further_analyses(
         "inverters/INV1/rated_kva"
     )
 
-    page.get_by_role("link", name="Sweep (M3b)").click()
+    step(page, "Sweep (M3b)")
     expect(page.get_by_role("heading", name="Sweep (M3b)")).to_be_visible()
     page.get_by_label("Parameter", exact=True).select_option("inverters/INV1/rated_kva")
     page.get_by_label("From (kVA)").fill("5")
@@ -60,7 +60,7 @@ def test_fr_28_fr_29_fr_44_fr_30_fr_31_further_analyses(
     _status(page, "INPUT_INVALID")
     expect(page.get_by_role("status", name="Status")).to_contain_text("SWEEP_CAP_EXCEEDED")
 
-    page.get_by_role("link", name="Scenarios (M3c)").click()
+    step(page, "Scenarios (M3c)")
     expect(page.get_by_text("No scenarios yet.")).to_be_visible()
     for name in ("Base", "Bigger load"):
         page.get_by_label("Scenario name").fill(name)
@@ -83,7 +83,7 @@ def test_fr_32_fr_44_envelope(server: Callable[[str], str], page: Page) -> None:
     """S-12 (WP 1.5.5, Could): two axes, grid of Status, feasible fraction, cap on the product."""
     enter_design(page, server("default"), gui_snapshot())
     _run_m1(page)
-    page.get_by_role("link", name="Envelope (M3d)").click()
+    step(page, "Envelope (M3d)")
     page.get_by_label("X axis: Axis").select_option("LOAD_SCALE")
     page.get_by_label("X axis: From (factor)").fill("0.5")
     page.get_by_label("X axis: To (factor)").fill("1.5")
@@ -111,16 +111,16 @@ def test_fr_32_fr_44_envelope(server: Callable[[str], str], page: Page) -> None:
 def test_fr_80_static_n_minus_1(server: Callable[[str], str], page: Page) -> None:
     enter_design(page, server("default"), gui_snapshot())
     _run_m1(page)
-    page.get_by_role("link", name="Scenarios (M3c)").click()
+    step(page, "Scenarios (M3c)")
     page.get_by_role("button", name="Run N−1 check").click()
     head = page.get_by_role("table", name="Scenario comparison").locator("thead")
     expect(head).to_contain_text("Base design (FEASIBLE)")
     expect(head).to_contain_text("Without INV1 (FEASIBLE)")
     expect(head).to_contain_text("Without INV2 (FEASIBLE)")
 
-    page.get_by_role("link", name="3 Network").click()
+    step(page, "Network")
     page.get_by_role("tab", name="Inverters").click()
-    page.get_by_role("button", name="Delete INV2").click()
-    page.get_by_role("link", name="Scenarios (M3c)").click()
+    delete(page, "INV2")
+    step(page, "Scenarios (M3c)")
     expect(page.get_by_role("button", name="Run N−1 check")).to_be_disabled()
     expect(page.get_by_text("N−1 needs at least two inverters.")).to_be_visible()
