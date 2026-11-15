@@ -2,7 +2,7 @@
 // S-20 Battery adequacy (Doc 12 B2, B3, FR-116, FR-117, FR-119, FR-120; Doc 7 §2.5; ADR-015; Doc 9
 // D-109, D-110): start hour (prefilled 0) → Run gated on a current M1 → Status banner → fixed caveat →
 // one row per bank (power and autonomy) → depletion chart. Advice only.
-import { useState } from "react";
+import { useKept } from "../../components/useKept";
 import type { BatteryBank, RunRecord } from "../../api-types";
 import { AUTONOMY_OUTCOME, POWER_OUTCOME, valueSource, type BaBank, type BaPayload } from "../../components/battery";
 import { useCatalog } from "../../components/Catalog";
@@ -94,7 +94,7 @@ function Battery() {
       ];
     });
   const { fresh, busy, resp, stale, error, clearError, run } = useDependentRun("BA");
-  const [startHour, setStartHour] = useState<number | null>(0);
+  const [startHour, setStartHour] = useKept<number | null>("startHour", 0);
   const r = resp?.result;
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as BaPayload) : null;
   if (batteryBanks.length === 0)

@@ -4,6 +4,7 @@
 // reference (Doc 3 §6.6 default), explicit deltas, no ranking (4.2.5). Static N−1 check (Doc 12 FR-80).
 // UX-8 (Doc 12 X3): one bar chart per key metric across the scenarios (run order, no sorting, so no
 // ranking is implied); the comparison table with the payload deltas follows the charts.
+import { useKept } from "../../components/useKept";
 import { useState } from "react";
 import type { M3cPayload } from "../../api-types";
 import { ExampleGuide, ExampleNext, nextReady } from "../../components/ExampleForm";
@@ -81,8 +82,8 @@ function Scenarios() {
   const { scenarios } = useProject();
   const dispatch = useProjectDispatch();
   const { design, fresh, busy, resp, stale, error, clearError, run, m2Infeasible } = useDependentRun("M3c");
-  const [selected, setSelected] = useState<string[]>([]);
-  const [name, setName] = useState("");
+  const [selected, setSelected] = useKept<string[]>("selected", []);
+  const [name, setName] = useKept("name", "");
   const [runLabels, setRunLabels] = useState<Record<string, string>>({});
   const inverterCount = design.inverters?.length ?? 0;
   const paths = numericPaths(design);

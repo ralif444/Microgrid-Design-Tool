@@ -4,7 +4,8 @@
 // M2 limiting constraint via ?kind=&element= (Doc 12 FR-84); nothing runs until Run is pressed.
 // UX-8 (Doc 12 X3): one tornado chart per metric (normalised values in payload rank order; a null
 // is listed as not reported with its reason, never drawn); a status change is flagged with icon + word.
-import { useEffect, useState } from "react";
+import { useKept } from "../../components/useKept";
+import { useEffect } from "react";
 import type { M3aPayload, OutputMetric } from "../../api-types";
 import { BarChart } from "../../components/charts/BarChart";
 import { DataTable, type DataColumn } from "../../components/DataTable";
@@ -43,8 +44,8 @@ function Sensitivity() {
   const metrics = ex.values.output_metrics ?? [];
   const setPaths = (v: string[]) => ex.set("parameter_paths", v);
   const setMetrics = (v: OutputMetric[]) => ex.set("output_metrics", v);
-  const [stepKind, setStepKind] = useState<"step_relative" | "step_absolute">("step_relative");
-  const [step, setStep] = useState<number | null>(null);
+  const [stepKind, setStepKind] = useKept<"step_relative" | "step_absolute">("stepKind", "step_relative");
+  const [step, setStep] = useKept<number | null>("step", null);
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     const pre = shortcutPrefill(design, q.get("kind") ?? "", q.get("element") ?? "");

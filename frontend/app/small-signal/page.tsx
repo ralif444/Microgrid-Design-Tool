@@ -2,8 +2,8 @@
 // S-13 Small-signal (M4a) (Doc 7 §6.6, Doc 3 §6.8): optional τ_in and damping threshold; class in
 // words; validity-indicator panel (FR-61); τ_in pre-filled from a catalogue entry (Doc 12 FR-71).
 // UX-5 (Doc 12 X2, X3): KPI strip, eigenvalue plot, participation grid; tables on DataTable.
+import { useKept } from "../../components/useKept";
 import Link from "next/link";
-import { useState } from "react";
 import type { M4aPayload } from "../../api-types";
 import { ExampleGuide, ExampleNext, nextReady } from "../../components/ExampleForm";
 import { tauInSource } from "../../components/Catalog";
@@ -59,8 +59,8 @@ const EIGEN: DataColumn<EigRow>[] = [
 function SmallSignal() {
   const { design, fresh, busy, resp, stale, error, clearError, run, m2Infeasible } = useDependentRun("M4a");
   const { from, conflict } = tauInSource(design.inverters ?? []);
-  const [tauIn, setTauIn] = useState<number | null>(from?.tau_in_s ?? null);
-  const [threshold, setThreshold] = useState<number | null>(null);
+  const [tauIn, setTauIn] = useKept<number | null>("tauIn", from?.tau_in_s ?? null);
+  const [threshold, setThreshold] = useKept<number | null>("threshold", null);
   const r = resp?.result;
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as M4aPayload) : null;
   const eig: EigRow[] = p ? eigenRows(p) : [];

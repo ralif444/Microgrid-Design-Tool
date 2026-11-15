@@ -1,6 +1,6 @@
 # Plan: audit 2026-11-15 follow-up (Catalogue, Sizing, battery bank, study inputs)
 
-Status: Phase A and B done; rounds 2, 3 and 4 done (2026-11-15); O4 not started
+Status: Phase A and B done; all rounds done (2026-11-15), O4 included
 
 Basis: `docs/ui-ux-audit-2026-11-15.md` and the user's answers of 2026-11-15:
 
@@ -40,8 +40,8 @@ Rules: no engine, Engine Port, equation or Project file format change. The bank 
 - Sensitivity: parameters grouped per element with "n of m selected", bounded height; 16 px checkboxes and radios in study forms.
 - Battery bank: "Not saved yet." while the form holds unsaved changes (O2, a flag rather than a guard).
 
-## Later (not started)
-- Inputs kept across navigation (O4): store logic, needs a decision on what is kept.
+## Round 5 (done)
+- O4: study and Sizing inputs survive leaving a screen (`useKept`, memory only, per Project and screen; not in the Project file, gone on reload).
 
 ## Checks
 vitest, typecheck, rebuild, live pass at 1024 and 375 px on Catalogue, inspector bank, Sizing, Sensitivity, Battery.

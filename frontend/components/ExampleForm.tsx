@@ -3,6 +3,7 @@
 // precedence of `initialValue`, an "Example" tag with its source on each field that holds an example
 // value, the "not set" note for fields the example leaves empty, and "Reset to example values".
 // Outside example mode the hook only returns the refill values, and the screen looks as before.
+import { useKept } from "./useKept";
 import { Tag } from "@carbon/react";
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
@@ -48,7 +49,7 @@ export function useExampleForm<T extends object>(
     if (r === null) console.warn(`Example settings: ${screen}.${k} dropped (does not resolve on this Project)`);
     return r;
   };
-  const [form, setForm] = useState(() => {
+  const [form, setForm] = useKept(`form|${JSON.stringify(refill)}`, () => { // a new run (new refill) wins over kept typing (K149)
     const values = { ...refill } as Record<string, unknown>;
     const sources: Record<string, string> = {};
     const dropped: string[] = [];

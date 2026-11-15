@@ -4,7 +4,7 @@
 // INPUT_INVALID / SWEEP_CAP_EXCEEDED (Doc 7 §3.1).
 // UX-7 (Doc 12 X2–X4): KPI strip, metric picker over the metrics with data, crosshair, a mark at
 // the first infeasible value; the points table on DataTable.
-import { useState } from "react";
+import { useKept } from "../../components/useKept";
 import type { KeyMetrics, M3bPayload, RunRecord, SweepPoint } from "../../api-types";
 import { axisNeeds, SizeIndicator, useAxis, useSweepCap } from "../../components/AxisForm";
 import { LineChart } from "../../components/charts/LineChart";
@@ -67,7 +67,7 @@ function Sweep() {
   const pointMetrics = ex.values.point_metrics ?? [];
   const eigenvalues = ex.values.include_eigenvalues ?? false;
   const cap = useSweepCap();
-  const [metric, setMetric] = useState<Metric>("system_frequency_hz");
+  const [metric, setMetric] = useKept<Metric>("metric", "system_frequency_hz");
   // the run's own axis decides the hour view, so a later form change does not relabel a result
   const ranHours = (resp?.run_record.parameters as { axis?: { kind?: string } } | undefined)?.axis?.kind === HOUR_AXIS.kind;
   const unit = ranHours ? "h" : ax.unit;
