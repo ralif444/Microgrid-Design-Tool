@@ -20,8 +20,9 @@ import { fixed } from "../../components/format";
 import { ConstraintTable, KIND_WORDS, M2Results } from "../../components/M2Results";
 import { RequireProject } from "../../components/RequireProject";
 import { SldFigure } from "../../components/sld/SldFigure";
+import { ResultSheet } from "../../components/ResultSheet";
 import { statusIcon, TOKEN_ROLE } from "../../components/StatusBanner";
-import { bannerText } from "../../components/status-text";
+import { bannerText, statusWord } from "../../components/status-text";
 import { useValidation } from "../../components/useValidation";
 import { BarChart } from "../../components/charts/BarChart";
 import { ReportCharts } from "../../components/charts/ChartFrame";
@@ -138,7 +139,7 @@ function Report() {
           <p>
             <strong className={styles.word}>
               <Icon name={statusIcon(m2.result)} size={20} />
-              {m2.result.status}
+              {statusWord("M2", m2.result)}
             </strong>
             : {bannerText("M2", m2.result).headline}
           </p>
@@ -160,12 +161,12 @@ function Report() {
               </li>
             ))}
           </ul>
-          <ConstraintTable label="Limiting constraints" rows={limiting} />
+          <ConstraintTable label="Limiting constraints" rows={limiting} note={false} />
         </>
       )}
 
       <h2>3 Margins and checks not evaluated</h2>
-      {m2p && m2 ? <M2Results p={m2p} charts={{ record: m2 }} /> : <p>No M2 result with margins.</p>}
+      {m2p && m2 ? <ResultSheet record={m2}><M2Results p={m2p} charts={{ record: m2 }} /></ResultSheet> : <p>No M2 result with margins.</p>}
 
       <h2>4 Design summary</h2>
       <DataTable
@@ -195,6 +196,7 @@ function Report() {
       {m1p ? (
         <>
           {m1 && outdated(m1)}
+          <ResultSheet record={m1}>
           <div className={styles.chart}>
             <BarChart
               title="Bus voltage magnitude from the latest power flow (M1)"
@@ -207,17 +209,20 @@ function Report() {
             />
           </div>
           {/* limits as the reported run saw them, so the reference lines match that run */}
-          {m1 && <M1Results p={m1p} charts={{ limits: (m1.snapshot as ProjectSnapshot | null)?.design_constraints, record: m1, voltage: false }} />}
+          {m1 && <M1Results p={m1p} charts={{ limits: (m1.snapshot as ProjectSnapshot | null)?.design_constraints, record: m1, voltage: false }} check={m1.snapshot ? { design: m1.snapshot as ProjectSnapshot, m2: m2?.snapshot_hash === m1.snapshot_hash ? m2p : null } : undefined} />}
+          </ResultSheet>
         </>
       ) : (
-        <p className={styles.muted}>No power flow (M1) result{m1 ? `: the latest run ended with ${m1.result.status}` : ""}.</p>
+        <p className={styles.muted}>No power flow (M1) result{m1 ? `: the latest run ended with “${statusWord("M1", m1.result)}”` : ""}.</p>
       )}
 
       {m4ap && m4a && (
         <>
-          <h3>Small-signal (M4a): class {m4ap.stability_class}</h3>
+          <h3>Small-signal (M4a): {statusWord("M4a", m4a.result)}</h3>
           {outdated(m4a)}
-          <M4aCharts p={m4ap} record={m4a} reason={m4a.result.diagnostics?.participation_reason} />
+          <ResultSheet record={m4a}>
+            <M4aCharts p={m4ap} record={m4a} reason={m4a.result.diagnostics?.participation_reason} />
+          </ResultSheet>
         </>
       )}
 

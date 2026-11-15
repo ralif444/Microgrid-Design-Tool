@@ -4,6 +4,9 @@ import type { CatalogRef, DesignConstraints, Load, RunRecord } from "../api-type
 import { refText } from "./Catalog";
 import type { Column } from "./EntityTable";
 
+// An element the inspector can show (Inspector, workspace selection, element links).
+export type ElementRef = { kind: "bus" | "line" | "inverter" | "load"; id: string };
+
 const times = (a: unknown, b: unknown) => (typeof a === "number" && typeof b === "number" ? a * b : null);
 
 export const BUS_COLUMNS: Column[] = [{ field: "id", label: "Bus id", kind: "text" }];
@@ -45,10 +48,31 @@ export const CONSTRAINT_FIELDS: [keyof DesignConstraints, string, string][] = [
   ["balance_tolerance_kw", "Power-balance tolerance, optional", "kW"],
 ];
 
+// Field names and units as the tables and inspector show them (elementFields.ts); loads have no column list there.
+export const FIELD_NAME: Record<string, [string, string]> = Object.fromEntries([
+  ...[...LINE_COLUMNS, ...INVERTER_COLUMNS].flatMap((c) => (c.kind === "number" ? [[c.field, [c.label.replace(/, (optional|needed for M4)$/, ""), c.unit]]] : [])),
+  ["p_kw", ["Active power P", "kW"]],
+  ["q_kvar", ["Reactive power Q", "kvar"]],
+  ["power_factor", ["Power factor", "ratio"]],
+  ["nominal_voltage_kv", ["Nominal voltage, line-to-line", "kV"]],
+  ["nominal_frequency_hz", ["Nominal frequency", "Hz"]],
+  ["values.p_kw", ["Hourly P", "kW"]],
+  ...[...LINE_COLUMNS, ...INVERTER_COLUMNS].flatMap((c) => (c.kind === "bus" ? [[c.field, [c.label, ""]]] : [])),
+  ...CONSTRAINT_FIELDS.map(([f, l, u]) => [f, [l.replace(/, optional$/, ""), u]]),
+]);
+// a nested path ("battery_banks[0].initial_soc_ratio") is named by its last field; the issue id names the element
+export const fieldName = (f: string) => FIELD_NAME[f]?.[0] ?? f.replace(/^.*\./, "").replace(/_/g, " ");
+const ENTITY_WORD: Record<string, string> = { parameters: "Settings", DesignConstraints: "Design limits", LoadProfile: "Load profile" };
+// Where an issue sits, in words (audit D-26): "INV3, Bus", "Project, Nominal frequency", "Design".
+export const issueWhere = (i: { entity?: string | null; id?: string | null; field?: string | null }) =>
+  [i.id ?? ENTITY_WORD[i.entity ?? ""] ?? i.entity, i.field && fieldName(i.field)].filter(Boolean).join(", ") || "Design";
+
 // S-03 (FR-03): Q or power factor per load. The choice is a screen state, not data: both empty reads as Q.
 export type LoadMode = "Q" | "PF";
 export const loadMode = (l: Load, chosen?: LoadMode): LoadMode => chosen ?? (l.power_factor != null || l.pf_direction != null ? "PF" : "Q");
 export const modePatch = (m: LoadMode): Partial<Load> => (m === "Q" ? { power_factor: null, pf_direction: null } : { q_kvar: null });
+// D-15, Doc 3 §3.4: q_kvar is inductive Q, 0 or more; a leading load is a LEADING power factor, never a negative Q.
+export const Q_SIGN_NOTE = "Q is the inductive reactive power the load draws, 0 or more. For a leading load, give a power factor with direction leading.";
 export const PF_DIRECTIONS: [string, string][] = [
   ["LAGGING", "lagging"],
   ["LEADING", "leading"],

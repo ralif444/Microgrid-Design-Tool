@@ -60,6 +60,8 @@ export interface ProjectState {
   // Battery round (D-106 K304): design data outside the snapshot, so an edit makes nothing stale.
   batteryBanks: BatteryBank[];
   runRecords: RunRecord[];
+  // Audit O-1: inverter drafts added per accepted advice id; UI state only, never in the Project file.
+  draftsAdded: Record<string, number>;
   unsaved: boolean;
   // Example mode (Doc 12 X9, D-92 K233): UI state only, never in the Project file or a snapshot.
   example: { id: string; settings: ExampleSettings } | null;
@@ -84,8 +86,12 @@ export type ProjectAction =
   | { type: "rowUpdated"; collection: Collection; id: string; patch: Row }
   | { type: "rowRemoved"; collection: Collection; id: string }
   | { type: "constraintSet"; field: keyof DesignConstraints; value: number | null }
+  // O-2: the one LoadProfile of the Project (Doc 3 §3.5); null removes it
+  | { type: "profileSet"; profile: ProjectSnapshot["load_profile"] }
   | { type: "adviceAdded"; advice: SizingAdvice }
   | { type: "adviceDecided"; id: string; state: "ACCEPTED" | "SKIPPED" }
+  // FR-09: unit_count Inverter rows at the advised unit rating, remembered for that advice (O-1)
+  | { type: "draftsAdded"; adviceId: string; count: number; ratedKva: number }
   | { type: "runRecordAdded"; record: RunRecord }
   // Scenarios (Doc 7 S-11, D-56 K96): not design data, so they never make M1 stale.
   | { type: "scenarioAdded"; name: string }
@@ -124,6 +130,7 @@ export const initialState: ProjectState = {
   scenarios: [],
   batteryBanks: [],
   runRecords: [],
+  draftsAdded: {},
   unsaved: false,
   example: null,
 };
@@ -209,6 +216,8 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
       };
     case "bankRemoved":
       return { ...state, batteryBanks: state.batteryBanks.filter((b) => b.inverter_id !== action.inverterId), unsaved: true };
+    case "profileSet":
+      return edit(state, { load_profile: action.profile });
     case "constraintSet":
       return edit(state, { design_constraints: { ...d.design_constraints, [action.field]: action.value } });
     case "adviceAdded":
@@ -220,8 +229,16 @@ export function projectReducer(state: ProjectState, action: ProjectAction): Proj
         sizingAdvice: state.sizingAdvice.map((a) =>
           a.id === action.id ? { ...a, state: action.state } : a,
         ),
+        // a new Accept starts a fresh draft record (O-1)
+        draftsAdded: action.state === "ACCEPTED" ? {} : state.draftsAdded,
         unsaved: true,
       };
+    case "draftsAdded": {
+      let next = state;
+      for (let k = 0; k < action.count; k++)
+        next = projectReducer(next, { type: "rowAdded", collection: "inverters", row: { rated_kva: action.ratedKva } });
+      return { ...next, draftsAdded: { ...state.draftsAdded, [action.adviceId]: action.count } };
+    }
     case "runRecordAdded":
       return { ...state, runRecords: [...state.runRecords, action.record] };
     case "scenarioAdded":
@@ -275,6 +292,16 @@ export function latestRun(runRecords: RunRecord[], type: string, current: string
   return runRecords.findLast((r) => r.analysis_type === type && hash(r) === current) ?? null;
 }
 
+// O-3: the run a study screen shows: the current one, else the latest of its type marked out of date.
+// Null while the design hash is not known yet, so nothing is called out of date before the check answers.
+export type StudyState = "current" | "stale" | "none";
+export function studyRun(runRecords: RunRecord[], type: string, current: string | null): { record: RunRecord | null; state: StudyState } {
+  if (current === null) return { record: null, state: "none" };
+  const now = latestRun(runRecords, type, current);
+  const last = now ?? runRecords.findLast((r) => r.analysis_type === type) ?? null;
+  return { record: last, state: now ? "current" : last ? "stale" : "none" };
+}
+
 // Latest FEASIBLE M1 as the dependency reference for M2 (Doc 3 §5.1 RunRecordRef), or null.
 export function m1Ref(runRecords: RunRecord[]): RunRecordRef | null {
   const rec = runRecords.findLast((r) => r.analysis_type === "M1" && r.result.status === "FEASIBLE");
@@ -308,5 +335,6 @@ export function fromProjectFile(f: ProjectFile): Omit<ProjectState, "unsaved" | 
     scenarios: (f.scenarios ?? []) as Scenario[],
     batteryBanks: f.battery_banks ?? [],
     runRecords: f.run_records as RunRecord[],
+    draftsAdded: {},
   };
 }

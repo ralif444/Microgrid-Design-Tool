@@ -5,7 +5,7 @@
 import { useState } from "react";
 import type { Load, ValidationIssue } from "../api-types";
 import { busDependents, useProject, useProjectDispatch, type Collection } from "../store";
-import { BUS_COLUMNS, CONSTRAINT_FIELDS, INVERTER_COLUMNS, LINE_COLUMNS, loadMode, modePatch, PF_DIRECTIONS, type LoadMode } from "./elementFields";
+import { BUS_COLUMNS, CONSTRAINT_FIELDS, INVERTER_COLUMNS, LINE_COLUMNS, loadMode, modePatch, PF_DIRECTIONS, Q_SIGN_NOTE, type LoadMode } from "./elementFields";
 import styles from "./ElementForm.module.css";
 import type { Column } from "./EntityTable";
 import { useRowDelete } from "./EntityTable";
@@ -215,6 +215,9 @@ export function ElementForm({ target, onRename, onDeleted }: { target: ElementRe
             />,
           ]
         : []),
+      <p key="sign" className={styles.hint}>
+        {Q_SIGN_NOTE}
+      </p>,
     ];
   }
 
@@ -247,14 +250,58 @@ export function ElementForm({ target, onRename, onDeleted }: { target: ElementRe
 }
 
 /** The design limits (S-06) in the inspector column. */
+// Project and system (audit Phase 7, decision 4): the former S-02 fields, now in the workspace inspector.
+export function SystemForm() {
+  const { project, design, runRecords } = useProject();
+  const dispatch = useProjectDispatch();
+  const issues = (useValidation(design)?.issues ?? []).filter((i) => i.entity === "Project");
+  const counts: [string, number][] = [
+    ["Buses", design.buses?.length ?? 0],
+    ["Lines", design.lines?.length ?? 0],
+    ["Loads", design.loads?.length ?? 0],
+    ["Inverters", design.inverters?.length ?? 0],
+    ["RunRecords", runRecords.length],
+  ];
+  return (
+    <form aria-label="Edit project and system" className={styles.form} onSubmit={(e) => e.preventDefault()}>
+      <div className={styles.field}>
+        <label htmlFor="sys-name">Project name</label>
+        <input id="sys-name" required maxLength={100} value={project?.name ?? ""} onChange={(e) => dispatch({ type: "projectUpdated", name: e.target.value })} />
+      </div>
+      <div className={styles.field}>
+        <label htmlFor="sys-description">Description, optional</label>
+        <textarea id="sys-description" rows={3} maxLength={1000} value={project?.description ?? ""} onChange={(e) => dispatch({ type: "projectUpdated", description: e.target.value || null })} />
+      </div>
+      <NumberField id="sys-kv" label="Nominal voltage, line-to-line" unit="kV" value={design.nominal_voltage_kv} error={messages(issues, "nominal_voltage_kv")} onChange={(v) => dispatch({ type: "projectUpdated", nominal_voltage_kv: v })} />
+      <NumberField id="sys-hz" label="Nominal frequency" unit="Hz" value={design.nominal_frequency_hz} error={messages(issues, "nominal_frequency_hz")} onChange={(v) => dispatch({ type: "projectUpdated", nominal_frequency_hz: v })} />
+      <table aria-label="Counts">
+        <tbody>
+          {counts.map(([k, n]) => (
+            <tr key={k}>
+              <th scope="row">{k}</th>
+              <td>{n}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </form>
+  );
+}
+
 export function LimitsForm() {
-  const { design } = useProject();
+  const { design, example } = useProject();
   const dispatch = useProjectDispatch();
   const c = design.design_constraints ?? {};
   const issues = (useValidation(design)?.issues ?? []).filter((i) => i.entity === "DesignConstraints");
   return (
     <form aria-label="Edit design limits" className={styles.form} onSubmit={(e) => e.preventDefault()}>
       <p className={styles.hint}>Every limit starts empty. An empty limit is not evaluated and is never counted as satisfied.</p>
+      {example && (
+        <p className={styles.hint} data-testid="example-constraints">
+          Example mode: these limits come from the guided example&apos;s Project file, as the study settings of the
+          reference designs, not values from a standard. Editing one changes the design like any other edit.
+        </p>
+      )}
       {CONSTRAINT_FIELDS.map(([k, label, unit]) => (
         <NumberField
           key={k}

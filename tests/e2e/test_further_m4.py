@@ -42,9 +42,11 @@ def test_fr_33_fr_34_stability_screens(server: Callable[[str], str], page: Page)
             "Inverter outage (permanent)",
         ]
     )
-    page.get_by_role("button", name="Run M4b").click()  # nothing entered yet
-    _status(page, "INPUT_INVALID")
-    expect(page.get_by_role("list", name="Issues")).to_contain_text("disturbance")
+    # nothing entered yet: Run stays disabled and names what is missing (Phase 5)
+    expect(page.get_by_role("button", name="Run M4b")).to_be_disabled()
+    expect(
+        page.get_by_text("Missing: Element, Step size, Start time, Simulation end")
+    ).to_be_visible()
 
     page.get_by_label("Element", exact=True).select_option("L1")
     page.get_by_label("Step size (kW)").fill("1")

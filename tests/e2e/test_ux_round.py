@@ -18,7 +18,7 @@ import xml.etree.ElementTree as ET
 from collections.abc import Callable
 from pathlib import Path
 
-from flows import enter_design, gui_snapshot, step
+from flows import enter_design, gui_snapshot, run_id, step
 from playwright.sync_api import Page, expect
 from test_network_m1_m2 import _margins, _run_m1
 
@@ -28,19 +28,19 @@ def test_fr_93_result_survives_leaving_and_hides_after_edit(
 ) -> None:
     enter_design(page, server("default"), gui_snapshot())
     _run_m1(page)
-    record = page.get_by_test_id("record-id").inner_text()
+    record = run_id(page)
 
     step(page, "Loads")
     step(page, "Power flow (M1)")
     expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "FEASIBLE")
-    expect(page.get_by_test_id("record-id")).to_have_text(record)
+    expect(page.get_by_test_id("sheet-run")).to_have_attribute("title", record)
 
     step(page, "Network")
     page.get_by_role("tab", name="Inverters").click()
     page.get_by_label("Rating (kVA) of INV1").fill("50")
     step(page, "Power flow (M1)")
     expect(page.get_by_text("No result on this screen.")).to_be_visible()
-    expect(page.get_by_test_id("record-id")).to_have_count(0)
+    expect(page.get_by_test_id("sheet-run")).to_have_count(0)
 
 
 def test_fr_86_show_data_lists_the_payload_rows(server: Callable[[str], str], page: Page) -> None:
@@ -119,16 +119,14 @@ def test_fr_87_fr_88_constraint_check_kpis_and_charts(
     page.get_by_role("button", name="Run M2").click()
     expect(page.get_by_role("status", name="Status")).to_have_attribute("data-status", "INFEASIBLE")
     kpis = page.get_by_role("region", name="Constraint check key figures")
-    expect(kpis).to_contain_text("INFEASIBLE")
+    expect(kpis).to_contain_text("Limits violated")
     expect(kpis).to_contain_text("Tightest constraint")
     expect(kpis).to_contain_text("solution-existence diagnostic, not a stability limit")
     expect(kpis).to_contain_text("FAKE engine: placeholder values, not engine results.")
 
-    margins = page.get_by_role("img", name="Normalised margin (ratio) bar chart, 2 bars")
-    expect(margins).to_contain_text("Violated (margin < 0)")
     axis = page.get_by_role("img", name="Load scale λ (ratio) axis, 0 markers")
     expect(axis).to_be_visible()
-    for title in ("Normalised margin per constraint", "Loadability along the load scale λ"):
+    for title in ("Loadability along the load scale λ",):
         figure = page.get_by_role("figure").filter(has_text=title)
         expect(figure).to_contain_text("FAKE engine: placeholder, not an engine result")
     page.get_by_role("button", name="Show data: Loadability along the load scale λ").click()
@@ -213,10 +211,10 @@ def test_fr_87_fr_88_fr_89_sweep_and_envelope(server: Callable[[str], str], page
     expect(figure).to_contain_text("FAKE engine: placeholder, not an engine result")
     figure.get_by_role("img", name="System frequency (Hz) against").focus()
     readout = figure.get_by_test_id("crosshair")
-    expect(readout).to_contain_text("inverters/INV1/rated_kva 5 kVA")
+    expect(readout).to_contain_text("INV1, Rating 5 kVA")
     expect(readout).to_contain_text(re.compile(r"System frequency: [0-9.]+ Hz"))
     page.keyboard.press("End")
-    expect(readout).to_contain_text("inverters/INV1/rated_kva 15 kVA")
+    expect(readout).to_contain_text("INV1, Rating 15 kVA")
 
     step(page, "Envelope (M3d)")
     page.get_by_label("X axis: Axis").select_option("LOAD_SCALE")
@@ -238,10 +236,10 @@ def test_fr_87_fr_88_fr_89_sweep_and_envelope(server: Callable[[str], str], page
     expect(grid.locator('td[tabindex="0"]')).to_have_count(1)  # one tab stop, arrows move
     grid.locator('td[tabindex="0"]').focus()
     readout = page.get_by_test_id("envelope-readout")
-    expect(readout).to_contain_text("LOAD_SCALE 0.5 factor")
+    expect(readout).to_contain_text("Load scale λ 0.5 factor")
     expect(readout).to_contain_text("FEASIBLE; limiting constraint: none")
     page.keyboard.press("ArrowRight")
-    expect(readout).to_contain_text("LOAD_SCALE 1.5 factor")
+    expect(readout).to_contain_text("Load scale λ 1.5 factor")
     page.get_by_role("button", name="Show data: Status per point").click()
     expect(
         page.get_by_role("table", name="Status per point data").locator("tbody tr")
@@ -252,8 +250,8 @@ def test_fr_88_tornado_and_scenario_bars(server: Callable[[str], str], page: Pag
     enter_design(page, server("default"), gui_snapshot())
     _run_m1(page)
     step(page, "Sensitivity (M3a)")
-    page.get_by_label("inverters/INV1/rated_kva").check()
-    page.get_by_label("inverters/INV2/rated_kva").check()
+    page.get_by_label("INV1, Rating (kVA)").check()
+    page.get_by_label("INV2, Rating (kVA)").check()
     page.get_by_label("System frequency (Hz)").check()
     page.get_by_label("Step (ratio)").fill("0.01")
     page.get_by_role("button", name="Run M3a").click()
@@ -295,7 +293,6 @@ def test_fr_88_report_charts_are_static_and_fit_a4(
     step(page, "Report")
     for name in (
         "Inverter loading",
-        "Normalised margin per constraint",
         "Loadability along the load scale λ",
         "Eigenvalues in the complex plane",
     ):
@@ -346,7 +343,7 @@ def test_fr_92_chart_svg_download_carries_the_caption(
 ) -> None:
     enter_design(page, server("default"), gui_snapshot())
     _run_m1(page)
-    record = page.get_by_test_id("record-id").inner_text()
+    record = run_id(page)
     with page.expect_download() as dl:
         page.get_by_role("button", name="Download SVG: Inverter loading").click()
     assert dl.value.suggested_filename == f"inverter-loading-{record}.svg"

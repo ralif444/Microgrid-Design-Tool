@@ -1,5 +1,6 @@
 // KPI selectors (Doc 12 X2, FR-87): values read straight from the payload. Only select (min, max,
 // argmin, argmax) and count; no arithmetic on physical quantities (guideline §1 rule 1).
+import { violatedCount } from "./status-text";
 import type { M1Payload, M2Payload, M3bPayload, M3dPayload, M4aPayload, M4bPayload } from "../api-types";
 import { num } from "./format";
 import type { GlossaryKey } from "./glossary";
@@ -36,8 +37,8 @@ export function m2Kpis(p: M2Payload): Kpi[] {
   const l = p.loadability;
   const res = `resolution ${num(l.resolution)}`;
   return [
-    { label: "Verdict", value: p.verdict, unit: "", term: p.verdict, icon: p.verdict === "FEASIBLE" ? "feasible" : "misuse" },
-    { label: "Violated constraints", value: p.constraint_margins.filter((c) => c.margin < 0).length, unit: "count", term: "margin" },
+    { label: "Verdict", value: p.verdict === "FEASIBLE" ? "Meets the limits" : "Limits violated", unit: "", term: p.verdict, icon: p.verdict === "FEASIBLE" ? "feasible" : "misuse" },
+    { label: "Violated constraints", value: violatedCount(p) ?? 0, unit: "count", term: "margin" },
     {
       label: "Tightest constraint",
       value: tight?.normalised_margin ?? null,

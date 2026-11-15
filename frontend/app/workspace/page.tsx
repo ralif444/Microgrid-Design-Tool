@@ -3,19 +3,20 @@
 // `?area=` from the header tabs (AreaNav). Element list, diagram, inspector beside it (FR-90, FR-91) and,
 // in Check, the results drawer. Runs follow the S-07 / S-08 rules: M2 needs the current M1 (FR-38,
 // FR-40, FR-93). Studies and Report are their own routes under the same tabs.
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import type { M1Payload, M2Payload } from "../../api-types";
-import { CheckStrip } from "../../components/CheckStrip";
-import { ElementForm, LimitsForm } from "../../components/ElementForm";
-import { lastM2Params, M2_FIELDS, type M2Params } from "../../components/elementFields";
+import { CheckStrip, useSizingMarginNote } from "../../components/CheckStrip";
+import { ElementForm, LimitsForm, SystemForm } from "../../components/ElementForm";
+import { issueWhere, lastM2Params, M2_FIELDS, type M2Params } from "../../components/elementFields";
 import { EmptyState } from "../../components/EmptyState";
 import { ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
 import { asResponse } from "../../components/Further";
 import { Icon } from "../../components/Icon";
 import { Inspector, type ElementRef } from "../../components/Inspector";
 import inspectorStyles from "../../components/Inspector.module.css";
-import { M1BlockedNote } from "../../components/M1Freshness";
+import { CheckFailed, M1BlockedNote } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { M1Results } from "../../components/M1Results";
 import { ConstraintTable, M2Results } from "../../components/M2Results";
@@ -27,11 +28,20 @@ import { useSldModel } from "../../components/sld/useSldModel";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import { SOLVER, useAnalysisCall } from "../../components/useAnalysisCall";
-import { m1Freshness, useValidation } from "../../components/useValidation";
+import { m1Freshness, useValidationState } from "../../components/useValidation";
 import { ID_PREFIX, latestRun, m1Ref, nextId, useProject, useProjectDispatch } from "../../store";
 import styles from "./workspace.module.css";
 
-type Selection = ElementRef | { kind: "limits" } | null;
+type Selection = ElementRef | { kind: "limits" } | { kind: "system" } | null;
+// `?el=inverter:INV1` (element links from the other screens, audit D-18) opens with that element selected;
+// `?el=system` and `?el=limits` open the former Project and Constraints screens (audit Phase 7).
+const KINDS = ["bus", "line", "inverter", "load"] as const;
+function parseEl(v: string | null): Selection {
+  if (v === "system" || v === "limits") return { kind: v };
+  const k = v?.indexOf(":") ?? -1;
+  const kind = v?.slice(0, k) as ElementRef["kind"];
+  return v && k > 0 && KINDS.includes(kind) ? { kind, id: v.slice(k + 1) } : null;
+}
 const MARK_WORD = { violated: "Violated", limiting: "Limiting", near: "Near limit" } as const;
 
 function ElementList({ selected, onSelect, editable }: { selected: Selection; onSelect: (s: Selection) => void; editable: boolean }) {
@@ -48,20 +58,36 @@ function ElementList({ selected, onSelect, editable }: { selected: Selection; on
     onSelect({ kind, id });
   };
   const groups = [
-    { title: "Inverters", kind: "inverter", list: full.inverters, add: () => add("inverters", "inverter", { bus_id: firstBus }) },
-    { title: "Buses", kind: "bus", list: full.buses, add: null },
-    { title: "Lines", kind: "line", list: full.lines, add: () => add("lines", "line", { from_bus_id: null, to_bus_id: null }) },
-    { title: "Loads", kind: "load", list: full.loads, add: () => add("loads", "load", { bus_id: firstBus, p_kw: null, q_kvar: null }) },
+    { title: "Inverters", kind: "inverter", list: full.inverters, add: () => add("inverters", "inverter", { bus_id: firstBus }), table: "/network/" },
+    { title: "Buses", kind: "bus", list: full.buses, add: null, table: "/network/" },
+    { title: "Lines", kind: "line", list: full.lines, add: () => add("lines", "line", { from_bus_id: null, to_bus_id: null }), table: "/network/" },
+    { title: "Loads", kind: "load", list: full.loads, add: () => add("loads", "load", { bus_id: firstBus, p_kw: null, q_kvar: null }), table: "/loads/" },
   ] as const;
   const isSel = (kind: string, id?: string) => selected?.kind === kind && (!id || ("id" in selected && selected.id === id));
   return (
     <nav aria-label="Elements" className={styles.list}>
+      <section aria-label="System">
+        <h2>
+          <span>System</span>
+        </h2>
+        <ul>
+          <li>
+            <button type="button" aria-pressed={isSel("system")} onClick={() => onSelect({ kind: "system" })}>
+              Project and system
+            </button>
+          </li>
+        </ul>
+      </section>
       {groups.map((g) => (
         <section key={g.title} aria-label={g.title}>
           <h2>
             <span>{g.title}</span>
             <span>{g.list.length}</span>
           </h2>
+          {/* bulk entry stays a table (audit Phase 7): the Loads and Network screens */}
+          <Link href={g.table} className={styles.tableView} aria-label={`Table view: ${g.title}`}>
+            Table view
+          </Link>
           <ul>
             {g.list.map((e) => {
               const flag =
@@ -127,13 +153,15 @@ function ElementList({ selected, onSelect, editable }: { selected: Selection; on
 function Workspace() {
   const { design, runRecords } = useProject();
   const dispatch = useProjectDispatch();
-  const area = useSearchParams().get("area") === "check" ? "check" : "model";
-  const [sel, setSel] = useState<Selection>(null);
+  const search = useSearchParams();
+  const area = search.get("area") === "check" ? "check" : "model";
+  const [sel, setSel] = useState<Selection>(() => parseEl(search.get("el")));
   const [focusKey, setFocusKey] = useState(0);
   const [drawer, setDrawer] = useState(true);
   const [tab, setTab] = useState<"margins" | "pf">("margins");
   const sld = useSldModel();
-  const report = useValidation(design);
+  const check = useValidationState(design);
+  const report = check.report;
   const ref = m1Ref(runRecords);
   const fresh = m1Freshness(ref?.snapshot_hash ?? null, report);
   const m1Record = runRecords.find((r) => r.record_id === ref?.record_id) ?? null;
@@ -145,7 +173,10 @@ function Workspace() {
   // starts from the user's last M2 entry, or the guided example's (K147, D-92 K230), as on S-08
   const ex = useExampleForm<M2Params>("constraint-check", lastM2Params(runRecords));
   const params = ex.values;
+  const marginNote = useSizingMarginNote(ex);
   const marginsSet = params.inverter_margin_ratio !== null && params.line_margin_ratio !== null;
+  // opened by the user, it stays open while they type (audit D-9); closed by default once margins are set
+  const [settingsOpen, setSettingsOpen] = useState(!marginsSet);
   const { busy, error, setError, call } = useAnalysisCall();
 
   const select = (s: Selection) => {
@@ -163,7 +194,7 @@ function Workspace() {
     if (data) dispatch({ type: "runRecordAdded", record: data.run_record });
   }
 
-  const element = sel && sel.kind !== "limits" ? sel : null;
+  const element = sel && sel.kind !== "limits" && sel.kind !== "system" ? sel : null;
   const issues = report?.issues ?? [];
   const designIssues = issues.filter((i) => i.level === "topology" || !["Bus", "Line", "Inverter", "Load"].includes(i.entity ?? ""));
 
@@ -189,10 +220,10 @@ function Workspace() {
       <ElementList selected={sel} onSelect={select} editable={area === "model"} />
 
       <div className={styles.canvas}>
-        {area === "check" && <CheckStrip fresh={fresh} m1={m1} m1Record={m1Record} m2={m2} />}
+        {area === "check" && <CheckStrip fresh={fresh} m1={m1} m1Record={m1Record} m2={m2} m2Record={m2Resp?.run_record ?? null} />}
         {area === "check" && <M1BlockedNote f={fresh} />}
         {area === "check" && (
-          <details className={styles.settings} open={!marginsSet || undefined}>
+          <details className={styles.settings} open={settingsOpen || !marginsSet} onToggle={(e) => setSettingsOpen(e.currentTarget.open)}>
             <summary>Constraint check settings{marginsSet ? "" : ": enter both design margins to run M2"}</summary>
             <form aria-label="Constraint check settings" onSubmit={(e) => (e.preventDefault(), void runM2())}>
               {M2_FIELDS.map(([k, label, unit, step]) => (
@@ -205,7 +236,7 @@ function Workspace() {
                   value={params[k]}
                   onChange={(v) => ex.set(k, v)}
                   adornment={ex.tag(k, label)}
-                  note={ex.note(k)}
+                  note={marginNote(k)}
                 />
               ))}
               {ex.resetButton}
@@ -225,7 +256,11 @@ function Workspace() {
         {area === "model" && (
           <section aria-label="Design issues" className={styles.issues}>
             <h2>Design issues</h2>
-            {designIssues.length === 0 ? (
+            {check.error ? (
+              <CheckFailed error={check.error} onRetry={check.retry} />
+            ) : report === null ? (
+              <p>Checking the design…</p>
+            ) : designIssues.length === 0 ? (
               <p className="all-clear">
                 <Icon name="feasible" />
                 No network-level problems found.
@@ -234,7 +269,7 @@ function Workspace() {
               <ul>
                 {designIssues.map((i, k) => (
                   <li key={k}>
-                    {[i.entity, i.id, i.field].filter(Boolean).join(" / ") || "Design"}: {i.message}
+                    {issueWhere(i)}: {i.message}
                   </li>
                 ))}
               </ul>
@@ -253,6 +288,17 @@ function Workspace() {
               </button>
             </div>
             <LimitsForm />
+            <ExampleNext screen="/workspace/?el=limits" ready />
+          </aside>
+        ) : sel?.kind === "system" ? (
+          <aside aria-label="Inspector: Project and system" className={`no-print ${inspectorStyles.docked}`}>
+            <div className={inspectorStyles.top}>
+              <h2>Project and system</h2>
+              <button type="button" onClick={() => setSel(null)}>
+                Close inspector
+              </button>
+            </div>
+            <SystemForm />
           </aside>
         ) : element ? (
           <Inspector
@@ -297,9 +343,9 @@ function Workspace() {
               {tab === "margins" ? (
                 <>
                   {r2 && <StatusBanner type="M2" result={r2} />}
-                  {r2?.status === "INFEASIBLE" && <ConstraintTable label="Limiting constraints" rows={r2.limiting_constraints ?? []} shortcut />}
+                  {r2?.status === "INFEASIBLE" && <ConstraintTable label="Limiting constraints" rows={r2.limiting_constraints ?? []} shortcut note={false} onInspect={select} />}
                   {m2 && m2Resp ? (
-                    <M2Results p={m2} charts={{ record: m2Resp.run_record }} />
+                    <M2Results p={m2} charts={{ record: m2Resp.run_record }} onInspect={select} />
                   ) : (
                     !r2 && <EmptyState title="No current constraint check.">Run M2 on the current design to see the margins.</EmptyState>
                   )}
@@ -309,7 +355,7 @@ function Workspace() {
                 <>
                   {m1Resp && <StatusBanner type="M1" result={m1Resp.result} />}
                   {m1 && m1Resp ? (
-                    <M1Results p={m1} charts={{ limits: design.design_constraints, record: m1Resp.run_record }} onInspect={select} />
+                    <M1Results p={m1} charts={{ limits: design.design_constraints, record: m1Resp.run_record }} onInspect={select} check={{ design, m2 }} />
                   ) : (
                     !m1Resp && (
                       <EmptyState title="No current power flow.">Run M1 on the current design to see bus voltages, inverter outputs and line flows.</EmptyState>

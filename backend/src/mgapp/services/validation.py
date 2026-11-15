@@ -84,10 +84,16 @@ class _Collector:
         entity: str | None = None,
         id_: str | None = None,
         field: str | None = None,
+        message: str | None = None,
     ) -> None:
         self.issues.append(
             ValidationIssue(
-                code=code, level=level, entity=entity, id=id_, field=field, message=MESSAGES[code]
+                code=code,
+                level=level,
+                entity=entity,
+                id=id_,
+                field=field,
+                message=message or MESSAGES[code],
             )
         )
 
@@ -313,8 +319,8 @@ def _axis_ok(s: ProjectSnapshot, axis: Any, hour_ok: bool = False) -> bool:
 def _parameters(
     c: _Collector, t: AnalysisType, p: dict[str, Any], s: ProjectSnapshot, scen_count: int
 ) -> None:
-    def bad(code: IssueCode, field: str | None = None) -> None:
-        c.add(code, IssueLevel.REQUEST, "parameters", None, field)
+    def bad(code: IssueCode, field: str | None = None, message: str | None = None) -> None:
+        c.add(code, IssueLevel.REQUEST, "parameters", None, field, message)
 
     if t is AnalysisType.PS:
         m, n, r, h = (
@@ -355,7 +361,11 @@ def _parameters(
             bad(IssueCode.SENSITIVITY_STEP_INVALID)
         for path in p.get("parameter_paths") or [None]:
             if not _path_ok(s, path):
-                bad(IssueCode.SCENARIO_PATH_INVALID, "parameter_paths")
+                bad(
+                    IssueCode.SCENARIO_PATH_INVALID,
+                    "parameter_paths",
+                    "A chosen parameter does not exist in this design.",
+                )
     elif t is AnalysisType.M3B:
         axis = p.get("axis")
         hour = isinstance(axis, dict) and axis.get("kind") == HOUR_AXIS
@@ -454,7 +464,13 @@ def _scenario_elements(base: ProjectSnapshot, scen: ProjectSnapshot) -> list[Val
     for id_ in sorted(
         {ln.id for ln in base.lines if ln.id} ^ {ln.id for ln in scen.lines if ln.id}
     ):
-        c.add(IssueCode.SCENARIO_PATH_INVALID, IssueLevel.ENTITY, "Line", id_)
+        c.add(
+            IssueCode.SCENARIO_PATH_INVALID,
+            IssueLevel.ENTITY,
+            "Line",
+            id_,
+            message="A scenario must keep the same lines as the base design.",
+        )
     return c.issues
 
 

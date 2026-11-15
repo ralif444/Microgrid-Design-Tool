@@ -111,11 +111,9 @@ def gui_snapshot() -> dict[str, Any]:
 # helpers, so a shell change edits only STEP_LINK.
 # Values: (area tab, screen link) as drawn by AreaNav.
 STEP_LINK = {
-    "Project": ("Model", "Project"),
     "Loads": ("Model", "Loads"),
     "Sizing advice": ("Model", "Sizing advice"),
     "Network": ("Model", "Network"),
-    "Constraints": ("Model", "Constraints"),
     "Power flow (M1)": ("Check", "Power flow (M1)"),
     "Constraint check (M2)": ("Check", "Constraint check (M2)"),
     "Report": ("Report", "Report"),
@@ -156,17 +154,24 @@ def step_link(page: Page, name: str, go: Callable[[Locator], None] | None = None
     return page.get_by_role("navigation", name="Screens").get_by_role("link", name=link, exact=True)
 
 
+# Retired screens (audit Phase 7, Doc 14 D16): now items of the workspace element list.
+WORKSPACE_ITEM = {"Project": "Project and system", "Constraints": "Design limits"}
+
+
 def step(page: Page, name: str) -> None:
     """Go to a screen (client-side navigation, so the Project stays open)."""
+    if name in WORKSPACE_ITEM:
+        area(page, "Model")
+        elements = page.get_by_role("navigation", name="Elements")
+        elements.get_by_role("button", name=WORKSPACE_ITEM[name]).click()
+        return
     step_link(page, name).click()
 
 
 ROUTE_STEP = {
-    "project": "Project",
     "loads": "Loads",
     "sizing": "Sizing advice",
     "network": "Network",
-    "constraints": "Constraints",
     "power-flow": "Power flow (M1)",
     "constraint-check": "Constraint check (M2)",
     "sensitivity": "Sensitivity (M3a)",
@@ -187,3 +192,9 @@ def go_route(page: Page, route: str) -> None:
     else:
         page.get_by_role("banner").locator(f'a[href="/{route}/"]').first.click()
     page.wait_for_url(f"**/{route}/")
+
+
+def run_id(page: Page) -> str:
+    """Full RunRecord id of the first result sheet on screen (title block; audit §8)."""
+    expect(page.get_by_test_id("sheet-run").first).to_be_visible()
+    return page.get_by_test_id("sheet-run").first.get_attribute("title") or ""

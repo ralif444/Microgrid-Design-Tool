@@ -29,3 +29,18 @@ export function M1BlockedNote({ f }: { f: Freshness }) {
     </p>
   );
 }
+
+// Audit O-4: the design check itself failed; shown instead of "no problems" or an endless "checking".
+export function CheckFailed({ error, onRetry }: { error: string; onRetry: () => void }) {
+  return (
+    <div className="problems" role="alert">
+      <Icon name="warn" size={20} />
+      <p>
+        Could not check the design: {error}.{" "}
+        <button type="button" onClick={onRetry}>
+          Retry
+        </button>
+      </p>
+    </div>
+  );
+}

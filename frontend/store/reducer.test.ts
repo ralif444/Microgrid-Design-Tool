@@ -4,6 +4,7 @@ import {
   adviceInputHash,
   initialState,
   latestRun,
+  studyRun,
   m1Ref,
   nextId,
   projectReducer,
@@ -145,6 +146,15 @@ describe("network and constraints", () => {
     expect(latestRun([m3c], "M3c", "h1")?.record_id).toBe("e");
     expect(latestRun([m3c], "M3c", "h-with-scenarios")).toBeNull();
   });
+
+  it("studyRun keeps the latest run of a type on screen, marked out of date (O-3)", () => {
+    const rec = (id: string, analysis_type: string, hash: string) => ({ record_id: id, analysis_type, snapshot_hash: hash, result: { status: "FEASIBLE" } }) as unknown as RunRecord;
+    const runs = [rec("a", "M3a", "h1"), rec("b", "M3a", "h2")];
+    expect(studyRun(runs, "M3a", "h2")).toMatchObject({ state: "current", record: { record_id: "b" } });
+    expect(studyRun(runs, "M3a", "h3")).toMatchObject({ state: "stale", record: { record_id: "b" } });
+    expect(studyRun(runs, "M3b", "h3")).toEqual({ state: "none", record: null });
+    expect(studyRun(runs, "M3a", null)).toEqual({ state: "none", record: null }); // hash not known yet
+  });
 });
 
 describe("Example Project (Doc 12 FR-85)", () => {
@@ -193,5 +203,20 @@ describe("FR-02 name and description; FR-11 Bus delete guard", () => {
     expect(run([{ type: "rowRemoved", collection: "buses", id: "B1" }], s).design.buses).toHaveLength(2);
     const freed = run([{ type: "rowRemoved", collection: "lines", id: "LN1" }, { type: "rowRemoved", collection: "buses", id: "B2" }], s);
     expect(freed.design.buses?.map((b) => b.id)).toEqual(["B1"]);
+  });
+});
+
+describe("audit O-1, O-2", () => {
+  it("adds inverter drafts once per advice and forgets them on a new Accept", () => {
+    const s = run([created, { type: "draftsAdded", adviceId: "a1", count: 2, ratedKva: 5 }]);
+    expect(s.design.inverters?.map((i) => [i.id, i.rated_kva])).toEqual([["INV1", 5], ["INV2", 5]]);
+    expect(s.draftsAdded).toEqual({ a1: 2 });
+    expect(run([{ type: "adviceDecided", id: "a2", state: "ACCEPTED" }], s).draftsAdded).toEqual({});
+  });
+  it("sets and removes the load profile", () => {
+    const profile = { id: "LP1", values: [{ hour: 0, p_kw: 3 }] };
+    const s = run([created, { type: "profileSet", profile }]);
+    expect(s.design.load_profile).toEqual(profile);
+    expect(run([{ type: "profileSet", profile: null }], s).design.load_profile).toBeNull();
   });
 });

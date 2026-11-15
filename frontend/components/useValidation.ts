@@ -9,20 +9,29 @@ import type { AnalysisType, BatteryBank, ProjectSnapshot, ValidationReport } fro
 // default is one shared array: a fresh [] per render would restart the debounce every render.
 const NO_BANKS: BatteryBank[] = [];
 export function useValidation(design: ProjectSnapshot, target: AnalysisType | null = null, banks: BatteryBank[] = NO_BANKS): ValidationReport | null {
+  return useValidationState(design, target, banks).report;
+}
+
+// Audit O-4: a failed check is its own state (`error`), never read as "no problems"; `retry` asks again.
+export function useValidationState(design: ProjectSnapshot, target: AnalysisType | null = null, banks: BatteryBank[] = NO_BANKS) {
   const [report, setReport] = useState<ValidationReport | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let live = true;
     const t = setTimeout(() => {
       void validateProject({ project_snapshot: design, target_analysis_type: target, ...(banks.length ? { battery_banks: banks } : {}) }).then((r) => {
-        if (live) setReport(r.ok ? r.data : null);
+        if (!live) return;
+        setReport(r.ok ? r.data : null);
+        setError(r.ok ? null : r.message);
       });
     }, 300);
     return () => {
       live = false;
       clearTimeout(t);
     };
-  }, [design, target, banks]);
-  return report;
+  }, [design, target, banks, attempt]);
+  return { report, error, retry: () => setAttempt((n) => n + 1) };
 }
 
 export type Freshness = "missing" | "stale" | "current";

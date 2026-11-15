@@ -59,10 +59,11 @@ export function ChartFrame({
       {note && <p className={styles.meta}>{note}</p>}
       {record && (
         <p className={styles.meta}>
-          {record.analysis_type} · RunRecord {record.record_id}
-          {report && <> · result hash <code>{record.result_hash}</code></>} · engine {record.engine_kind ?? "not called"}
+          {/* the sheet's title block carries the run; the caption keeps a short reference (audit §8) */}
+          Run <code title={record.record_id}>{record.record_id.slice(0, 8)}</code>, {record.analysis_type}, engine {record.engine_kind ?? "not called"}
+          {report && <>, result hash <code>{record.result_hash}</code></>}.
           {record.engine_kind === "FAKE" && (
-            <strong className={styles.fake}> · FAKE engine: placeholder, not an engine result</strong>
+            <strong className={styles.fake}> FAKE engine: placeholder, not an engine result</strong>
           )}
         </p>
       )}

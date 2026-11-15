@@ -8,7 +8,7 @@ import Link from "next/link";
 import { EmptyState } from "../../components/EmptyState";
 import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
 import { asResponse } from "../../components/Further";
-import { CheckStrip } from "../../components/CheckStrip";
+import { CheckStrip, useSizingMarginNote } from "../../components/CheckStrip";
 import { Icon } from "../../components/Icon";
 import { Inspector, type ElementRef } from "../../components/Inspector";
 import { m2Kpis } from "../../components/kpi";
@@ -19,6 +19,7 @@ import { lastM2Params, M2_FIELDS, type M2Params } from "../../components/element
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { ResultsDiagram } from "../../components/sld/ResultsDiagram";
+import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import { SOLVER, useAnalysisCall } from "../../components/useAnalysisCall";
@@ -33,6 +34,7 @@ function ConstraintCheck() {
   // an empty field takes the guided example's value (Doc 12 X9, D-92 K230).
   const ex = useExampleForm<M2Params>("constraint-check", lastM2Params(runRecords));
   const params = ex.values;
+  const marginNote = useSizingMarginNote(ex);
   const { busy, error, setError, call } = useAnalysisCall();
   const [inspect, setInspect] = useState<ElementRef | null>(null);
   const ref = m1Ref(runRecords);
@@ -56,9 +58,11 @@ function ConstraintCheck() {
   return (
     <>
       <div className={styles.head}>
-        <h1>Constraint check (M2)</h1>
+        <h1>
+          Constraint check <span className="code-label">(M2)</span>
+        </h1>
       </div>
-      <CheckStrip fresh={fresh} m1={m1} m1Record={m1Record} m2={payload} />
+      <CheckStrip fresh={fresh} m1={m1} m1Record={m1Record} m2={payload} m2Record={payload ? (resp?.run_record ?? null) : null} />
       <ExampleGuide screen="constraint-check" />
       <M1BlockedNote f={fresh} />
       <form
@@ -79,7 +83,7 @@ function ConstraintCheck() {
             value={params[k]}
             onChange={(v) => ex.set(k, v)}
             adornment={ex.tag(k, label)}
-            note={ex.note(k)}
+            note={marginNote(k)}
           />
         ))}
         {ex.resetButton}
@@ -88,18 +92,22 @@ function ConstraintCheck() {
         </button>
       </form>
       {error && <Toast message={error} onDismiss={() => setError(null)} />}
-      {r && <StatusBanner type="M2" result={r} />}
-      {payload && resp && <KpiStrip label="Constraint check key figures" kpis={m2Kpis(payload)} record={resp.run_record} />}
-      {notices.map((w, k) => (
-        <p key={k} data-testid="m2-warning" className="problems">
-          <Icon name="warn" size={20} />
-          {w.message}
-        </p>
-      ))}
-      {r?.status === "INFEASIBLE" && <ConstraintTable label="Limiting constraints" rows={r.limiting_constraints ?? []} shortcut />}
+      {r && resp && (
+        <ResultSheet record={resp.run_record}>
+          <StatusBanner type="M2" result={r} />
+          {payload && <KpiStrip label="Constraint check key figures" kpis={m2Kpis(payload)} record={resp.run_record} />}
+          {notices.map((w, k) => (
+            <p key={k} data-testid="m2-warning" className="problems">
+              <Icon name="warn" size={20} />
+              {w.message}
+            </p>
+          ))}
+          {r.status === "INFEASIBLE" && <ConstraintTable label="Limiting constraints" rows={r.limiting_constraints ?? []} shortcut note={false} />}
+          {payload && <M2Results p={payload} charts={{ record: resp.run_record }} />}
+        </ResultSheet>
+      )}
       <ResultsDiagram fresh={fresh} checks selected={inspect?.id ?? null} onSelect={setInspect} />
       {inspect && <Inspector target={inspect} onClose={() => setInspect(null)} />}
-      {payload && resp && <M2Results p={payload} charts={{ record: resp.run_record }} />}
       {!resp &&
         fresh === "current" &&
         (runRecords.some((x) => x.analysis_type === "M2") ? (

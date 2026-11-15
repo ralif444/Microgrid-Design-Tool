@@ -1,8 +1,9 @@
-/* KPI tiles (Doc 12 X2): flat layer-01 tiles with a hairline border, Carbon tile look (VISUAL §11). */
+/* Key figures row (Doc 12 X2; audit §8): ruled like a table, no tile boxes; labels in Plex Sans Condensed. */
 .strip { margin: var(--space-4) 0; }
-.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 1px; margin: 0; padding: 1px; max-width: 64rem; }
-.tile { padding: var(--space-3) var(--space-4); background: var(--cds-layer-01); outline: var(--border-width) solid var(--color-border); }
-.tile dt { font-size: var(--text-xs); color: var(--cds-text-secondary); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); margin: 0; padding: 0; border-bottom: var(--border-width) solid var(--color-border); }
+.tile { padding: var(--space-3) var(--space-4); border-left: var(--border-width) solid var(--cds-border-subtle-01); }
+.tile:first-child { padding-left: 0; border-left: 0; }
+.tile dt { font: 500 var(--text-xs)/1.3 var(--font-cond); color: var(--cds-text-secondary); }
 .value { display: flex; align-items: center; gap: var(--space-1); margin: var(--space-1) 0 0; font-size: var(--text-xl); font-variant-numeric: var(--numeric); }
 .unit { font-size: var(--text-sm); color: var(--cds-text-secondary); }
 .detail { margin: 0; font-size: var(--text-xs); color: var(--cds-text-secondary); }

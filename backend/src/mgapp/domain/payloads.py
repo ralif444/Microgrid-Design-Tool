@@ -349,3 +349,10 @@ PAYLOAD_MODEL: dict[AnalysisType, type[Model]] = {
     AnalysisType.M4A: M4aPayload,
     AnalysisType.M4B: M4bPayload,
 }
+
+
+def not_evaluated_message(n: int) -> str:
+    """CONSTRAINT_NOT_EVALUATED warning text, singular or plural (audit O-7)."""
+    if n == 1:
+        return "1 check not evaluated: its limit is empty. It is not counted as satisfied."
+    return f"{n} checks not evaluated: their limit is empty. They are not counted as satisfied."

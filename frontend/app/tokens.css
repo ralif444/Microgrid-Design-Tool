@@ -34,7 +34,8 @@
   /* ---- App tokens not in Carbon (ADR-016 §3, mockup) ---- */
   --color-canvas: #e4e7ea;   /* diagram canvas (mockup canvas) */
   /* Chart series (guideline §9), never a status colour; series also differ by dash and marker. */
-  --series-1: #00737d; --series-2: #0b1f44; --series-3: #8a3ffc; --series-4: #d02670; --series-5: #b28600;
+  --series-1: #1f5fbf; --series-2: #0b1f44; /* series 1 in the accent scale, 2 neutral ink (audit §8) */
+  --series-3: #8a3ffc; --series-4: #d02670; --series-5: #b28600;
 
   /* ---- Colour ROLES (ADR-016 §3, W2: "Quiet panel"). Colour only when something is abnormal; status
      is always icon + word. Each role: edge (left border), icon, fg (coloured text), bg (tint).
@@ -71,6 +72,7 @@
   /* ---- Typography (system stacks only) ---- */
   --font-sans: "IBM Plex Sans", system-ui, "Segoe UI", Arial, sans-serif;   /* self-hosted, @ibm/plex-sans */
   --font-mono: "IBM Plex Mono", Consolas, monospace;                          /* self-hosted, @ibm/plex-mono */
+  --font-cond: "IBM Plex Sans Condensed", var(--font-sans);                   /* sheet labels (audit §8); app/fonts, from @ibm/plex */
   --font-numeric: var(--font-sans);           /* with tabular-nums, see .num */
   --text-xs:  0.75rem;   /* 12 px: captions under charts, hash chips */
   --text-sm:  0.875rem;  /* 14 px: table cells, forms (Carbon body-compact-01) */
@@ -125,7 +127,7 @@
 @media screen {
   [data-theme="dark"] {
     --color-canvas: #1c2227;
-    --series-1: #08bdba; --series-2: #e6eaed; --series-3: #be95ff; --series-4: #ff7eb6; --series-5: #d2a106; /* teal-40, ink, purple-40, magenta-40, yellow-40 */
+    --series-1: #7fb0f5; --series-2: #e6eaed; --series-3: #be95ff; --series-4: #ff7eb6; --series-5: #d2a106; /* accent (mockup), ink, purple-40, magenta-40, yellow-40 */
     --role-negative-edge: #f0834a; --role-negative-icon: #f0834a;
     --role-negative-fg: #f0834a; --role-negative-bg: #4a2c1e;
     --role-error-fg: #ffb3b8; --role-error-bg: #520408;   /* red-30 / red-90 */

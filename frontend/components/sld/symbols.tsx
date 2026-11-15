@@ -20,7 +20,7 @@ type Deco = { icon: IconName; word: string; tone: "negative" | "neutral" | "erro
 export function decorations(el: SldElement, isolated = false): Deco[] {
   const d: Deco[] = [];
   if (el.mark === "violated") d.push({ icon: "misuse", word: "Violated", tone: "negative" });
-  if (el.mark === "limiting") d.push({ icon: "misuse", word: "Limiting", tone: "negative" });
+  if (el.mark === "limiting") d.push({ icon: "limiting", word: "Limiting", tone: "negative" });
   if (el.mark === "near") d.push({ icon: "warn", word: "Near limit", tone: "caution" });
   // W3: a bus shows its pass state beside the voltage; other elements stay quiet when they pass
   if (el.mark === "pass" && el.kind === "bus") d.push({ icon: "check", word: "Pass", tone: "neutral" });
@@ -201,7 +201,7 @@ export function SystemBlock({ el, x, y, w, h, emph, bind }: Common & { x: number
     <g className={cls(el, emph)} {...bind?.(el)} data-testid="diagram-system">
       <rect x={x} y={y} width={w} height={h} className={styles.block} />
       <text x={x + 10} y={y + 20} className={styles.id}>
-        {kv} · {hz}
+        {kv}, {hz}
       </text>
       <text x={x + 10} y={y + 20 + LH} className={styles.sec}>
         Balanced 3-phase, islanded
@@ -217,7 +217,18 @@ export function SystemBlock({ el, x, y, w, h, emph, bind }: Common & { x: number
 }
 
 /** HTML legend strip under the diagram (guideline §3): each symbol with its name. */
-export function SldLegend({ breakers = false, tightest = false }: { breakers?: boolean; tightest?: boolean }) {
+// `checks`: the diagram shows M2 marks, so the status words and the loading bar are explained too (audit D-19).
+export function SldLegend({ breakers = false, tightest = false, checks = false, loading = false }: { breakers?: boolean; tightest?: boolean; checks?: boolean; loading?: boolean }) {
+  const status = (name: string, icon: IconName, tone: "negative" | "caution" | "neutral") => (
+    <li key={name} className={styles[tone]}>
+      <svg width={20} height={36} viewBox="0 0 20 36" aria-hidden="true" focusable="false">
+        <g transform="translate(2 11)" className={styles.icon}>
+          <Icon name={icon} size={16} />
+        </g>
+      </svg>
+      {name}
+    </li>
+  );
   const item = (name: string, svg: ReactNode) => (
     <li key={name}>
       <svg width={44} height={36} viewBox="0 0 44 36" aria-hidden="true" focusable="false">
@@ -244,6 +255,18 @@ export function SldLegend({ breakers = false, tightest = false }: { breakers?: b
         </>,
       )}
       {item("Line (series R–X)", <line x1={2} y1={18} x2={42} y2={18} className={styles.conductor} />)}
+      {checks && status("Pass", "check", "neutral")}
+      {checks && status("Near limit", "warn", "caution")}
+      {checks && status("Violated", "misuse", "negative")}
+      {checks && status("Limiting", "limiting", "negative")}
+      {loading &&
+        item(
+          "Inverter loading (bar fill = loading ratio)",
+          <>
+            <rect x={2} y={16} width={40} height={5} className={styles.track} />
+            <rect x={2} y={16} width={24} height={5} className={styles.loadOk} />
+          </>,
+        )}
       {tightest && item("Smallest element margin", <rect x={2} y={16} width={40} height={4} className={styles.tight} />)}
       {breakers &&
         item(

@@ -1,7 +1,10 @@
 // Status strip of S-07 and S-08 (ADR-016, plan W3; mockup phase 2): power flow and constraint check as
 // two statuses, the counts, a few key facts and the M1 freshness, in one row above the results. Values
 // are read from the payloads (select and count only, guideline §1 rule 1), rounded for display.
+import type { ReactNode } from "react";
 import type { M1Payload, M2Payload, RunRecord } from "../api-types";
+import { useProject } from "../store";
+import type { M2Params } from "./elementFields";
 import styles from "./CheckStrip.module.css";
 import { fixed } from "./format";
 import { Icon, type IconName } from "./Icon";
@@ -44,6 +47,7 @@ export function CheckStrip({
   m1,
   m1Record,
   m2,
+  m2Record,
 }: {
   fresh: Freshness;
   /** current FEASIBLE M1 payload, or null */
@@ -51,7 +55,10 @@ export function CheckStrip({
   m1Record: RunRecord | null;
   /** S-08 only: the current M2 payload, or null when not run on this design */
   m2?: M2Payload | null;
+  /** its RunRecord, to restate the design margins the check used (audit D-9) */
+  m2Record?: RunRecord | null;
 }) {
+  const used = m2Record?.parameters as { inverter_margin_ratio?: number; line_margin_ratio?: number } | undefined;
   const marginWarn = useMarginWarn();
   const lo = m1 && pick(m1.bus_results, (b) => b.voltage_pu);
   return (
@@ -62,6 +69,9 @@ export function CheckStrip({
           <>
             {m2.verdict === "FEASIBLE" ? <Chip icon="feasible">Feasible</Chip> : <Chip icon="misuse" tone="negative">Not feasible</Chip>}
             <span className={styles.fact}>{countsText(m2, marginWarn)}</span>
+            {typeof used?.inverter_margin_ratio === "number" && typeof used.line_margin_ratio === "number" && (
+              <Fact label="with m_inv" value={`${fixed(used.inverter_margin_ratio, "ratio")}, m_line ${fixed(used.line_margin_ratio, "ratio")}`} />
+            )}
           </>
         ) : (
           <Chip icon="dot">No current constraint check</Chip>
@@ -78,4 +88,27 @@ export function CheckStrip({
       <M1FreshnessBadge f={fresh} title={runTitle(m1Record)} />
     </section>
   );
+}
+
+// Audit O-8: the m_inv the accepted Sizing advice used, next to M2's own m_inv field. The two stay
+// separate inputs; the button only copies the value. Other fields keep the example note as before.
+export function useSizingMarginNote(ex: { values: M2Params; set: (k: keyof M2Params, v: number | null) => void; note: (k: string) => ReactNode }) {
+  const { sizingAdvice } = useProject();
+  const m = sizingAdvice.findLast((a) => a.state === "ACCEPTED")?.ps_parameters.inverter_margin_ratio ?? null;
+  return (k: keyof M2Params): ReactNode =>
+    k !== "inverter_margin_ratio" || m === null ? (
+      ex.note(k)
+    ) : (
+      <>
+        {ex.note(k)} Accepted sizing advice used {fixed(m, "ratio")}.
+        {ex.values[k] !== m && (
+          <>
+            {" "}
+            <button type="button" onClick={() => ex.set(k, m)}>
+              Use {fixed(m, "ratio")} from sizing advice
+            </button>
+          </>
+        )}
+      </>
+    );
 }

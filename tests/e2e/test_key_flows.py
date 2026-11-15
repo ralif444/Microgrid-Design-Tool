@@ -9,6 +9,7 @@ import, verify, re-run (FR-49, FR-50, FR-52, FR-53, NFR-01); FR-23 M1 groups; Do
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -70,10 +71,9 @@ def test_f1_pipeline_infeasible_loop_to_report(server: Callable[[str], str], pag
     page.get_by_role("table", name="Limiting constraints").get_by_role(
         "link", name="INV1", exact=True
     ).click()
-    expect(page.get_by_role("tab", name="Inverters")).to_have_attribute("aria-selected", "true")
-    row = page.locator("tr[aria-current='true']")
-    expect(row).to_have_count(1)
-    row.get_by_label("Rating (kVA) of INV1").fill("50")
+    page.wait_for_url("**/workspace/?el=inverter:INV1")
+    insp = page.get_by_role("complementary", name="Inspector: Inverter INV1")
+    insp.get_by_label("Rating").fill("50")
 
     step(page, "Constraint check (M2)")
     expect(page.get_by_test_id("m1-freshness")).to_have_text("M1 result: stale")
@@ -82,7 +82,7 @@ def test_f1_pipeline_infeasible_loop_to_report(server: Callable[[str], str], pag
 
     _m1_m2(page)
     step(page, "Report")
-    expect(page.get_by_test_id("verdict")).to_contain_text("INFEASIBLE")
+    expect(page.get_by_test_id("verdict")).to_contain_text("Limits violated")
     expect(page.get_by_test_id("outdated")).to_have_count(0)
 
 
@@ -127,11 +127,13 @@ def test_f2_open_refused_skipped_and_stage_1_issues(
     expect(page.get_by_test_id("file-check")).to_contain_text("run_records[0]")
     page.wait_for_url("**/workspace/")
     step(page, "Project")
-    expect(page.get_by_role("heading", name="Project overview")).to_be_visible()
-    expect(page.get_by_role("list", name="Readiness issues")).to_contain_text(
+    expect(page.get_by_role("table", name="Counts")).to_contain_text("RunRecords0")
+    # stage-1 issues sit on their element (audit Phase 7: the former readiness list)
+    elements = page.get_by_role("navigation", name="Elements")
+    elements.get_by_role("button", name=re.compile(r"^L1")).click()
+    expect(page.get_by_role("complementary", name="Inspector: Load L1")).to_contain_text(
         "Power cannot be negative"
     )
-    expect(page.get_by_role("table", name="Counts")).to_contain_text("RunRecords0")
 
 
 def test_f3_fr_49_import_verify_rerun_in_another_project(
@@ -144,7 +146,7 @@ def test_f3_fr_49_import_verify_rerun_in_another_project(
     runs = page.get_by_role("table", name="Runs").locator("tbody tr")
     expect(runs.first).to_contain_text("FAKE")
     with page.expect_download() as dl:
-        runs.first.get_by_role("button", name="Export").click()
+        runs.first.get_by_role("button", name="Export run").click()
     exported = Path(dl.value.path())
     rec = json.loads(exported.read_text(encoding="utf-8"))
     assert len(rec) == 17  # FR-47 / FR-49: the whole record in one file
@@ -162,7 +164,7 @@ def test_f3_fr_49_import_verify_rerun_in_another_project(
     expect(runs).to_have_count(1)
     expect(page.get_by_role("region", name="Run detail")).to_contain_text(rec["snapshot_hash"])
 
-    runs.first.get_by_role("button", name="Re-run").click()
+    runs.first.get_by_role("button", name="Re-run run").click()
     outcome = page.get_by_test_id("rerun-outcome")
     expect(outcome).to_contain_text("Reproduced")
     expect(outcome).to_contain_text("The original record is unchanged.")

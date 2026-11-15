@@ -7,8 +7,10 @@ import type { AnalysisResponse, PsPayload } from "../../api-types";
 import { moduleHint } from "../../components/battery";
 import { catalogHints, useCatalog } from "../../components/Catalog";
 import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
+import { fixed, fixedOr, plural } from "../../components/format";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
+import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { SOLVER, useAnalysisCall } from "../../components/useAnalysisCall";
 import {
@@ -48,12 +50,12 @@ function AdvicePanel({ a }: { a: SizingAdvice }) {
         <tbody>
           <tr>
             <th scope="row">Load apparent power</th>
-            <td>{p.load_apparent_kva} kVA</td>
+            <td>{fixed(p.load_apparent_kva, "kVA")} kVA</td>
             <td />
           </tr>
           <tr>
             <th scope="row">Total inverter rating</th>
-            <td>{p.required_inverter_kva.value_kva} kVA</td>
+            <td>{fixed(p.required_inverter_kva.value_kva, "kVA")} kVA</td>
             <td>
               {p.required_inverter_kva.basis} {p.required_inverter_kva.assumptions.join(" ")}
             </td>
@@ -61,7 +63,7 @@ function AdvicePanel({ a }: { a: SizingAdvice }) {
           <tr>
             <th scope="row">Inverters</th>
             <td>
-              {plan.unit_count} × {plan.unit_rating_kva} kVA (installed {plan.installed_kva} kVA, redundancy {plan.redundancy})
+              {plan.unit_count} × {fixed(plan.unit_rating_kva, "kVA")} kVA (installed {fixed(plan.installed_kva, "kVA")} kVA, redundancy {plan.redundancy})
             </td>
             <td>
               {plan.basis} {plan.assumptions.join(" ")}
@@ -72,20 +74,22 @@ function AdvicePanel({ a }: { a: SizingAdvice }) {
             {p.storage_energy ? (
               <>
                 <td>
-                  AC {p.storage_energy.e_ac_kwh} kWh, DC {p.storage_energy.e_dc_kwh ?? "—"} kWh, nominal{" "}
-                  {p.storage_energy.e_nom_kwh ?? "—"} kWh (stage {p.storage_energy.stage})
+                  AC {fixed(p.storage_energy.e_ac_kwh, "kWh")} kWh, DC {fixedOr(p.storage_energy.e_dc_kwh, "kWh")} kWh, nominal{" "}
+                  {fixedOr(p.storage_energy.e_nom_kwh, "kWh")} kWh (stage {p.storage_energy.stage})
                 </td>
                 <td>
                   {p.storage_energy.basis} {p.storage_energy.assumptions.join(" ")}
                 </td>
               </>
             ) : (
-              <td colSpan={2}>Storage advice needs a LoadProfile and an autonomy time.</td>
+              <td colSpan={2}>
+                Storage advice needs a LoadProfile and an autonomy time. <Link href="/loads/#profile">Add the profile on Loads</Link>
+              </td>
             )}
           </tr>
         </tbody>
       </table>
-      <p data-testid="advice-state">State: {a.state}</p>
+      <p data-testid="advice-state">State: {({ PROPOSED: "Proposed", ACCEPTED: "Accepted", SKIPPED: "Skipped" } as Record<string, string>)[a.state] ?? a.state}</p>
       <CatalogHints unitKva={plan.unit_rating_kva} />
       <ModuleHint eNomKwh={p.storage_energy?.e_nom_kwh ?? null} />
     </section>
@@ -94,27 +98,25 @@ function AdvicePanel({ a }: { a: SizingAdvice }) {
 
 // FR-09: accepted advice offers editable Inverter drafts (unit_count rows at the unit rating) for
 // S-05; Accept itself changes no design entity (FR-08).
-function InverterDrafts({ plan }: { plan: PsPayload["inverter_plan"] }) {
+function InverterDrafts({ adviceId, plan }: { adviceId: string; plan: PsPayload["inverter_plan"] }) {
+  const { design, draftsAdded } = useProject();
   const dispatch = useProjectDispatch();
-  const [added, setAdded] = useState(false);
+  // O-1: remembered per advice in the store, so a second visit does not offer the drafts again
+  const added = draftsAdded[adviceId];
   if (added)
     return (
       <p role="status">
-        {plan.unit_count} inverter drafts added. <Link href="/network/">Complete them in Network</Link>
+        {plural(added, "inverter draft")} added. <Link href="/network/">Complete them in Network</Link>
       </p>
     );
+  // not remembered after a reload (store only): name the rows that still lack a bus instead
+  const unplaced = (design.inverters ?? []).filter((i) => !i.bus_id).length;
   return (
     <p>
-      <button
-        type="button"
-        onClick={() => {
-          for (let k = 0; k < plan.unit_count; k++)
-            dispatch({ type: "rowAdded", collection: "inverters", row: { rated_kva: plan.unit_rating_kva } });
-          setAdded(true);
-        }}
-      >
+      <button type="button" onClick={() => dispatch({ type: "draftsAdded", adviceId, count: plan.unit_count, ratedKva: plan.unit_rating_kva })}>
         Add {plan.unit_count} inverter drafts of {plan.unit_rating_kva} kVA
       </button>
+      {unplaced > 0 && ` ${plural(unplaced, "inverter")} without a bus already in the design.`}
     </p>
   );
 }
@@ -148,7 +150,7 @@ function ModuleHint({ eNomKwh }: { eNomKwh: number | null }) {
   const mod = modules.find((e) => e.id === modId) ?? modules[0];
   const inv = inverters.find((e) => e.id === invId)?.inverter;
   const h = moduleHint(eNomKwh, mod.battery_module ?? {}, { min: inv?.dc_voltage_min_v, max: inv?.dc_voltage_max_v }, ns);
-  const kwh = (v: number) => `${Number(v.toFixed(4))} kWh`;
+  const kwh = (v: number) => `${fixed(v, "kWh")} kWh`;
   return (
     <section aria-label="Battery module hint">
       <p>Battery module hint (hint only; the advice values above do not change):</p>
@@ -197,7 +199,7 @@ function ModuleHint({ eNomKwh }: { eNomKwh: number | null }) {
 }
 
 function Sizing() {
-  const { design, sizingAdvice } = useProject();
+  const { design, sizingAdvice, runRecords } = useProject();
   const dispatch = useProjectDispatch();
   // Last advice first, then the guided example (Doc 12 X9, D-92 K230), else empty.
   const ex = useExampleForm<PsParameters>("sizing", sizingAdvice.at(-1)?.ps_parameters ?? EMPTY);
@@ -274,7 +276,7 @@ function Sizing() {
         )}
       </form>
       {error && <p role="alert">{error}</p>}
-      {resp && <StatusBanner type="PS" result={resp.result} />}
+      {resp && resp.result.status !== "FEASIBLE" && <StatusBanner type="PS" result={resp.result} />}
       {warnings.map((w, k) => (
         <p key={k} role="alert">
           {w.message}
@@ -283,7 +285,8 @@ function Sizing() {
       {!latest ? (
         <p>No advice yet.</p>
       ) : (
-        <>
+        <ResultSheet record={runRecords.find((x) => x.record_id === latest.id) ?? resp?.run_record ?? null}>
+          {resp?.result.status === "FEASIBLE" && <StatusBanner type="PS" result={resp.result} />}
           {stale && (
             <p role="alert" data-testid="advice-stale">
               The loads or settings changed after this advice was made. Run the advice again.
@@ -291,17 +294,24 @@ function Sizing() {
           )}
           <AdvicePanel a={latest} />
           {latest.state === "PROPOSED" && (
-            <p>
-              <button type="button" onClick={() => dispatch({ type: "adviceDecided", id: latest.id, state: "ACCEPTED" })}>
-                Accept
-              </button>{" "}
-              <button type="button" onClick={() => dispatch({ type: "adviceDecided", id: latest.id, state: "SKIPPED" })}>
-                Skip
-              </button>
-            </p>
+            <div aria-label="Decide on the advice" role="group">
+              <ul>
+                <li>Accept: keep this advice as the sizing basis and offer inverter drafts from it. The design does not change.</li>
+                <li>Skip: go on without this advice. The design does not change.</li>
+              </ul>
+              <p>
+                <button type="button" disabled={stale} onClick={() => dispatch({ type: "adviceDecided", id: latest.id, state: "ACCEPTED" })}>
+                  Accept
+                </button>{" "}
+                <button type="button" disabled={stale} onClick={() => dispatch({ type: "adviceDecided", id: latest.id, state: "SKIPPED" })}>
+                  Skip
+                </button>
+                {stale && " Run the advice again to accept or skip it."}
+              </p>
+            </div>
           )}
-          {latest.state === "ACCEPTED" && <InverterDrafts plan={latest.result.inverter_plan} />}
-        </>
+          {latest.state === "ACCEPTED" && <InverterDrafts adviceId={latest.id} plan={latest.result.inverter_plan} />}
+        </ResultSheet>
       )}
       <ExampleNext screen="sizing" ready={nextReady(resp?.result.status)} />
     </>

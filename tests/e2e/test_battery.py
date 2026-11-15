@@ -11,7 +11,7 @@ import re
 from collections.abc import Callable
 from pathlib import Path
 
-from flows import delete, enter_design, gui_snapshot, step, studies
+from flows import delete, enter_design, gui_snapshot, run_id, step, studies
 from playwright.sync_api import Page, expect
 from test_catalogue import _provenance
 from test_network_m1_m2 import _run_m1
@@ -94,7 +94,7 @@ def test_fr_75_battery_bank_on_s05_saved_outside_the_design(
     form.get_by_label("Initial state of charge, optional (ratio)").fill("1.5")
     form.get_by_role("button", name="Save bank").click()
     expect(page.get_by_role("list", name="Network issues")).to_contain_text(
-        "battery_banks[0].initial_soc_ratio"
+        "INV1, initial soc ratio"
     )
     form.get_by_label("Initial state of charge, optional (ratio)").fill("1")
     form.get_by_role("button", name="Save bank").click()
@@ -195,7 +195,7 @@ def test_fr_120_depletion_chart_show_data_and_report_section(
     expect(figure.get_by_text("FAKE engine: placeholder, not an engine result")).to_be_visible()
     page.get_by_role("button", name=f"Show data: {title}").click()
     expect(page.get_by_role("table", name=f"{title} data").locator("tbody tr")).to_have_count(25)
-    record = page.get_by_test_id("ba-record").locator("code").inner_text()
+    record = run_id(page)
 
     step(page, "Report")
     section = page.get_by_role("region", name="Battery adequacy (advice, discharge only)")

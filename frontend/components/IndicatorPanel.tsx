@@ -5,7 +5,7 @@
 import { useEffect, useState } from "react";
 import { getMeta } from "../api-client";
 import type { M1Payload, M4aPayload, RunRecord } from "../api-types";
-import { fmt } from "./Further";
+import { fixed } from "./format";
 import { useValidation } from "./useValidation";
 import { useProject } from "../store";
 
@@ -55,7 +55,7 @@ export function useIndicatorRows(): IndicatorRow[] {
 }
 
 export const indicatorText = (r: IndicatorRow) =>
-  r.value === null ? `not evaluated: ${r.reason}` : fmt(r.value);
+  r.value === null ? `not evaluated: ${r.reason}` : fixed(r.value, "ratio");
 
 export const sourceText = (r: IndicatorRow) =>
   r.record ? `${r.record.analysis_type} run ${r.record.record_id}${r.record.engine_kind === "FAKE" ? " (Fake Engine)" : ""}` : "none";

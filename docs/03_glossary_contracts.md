@@ -235,7 +235,7 @@ Stage 1 runs in the application service before any engine call and yields `INPUT
 | SENSITIVITY_STEP_INVALID | request | M3a: neither or both of step_relative / step_absolute, or ≤ 0 | "Give one step size: relative or absolute." |
 | DISTURBANCE_INVALID | request | M4b disturbance incomplete or inconsistent with its kind | "Complete the disturbance definition." |
 | SWEEP_RANGE_INVALID | field | Range min ≥ max or step count < 2 / not integer | "The sweep range or step count is not valid." |
-| SCENARIO_PATH_INVALID | entity | Override path does not resolve; or an M3c scenario snapshot lacks a base line or adds one (D-112) | "This scenario changes something that does not exist." |
+| SCENARIO_PATH_INVALID | entity | Override path does not resolve; or an M3c scenario snapshot lacks a base line or adds one (D-112) | "This scenario changes something that does not exist." (M3a path: "A chosen parameter does not exist in this design."; M3c line set: "A scenario must keep the same lines as the base design.", audit O-7, 2026-11-14) |
 | SWEEP_CAP_EXCEEDED | request | M3b/M3d point count above SWEEP_CAP (initial 1 000) | "This sweep has too many points (<n>; the limit is <cap>). Reduce the range or step count." (D-68) |
 | PARAMETER_CAP_EXCEEDED | request | M3a parameter count above cap [ASSUMPTION value] | "Too many parameters selected (<n>; the limit is <cap>). Select fewer parameters." (D-68) |
 | DURATION_CAP_EXCEEDED | request | M4b duration above cap [ASSUMPTION value] | "The simulation time is too long (<t> s; the limit is <cap> s). Shorten the simulation end time." (D-68) |

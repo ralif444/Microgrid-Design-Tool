@@ -21,8 +21,11 @@
 .empty {
   display: grid; justify-items: start; gap: var(--space-2); max-width: var(--prose-max);
   margin: var(--space-4) 0; padding: var(--space-5) var(--space-6);
-  border: var(--border-width) solid var(--color-border); background: var(--cds-layer-01); /* solid: dashed means advisory (§8) */
+  position: relative; border: var(--border-width) solid var(--color-fg); background: var(--cds-layer-01); /* solid: dashed means advisory (§8) */
 }
+/* an empty result is an empty sheet: the same double frame as ResultSheet (audit §8) */
+.empty::before { content: ""; position: absolute; inset: 5px; border: 2px solid var(--color-fg); pointer-events: none; }
+.emptyTitle { font-family: var(--font-cond); }
 .emptyTitle > svg { fill: var(--cds-icon-secondary); }
 .emptyTitle { display: grid; justify-items: start; gap: var(--space-2); margin: 0; font-weight: var(--weight-semibold); color: var(--color-fg); }
 .empty p { margin: 0; color: var(--color-fg-muted); }

@@ -31,8 +31,10 @@ def test_fr_17_m1_with_empty_template_lists_issues(
     page.get_by_role("button", name="Run M1").click()
     banner = page.get_by_role("status", name="Status")
     expect(banner).to_have_attribute("data-status", "INPUT_INVALID")
-    expect(banner.get_by_role("list", name="Issues")).to_contain_text("nominal_voltage_kv")
-    expect(page.get_by_test_id("record-id")).to_be_visible()
+    expect(banner.get_by_role("list", name="Issues")).to_contain_text(
+        "Nominal voltage, line-to-line"
+    )
+    expect(page.get_by_test_id("sheet-run")).to_be_visible()
 
 
 def test_fr_35_m1_feasible_on_fake(server: Callable[[str], str], page: Page) -> None:
@@ -45,7 +47,7 @@ def test_fr_35_m1_feasible_on_fake(server: Callable[[str], str], page: Page) -> 
     expect(banner).to_contain_text("an operating point was found")
     expect(banner).to_contain_text("Fake Engine")
     expect(page.get_by_role("table", name="Bus voltages")).to_contain_text("B2")
-    expect(page.get_by_test_id("snapshot-hash")).to_have_text(HEX64)
+    expect(page.get_by_test_id("sheet-snapshot")).to_have_attribute("title", HEX64)
 
 
 def test_solver_failed_banner_with_profile(server: Callable[[str], str], page: Page) -> None:

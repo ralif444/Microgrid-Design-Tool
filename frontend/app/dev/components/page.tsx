@@ -186,7 +186,7 @@ export default function ComponentsPage() {
             Advice
           </Tag>
           <Tag type="purple" size="sm">
-            Sizing check · from the network
+            Sizing check, from the network
           </Tag>
           <M1FreshnessBadge f="current" />
           <M1FreshnessBadge f="stale" />
@@ -282,7 +282,7 @@ export default function ComponentsPage() {
         <AdvisoryPanel label="Sizing advice sample" title="Sizing advice (not design data)">
           <p>Accept makes it design data; Skip leaves the design unchanged.</p>
         </AdvisoryPanel>
-        <AdvisoryPanel label="Sizing check sample" tag="Sizing check · from the network" title="Sizing check (advisory, from the network)">
+        <AdvisoryPanel label="Sizing check sample" tag="Sizing check, from the network" title="Sizing check (advisory, from the network)">
           <p>Computed from the network result; it never changes the design.</p>
         </AdvisoryPanel>
       </Demo>

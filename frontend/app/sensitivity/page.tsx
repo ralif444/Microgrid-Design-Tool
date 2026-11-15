@@ -10,12 +10,14 @@ import { BarChart } from "../../components/charts/BarChart";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
 import { ExampleGuide, ExampleNext, nextReady, NotSet, useExampleForm } from "../../components/ExampleForm";
-import { fmt, InfeasibleNote, METRICS, numericPaths, shortcutPrefill, useDependentRun } from "../../components/Further";
+import { fixedOr } from "../../components/format";
+import { InfeasibleNote, METRICS, numericPaths, OutOfDate, paramLabel, RunButton, shortcutPrefill, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
 import { Icon } from "../../components/Icon";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
+import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 
@@ -23,7 +25,7 @@ type Sens = M3aPayload["sensitivities"][number];
 const FLAG = "status differs between the two sides";
 
 function Sensitivity() {
-  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M3a");
+  const { design, fresh, busy, resp, stale, error, clearError, run, m2Infeasible } = useDependentRun("M3a");
   // Example mode (Doc 12 X9, D-92 K230): paths and metrics from the guided example; a path that does not
   // resolve on this Project is dropped (Doc 7 §2.3). The step stays the user's (D-92 K231).
   const ex = useExampleForm<{ parameter_paths: string[] | null; output_metrics: OutputMetric[] | null }>(
@@ -58,12 +60,15 @@ function Sensitivity() {
   return (
     <>
       <div className={styles.head}>
-        <h1>Sensitivity (M3a)</h1>
+        <h1>
+          Sensitivity <span className="code-label">(M3a)</span>
+        </h1>
         <M1FreshnessBadge f={fresh} />
       </div>
       <ExampleGuide screen="sensitivity" />
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
+      <div className={styles.study}>
       <form
         aria-label="Sensitivity settings"
         className={styles.form}
@@ -77,7 +82,7 @@ function Sensitivity() {
           {ex.tag("parameter_paths", "Parameters")}
           {numericPaths(design).map((pp) => (
             <label key={pp}>
-              <input type="checkbox" checked={paths.includes(pp)} onChange={() => setPaths(toggle(paths, pp))} /> {pp}
+              <input type="checkbox" checked={paths.includes(pp)} onChange={() => setPaths(toggle(paths, pp))} /> {paramLabel(pp)}
             </label>
           ))}
         </fieldset>
@@ -107,14 +112,15 @@ function Sensitivity() {
             note={ex.needs("step_relative") && step === null ? <NotSet /> : undefined}
           />
         </fieldset>
-        {paths.length === 0 && <p>Pick at least one parameter.</p>}
         {ex.resetButton}
-        <button type="submit" className="primary" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
-          {busy ? "Running..." : "Run M3a"}
-        </button>
+        <RunButton label="Run M3a" busy={busy} fresh={fresh} missing={[!paths.length && "a parameter", !metrics.length && "an output metric", step === null && "the step"].filter((x): x is string => !!x)} />
       </form>
+      <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
-      {r && <StatusBanner type="M3a" result={r} />}
+      <OutOfDate show={stale} />
+      {resp && r && (
+        <ResultSheet record={resp.run_record}>
+          <StatusBanner type="M3a" result={r} />
       {p &&
         resp &&
         METRICS.filter(([m]) => p.sensitivities.some((s) => s.metric === m)).map(([m, label, unit]) => {
@@ -127,9 +133,9 @@ function Sensitivity() {
           const flagged = rows.filter((s) => s.status_change);
           const columns: DataColumn<Sens>[] = [
             { key: "rank", header: "Rank", numeric: true, cell: (s) => rank.get(s.parameter_path) ?? "—" },
-            { key: "path", header: "Parameter", cell: (s) => s.parameter_path },
-            { key: "v", header: "dy/dp", cell: (s) => `${fmt(s.value)}${s.value === null || !s.unit ? "" : ` ${s.unit}`}` },
-            { key: "n", header: "Normalised", unit: "ratio", numeric: true, cell: (s) => fmt(s.normalised_value) },
+            { key: "path", header: "Parameter", cell: (s) => paramLabel(s.parameter_path) },
+            { key: "v", header: "dy/dp", cell: (s) => `${fixedOr(s.value, s.unit ?? "")}${s.value === null || !s.unit ? "" : ` ${s.unit}`}` },
+            { key: "n", header: "Normalised", unit: "ratio", numeric: true, cell: (s) => fixedOr(s.normalised_value, "ratio") },
             { key: "s", header: "Scheme", cell: (s) => s.scheme ?? "—" },
             {
               key: "note",
@@ -153,28 +159,27 @@ function Sensitivity() {
                 title={`Tornado: ${label}`}
                 valueTitle="Normalised sensitivity (ratio)"
                 categoryTitle="Parameter"
-                categories={drawn.map((s) => `${s.parameter_path}${s.status_change ? " (status differs)" : ""}`)}
+                categories={drawn.map((s) => `${paramLabel(s.parameter_path)}${s.status_change ? " (status differs)" : ""}`)}
                 series={[{ name: label, values: drawn.map((s) => s.normalised_value ?? null) }]}
                 labelWidth={230}
                 note={[
                   `Bars in the payload's rank order (largest absolute normalised effect first); metric unit ${unit}.`,
-                  missing.length ? `Not reported: ${missing.map((s) => `${s.parameter_path} (${s.reason ?? "no reason given"})`).join("; ")}.` : null,
-                  flagged.length ? `Status differs between the two sides for: ${flagged.map((s) => s.parameter_path).join(", ")}.` : null,
+                  missing.length ? `Not reported: ${missing.map((s) => `${paramLabel(s.parameter_path)} (${s.reason ?? "no reason given"})`).join("; ")}.` : null,
+                  flagged.length ? `Status differs between the two sides for: ${flagged.map((s) => paramLabel(s.parameter_path)).join(", ")}.` : null,
                 ]
                   .filter(Boolean)
                   .join(" ")}
                 record={resp.run_record}
               />
-              <DataTable label={`Sensitivity of ${label}`} caption={`Sensitivity of ${label}`} columns={columns} rows={rows} rowKey={(s) => s.parameter_path} rowName={(s) => s.parameter_path} />
+              <DataTable label={`Sensitivity of ${label}`} caption={`Sensitivity of ${label}`} columns={columns} rows={rows} rowKey={(s) => s.parameter_path} rowName={(s) => paramLabel(s.parameter_path)} />
             </section>
           );
         })}
-      {p && resp && (
-        <p className={styles.record}>
-          RunRecord <code>{resp.run_record.record_id}</code>, engine {resp.run_record.engine_kind ?? "not called"}.
-        </p>
+        </ResultSheet>
       )}
       {!resp && <EmptyState title="Not run yet.">Pick parameters, output metrics and a step, then run M3a to rank the parameters by effect.</EmptyState>}
+      </div>
+      </div>
       <ExampleNext screen="sensitivity" ready={nextReady(r?.status)} />
     </>
   );

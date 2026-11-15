@@ -7,11 +7,13 @@ import { AUTONOMY_OUTCOME, POWER_OUTCOME, type BaBank, type BaPayload } from "..
 import { autonomyText, SocChart } from "../../components/BatteryResults";
 import { Toggletip } from "../../components/Term";
 import { EmptyState } from "../../components/EmptyState";
-import { fmt, useDependentRun } from "../../components/Further";
+import { fixedOr } from "../../components/format";
+import { OutOfDate, RunButton, useDependentRun } from "../../components/Further";
 import { Icon } from "../../components/Icon";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
+import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import { useProject } from "../../store";
@@ -58,16 +60,16 @@ function Row({ b }: { b: BaBank }) {
       <td>
         <Tag o={POWER_OUTCOME[p.outcome]} />
       </td>
-      <td className="num">{fmt(p.capability_kw)}</td>
+      <td className="num">{fixedOr(p.capability_kw, "kW")}</td>
       <td>{p.capability_source ? SOURCE[p.capability_source] : "—"}</td>
-      <td className="num">{fmt(p.inverter_p_kw)}</td>
-      <td className="num">{fmt(p.dc_side_power_kw)}</td>
-      <td className="num">{fmt(p.margin_kw)}</td>
+      <td className="num">{fixedOr(p.inverter_p_kw, "kW")}</td>
+      <td className="num">{fixedOr(p.dc_side_power_kw, "kW")}</td>
+      <td className="num">{fixedOr(p.margin_kw, "kW")}</td>
       <td>{p.reason ? `Not evaluated: ${p.reason}.` : "—"}</td>
       <td>
         <Tag o={AUTONOMY_OUTCOME[b.autonomy.outcome]} />
       </td>
-      <td className="num">{fmt(b.autonomy.usable_energy_kwh)}</td>
+      <td className="num">{fixedOr(b.autonomy.usable_energy_kwh, "kWh")}</td>
       <td>{autonomyText(b)}</td>
     </tr>
   );
@@ -75,7 +77,7 @@ function Row({ b }: { b: BaBank }) {
 
 function Battery() {
   const { batteryBanks } = useProject();
-  const { fresh, busy, resp, error, clearError, run } = useDependentRun("BA");
+  const { fresh, busy, resp, stale, error, clearError, run } = useDependentRun("BA");
   const [startHour, setStartHour] = useState<number | null>(0);
   const r = resp?.result;
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as BaPayload) : null;
@@ -92,6 +94,7 @@ function Battery() {
         <M1FreshnessBadge f={fresh} />
       </div>
       <M1BlockedNote f={fresh} />
+      <div className={further.study}>
       <form
         aria-label="Battery adequacy settings"
         className={further.form}
@@ -103,12 +106,14 @@ function Battery() {
         <p>
           <NumberField id="ba-start-hour" label="Start hour" unit="h" step="1" value={startHour} onChange={setStartHour} />
         </p>
-        <button type="submit" className="primary" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
-          {busy ? "Running..." : "Run battery adequacy"}
-        </button>
+        <RunButton label="Run battery adequacy" busy={busy} fresh={fresh} missing={startHour === null ? ["Start hour"] : []} />
       </form>
+      <div className={further.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
-      {r && <StatusBanner type="BA" result={r} />}
+      <OutOfDate show={stale} />
+      {resp && r && (
+        <ResultSheet record={resp.run_record}>
+          <StatusBanner type="BA" result={r} />
       {p && resp && (
         <>
           <p data-testid="ba-caveat" className={styles.caveat}>
@@ -160,12 +165,16 @@ function Battery() {
           </p>
           <SocChart p={p} record={resp.run_record} />
           <p className={further.record} data-testid="ba-record">
-            RunRecord <code>{resp.run_record.record_id}</code>, computed by the app from {String(r?.diagnostics?.engine_calls ?? 0)} hourly power flow runs
+            Computed by the app from {String(r?.diagnostics?.engine_calls ?? 0)} hourly power flow runs
             {resp.run_record.engine_kind ? ` (${resp.run_record.engine_kind} engine)` : ""}.
           </p>
         </>
       )}
+        </ResultSheet>
+      )}
       {!resp && <EmptyState title="Not run yet.">Run the battery adequacy check after a current M1.</EmptyState>}
+      </div>
+      </div>
     </>
   );
 }

@@ -9,7 +9,8 @@ import { ExampleGuide, ExampleNext, nextReady } from "../../components/ExampleFo
 import { tauInSource } from "../../components/Catalog";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
-import { fmt, InfeasibleNote, useDependentRun } from "../../components/Further";
+import { fixedOr } from "../../components/format";
+import { InfeasibleNote, OutOfDate, RunButton, tauMissing, useDependentRun } from "../../components/Further";
 import { IndicatorPanel } from "../../components/IndicatorPanel";
 import { m4aKpis } from "../../components/kpi";
 import { KpiStrip } from "../../components/KpiStrip";
@@ -17,6 +18,7 @@ import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { eigenRows, M4aCharts, type EigRow } from "../../components/M4aCharts";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
+import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
 import { Toast } from "../../components/Toast";
 import styles from "../../components/Further.module.css";
@@ -32,8 +34,8 @@ const yesNo = (b: boolean | null | undefined, none: string) => (b === null || b 
 type Dom = M4aPayload["dominant_modes"][number];
 const DOMINANT: DataColumn<Dom>[] = [
   { key: "k", header: "Eigenvalue", term: "eigen", cell: (d) => <strong>#{d.eigenvalue_index}</strong> },
-  { key: "z", header: "Damping ratio", term: "zeta", unit: "ratio", numeric: true, cell: (d) => fmt(d.damping_ratio) },
-  { key: "f", header: "Frequency", unit: "Hz", numeric: true, cell: (d) => fmt(d.frequency_hz) },
+  { key: "z", header: "Damping ratio", term: "zeta", unit: "ratio", numeric: true, cell: (d) => fixedOr(d.damping_ratio, "ratio") },
+  { key: "f", header: "Frequency", unit: "Hz", numeric: true, cell: (d) => fixedOr(d.frequency_hz, "Hz") },
   {
     key: "e",
     header: "Associated elements",
@@ -48,14 +50,14 @@ const DOMINANT: DataColumn<Dom>[] = [
 
 const EIGEN: DataColumn<EigRow>[] = [
   { key: "k", header: "#", cell: (e) => `${e.k}${e.dominant ? " (dominant)" : ""}` },
-  { key: "re", header: "Real part", unit: "1/s", numeric: true, cell: (e) => fmt(e.re) },
-  { key: "im", header: "Imaginary part", unit: "1/s", numeric: true, cell: (e) => fmt(e.im) },
-  { key: "z", header: "Damping ratio", term: "zeta", unit: "ratio", numeric: true, cell: (e) => fmt(e.zeta) },
-  { key: "f", header: "Frequency", unit: "Hz", numeric: true, cell: (e) => fmt(e.f) },
+  { key: "re", header: "Real part", unit: "1/s", numeric: true, cell: (e) => fixedOr(e.re, "1/s") },
+  { key: "im", header: "Imaginary part", unit: "1/s", numeric: true, cell: (e) => fixedOr(e.im, "1/s") },
+  { key: "z", header: "Damping ratio", term: "zeta", unit: "ratio", numeric: true, cell: (e) => fixedOr(e.zeta, "ratio") },
+  { key: "f", header: "Frequency", unit: "Hz", numeric: true, cell: (e) => fixedOr(e.f, "Hz") },
 ];
 
 function SmallSignal() {
-  const { design, fresh, busy, resp, error, clearError, run, m2Infeasible } = useDependentRun("M4a");
+  const { design, fresh, busy, resp, stale, error, clearError, run, m2Infeasible } = useDependentRun("M4a");
   const { from, conflict } = tauInSource(design.inverters ?? []);
   const [tauIn, setTauIn] = useState<number | null>(from?.tau_in_s ?? null);
   const [threshold, setThreshold] = useState<number | null>(null);
@@ -66,12 +68,15 @@ function SmallSignal() {
   return (
     <>
       <div className={styles.head}>
-        <h1>Small-signal (M4a)</h1>
+        <h1>
+          Small-signal <span className="code-label">(M4a)</span>
+        </h1>
         <M1FreshnessBadge f={fresh} />
       </div>
       <ExampleGuide screen="small-signal" />
       <M1BlockedNote f={fresh} />
       <InfeasibleNote show={m2Infeasible} />
+      <div className={styles.study}>
       <form
         aria-label="Small-signal settings"
         className={styles.form}
@@ -99,19 +104,21 @@ function SmallSignal() {
         <p>
           <NumberField id="damping-threshold" label="Damping pass threshold, optional" unit="ratio" value={threshold} onChange={setThreshold} />
         </p>
-        <button type="submit" className="primary" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
-          {busy ? "Running..." : "Run M4a"}
-        </button>
+        <RunButton label="Run M4a" busy={busy} fresh={fresh} missing={tauMissing(design)} />
       </form>
+      <div className={styles.result}>
       {error && <Toast message={error} onDismiss={clearError} />}
-      {r && <StatusBanner type="M4a" result={r} />}
+      <OutOfDate show={stale} />
+      {resp && r && (
+        <ResultSheet record={resp.run_record}>
+          <StatusBanner type="M4a" result={r} />
       {p && resp && <KpiStrip label="Small-signal key figures" kpis={m4aKpis(p, thresholdGiven)} record={resp.run_record} />}
       {p && resp && (
         <>
           <h2>Class: {p.stability_class}</h2>
           <p data-testid="stability-class">{CLASS_WORDS[p.stability_class]}</p>
           <ul className={styles.facts}>
-            <li>Lowest damping of the oscillatory modes ζ_min: {fmt(p.zeta_min)}</li>
+            <li>Lowest damping of the oscillatory modes ζ_min: {fixedOr(p.zeta_min, "ratio")}</li>
             <li>Damping passes the threshold: {yesNo(p.damping_pass, "not judged (no threshold or no oscillatory mode)")}</li>
             {p.outside_definition && <li>The operating point violates constraints: outside definition [19].</li>}
           </ul>
@@ -121,12 +128,13 @@ function SmallSignal() {
             <DataTable label="Dominant modes" caption="Dominant modes" columns={DOMINANT} rows={p.dominant_modes} rowKey={(d) => d.eigenvalue_index} rowName={(d) => `#${d.eigenvalue_index}`} />
           )}
           {eig.length > 0 && <DataTable label="Eigenvalues" caption="Eigenvalues and modes (Eq. 4.20)" columns={EIGEN} rows={eig} rowKey={(e) => e.k} rowName={(e) => `#${e.k}`} />}
-          <p className={styles.record}>
-            RunRecord <code>{resp.run_record.record_id}</code>, engine {resp.run_record.engine_kind ?? "not called"}.
-          </p>
         </>
       )}
+        </ResultSheet>
+      )}
       {!resp && <EmptyState title="Not run yet.">Run M4a to see the eigenvalues, damping and the stability class.</EmptyState>}
+      </div>
+      </div>
       <ExampleNext screen="small-signal" ready={nextReady(r?.status)} />
     </>
   );
