@@ -73,7 +73,7 @@ Deferred (not in v1): batch M4b over all inverter outages, CSV import/export, p.
 
 ### 3.3 K — Component catalogue
 
-Scope of catalogue entries: GFM inverter and conductor (Should); battery module (Could, §3.4). PV, PV inverters (grid-following), diesel, transformers and protection devices are not catalogued because the model does not represent them. The application ships no vendor data and no example entries; the Catalogue starts empty (Doc 9 D-59 K107). Conductor tables from an official standard are postponed (not in this version of the extension).
+Scope of catalogue entries: GFM inverter and conductor (Should); battery module (Could, §3.4). PV, PV inverters (grid-following), diesel, transformers and protection devices are not catalogued because the model does not represent them. The application ships a read-only base catalogue read from manufacturer documents (user decision 2026-11-16, Doc 9 D-114, replacing D-59 K107); the user adds their own entries beside it, and base entries are copied, not edited. Conductor tables from an official standard are postponed (not in this version of the extension).
 
 | ID | Requirement | Priority | Acceptance criteria | Source |
 |---|---|---|---|---|

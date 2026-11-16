@@ -1,0 +1,1007 @@
+{
+ "schema_version": 1,
+ "app_version": "0.1.0",
+ "entries": [
+  {
+   "id": "INV-TRUMPF-AC3025-X2",
+   "kind": "INVERTER",
+   "provenance": {
+    "manufacturer": "TRUMPF Huettinger",
+    "model": "TruConvert AC 3025 x2 in parallel, with TruConvert System Control",
+    "document": "Operator's manual TruConvert AC 3025, TruConvert System Control, TruConvert Modular (A67-0141-00.BKen-001-12)",
+    "revision": "Edition 2025-02-24"
+   },
+   "sources": {
+    "rated_kva": "Sec. 3.1 Tab. 5 pp. 16-17: 25 kVA per module; x2 = 50 kVA (DERIVED)",
+    "nominal_voltage_kv": "Tab. 5 pp. 16-17: 380 V -10 % to 480 V +10 %, 440 V row in the nominal-current table (33 A); 440 V chosen inside the printed range",
+    "nominal_frequency_hz": "Tab. 5: 50/60 Hz nominal, 45-65 Hz",
+    "frequency_droop_min_hz_per_kw": "Tab. 33 p. 111 DroopkP 0.1 % of fN/PN; kP = DroopkP*fN/(100*PN), p. 107, PN 25 kW per module; DERIVED for 2 parallel modules: per-module value / 2",
+    "frequency_droop_max_hz_per_kw": "Tab. 33 p. 111 DroopkP 4 % of fN/PN; same equation; DERIVED for 2 parallel modules: per-module value / 2",
+    "voltage_droop_min_kv_per_kvar": "Tab. 33 p. 112 DroopkQ 0.1 % of VN/QN; kQ = DroopkQ*UN/(100*QN), p. 108; QN = 25 kvar per module (manual example, ASSUMED); UN expressed as 0.44 kV line-to-line; DERIVED for 2 parallel modules: per-module value / 2",
+    "voltage_droop_max_kv_per_kvar": "Tab. 33 p. 112 DroopkQ 10 % of VN/QN; same equation and assumptions; DERIVED for 2 parallel modules: per-module value / 2"
+   },
+   "inverter": {
+    "rated_kva": 50,
+    "nominal_voltage_kv": 0.44,
+    "nominal_frequency_hz": 50,
+    "frequency_droop_min_hz_per_kw": 0.001,
+    "frequency_droop_max_hz_per_kw": 0.04,
+    "voltage_droop_min_kv_per_kvar": 8.8e-06,
+    "voltage_droop_max_kv_per_kvar": 0.00088,
+    "tau_in_s": null,
+    "grid_forming": true,
+    "grid_forming_reference": "Sec. 6.7 p. 57: 'can be used as ... a grid-forming inverter'; 'can form a stand-alone network'; Tab. 28 p. 82 register 4229 voltage source mode",
+    "overload_ratio": 1.25,
+    "current_limit_a": null,
+    "output_filter": null,
+    "efficiency_ratio": 0.98,
+    "dc_voltage_min_v": 750,
+    "dc_voltage_max_v": 950
+   }
+  },
+  {
+   "id": "INV-TRUMPF-AC3025-X3",
+   "kind": "INVERTER",
+   "provenance": {
+    "manufacturer": "TRUMPF Huettinger",
+    "model": "TruConvert AC 3025 x3 in parallel, with TruConvert System Control",
+    "document": "Operator's manual TruConvert AC 3025, TruConvert System Control, TruConvert Modular (A67-0141-00.BKen-001-12)",
+    "revision": "Edition 2025-02-24"
+   },
+   "sources": {
+    "rated_kva": "Sec. 3.1 Tab. 5 pp. 16-17: 25 kVA per module; x3 = 75 kVA (DERIVED)",
+    "nominal_voltage_kv": "Tab. 5 pp. 16-17: 380 V -10 % to 480 V +10 %, 440 V row in the nominal-current table (33 A); 440 V chosen inside the printed range",
+    "nominal_frequency_hz": "Tab. 5: 50/60 Hz nominal, 45-65 Hz",
+    "frequency_droop_min_hz_per_kw": "Tab. 33 p. 111 DroopkP 0.1 % of fN/PN; kP = DroopkP*fN/(100*PN), p. 107, PN 25 kW per module; DERIVED for 3 parallel modules: per-module value / 3",
+    "frequency_droop_max_hz_per_kw": "Tab. 33 p. 111 DroopkP 4 % of fN/PN; same equation; DERIVED for 3 parallel modules: per-module value / 3",
+    "voltage_droop_min_kv_per_kvar": "Tab. 33 p. 112 DroopkQ 0.1 % of VN/QN; kQ = DroopkQ*UN/(100*QN), p. 108; QN = 25 kvar per module (manual example, ASSUMED); UN expressed as 0.44 kV line-to-line; DERIVED for 3 parallel modules: per-module value / 3",
+    "voltage_droop_max_kv_per_kvar": "Tab. 33 p. 112 DroopkQ 10 % of VN/QN; same equation and assumptions; DERIVED for 3 parallel modules: per-module value / 3"
+   },
+   "inverter": {
+    "rated_kva": 75,
+    "nominal_voltage_kv": 0.44,
+    "nominal_frequency_hz": 50,
+    "frequency_droop_min_hz_per_kw": 0.000666667,
+    "frequency_droop_max_hz_per_kw": 0.026666667,
+    "voltage_droop_min_kv_per_kvar": 5.866667e-06,
+    "voltage_droop_max_kv_per_kvar": 0.000586666667,
+    "tau_in_s": null,
+    "grid_forming": true,
+    "grid_forming_reference": "Sec. 6.7 p. 57: 'can be used as ... a grid-forming inverter'; 'can form a stand-alone network'; Tab. 28 p. 82 register 4229 voltage source mode",
+    "overload_ratio": 1.25,
+    "current_limit_a": null,
+    "output_filter": null,
+    "efficiency_ratio": 0.98,
+    "dc_voltage_min_v": 750,
+    "dc_voltage_max_v": 950
+   }
+  },
+  {
+   "id": "INV-HUAWEI-LUNA2000-100KTL-M1",
+   "kind": "INVERTER",
+   "provenance": {
+    "manufacturer": "Huawei",
+    "model": "LUNA2000-100KTL-M1 Smart PCS",
+    "document": "LUNA2000-100KTL-M1 Smart PCS User Manual; SmartLogger3000 User Manual EDOC1100108365 (Setting PCS Parameters, 100KTL and 200KTL Series)",
+    "revision": "Issue 01, 2023-01-04; EDOC1100108365 page update 2025-08-30"
+   },
+   "sources": {
+    "nominal_voltage_kv": "User manual p. 74: rated AC voltage 380 / 400 / 440 V",
+    "nominal_frequency_hz": "User manual p. 74: 50/60 Hz"
+   },
+   "inverter": {
+    "rated_kva": null,
+    "nominal_voltage_kv": 0.44,
+    "nominal_frequency_hz": 50,
+    "frequency_droop_min_hz_per_kw": null,
+    "frequency_droop_max_hz_per_kw": null,
+    "voltage_droop_min_kv_per_kvar": null,
+    "voltage_droop_max_kv_per_kvar": null,
+    "tau_in_s": null,
+    "grid_forming": true,
+    "grid_forming_reference": "EDOC1100108365 Feature Parameters: off-grid scenario -> Working mode VSG; Power Adjustment: grid-forming P/f coefficient [0, 200], Q/V coefficient [0, 50] (per-unit gains)",
+    "overload_ratio": null,
+    "current_limit_a": null,
+    "output_filter": null,
+    "efficiency_ratio": 0.984,
+    "dc_voltage_min_v": 570,
+    "dc_voltage_max_v": 1100
+   }
+  },
+  {
+   "id": "BAT-DYNESS-S51314",
+   "kind": "BATTERY_MODULE",
+   "provenance": {
+    "manufacturer": "Dyness",
+    "model": "S51314 module (STACK314 system)",
+    "document": "STACK314 User Manual",
+    "revision": "V0 2026-03-30 (First Published)"
+   },
+   "sources": {
+    "energy_kwh": "Sec. 2.2 Tab. 2-2 p. 10",
+    "nominal_voltage_v": "Sec. 2.2 Tab. 2-2 p. 10",
+    "voltage_min_v": "DERIVED: Sec. 2.1 Tab. 2-1, 314-15s operating 672-876 V / 15 modules (3s: 134-175 V / 3 agrees)",
+    "voltage_max_v": "DERIVED: Sec. 2.1 Tab. 2-1, 876 V / 15 modules",
+    "discharge_power_kw": "DERIVED: Tab. 2-1 max continuous discharge current 200 A x module nominal 51.2 V",
+    "recommended_dod_ratio": "Sec. 2.1 Tab. 2-1: Depth of Discharge 95 %"
+   },
+   "battery_module": {
+    "energy_kwh": 16.08,
+    "nominal_voltage_v": 51.2,
+    "voltage_min_v": 44.8,
+    "voltage_max_v": 58.4,
+    "discharge_power_kw": 10.24,
+    "c_rate_per_h": null,
+    "recommended_dod_ratio": 0.95
+   }
+  },
+  {
+   "id": "BAT-DEYE-BOS-A-PACK7.68",
+   "kind": "BATTERY_MODULE",
+   "provenance": {
+    "manufacturer": "Deye",
+    "model": "BOS-A-Pack7.68",
+    "document": "Deye BOS-A Series brochure",
+    "revision": "file tag 20260403V-NA1.1 (no revision printed)"
+   },
+   "sources": {
+    "energy_kwh": "Section 'Model BOS-A-Pack7.68': Nominal Energy",
+    "nominal_voltage_v": "Section 'Model BOS-A-Pack7.68': Nominal Voltage 38.4 V",
+    "voltage_min_v": "DERIVED: Main Parameters, BOS-A160 System Operating Voltage 705.6 V / 21 packs in series",
+    "voltage_max_v": "DERIVED: Main Parameters, 919.8 V / 21 packs in series",
+    "discharge_power_kw": "DERIVED: pack Nominal Charge/Discharge Current 160 A x 38.4 V",
+    "recommended_dod_ratio": "Main Parameters: Recommend Depth of Discharge 0.9 (system table, applied to the pack)"
+   },
+   "battery_module": {
+    "energy_kwh": 7.68,
+    "nominal_voltage_v": 38.4,
+    "voltage_min_v": 33.6,
+    "voltage_max_v": 43.8,
+    "discharge_power_kw": 6.144,
+    "c_rate_per_h": null,
+    "recommended_dod_ratio": 0.9
+   }
+  },
+  {
+   "id": "BAT-DEYE-BOS-A160-RACK",
+   "kind": "BATTERY_MODULE",
+   "provenance": {
+    "manufacturer": "Deye",
+    "model": "BOS-A160 rack (21 x BOS-A-Pack7.68, entered as one module)",
+    "document": "Deye BOS-A Series brochure",
+    "revision": "file tag 20260403V-NA1.1 (no revision printed)"
+   },
+   "sources": {
+    "energy_kwh": "Main Parameters: System Energy 161.28 kWh",
+    "nominal_voltage_v": "Main Parameters: System Nominal Voltage",
+    "voltage_min_v": "Main Parameters: System Operating Voltage 705.6-919.8 V",
+    "voltage_max_v": "Main Parameters: System Operating Voltage 705.6-919.8 V",
+    "discharge_power_kw": "Main Parameters: Max Continuous Discharge Rate 129.02 kW",
+    "recommended_dod_ratio": "Main Parameters: Recommend Depth of Discharge 0.9"
+   },
+   "battery_module": {
+    "energy_kwh": 161.28,
+    "nominal_voltage_v": 806.4,
+    "voltage_min_v": 705.6,
+    "voltage_max_v": 919.8,
+    "discharge_power_kw": 129.02,
+    "c_rate_per_h": null,
+    "recommended_dod_ratio": 0.9
+   }
+  },
+  {
+   "id": "BAT-SUNGROW-SBH400-TOWER",
+   "kind": "BATTERY_MODULE",
+   "provenance": {
+    "manufacturer": "Sungrow",
+    "model": "SBH400 tower (8 x 5.0 kWh modules, entered as one module)",
+    "document": "SBH150/200/250/300/350/400 High Voltage LFP Battery, technical specifications",
+    "revision": "Version 1, (c) 2026"
+   },
+   "sources": {
+    "energy_kwh": "Technical specifications table, SBH400 usable energy 40.0 kWh",
+    "nominal_voltage_v": "Technical specifications table, SBH400 nominal voltage",
+    "voltage_min_v": "Technical specifications table, SBH400 operating voltage 475.2-642.4 V",
+    "voltage_max_v": "Technical specifications table, SBH400 operating voltage 475.2-642.4 V",
+    "discharge_power_kw": "Technical specifications, footnote 2: 'Normal power' 28.16 kW (derating with temperature and SOC); not labelled continuous"
+   },
+   "battery_module": {
+    "energy_kwh": 40.0,
+    "nominal_voltage_v": 563.2,
+    "voltage_min_v": 475.2,
+    "voltage_max_v": 642.4,
+    "discharge_power_kw": 28.16,
+    "c_rate_per_h": null,
+    "recommended_dod_ratio": null
+   }
+  },
+  {
+   "id": "CBL-CITRA-NYY-4X16",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT Citra Cable (Citra Cable)",
+    "model": "NYY 0.6/1 kV 4 x 16 mm2",
+    "document": "NON ARMOURED CABLE, Type NYY 0.6/1 kV, SNI IEC 60502-1:2009 (SPLN 43-1:1981) (citracable.com LV/NYY.pdf)",
+    "revision": "no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "Electrical data table, 4-core block: DC resistance at 20 C",
+    "x_ohm_per_km": "Electrical data table, 4-core block: reactance (printed)",
+    "ampacity_a": "Electrical data table, 4-core block: current-carrying capacity in air, 30 C"
+   },
+   "conductor": {
+    "r_ohm_per_km": 1.15,
+    "x_ohm_per_km": 0.09,
+    "rx_conditions": "R: DC at 20 C (max). X: printed reactance per conductor, laying not stated",
+    "ampacity_a": 80,
+    "ampacity_conditions": "in air, 30 C (only condition printed); in ground 89 A at 30 C; depth and soil resistivity not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "PVC",
+    "cores": 4,
+    "size_mm2": 16
+   }
+  },
+  {
+   "id": "CBL-CITRA-NYY-4X25",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT Citra Cable (Citra Cable)",
+    "model": "NYY 0.6/1 kV 4 x 25 mm2",
+    "document": "NON ARMOURED CABLE, Type NYY 0.6/1 kV, SNI IEC 60502-1:2009 (SPLN 43-1:1981) (citracable.com LV/NYY.pdf)",
+    "revision": "no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "Electrical data table, 4-core block: DC resistance at 20 C",
+    "x_ohm_per_km": "Electrical data table, 4-core block: reactance (printed)",
+    "ampacity_a": "Electrical data table, 4-core block: current-carrying capacity in air, 30 C"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.727,
+    "x_ohm_per_km": 0.086,
+    "rx_conditions": "R: DC at 20 C (max). X: printed reactance per conductor, laying not stated",
+    "ampacity_a": 105,
+    "ampacity_conditions": "in air, 30 C (only condition printed); in ground 116 A at 30 C; depth and soil resistivity not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "PVC",
+    "cores": 4,
+    "size_mm2": 25
+   }
+  },
+  {
+   "id": "CBL-CITRA-NYY-4X35",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT Citra Cable (Citra Cable)",
+    "model": "NYY 0.6/1 kV 4 x 35 mm2",
+    "document": "NON ARMOURED CABLE, Type NYY 0.6/1 kV, SNI IEC 60502-1:2009 (SPLN 43-1:1981) (citracable.com LV/NYY.pdf)",
+    "revision": "no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "Electrical data table, 4-core block: DC resistance at 20 C",
+    "x_ohm_per_km": "Electrical data table, 4-core block: reactance (printed)",
+    "ampacity_a": "Electrical data table, 4-core block: current-carrying capacity in air, 30 C"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.524,
+    "x_ohm_per_km": 0.083,
+    "rx_conditions": "R: DC at 20 C (max). X: printed reactance per conductor, laying not stated",
+    "ampacity_a": 130,
+    "ampacity_conditions": "in air, 30 C (only condition printed); in ground 138 A at 30 C; depth and soil resistivity not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "PVC",
+    "cores": 4,
+    "size_mm2": 35
+   }
+  },
+  {
+   "id": "CBL-CITRA-NYY-4X50",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT Citra Cable (Citra Cable)",
+    "model": "NYY 0.6/1 kV 4 x 50 mm2",
+    "document": "NON ARMOURED CABLE, Type NYY 0.6/1 kV, SNI IEC 60502-1:2009 (SPLN 43-1:1981) (citracable.com LV/NYY.pdf)",
+    "revision": "no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "Electrical data table, 4-core block: DC resistance at 20 C",
+    "x_ohm_per_km": "Electrical data table, 4-core block: reactance (printed)",
+    "ampacity_a": "Electrical data table, 4-core block: current-carrying capacity in air, 30 C"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.387,
+    "x_ohm_per_km": 0.083,
+    "rx_conditions": "R: DC at 20 C (max). X: printed reactance per conductor, laying not stated",
+    "ampacity_a": 160,
+    "ampacity_conditions": "in air, 30 C (only condition printed); in ground 165 A at 30 C; depth and soil resistivity not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "PVC",
+    "cores": 4,
+    "size_mm2": 50
+   }
+  },
+  {
+   "id": "CBL-CITRA-NYY-4X70",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT Citra Cable (Citra Cable)",
+    "model": "NYY 0.6/1 kV 4 x 70 mm2",
+    "document": "NON ARMOURED CABLE, Type NYY 0.6/1 kV, SNI IEC 60502-1:2009 (SPLN 43-1:1981) (citracable.com LV/NYY.pdf)",
+    "revision": "no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "Electrical data table, 4-core block: DC resistance at 20 C",
+    "x_ohm_per_km": "Electrical data table, 4-core block: reactance (printed)",
+    "ampacity_a": "Electrical data table, 4-core block: current-carrying capacity in air, 30 C"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.268,
+    "x_ohm_per_km": 0.082,
+    "rx_conditions": "R: DC at 20 C (max). X: printed reactance per conductor, laying not stated",
+    "ampacity_a": 200,
+    "ampacity_conditions": "in air, 30 C (only condition printed); in ground 205 A at 30 C; depth and soil resistivity not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "PVC",
+    "cores": 4,
+    "size_mm2": 70
+   }
+  },
+  {
+   "id": "CBL-CITRA-NYY-4X95",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT Citra Cable (Citra Cable)",
+    "model": "NYY 0.6/1 kV 4 x 95 mm2",
+    "document": "NON ARMOURED CABLE, Type NYY 0.6/1 kV, SNI IEC 60502-1:2009 (SPLN 43-1:1981) (citracable.com LV/NYY.pdf)",
+    "revision": "no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "Electrical data table, 4-core block: DC resistance at 20 C",
+    "x_ohm_per_km": "Electrical data table, 4-core block: reactance (printed)",
+    "ampacity_a": "Electrical data table, 4-core block: current-carrying capacity in air, 30 C"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.193,
+    "x_ohm_per_km": 0.082,
+    "rx_conditions": "R: DC at 20 C (max). X: printed reactance per conductor, laying not stated",
+    "ampacity_a": 245,
+    "ampacity_conditions": "in air, 30 C (only condition printed); in ground 245 A at 30 C; depth and soil resistivity not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "PVC",
+    "cores": 4,
+    "size_mm2": 95
+   }
+  },
+  {
+   "id": "CBL-FIRSTCABLE-N2XY-1X16",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT First Cable",
+    "model": "N2XY 0.6/1 kV 1 x 16 mm2",
+    "document": "N2XY Cu/XLPE/PVC 600/1000 V, IEC 60502-1 (firstcable.co.id/product/n2xy-50)",
+    "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "single-core table: AC resistance at 90 C",
+    "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.315 mH/km printed (trefoil) in the single-core table",
+    "ampacity_a": "single-core table: current-carrying capacity at 30 C, in air (trefoil)"
+   },
+   "conductor": {
+    "r_ohm_per_km": 1.466,
+    "x_ohm_per_km": 0.099,
+    "rx_conditions": "R: AC at 90 C (printed). X: derived from printed inductance 0.315 mH/km (trefoil) at 50 Hz",
+    "ampacity_a": 104,
+    "ampacity_conditions": "in air, 30 C (only condition printed), trefoil; in ground 118 A at 30 C; installation details not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "XLPE",
+    "cores": 1,
+    "size_mm2": 16
+   }
+  },
+  {
+   "id": "CBL-FIRSTCABLE-N2XY-1X25",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT First Cable",
+    "model": "N2XY 0.6/1 kV 1 x 25 mm2",
+    "document": "N2XY Cu/XLPE/PVC 600/1000 V, IEC 60502-1 (firstcable.co.id/product/n2xy-50)",
+    "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "single-core table: AC resistance at 90 C",
+    "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.302 mH/km printed (trefoil) in the single-core table",
+    "ampacity_a": "single-core table: current-carrying capacity at 30 C, in air (trefoil)"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.927,
+    "x_ohm_per_km": 0.0949,
+    "rx_conditions": "R: AC at 90 C (printed). X: derived from printed inductance 0.302 mH/km (trefoil) at 50 Hz",
+    "ampacity_a": 141,
+    "ampacity_conditions": "in air, 30 C (only condition printed), trefoil; in ground 152 A at 30 C; installation details not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "XLPE",
+    "cores": 1,
+    "size_mm2": 25
+   }
+  },
+  {
+   "id": "CBL-FIRSTCABLE-N2XY-1X35",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT First Cable",
+    "model": "N2XY 0.6/1 kV 1 x 35 mm2",
+    "document": "N2XY Cu/XLPE/PVC 600/1000 V, IEC 60502-1 (firstcable.co.id/product/n2xy-50)",
+    "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "single-core table: AC resistance at 90 C",
+    "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.289 mH/km printed (trefoil) in the single-core table",
+    "ampacity_a": "single-core table: current-carrying capacity at 30 C, in air (trefoil)"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.688,
+    "x_ohm_per_km": 0.0908,
+    "rx_conditions": "R: AC at 90 C (printed). X: derived from printed inductance 0.289 mH/km (trefoil) at 50 Hz",
+    "ampacity_a": 173,
+    "ampacity_conditions": "in air, 30 C (only condition printed), trefoil; in ground 182 A at 30 C; installation details not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "XLPE",
+    "cores": 1,
+    "size_mm2": 35
+   }
+  },
+  {
+   "id": "CBL-FIRSTCABLE-N2XY-1X50",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT First Cable",
+    "model": "N2XY 0.6/1 kV 1 x 50 mm2",
+    "document": "N2XY Cu/XLPE/PVC 600/1000 V, IEC 60502-1 (firstcable.co.id/product/n2xy-50)",
+    "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "single-core table: AC resistance at 90 C",
+    "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.279 mH/km printed (trefoil) in the single-core table",
+    "ampacity_a": "single-core table: current-carrying capacity at 30 C, in air (trefoil)"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.494,
+    "x_ohm_per_km": 0.0877,
+    "rx_conditions": "R: AC at 90 C (printed). X: derived from printed inductance 0.279 mH/km (trefoil) at 50 Hz",
+    "ampacity_a": 213,
+    "ampacity_conditions": "in air, 30 C (only condition printed), trefoil; in ground 216 A at 30 C; installation details not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "XLPE",
+    "cores": 1,
+    "size_mm2": 50
+   }
+  },
+  {
+   "id": "CBL-FIRSTCABLE-N2XY-1X70",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT First Cable",
+    "model": "N2XY 0.6/1 kV 1 x 70 mm2",
+    "document": "N2XY Cu/XLPE/PVC 600/1000 V, IEC 60502-1 (firstcable.co.id/product/n2xy-50)",
+    "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "single-core table: AC resistance at 90 C",
+    "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.27 mH/km printed (trefoil) in the single-core table",
+    "ampacity_a": "single-core table: current-carrying capacity at 30 C, in air (trefoil)"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.342,
+    "x_ohm_per_km": 0.0848,
+    "rx_conditions": "R: AC at 90 C (printed). X: derived from printed inductance 0.27 mH/km (trefoil) at 50 Hz",
+    "ampacity_a": 271,
+    "ampacity_conditions": "in air, 30 C (only condition printed), trefoil; in ground 265 A at 30 C; installation details not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "XLPE",
+    "cores": 1,
+    "size_mm2": 70
+   }
+  },
+  {
+   "id": "CBL-FIRSTCABLE-N2XY-1X95",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT First Cable",
+    "model": "N2XY 0.6/1 kV 1 x 95 mm2",
+    "document": "N2XY Cu/XLPE/PVC 600/1000 V, IEC 60502-1 (firstcable.co.id/product/n2xy-50)",
+    "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "single-core table: AC resistance at 90 C",
+    "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.263 mH/km printed (trefoil) in the single-core table",
+    "ampacity_a": "single-core table: current-carrying capacity at 30 C, in air (trefoil)"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.247,
+    "x_ohm_per_km": 0.0826,
+    "rx_conditions": "R: AC at 90 C (printed). X: derived from printed inductance 0.263 mH/km (trefoil) at 50 Hz",
+    "ampacity_a": 335,
+    "ampacity_conditions": "in air, 30 C (only condition printed), trefoil; in ground 316 A at 30 C; installation details not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "XLPE",
+    "cores": 1,
+    "size_mm2": 95
+   }
+  },
+  {
+   "id": "CBL-FIRSTCABLE-N2XY-4X16",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT First Cable",
+    "model": "N2XY 0.6/1 kV 4 x 16 mm2",
+    "document": "N2XY Cu/XLPE/PVC 600/1000 V, IEC 60502-1 (firstcable.co.id/product/n2xy-50)",
+    "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "four-core table: AC resistance at 90 C",
+    "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.238 mH/km printed (four-core (formation not stated)) in the four-core table",
+    "ampacity_a": "four-core table: current-carrying capacity at 30 C, in air"
+   },
+   "conductor": {
+    "r_ohm_per_km": 1.466,
+    "x_ohm_per_km": 0.0748,
+    "rx_conditions": "R: AC at 90 C (printed). X: derived from printed inductance 0.238 mH/km (four-core (formation not stated)) at 50 Hz",
+    "ampacity_a": 108,
+    "ampacity_conditions": "in air, 30 C (only condition printed); in ground 116 A at 30 C; installation details not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "XLPE",
+    "cores": 4,
+    "size_mm2": 16
+   }
+  },
+  {
+   "id": "CBL-FIRSTCABLE-N2XY-4X25",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT First Cable",
+    "model": "N2XY 0.6/1 kV 4 x 25 mm2",
+    "document": "N2XY Cu/XLPE/PVC 600/1000 V, IEC 60502-1 (firstcable.co.id/product/n2xy-50)",
+    "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "four-core table: AC resistance at 90 C",
+    "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.24 mH/km printed (four-core (formation not stated)) in the four-core table",
+    "ampacity_a": "four-core table: current-carrying capacity at 30 C, in air"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.927,
+    "x_ohm_per_km": 0.0754,
+    "rx_conditions": "R: AC at 90 C (printed). X: derived from printed inductance 0.24 mH/km (four-core (formation not stated)) at 50 Hz",
+    "ampacity_a": 146,
+    "ampacity_conditions": "in air, 30 C (only condition printed); in ground 151 A at 30 C; installation details not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "XLPE",
+    "cores": 4,
+    "size_mm2": 25
+   }
+  },
+  {
+   "id": "CBL-FIRSTCABLE-N2XY-4X35",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT First Cable",
+    "model": "N2XY 0.6/1 kV 4 x 35 mm2",
+    "document": "N2XY Cu/XLPE/PVC 600/1000 V, IEC 60502-1 (firstcable.co.id/product/n2xy-50)",
+    "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "four-core table: AC resistance at 90 C",
+    "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.233 mH/km printed (four-core (formation not stated)) in the four-core table",
+    "ampacity_a": "four-core table: current-carrying capacity at 30 C, in air"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.688,
+    "x_ohm_per_km": 0.0732,
+    "rx_conditions": "R: AC at 90 C (printed). X: derived from printed inductance 0.233 mH/km (four-core (formation not stated)) at 50 Hz",
+    "ampacity_a": 180,
+    "ampacity_conditions": "in air, 30 C (only condition printed); in ground 181 A at 30 C; installation details not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "XLPE",
+    "cores": 4,
+    "size_mm2": 35
+   }
+  },
+  {
+   "id": "CBL-FIRSTCABLE-N2XY-4X50",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT First Cable",
+    "model": "N2XY 0.6/1 kV 4 x 50 mm2",
+    "document": "N2XY Cu/XLPE/PVC 600/1000 V, IEC 60502-1 (firstcable.co.id/product/n2xy-50)",
+    "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "four-core table: AC resistance at 90 C",
+    "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.232 mH/km printed (four-core (formation not stated)) in the four-core table",
+    "ampacity_a": "four-core table: current-carrying capacity at 30 C, in air"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.494,
+    "x_ohm_per_km": 0.0729,
+    "rx_conditions": "R: AC at 90 C (printed). X: derived from printed inductance 0.232 mH/km (four-core (formation not stated)) at 50 Hz",
+    "ampacity_a": 212,
+    "ampacity_conditions": "in air, 30 C (only condition printed); in ground 208 A at 30 C; installation details not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "XLPE",
+    "cores": 4,
+    "size_mm2": 50
+   }
+  },
+  {
+   "id": "CBL-FIRSTCABLE-N2XY-4X70",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT First Cable",
+    "model": "N2XY 0.6/1 kV 4 x 70 mm2",
+    "document": "N2XY Cu/XLPE/PVC 600/1000 V, IEC 60502-1 (firstcable.co.id/product/n2xy-50)",
+    "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "four-core table: AC resistance at 90 C",
+    "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.229 mH/km printed (four-core (formation not stated)) in the four-core table",
+    "ampacity_a": "four-core table: current-carrying capacity at 30 C, in air"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.342,
+    "x_ohm_per_km": 0.0719,
+    "rx_conditions": "R: AC at 90 C (printed). X: derived from printed inductance 0.229 mH/km (four-core (formation not stated)) at 50 Hz",
+    "ampacity_a": 265,
+    "ampacity_conditions": "in air, 30 C (only condition printed); in ground 254 A at 30 C; installation details not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "XLPE",
+    "cores": 4,
+    "size_mm2": 70
+   }
+  },
+  {
+   "id": "CBL-FIRSTCABLE-N2XY-4X95",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT First Cable",
+    "model": "N2XY 0.6/1 kV 4 x 95 mm2",
+    "document": "N2XY Cu/XLPE/PVC 600/1000 V, IEC 60502-1 (firstcable.co.id/product/n2xy-50)",
+    "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "four-core table: AC resistance at 90 C",
+    "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.224 mH/km printed (four-core (formation not stated)) in the four-core table",
+    "ampacity_a": "four-core table: current-carrying capacity at 30 C, in air"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.247,
+    "x_ohm_per_km": 0.0704,
+    "rx_conditions": "R: AC at 90 C (printed). X: derived from printed inductance 0.224 mH/km (four-core (formation not stated)) at 50 Hz",
+    "ampacity_a": 327,
+    "ampacity_conditions": "in air, 30 C (only condition printed); in ground 305 A at 30 C; installation details not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "XLPE",
+    "cores": 4,
+    "size_mm2": 95
+   }
+  },
+  {
+   "id": "CBL-FIRSTCABLE-NYY-4X16",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT First Cable",
+    "model": "NYY 0.6/1 kV 4 x 16 mm2",
+    "document": "NYY Cu/PVC/PVC 600/1000 V, IEC 60502-1:2009 (firstcable.co.id/product/nyy-2)",
+    "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "four-core table: AC resistance at 70 C (max)",
+    "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.255 mH/km printed in the four-core table",
+    "ampacity_a": "four-core table: current-carrying capacity at 30 C, in air (max)"
+   },
+   "conductor": {
+    "r_ohm_per_km": 1.376,
+    "x_ohm_per_km": 0.0801,
+    "rx_conditions": "R: AC at 70 C (printed). X: derived from printed inductance 0.255 mH/km at 50 Hz",
+    "ampacity_a": 90,
+    "ampacity_conditions": "in air, 30 C (only condition printed); in ground 99 A at 30 C; installation details not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "PVC",
+    "cores": 4,
+    "size_mm2": 16
+   }
+  },
+  {
+   "id": "CBL-FIRSTCABLE-NYY-4X25",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT First Cable",
+    "model": "NYY 0.6/1 kV 4 x 25 mm2",
+    "document": "NYY Cu/PVC/PVC 600/1000 V, IEC 60502-1:2009 (firstcable.co.id/product/nyy-2)",
+    "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "four-core table: AC resistance at 70 C (max)",
+    "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.255 mH/km printed in the four-core table",
+    "ampacity_a": "four-core table: current-carrying capacity at 30 C, in air (max)"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.87,
+    "x_ohm_per_km": 0.0801,
+    "rx_conditions": "R: AC at 70 C (printed). X: derived from printed inductance 0.255 mH/km at 50 Hz",
+    "ampacity_a": 121,
+    "ampacity_conditions": "in air, 30 C (only condition printed); in ground 128 A at 30 C; installation details not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "PVC",
+    "cores": 4,
+    "size_mm2": 25
+   }
+  },
+  {
+   "id": "CBL-FIRSTCABLE-NYY-4X35",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT First Cable",
+    "model": "NYY 0.6/1 kV 4 x 35 mm2",
+    "document": "NYY Cu/PVC/PVC 600/1000 V, IEC 60502-1:2009 (firstcable.co.id/product/nyy-2)",
+    "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "four-core table: AC resistance at 70 C (max)",
+    "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.246 mH/km printed in the four-core table",
+    "ampacity_a": "four-core table: current-carrying capacity at 30 C, in air (max)"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.627,
+    "x_ohm_per_km": 0.0773,
+    "rx_conditions": "R: AC at 70 C (printed). X: derived from printed inductance 0.246 mH/km at 50 Hz",
+    "ampacity_a": 149,
+    "ampacity_conditions": "in air, 30 C (only condition printed); in ground 154 A at 30 C; installation details not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "PVC",
+    "cores": 4,
+    "size_mm2": 35
+   }
+  },
+  {
+   "id": "CBL-FIRSTCABLE-NYY-4X50",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT First Cable",
+    "model": "NYY 0.6/1 kV 4 x 50 mm2",
+    "document": "NYY Cu/PVC/PVC 600/1000 V, IEC 60502-1:2009 (firstcable.co.id/product/nyy-2)",
+    "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "four-core table: AC resistance at 70 C (max)",
+    "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.247 mH/km printed in the four-core table",
+    "ampacity_a": "four-core table: current-carrying capacity at 30 C, in air (max)"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.464,
+    "x_ohm_per_km": 0.0776,
+    "rx_conditions": "R: AC at 70 C (printed). X: derived from printed inductance 0.247 mH/km at 50 Hz",
+    "ampacity_a": 173,
+    "ampacity_conditions": "in air, 30 C (only condition printed); in ground 173 A at 30 C; installation details not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "PVC",
+    "cores": 4,
+    "size_mm2": 50
+   }
+  },
+  {
+   "id": "CBL-FIRSTCABLE-NYY-4X70",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT First Cable",
+    "model": "NYY 0.6/1 kV 4 x 70 mm2",
+    "document": "NYY Cu/PVC/PVC 600/1000 V, IEC 60502-1:2009 (firstcable.co.id/product/nyy-2)",
+    "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "four-core table: AC resistance at 70 C (max)",
+    "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.238 mH/km printed in the four-core table",
+    "ampacity_a": "four-core table: current-carrying capacity at 30 C, in air (max)"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.321,
+    "x_ohm_per_km": 0.0748,
+    "rx_conditions": "R: AC at 70 C (printed). X: derived from printed inductance 0.238 mH/km at 50 Hz",
+    "ampacity_a": 215,
+    "ampacity_conditions": "in air, 30 C (only condition printed); in ground 212 A at 30 C; installation details not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "PVC",
+    "cores": 4,
+    "size_mm2": 70
+   }
+  },
+  {
+   "id": "CBL-FIRSTCABLE-NYY-4X95",
+   "kind": "CONDUCTOR",
+   "provenance": {
+    "manufacturer": "PT First Cable",
+    "model": "NYY 0.6/1 kV 4 x 95 mm2",
+    "document": "NYY Cu/PVC/PVC 600/1000 V, IEC 60502-1:2009 (firstcable.co.id/product/nyy-2)",
+    "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+   },
+   "sources": {
+    "r_ohm_per_km": "four-core table: AC resistance at 70 C (max)",
+    "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.238 mH/km printed in the four-core table",
+    "ampacity_a": "four-core table: current-carrying capacity at 30 C, in air (max)"
+   },
+   "conductor": {
+    "r_ohm_per_km": 0.232,
+    "x_ohm_per_km": 0.0748,
+    "rx_conditions": "R: AC at 70 C (printed). X: derived from printed inductance 0.238 mH/km at 50 Hz",
+    "ampacity_a": 266,
+    "ampacity_conditions": "in air, 30 C (only condition printed); in ground 255 A at 30 C; installation details not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "PVC",
+    "cores": 4,
+    "size_mm2": 95
+   }
+  },
+  {
+   "id": "BRK-SE-IC60N-3P-C40",
+   "kind": "BREAKER",
+   "provenance": {
+    "manufacturer": "Schneider Electric",
+    "model": "Acti9 iC60N 3P 40 A curve C (A9F74340)",
+    "document": "Acti9 catalogue (Acti9_Catalogue_2017)",
+    "revision": "Version 2.0, May 2017"
+   },
+   "sources": {
+    "in_a": "p. 9 catalogue-number table, curve C In series 0.5-63 A; product page A9F74340"
+   },
+   "breaker": {
+    "standard": "IEC 60898-1",
+    "class": "MCB",
+    "in_a": 40,
+    "curve": "C",
+    "poles": 3
+   }
+  },
+  {
+   "id": "BRK-SE-IC60N-3P-C63",
+   "kind": "BREAKER",
+   "provenance": {
+    "manufacturer": "Schneider Electric",
+    "model": "Acti9 iC60N 3P 63 A curve C (A9F74363)",
+    "document": "Acti9 catalogue (Acti9_Catalogue_2017)",
+    "revision": "Version 2.0, May 2017"
+   },
+   "sources": {
+    "in_a": "p. 9 catalogue-number table, curve C In series 0.5-63 A; product page A9F74363"
+   },
+   "breaker": {
+    "standard": "IEC 60898-1",
+    "class": "MCB",
+    "in_a": 63,
+    "curve": "C",
+    "poles": 3
+   }
+  },
+  {
+   "id": "BRK-SE-EASYPACT-CVS100F-TMD63",
+   "kind": "BREAKER",
+   "provenance": {
+    "manufacturer": "Schneider Electric",
+    "model": "EasyPact CVS100F TM-D 63 A 3P3d (LV510335)",
+    "document": "Product data sheet LV510335",
+    "revision": "date as printed on the sheet (re-check; extraction showed Oct-Nov 2026)"
+   },
+   "sources": {
+    "in_a": "LV510335 data sheet p. 1: rated current 63 A at 40 C"
+   },
+   "breaker": {
+    "standard": "IEC 60947-2",
+    "class": "MCCB",
+    "in_a": 63,
+    "curve": "TM-D",
+    "poles": 3
+   }
+  },
+  {
+   "id": "BRK-SE-EASYPACT-CVS100F-TMD80",
+   "kind": "BREAKER",
+   "provenance": {
+    "manufacturer": "Schneider Electric",
+    "model": "EasyPact CVS100F TM-D 80 A 3P3d (LV510336)",
+    "document": "Product data sheet LV510336",
+    "revision": "date as printed on the sheet (re-check; extraction showed Oct-Nov 2026)"
+   },
+   "sources": {
+    "in_a": "LV510336 data sheet p. 1: rated current 80 A at 40 C"
+   },
+   "breaker": {
+    "standard": "IEC 60947-2",
+    "class": "MCCB",
+    "in_a": 80,
+    "curve": "TM-D",
+    "poles": 3
+   }
+  },
+  {
+   "id": "BRK-SE-EASYPACT-CVS100F-TMD100",
+   "kind": "BREAKER",
+   "provenance": {
+    "manufacturer": "Schneider Electric",
+    "model": "EasyPact CVS100F TM-D 100 A 3P3d (LV510337)",
+    "document": "Product data sheet LV510337",
+    "revision": "date as printed on the sheet (re-check; extraction showed Oct-Nov 2026)"
+   },
+   "sources": {
+    "in_a": "LV510337 data sheet p. 1: rated current 100 A at 40 C"
+   },
+   "breaker": {
+    "standard": "IEC 60947-2",
+    "class": "MCCB",
+    "in_a": 100,
+    "curve": "TM-D",
+    "poles": 3
+   }
+  },
+  {
+   "id": "BRK-SE-EASYPACT-CVS160F-TMD160",
+   "kind": "BREAKER",
+   "provenance": {
+    "manufacturer": "Schneider Electric",
+    "model": "EasyPact CVS160F TM-D 160 A 3P3d (LV516333)",
+    "document": "Product data sheet LV516333",
+    "revision": "date as printed on the sheet (re-check; extraction showed Oct-Nov 2026)"
+   },
+   "sources": {
+    "in_a": "LV516333 data sheet p. 1: rated current 160 A at 40 C"
+   },
+   "breaker": {
+    "standard": "IEC 60947-2",
+    "class": "MCCB",
+    "in_a": 160,
+    "curve": "TM-D",
+    "poles": 3
+   }
+  },
+  {
+   "id": "BRK-SE-EASYPACT-CVS250F-TMD250",
+   "kind": "BREAKER",
+   "provenance": {
+    "manufacturer": "Schneider Electric",
+    "model": "EasyPact CVS250F TM-D 250 A 3P3d (LV525333)",
+    "document": "Product data sheet LV525333",
+    "revision": "date as printed on the sheet (re-check; extraction showed Oct-Nov 2026)"
+   },
+   "sources": {
+    "in_a": "LV525333 data sheet p. 1: rated current 250 A at 40 C"
+   },
+   "breaker": {
+    "standard": "IEC 60947-2",
+    "class": "MCCB",
+    "in_a": 250,
+    "curve": "TM-D",
+    "poles": 3
+   }
+  }
+ ]
+}

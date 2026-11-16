@@ -446,6 +446,10 @@ DOC 7 COMPLETE
 - C5.1 F3 outcome edge: Status equal and result_hash equal.
 - C5.4 first phase per key flow stated in §4.
 
+## Change log 2026-11-16 (base catalogue, cable sizing on; Doc 9 D-114, Doc 14 D13, D14, D18)
+- S-18: a read-only base catalogue ships with the app; a Source column (Base / Yours), Copy instead of Edit and Delete on base rows, the list sorted by kind then id; Save and Open act on the user's entries only.
+- S-19 Cable and breaker sizing is listed under Studies by default (the flag is on unless set to 0); the table file is still loaded by the user.
+
 ## Change log 2026-11-15 (UI/UX audit 2026-11-15, user decisions; Doc 14 D17)
 - Labels: words first, codes small after them (M-codes as suffixes, equation numbers in captions, basis and Report, not in form labels; an assumption number once per screen; PS spelled out on first use). Run buttons in words: "Run sensitivity", "Run small-signal analysis", "Run transient simulation", "Compare scenarios"; every study form shows "Missing: …" beside a disabled Run. One control per row in study forms; placeholder "Choose…".
 - Inspector: labels above inputs below 28rem (container query), width unchanged; below 40rem every form stacks its labels.

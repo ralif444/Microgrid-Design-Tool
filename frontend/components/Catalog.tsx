@@ -2,8 +2,8 @@
 // Catalogue state and helpers (Doc 12 §3.3; FR-64 - FR-72; D-61). The Catalogue lives beside the
 // Project, not in it, and survives opening another Project. The selection guard is the server's
 // (/api/catalogs/import), re-checked whenever the Catalogue changes.
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { importCatalog } from "../api-client";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { getBaseCatalog, importCatalog } from "../api-client";
 import type { Catalog, CatalogEntry, CatalogRef, EntryCheck } from "../api-types";
 
 // "x10": used only by the X10 cable sizing match (D-104 K293, K296), shown only with the flag on;
@@ -175,13 +175,22 @@ export function refText(ref: CatalogRef | null | undefined): string {
 }
 
 interface CatalogState {
-  catalog: Catalog;
+  catalog: Catalog; // base entries first, then the user's own; every screen picks from this
   checks: EntryCheck[];
   checkError: string | null; // the server check failed (audit O6): say so instead of "Checking…" forever
+  /** the user's own entries only; base entries passed in are dropped */
   setCatalog: (c: Catalog) => void;
+  isBase: (id: string) => boolean;
 }
 
-const Ctx = createContext<CatalogState>({ catalog: emptyCatalog(), checks: [], checkError: null, setCatalog: () => undefined });
+const Ctx = createContext<CatalogState>({ catalog: emptyCatalog(), checks: [], checkError: null, setCatalog: () => undefined, isBase: () => false });
+
+// Base catalogue (user decision 2026-11-16): real datasheet entries shipped with the app, read-only;
+// the user adds their own beside them. A missing or unreadable file leaves only the user's entries.
+export const KIND_ORDER: CatalogEntry["kind"][] = ["INVERTER", "BATTERY_MODULE", "CONDUCTOR", "BREAKER"];
+/** Sorted by kind, then by id with numbers in order (E2 before E10). */
+export const sortEntries = (es: CatalogEntry[]) =>
+  [...es].sort((a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) || a.id.localeCompare(b.id, undefined, { numeric: true }));
 
 // Kept in this browser like the Project draft (audit O1), so a reload or restore does not empty it.
 // The file stays the record: "Save catalogue" writes it. Storage errors only turn this off.
@@ -204,18 +213,30 @@ function storeCatalog(c: Catalog) {
 }
 
 export function CatalogProvider({ children }: { children: ReactNode }) {
-  const [catalog, setCatalog] = useState<Catalog>(emptyCatalog);
+  const [own, setOwn] = useState<Catalog>(emptyCatalog);
+  const [base, setBase] = useState<CatalogEntry[]>([]);
   const [checks, setChecks] = useState<EntryCheck[]>([]);
   const [checkError, setCheckError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   useEffect(() => {
     const c = readStoredCatalog(); // after mount: the static export renders without storage
-    if (c) setCatalog(c);
+    if (c) setOwn(c);
     setLoaded(true);
+    void getBaseCatalog().then((r) => {
+      const es = r.ok ? (r.data as Catalog | null)?.entries : null;
+      setBase(Array.isArray(es) ? es : []);
+    });
   }, []);
+  const baseIds = useMemo(() => new Set(base.map((e) => e.id)), [base]);
+  const isBase = useCallback((id: string) => baseIds.has(id), [baseIds]);
+  const catalog = useMemo<Catalog>(
+    () => ({ ...own, entries: [...sortEntries(base), ...sortEntries(own.entries.filter((e) => !baseIds.has(e.id)))] }),
+    [own, base, baseIds],
+  );
+  const setCatalog = useCallback((c: Catalog) => setOwn({ ...c, entries: c.entries.filter((e) => !baseIds.has(e.id)) }), [baseIds]);
   useEffect(() => {
-    if (loaded) storeCatalog(catalog);
-  }, [catalog, loaded]);
+    if (loaded) storeCatalog(own);
+  }, [own, loaded]);
   useEffect(() => {
     let live = true;
     const t = setTimeout(() => {
@@ -230,7 +251,7 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
       clearTimeout(t);
     };
   }, [catalog]);
-  return <Ctx.Provider value={{ catalog, checks, checkError, setCatalog }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ catalog, checks, checkError, setCatalog, isBase }}>{children}</Ctx.Provider>;
 }
 
 export const useCatalog = () => useContext(Ctx);

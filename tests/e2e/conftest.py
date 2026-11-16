@@ -17,6 +17,11 @@ from _common import BACKEND, uv
 from playwright.sync_api import Browser, Page, sync_playwright
 
 STATIC_INDEX = BACKEND / "src" / "mgapp" / "static" / "index.html"
+BASE_CATALOG_PATH = "/catalogs/base-v1.json"
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line("markers", "base_catalogue: serve the shipped base catalogue to this test")
 
 
 def _free_port() -> int:
@@ -72,15 +77,20 @@ def browser() -> Iterator[Browser]:
 
 
 @pytest.fixture
-def page(browser: Browser) -> Iterator[Page]:
+def page(browser: Browser, request: pytest.FixtureRequest) -> Iterator[Page]:
     ctx = browser.new_context()
     external: list[str] = []
+    # the shipped base catalogue is served empty unless a test is marked base_catalogue, so the other
+    # tests keep counting only their own entries (tests never depend on vendor values)
+    base = request.node.get_closest_marker("base_catalogue") is not None
 
     def guard(route, request) -> None:  # type: ignore[no-untyped-def]
-        host = urlparse(request.url).hostname
-        if host not in ("127.0.0.1", "localhost"):
+        url = urlparse(request.url)
+        if url.hostname not in ("127.0.0.1", "localhost"):
             external.append(request.url)
             route.abort()
+        elif not base and url.path.endswith(BASE_CATALOG_PATH):
+            route.fulfill(json={"schema_version": 1, "app_version": "", "entries": []})
         else:
             route.continue_()
 

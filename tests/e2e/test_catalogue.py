@@ -3,7 +3,8 @@
 FR-64 (save then open gives the same entries), FR-65/FR-66 (guard refuses with the reason, the
 entry stays), FR-67/FR-68 (A2/A4 labels), FR-69 (copy, marker on edit), FR-70 (no current limit
 without confirmation), FR-72 (hint on the sizing screen is covered by the client).
-Entries are typed in by the test; the app ships none (D-59 K107).
+Entries are typed in by the test; the shipped base catalogue is served empty here except in the
+test marked base_catalogue (user decision 2026-11-16).
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ import json
 from collections.abc import Callable
 from pathlib import Path
 
+import pytest
 from flows import delete, enter_design, gui_snapshot, step
 from playwright.sync_api import Page, expect
 from test_network_m1_m2 import _margins, _run_m1
@@ -38,19 +40,19 @@ def test_fr_64_to_fr_70_catalogue_into_network(server: Callable[[str], str], pag
     page.get_by_label("Current-carrying capacity: page or section").fill("p. 3")
     expect(page.get_by_text("not used by the model (A4)")).to_be_visible()
     entries = page.get_by_role("table", name="Catalogue entries")
-    expect(entries.locator("tbody tr").nth(0)).to_contain_text("Usable")
+    expect(entries.locator("tbody tr").filter(has_text="E1")).to_contain_text("Usable")
 
     page.get_by_role("button", name="+ Add inverter entry").click()
     _provenance(page)
     page.get_by_label("Rating (kVA)").fill("10")
     expect(page.get_by_text("not used by the model (A2)").first).to_be_visible()
-    expect(entries.locator("tbody tr").nth(1)).to_contain_text("Information only")
+    expect(entries.locator("tbody tr").filter(has_text="E2")).to_contain_text("Information only")  # sorted: inverters first
 
     with page.expect_download() as dl:
         page.get_by_role("button", name="Save catalogue").click()
     saved = Path(dl.value.path())
     doc = json.loads(saved.read_text(encoding="utf-8"))
-    assert [e["id"] for e in doc["entries"]] == ["E1", "E2"] and doc["schema_version"] == 1
+    assert [e["id"] for e in doc["entries"]] == ["E2", "E1"]  # saved sorted: inverter first and doc["schema_version"] == 1
     delete(page, "E2")
     page.get_by_label("Open catalogue file").set_input_files(saved)
     expect(page.get_by_test_id("file-check")).to_contain_text("The Catalogue was opened.")
@@ -169,3 +171,19 @@ def test_fr_70_fr_71_fr_72_limit_tau_in_and_hint(
     page.get_by_label("Redundancy r (0 or 1) (count)").fill("0")
     page.get_by_role("button", name="Run advice").click()
     expect(page.get_by_role("region", name="Catalogue hints")).to_contain_text("E1 (10 kVA)")
+
+
+@pytest.mark.base_catalogue
+def test_base_catalogue_is_read_only_and_copyable(server: Callable[[str], str], page: Page) -> None:
+    page.goto(server("default") + "/catalogue/")
+    entries = page.get_by_role("table", name="Catalogue entries")
+    rows = entries.locator("tbody tr")
+    expect(rows).to_have_count(38)
+    expect(rows.first.locator("td").first).to_have_text("inverter")  # sorted by kind
+    trumpf = rows.filter(has_text="INV-TRUMPF-AC3025-X2")
+    expect(trumpf).to_contain_text("Base")
+    expect(trumpf.get_by_role("button", name="Delete INV-TRUMPF-AC3025-X2")).to_have_count(0)
+    trumpf.get_by_role("button", name="Copy INV-TRUMPF-AC3025-X2").click()
+    expect(rows).to_have_count(39)
+    expect(rows.filter(has_text="E1")).to_contain_text("Yours")
+    expect(page.get_by_role("form", name="Entry E1")).to_be_visible()

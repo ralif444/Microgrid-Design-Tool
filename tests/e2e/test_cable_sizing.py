@@ -23,7 +23,7 @@ CAVEAT = (
 
 
 def test_fr_105_screen_hidden_when_flag_off(server: Callable[..., str], page: Page) -> None:
-    base = server("default")
+    base = server("default", env={"MGAPP_FEATURE_CABLE_SIZING": "0"})  # on by default since 2026-11-16
     enter_design(page, base, gui_snapshot())
     further = studies(page)
     expect(further.get_by_role("link", name="Transient (M4b)")).to_be_visible()

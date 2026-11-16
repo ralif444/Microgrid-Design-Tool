@@ -143,7 +143,7 @@ def test_fr_115_catalogue_breaker_and_match(
 def test_fr_105_catalogue_has_no_breaker_kind_when_flag_off(
     server: Callable[..., str], page: Page
 ) -> None:
-    enter_design(page, server("default"), gui_snapshot())
+    enter_design(page, server("default", env={"MGAPP_FEATURE_CABLE_SIZING": "0"}), gui_snapshot())
     page.get_by_role("link", name="Catalogue").click()
     expect(page.get_by_role("button", name="+ Add conductor entry")).to_be_visible()
     expect(page.get_by_role("button", name="+ Add breaker entry")).to_have_count(0)

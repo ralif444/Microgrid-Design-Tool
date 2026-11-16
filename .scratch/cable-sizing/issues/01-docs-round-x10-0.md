@@ -1,5 +1,5 @@
 # 01 Docs round X10-0
-Status: ready-for-agent
+Status: done (2026-11-09, gate_log X10-0 row, D-100)
 Type: task
 Blocked by: none
 

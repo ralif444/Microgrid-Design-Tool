@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CatalogEntry } from "../api-types";
 import { initialState, projectReducer, type ProjectAction } from "../store";
-import { CATALOG_KEY, catalogHints, keyValues, entryWarnings, fromEntry, readStoredCatalog, reasonText, refText, tauInSource } from "./Catalog";
+import { CATALOG_KEY, catalogHints, keyValues, entryWarnings, fromEntry, readStoredCatalog, reasonText, refText, sortEntries, tauInSource } from "./Catalog";
 
 const conductor: CatalogEntry = {
   id: "E1",
@@ -113,5 +113,13 @@ describe("keyValues", () => {
   it("lists the set key values with units, or a dash", () => {
     expect(keyValues(conductor)).toBe("R 0.5 Ω/km, X 0.3 Ω/km, 100 A");
     expect(keyValues({ ...conductor, conductor: {} } as CatalogEntry)).toBe("—");
+  });
+});
+
+describe("base catalogue order (user decision 2026-11-16)", () => {
+  it("sorts by kind, then by id with numbers in order", () => {
+    const e = (id: string, kind: CatalogEntry["kind"]) => ({ id, kind }) as CatalogEntry;
+    const ids = sortEntries([e("E10", "CONDUCTOR"), e("B1", "BREAKER"), e("E2", "CONDUCTOR"), e("I1", "INVERTER")]).map((x) => x.id);
+    expect(ids).toEqual(["I1", "E2", "E10", "B1"]);
   });
 });
