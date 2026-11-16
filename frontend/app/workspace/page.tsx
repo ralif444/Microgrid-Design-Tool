@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import type { M1Payload, M2Payload } from "../../api-types";
+import { HOME } from "../../components/AreaNav";
 import { CheckStrip, useSizingMarginNote } from "../../components/CheckStrip";
 import { ElementForm, LimitsForm, SystemForm } from "../../components/ElementForm";
 import { issueWhere, lastM2Params, M2_FIELDS, type M2Params } from "../../components/elementFields";
@@ -26,6 +27,7 @@ import { ResultsDiagram } from "../../components/sld/ResultsDiagram";
 import { SingleLineDiagram } from "../../components/sld/SingleLineDiagram";
 import { useSldModel } from "../../components/sld/useSldModel";
 import { StatusBanner } from "../../components/StatusBanner";
+import { statusWord } from "../../components/status-text";
 import { Toast } from "../../components/Toast";
 import { SOLVER, useAnalysisCall } from "../../components/useAnalysisCall";
 import { m1Freshness, useValidationState } from "../../components/useValidation";
@@ -245,6 +247,13 @@ function Workspace() {
         )}
         {error && <Toast message={error} onDismiss={() => setError(null)} />}
         {area === "model" && <RunWholeExample />}
+        {/* Run M1 here shows its outcome here; the tables stay in Check (audit 2026-11-15 E14) */}
+        {area === "model" && m1Resp && (
+          <p role="status">
+            Power flow (M1): {statusWord("M1", m1Resp.result)}.{" "}
+            <Link href={`${HOME}?area=check`}>See the results in Check</Link>
+          </p>
+        )}
         {area === "model" ? (
           <section aria-label="Single-line diagram">
             <h2 className="sr-only">Single-line diagram</h2>

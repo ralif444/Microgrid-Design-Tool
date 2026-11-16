@@ -54,6 +54,8 @@ def test_fr_64_to_fr_70_catalogue_into_network(server: Callable[[str], str], pag
     delete(page, "E2")
     page.get_by_label("Open catalogue file").set_input_files(saved)
     expect(page.get_by_test_id("file-check")).to_contain_text("The Catalogue was opened.")
+    expect(entries.locator("tbody tr")).to_have_count(1)  # O7: nothing replaced before the user agrees
+    page.get_by_role("button", name="Replace").click()
     expect(entries.locator("tbody tr")).to_have_count(2)
 
     step(page, "Network")

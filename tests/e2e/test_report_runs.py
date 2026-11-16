@@ -79,14 +79,13 @@ def test_fr_49_fr_50_fr_53_runs_export_import_rerun_and_project_file(
     saved = Path(dl.value.path())
     expect(page.get_by_title("Unsaved changes")).to_have_count(0)
 
-    page.once("dialog", lambda d: d.accept())
     page.get_by_role("link", name="Microgrid design tool").click()
     page.get_by_label("Project name").fill("Other")
-    page.get_by_role("button", name="Create project").click()
+    page.get_by_role("button", name="Create project").click()  # just saved: nothing to discard, no question
     expect(page.get_by_test_id("project-name")).to_contain_text("Other")
 
-    page.once("dialog", lambda d: d.accept())  # K17: unsaved "Other" is discarded
     page.get_by_label("Open project file").set_input_files(saved)
+    page.get_by_role("dialog").get_by_role("button", name="Discard", exact=True).click()  # unsaved changes (K17, audit O9)
     expect(page.get_by_test_id("project-name")).to_have_text("E2E project")
     step(page, "Run history")
     expect(rows).to_have_count(2)

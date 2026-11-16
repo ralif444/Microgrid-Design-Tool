@@ -177,10 +177,11 @@ export function refText(ref: CatalogRef | null | undefined): string {
 interface CatalogState {
   catalog: Catalog;
   checks: EntryCheck[];
+  checkError: string | null; // the server check failed (audit O6): say so instead of "Checking…" forever
   setCatalog: (c: Catalog) => void;
 }
 
-const Ctx = createContext<CatalogState>({ catalog: emptyCatalog(), checks: [], setCatalog: () => undefined });
+const Ctx = createContext<CatalogState>({ catalog: emptyCatalog(), checks: [], checkError: null, setCatalog: () => undefined });
 
 // Kept in this browser like the Project draft (audit O1), so a reload or restore does not empty it.
 // The file stays the record: "Save catalogue" writes it. Storage errors only turn this off.
@@ -205,6 +206,7 @@ function storeCatalog(c: Catalog) {
 export function CatalogProvider({ children }: { children: ReactNode }) {
   const [catalog, setCatalog] = useState<Catalog>(emptyCatalog);
   const [checks, setChecks] = useState<EntryCheck[]>([]);
+  const [checkError, setCheckError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   useEffect(() => {
     const c = readStoredCatalog(); // after mount: the static export renders without storage
@@ -217,14 +219,18 @@ export function CatalogProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let live = true;
     const t = setTimeout(() => {
-      void importCatalog(catalog).then((r) => live && setChecks(r.ok ? r.data.entry_checks : []));
+      void importCatalog(catalog).then((r) => {
+        if (!live) return;
+        setChecks(r.ok ? r.data.entry_checks : []);
+        setCheckError(r.ok ? null : r.message);
+      });
     }, 300);
     return () => {
       live = false;
       clearTimeout(t);
     };
   }, [catalog]);
-  return <Ctx.Provider value={{ catalog, checks, setCatalog }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ catalog, checks, checkError, setCatalog }}>{children}</Ctx.Provider>;
 }
 
 export const useCatalog = () => useContext(Ctx);

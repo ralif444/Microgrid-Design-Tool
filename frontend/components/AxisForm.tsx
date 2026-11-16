@@ -156,6 +156,9 @@ export function useAxis(design: ProjectSnapshot, prefix = "", example?: AxisExam
     lo === null && "From",
     hi === null && "To",
     steps === null && "Points",
+    // SWEEP_RANGE_INVALID (Doc 3 §5): min ≥ max or fewer than 2 steps; named before Run instead of after
+    lo !== null && hi !== null && lo >= hi && "To above From",
+    steps !== null && steps < 2 && "at least 2 Points",
   ].flatMap((m) => (m ? [`${prefix}${m}`] : []));
   return {
     axis: { ...shape, range_min: lo, range_max: hi, step_count: steps },

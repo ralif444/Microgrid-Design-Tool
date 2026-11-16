@@ -40,7 +40,12 @@ export function hasDraft(): boolean {
   }
 }
 
-export const DRAFT_REPLACE = "Unsaved work is kept in this browser. Another Project replaces it once you edit. OK to continue; Cancel to restore it first on Start.";
+// [title, body, confirm word] for the in-app dialog (audit O9)
+export const DRAFT_REPLACE = [
+  "Replace the unsaved work?",
+  "Unsaved work is kept in this browser. Another Project replaces it once you edit. To keep it, Cancel and restore it on Start.",
+  "Continue",
+] as const;
 
 export function clearDraft(): void {
   try {

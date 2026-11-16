@@ -10,6 +10,7 @@ import { fixed } from "./format";
 import { Icon, type IconName } from "./Icon";
 import { pick } from "./kpi";
 import { M1FreshnessBadge } from "./M1Freshness";
+import { m2NothingChecked } from "./status-text";
 import { marginStatus, useMarginWarn } from "./M2Results";
 import type { Freshness } from "./useValidation";
 
@@ -67,7 +68,13 @@ export function CheckStrip({
       {m2 !== undefined &&
         (m2 ? (
           <>
-            {m2.verdict === "FEASIBLE" ? <Chip icon="feasible">Feasible</Chip> : <Chip icon="misuse" tone="negative">Not feasible</Chip>}
+            {m2.verdict !== "FEASIBLE" ? (
+              <Chip icon="misuse" tone="negative">Not feasible</Chip>
+            ) : m2NothingChecked(m2) ? (
+              <Chip icon="dot">Nothing checked: no limits set</Chip>
+            ) : (
+              <Chip icon="feasible">Feasible</Chip>
+            )}
             <span className={styles.fact}>{countsText(m2, marginWarn)}</span>
             {typeof used?.inverter_margin_ratio === "number" && typeof used.line_margin_ratio === "number" && (
               <Fact label="with m_inv" value={`${fixed(used.inverter_margin_ratio, "ratio")}, m_line ${fixed(used.line_margin_ratio, "ratio")}`} />
@@ -91,24 +98,34 @@ export function CheckStrip({
 }
 
 // Audit O-8: the m_inv the accepted Sizing advice used, next to M2's own m_inv field. The two stay
-// separate inputs; the button only copies the value. Other fields keep the example note as before.
+// separate inputs; the button only copies the value. Audit O3 (user 2026-11-15): Sizing owns t_aut, η_dc
+// and DoD, so those M2 fields get the same note and copy button. Other fields keep the example note.
+const FROM_SIZING: Partial<Record<keyof M2Params, string>> = {
+  inverter_margin_ratio: "ratio",
+  autonomy_h: "h",
+  dc_efficiency_ratio: "ratio",
+  depth_of_discharge_ratio: "ratio",
+};
 export function useSizingMarginNote(ex: { values: M2Params; set: (k: keyof M2Params, v: number | null) => void; note: (k: string) => ReactNode }) {
   const { sizingAdvice } = useProject();
-  const m = sizingAdvice.findLast((a) => a.state === "ACCEPTED")?.ps_parameters.inverter_margin_ratio ?? null;
-  return (k: keyof M2Params): ReactNode =>
-    k !== "inverter_margin_ratio" || m === null ? (
-      ex.note(k)
-    ) : (
+  const ps = sizingAdvice.findLast((a) => a.state === "ACCEPTED")?.ps_parameters;
+  return (k: keyof M2Params): ReactNode => {
+    const unit = FROM_SIZING[k];
+    const m = unit && ps ? ((ps as unknown as Record<string, number | null>)[k] ?? null) : null;
+    if (m === null) return ex.note(k);
+    const v = `${fixed(m, unit!)}${unit === "h" ? " h" : ""}`;
+    return (
       <>
-        {ex.note(k)} Accepted sizing advice used {fixed(m, "ratio")}.
+        {ex.note(k)} Accepted sizing advice used {v}.
         {ex.values[k] !== m && (
           <>
             {" "}
             <button type="button" onClick={() => ex.set(k, m)}>
-              Use {fixed(m, "ratio")} from sizing advice
+              Use {v} from sizing advice
             </button>
           </>
         )}
       </>
     );
+  };
 }

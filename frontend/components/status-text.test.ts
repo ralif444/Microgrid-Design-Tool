@@ -16,8 +16,13 @@ describe("NFR-06 DEPENDENCY_NOT_MET banner per reason (Doc 7 §5, WP 1.7.2)", ()
 });
 
 describe("M2 FEASIBLE headline (WP 1.7.4)", () => {
-  const m2 = (notEvaluated: number) =>
-    ({ status: "FEASIBLE", status_code: "OK", message: "m", payload: { not_evaluated: Array(notEvaluated).fill({}) } }) as unknown as AnalysisResult;
+  const m2 = (notEvaluated: number, margins = 1) =>
+    ({ status: "FEASIBLE", status_code: "OK", message: "m", payload: { not_evaluated: Array(notEvaluated).fill({}), constraint_margins: Array(margins).fill({ margin: 1 }) } }) as unknown as AnalysisResult;
+  it("says nothing was checked when no margin was evaluated (audit E15)", () => {
+    expect(statusWord("M2", m2(9, 0))).toBe("Not evaluated");
+    expect(bannerText("M2", m2(9, 0)).headline).toMatch(/^Nothing was checked/);
+    expect(statusWord("M2", m2(0))).toBe("Meets the limits");
+  });
   it("does not claim every constraint is met when some had no limit", () => {
     expect(bannerText("M2", m2(0)).headline).toBe("The design meets all constraints.");
     expect(bannerText("M2", m2(13)).headline).toContain("13 checks had no limit");

@@ -330,6 +330,27 @@ These need a logic, state, store, API or engine change and are not proposed for 
 | O9 | Native `confirm()` on Create project; staying on Start after create; Run M1 without visible result in Model; M2 "Feasible" with zero checks; deep links without restore offer | Outside the four areas, listed from the E2E run (E13–E16) |
 | O10 | Example D2 description in `d2.mgproj.json` contains a mis-encoded section sign ("Â§4") | Data file encoding; not checked whether it is shown on screen |
 
+**Status (2026-11-15, after the user decisions):**
+
+- O1: done. The Catalogue is kept in the browser (`mgapp-catalog`).
+- O2: done. A flag only; there is no bank draft autosave.
+- O3: done.
+  - The bank pre-fills η_dc and DoD and its basis names the source.
+  - M2 shows the m_inv, t_aut, η_dc and DoD values of the accepted Sizing advice, each with a "Use … from sizing advice" button.
+  - Each screen keeps its own input.
+- O4: done. Study inputs are kept across navigation, in memory only.
+- O5: done. The message names what is missing (a LoadProfile, the autonomy time t_aut, or both). The S_unit basis reads "rounded up to the next 0.1 kVA". Both texts are app-side adapter texts, not engine numbers.
+- O6: done. A failed check shows "Not checked: …" with the error, not "Checking…".
+- O7: done. Opening a file over existing entries asks "Replace the Catalogue?". The same file can be opened again.
+- O8: the study part is done. "To above From" and "at least 2 Points" are named beside Run (`SWEEP_RANGE_INVALID`, Doc 3 §5). The catalogue part is not done: the contract has no rule for droop min > max or for negative R/X (only `voltage_min_v > voltage_max_v`, already checked), and no rule is invented.
+- O9: done.
+  - Create project, Open example and Open project file ask in the in-app dialog, not `confirm()`.
+  - Create still goes to the workspace.
+  - Model shows the M1 outcome with a link to Check.
+  - M2 with no evaluated margin reads "Nothing checked: no limits set" ("Not evaluated"), not "Feasible".
+  - A deep link with no Project open points to the restore offer on Start when unsaved work is kept.
+- O10: no change. The file is valid UTF-8 and is served as `application/json`; "Â§" came from the viewer decoding it with another code page.
+
 ---
 
 ## 11. Open questions for the redesign brainstorm

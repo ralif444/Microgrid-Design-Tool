@@ -175,7 +175,12 @@ class RealEngine:
                 assumptions=_storage_assumptions(r.storage),
             )
         else:
-            no_storage = ["No storage energy: LoadProfile or autonomy_h not given."]
+            # name what is missing (audit 2026-11-15 O5), not "LoadProfile or autonomy_h"
+            lacks = [
+                *(["a LoadProfile"] if profile_w is None else []),
+                *(["the autonomy time t_aut"] if p.get("autonomy_h") is None else []),
+            ]
+            no_storage = [f"No storage energy: {' and '.join(lacks) or 'the storage inputs'} not given."]
         payload = PsPayload(
             load_apparent_kva=r.load_apparent_va / 1e3,
             required_inverter_kva=RequiredInverter(
@@ -188,7 +193,8 @@ class RealEngine:
                 redundancy=r.redundancy,
                 unit_rating_kva=r.unit_rating_va / 1e3,
                 installed_kva=r.installed_va / 1e3,
-                basis="S_unit = 0.1⌈S_inv / (0.1(n − r))⌉ kVA, S_inst = n · S_unit (Eq. 4.3).",
+                basis="S_unit = S_inv / (n − r) rounded up to the next 0.1 kVA, "
+                "S_inst = n · S_unit (Eq. 4.3).",
                 assumptions=["Equal unit ratings; no rounding to catalogue ratings."],
             ),
             storage_energy=storage,
