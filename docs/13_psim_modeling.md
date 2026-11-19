@@ -62,16 +62,21 @@ Using three-phase totals in PSIM avoids the per-phase conversion ($m_p^{phase} =
 
 ## 4. Reference designs
 
-Values below are those of the prototype design files and agree with the manuscript where the manuscript gives numbers (Tabel 4.7, 4.13; $\lambda_{up} = 115/26.93$ for D2). Work package 1.6.1 confirms or replaces them; the final values are frozen in the input sheets.
+The designs are built from base-catalogue products (user decision 2026-11-19, Doc 9 D-116; Doc 14 D19). They replace the prototype values (D1 50 kVA; D2 INV1 70 kVA and INV2 45 kVA with $m_p = 5\times10^{-5}$ / $8\times10^{-5}$ rad/(s·W), $n_q = 5\times10^{-4}$ / $7\times10^{-4}$ V/VAR; lines 0.02 + j0.04 Ω and 0.025 + j0.045 Ω; D2 load 25 kW + 10 kvar), which agreed with manuscript Tabel 4.7 and 4.13. Rules used to tailor them:
 
-| Design | Topology | Inverters | Lines (R; X in Ω) | Load at B2 | Purpose |
+- **Inverters**: the catalogue unit whose rating is nearest the prototype rating: TRUMPF TruConvert AC 3025 ×2 (50 kVA) for D1 and D2 INV2, ×3 (75 kVA) for D2 INV1. Ratings and droop ranges are those of the base-catalogue entries (DERIVED from the operator's manual, see their sources).
+- **Droop**: the prototype gains gave each D2 unit nearly the same droop on its own rating base (P–f 1.11 % and 1.15 %, Q–V 13.8 % and 12.4 %), which makes the sharing follow the ratings (Doc 12 Eq. 12.10 – 12.13). The same rule is kept with one % for both units: P–f 1 % (rounded from 1.11 – 1.15 %) and Q–V 10 % (the catalogue maximum, the nearest allowed value to 12.4 – 13.8 %). On the rating base $k_P = D_P f_n / (100\,S_r)$ Hz/kW and $k_Q = D_Q V_n / (100\,S_r)$ kV/kvar (TRUMPF manual pp. 107 – 108, with $P_N = Q_N = S_r$). D1 keeps its prototype gains (0.80 %, 9.84 %), which lie inside the 50 kVA unit's range.
+- **Loads**: kept at the same % of the total rating. D1 is unchanged (50 kVA). The D2 family scales by 125/115: D2 load = 21.74 % P and 8.70 % Q of 125 kVA.
+- **Lines**: First Cable N2XY 0.6/1 kV 4 × 16 mm² (R 1.466 Ω/km at 90 °C, X 0.0748 Ω/km, 108 A in air at 30 °C), the smallest catalogue cable whose ampacity covers the rated current of the largest unit (75 kVA at 440 V: 98.4 A). Each length keeps the prototype line's |Z|; the R/X ratio is the cable's (≈ 19.6), not the prototype's 0.5.
+
+| Design | Topology | Inverters | Lines | Load at B2 | Purpose |
 |---|---|---|---|---|---|
-| D1 | INV1@B1 — B2 | 50 kVA; $m_p = 5\times10^{-5}$ rad/(s·W); $n_q = 5\times10^{-4}$ V/VAR | B1–B2: 0.02; 0.04 | 20 kW, 8 kvar | Baseline, single inverter |
-| D2 | INV1@B1 — B2 — INV2@B3 | INV1 70 kVA, $m_p = 5\times10^{-5}$, $n_q = 5\times10^{-4}$; INV2 45 kVA, $m_p = 8\times10^{-5}$, $n_q = 7\times10^{-4}$ | B1–B2: 0.02; 0.04 (R/X 0.5). B2–B3: 0.025; 0.045 (R/X 0.556) | 25 kW, 10 kvar (26.93 kVA) | Two inverters with different droop gains |
-| D2S | as D2 | as D2 | as D2 | 2.4 × D2 (60 kW, 24 kvar) | Stressed but physical |
-| D2H | as D2 | as D2 | as D2 | 4.0 × D2 (100 kW, 40 kvar); ≈ 94 % of rating | Near the engineering limit |
+| D1 | INV1@B1 — B2 | INV1 TRUMPF ×2, 50 kVA; $k_P$ 0.007958 Hz/kW (0.80 %); $k_Q$ 0.000866 kV/kvar (9.84 %) | B1–B2: N2XY 4×16, 30.47 m | 20 kW, 8 kvar (43 % of rating) | Baseline, single inverter |
+| D2 | INV1@B1 — B2 — INV2@B3 | INV1 TRUMPF ×3, 75 kVA, $k_P$ 0.006667 Hz/kW, $k_Q$ 0.000587 kV/kvar; INV2 TRUMPF ×2, 50 kVA, $k_P$ 0.01 Hz/kW, $k_Q$ 0.00088 kV/kvar (both 1 % and 10 %) | B1–B2: N2XY 4×16, 30.47 m. B2–B3: N2XY 4×16, 35.07 m | 27.17 kW, 10.87 kvar (29.27 kVA, 23.4 % of 125 kVA) | Two inverters, sharing in proportion to rating |
+| D2S | as D2 | as D2 | as D2 | 2.4 × D2 (65.22 kW, 26.09 kvar; 56.2 %) | Stressed but physical |
+| D2H | as D2 | as D2 | as D2 | 4.0 × D2 (108.7 kW, 43.48 kvar; 93.7 % of rating) | Near the engineering limit |
 
-All designs: 440 V LL, 50 Hz, $\tau_P = \tau_Q = 0.05$ s, $P^* = Q^* = 0$.
+All designs: 440 V LL, 50 Hz, $\tau_P = \tau_Q = 0.05$ s, $P^* = Q^* = 0$. Work package 1.6.1 confirms them; the final values are frozen in the input sheets. The example Projects `frontend/public/examples/d1`, `d2`, `d2s`, `d2h` hold these values with each catalogue reference; the D2 disturbances of §5 are presets on the Transient screen of the guided example.
 
 ## 5. The eleven cases
 
@@ -81,15 +86,15 @@ All designs: 440 V LL, 50 Hz, $\tau_P = \tau_Q = 0.05$ s, $P^* = Q^* = 0$.
 | SS-02 | Steady (power sharing) | D2 | — | 5 s; 0.01 s | as SS-01, plus P sharing | Eq. 13.5 |
 | SS-03 | Steady (stressed) | D2S | — | 5 s; 0.01 s | as SS-01 | Eq. 13.5 |
 | SS-04 | Steady (near limit) | D2H | — | 5 s; 0.01 s | as SS-01 | Eq. 13.5 |
-| SM-01 | Small signal | D2 | Load step +3 % at B2 (+750 W, +300 VAR) | 3 s; 0.002 s | Dominant mode from ring-down | Matrix pencil: damped frequency, damping |
-| SM-02 | Small signal | D2 | $P^*$ step on INV1, +1.5 kW | 3 s; 0.002 s | as SM-01 | as SM-01 |
-| DR-01 | Dynamic response | D2 | Load step +10 % (+2.5 kW, +1 kvar) | 4 s; 0.002 s | V(t), f(t), P(t), Q(t), I(t) | Eq. 13.6; settling, overshoot, RoCoF (descriptive) |
-| DR-02 | Dynamic response | D2 | $P^*$ step on INV1, +2 kW | 4 s; 0.002 s | as DR-01 | as DR-01 |
-| TS-01 | Transient | D2 | Load +300 % (+75 kW, +30 kvar) | 5 s; 0.002 s | Envelope, recovery, final state | Categorical (class must match) |
+| SM-01 | Small signal | D2 | Load step +3 % at B2 (+0.815 kW, +0.326 kvar) | 3 s; 0.002 s | Dominant mode from ring-down | Matrix pencil: damped frequency, damping |
+| SM-02 | Small signal | D2 | $P^*$ step on INV1, +2.14 % of rating (+1.607 kW) | 3 s; 0.002 s | as SM-01 | as SM-01 |
+| DR-01 | Dynamic response | D2 | Load step +10 % (+2.717 kW, +1.087 kvar) | 4 s; 0.002 s | V(t), f(t), P(t), Q(t), I(t) | Eq. 13.6; settling, overshoot, RoCoF (descriptive) |
+| DR-02 | Dynamic response | D2 | $P^*$ step on INV1, +2.86 % of rating (+2.143 kW) | 4 s; 0.002 s | as DR-01 | as DR-01 |
+| TS-01 | Transient | D2 | Load +300 % (+81.51 kW, +32.61 kvar) | 5 s; 0.002 s | Envelope, recovery, final state | Categorical (class must match) |
 | TS-02 | Transient | D2 | INV2 trip (breaker opens, permanent; line stays connected) | 5 s; 0.002 s | as TS-01 | Categorical |
-| TS-03 | Transient | D2 | Large $P^*$ step on INV1, +15 kW | 5 s; 0.002 s | as TS-01 | Categorical |
+| TS-03 | Transient | D2 | Large $P^*$ step on INV1, +21.43 % of rating (+16.071 kW) | 5 s; 0.002 s | as TS-01 | Categorical |
 
-The 3 % small-signal step is chosen because at 1 % the voltage deviation falls below the resolution floor (manuscript 4.5.3).
+Load steps are a % of the D2 load and $P^*$ steps a % of the INV1 rating, the same % as the prototype cases (D-116). The 3 % small-signal step is chosen because at 1 % the voltage deviation falls below the resolution floor (manuscript 4.5.3).
 
 ## 6. Comparison rules and tolerance policy v1
 

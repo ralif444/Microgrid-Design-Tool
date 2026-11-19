@@ -31,7 +31,7 @@ describe("guided example settings guard", () => {
     }
     expect(s!.screens.sizing.fields.inverter_margin_ratio.value).toBe(0.2);
     expect(s!.screens.sensitivity.needs_value).toEqual(["step_relative"]);
-    expect(s!.screens.transient.presets.map((p) => p.id)).toEqual(["DR-01", "TS-02", "DR-02"]);
+    expect(s!.screens.transient.presets.map((p) => p.id)).toEqual(["SM-01", "SM-02", "DR-01", "DR-02", "TS-01", "TS-02", "TS-03"]); // the seven D2 cases of Doc 13 §5 (D-116)
   });
 
   // FR-102 (D-97 K250): guidance on every screen S-03 – S-16, with a source, and no result numbers.
@@ -72,12 +72,12 @@ describe("guided example settings guard", () => {
     raw.screens.sizing.fields.inverter_margin_ratio.value = -0.1; // Doc 3 §6.1: ≥ 0
     raw.screens.sizing.fields.redundancy.source = " ";
     raw.screens.sweep.fields.axis.value = { kind: "LOAD_SCALE", range_min: 4, range_max: 1 };
-    raw.screens.transient.presets![1] = { id: "TS-02", label: "x", source: "s", fields: { disturbance: { kind: "OUTAGE" }, simulation_end_s: 5 } };
+    raw.screens.transient.presets![1] = { id: "SM-02", label: "x", source: "s", fields: { disturbance: { kind: "OUTAGE" }, simulation_end_s: 5 } };
     const s = parseExampleSettings(raw)!;
     expect(s.screens.sizing.fields.inverter_margin_ratio).toBeUndefined();
     expect(s.screens.sizing.needs_value).toEqual(["inverter_margin_ratio", "redundancy"]);
     expect(s.screens.sweep.needs_value).toContain("axis");
-    expect(s.screens.transient.presets.map((p) => p.id)).toEqual(["DR-01", "DR-02"]);
+    expect(s.screens.transient.presets.map((p) => p.id)).toEqual(["SM-01", "DR-01", "DR-02", "TS-01", "TS-02", "TS-03"]);
     expect(warn).toHaveBeenCalledTimes(4);
   });
 

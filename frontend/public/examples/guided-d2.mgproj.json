@@ -4,9 +4,9 @@
   "project": {
     "id": "guided-d2",
     "name": "Guided example D2",
-    "description": "Guided example (Doc 12 X9, D-92): design D2 of Doc 13 §4 (prototype values, confirmed or replaced at WP 1.6.1), the reference-design study limits of Doc 3 §3.7, and scenarios D2S and D2H of Doc 13 §4. Lines: Doc 13 totals entered as 1 km.",
+    "description": "Guided example (Doc 12 X9, D-92): design D2 of Doc 13 §4 tailored to the base catalogue (D-116), the reference-design study limits of Doc 3 §3.7, scenarios D2S and D2H, and the D2 validation cases as Transient presets. Tailored to the base catalogue (D-116): inverters TRUMPF TruConvert AC 3025 sets, lines First Cable N2XY 4×16 mm² with the length that keeps the Doc 13 line |Z|.",
     "created_at": "2026-11-05T00:00:00Z",
-    "modified_at": "2026-11-05T00:00:00Z",
+    "modified_at": "2026-11-19T00:00:00Z",
     "nominal_voltage_kv": 0.44,
     "nominal_frequency_hz": 50.0
   },
@@ -26,53 +26,119 @@
       "id": "LN1",
       "from_bus_id": "B1",
       "to_bus_id": "B2",
-      "r_ohm_per_km": 0.02,
-      "x_ohm_per_km": 0.04,
-      "length_km": 1.0
+      "r_ohm_per_km": 1.466,
+      "x_ohm_per_km": 0.0748,
+      "length_km": 0.03047,
+      "catalog_ref": {
+        "entry_id": "CBL-FIRSTCABLE-N2XY-4X16",
+        "provenance": {
+          "manufacturer": "PT First Cable",
+          "model": "N2XY 0.6/1 kV 4 x 16 mm2",
+          "document": "N2XY Cu/XLPE/PVC 600/1000 V, IEC 60502-1 (firstcable.co.id/product/n2xy-50)",
+          "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+        },
+        "sources": {
+          "r_ohm_per_km": "four-core table: AC resistance at 90 C",
+          "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.238 mH/km printed (four-core (formation not stated)) in the four-core table"
+        },
+        "catalog_schema_version": 1,
+        "modified": false,
+        "current_limit_confirmed": false,
+        "tau_in_s": null
+      }
     },
     {
       "id": "LN2",
       "from_bus_id": "B2",
       "to_bus_id": "B3",
-      "r_ohm_per_km": 0.025,
-      "x_ohm_per_km": 0.045,
-      "length_km": 1.0
+      "r_ohm_per_km": 1.466,
+      "x_ohm_per_km": 0.0748,
+      "length_km": 0.03507,
+      "catalog_ref": {
+        "entry_id": "CBL-FIRSTCABLE-N2XY-4X16",
+        "provenance": {
+          "manufacturer": "PT First Cable",
+          "model": "N2XY 0.6/1 kV 4 x 16 mm2",
+          "document": "N2XY Cu/XLPE/PVC 600/1000 V, IEC 60502-1 (firstcable.co.id/product/n2xy-50)",
+          "revision": "web product page, no revision or date printed; retrieved 2026-11-16"
+        },
+        "sources": {
+          "r_ohm_per_km": "four-core table: AC resistance at 90 C",
+          "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.238 mH/km printed (four-core (formation not stated)) in the four-core table"
+        },
+        "catalog_schema_version": 1,
+        "modified": false,
+        "current_limit_confirmed": false,
+        "tau_in_s": null
+      }
     }
   ],
   "loads": [
     {
       "id": "L1",
       "bus_id": "B2",
-      "p_kw": 25.0,
-      "q_kvar": 10.0
+      "p_kw": 27.17,
+      "q_kvar": 10.87
     }
   ],
   "inverters": [
     {
       "id": "INV1",
       "bus_id": "B1",
-      "rated_kva": 70.0,
-      "frequency_droop_hz_per_kw": 0.007957747154594767,
-      "voltage_droop_kv_per_kvar": 0.0008660254037844386,
+      "rated_kva": 75,
+      "frequency_droop_hz_per_kw": 0.006666666666666667,
+      "voltage_droop_kv_per_kvar": 0.0005866666666666668,
       "frequency_setpoint_hz": 50.0,
       "voltage_setpoint_kv": 0.44,
       "p_setpoint_kw": 0.0,
       "q_setpoint_kvar": 0.0,
       "tau_p_s": 0.05,
-      "tau_q_s": 0.05
+      "tau_q_s": 0.05,
+      "catalog_ref": {
+        "entry_id": "INV-TRUMPF-AC3025-X3",
+        "provenance": {
+          "manufacturer": "TRUMPF Huettinger",
+          "model": "TruConvert AC 3025 x3 in parallel, with TruConvert System Control",
+          "document": "Operator's manual TruConvert AC 3025, TruConvert System Control, TruConvert Modular (A67-0141-00.BKen-001-12)",
+          "revision": "Edition 2025-02-24"
+        },
+        "sources": {
+          "rated_kva": "Sec. 3.1 Tab. 5 pp. 16-17: 25 kVA per module; x3 = 75 kVA (DERIVED)"
+        },
+        "catalog_schema_version": 1,
+        "modified": false,
+        "current_limit_confirmed": false,
+        "tau_in_s": null
+      }
     },
     {
       "id": "INV2",
       "bus_id": "B3",
-      "rated_kva": 45.0,
-      "frequency_droop_hz_per_kw": 0.012732395447351628,
-      "voltage_droop_kv_per_kvar": 0.001212435565298214,
+      "rated_kva": 50,
+      "frequency_droop_hz_per_kw": 0.01,
+      "voltage_droop_kv_per_kvar": 0.00088,
       "frequency_setpoint_hz": 50.0,
       "voltage_setpoint_kv": 0.44,
       "p_setpoint_kw": 0.0,
       "q_setpoint_kvar": 0.0,
       "tau_p_s": 0.05,
-      "tau_q_s": 0.05
+      "tau_q_s": 0.05,
+      "catalog_ref": {
+        "entry_id": "INV-TRUMPF-AC3025-X2",
+        "provenance": {
+          "manufacturer": "TRUMPF Huettinger",
+          "model": "TruConvert AC 3025 x2 in parallel, with TruConvert System Control",
+          "document": "Operator's manual TruConvert AC 3025, TruConvert System Control, TruConvert Modular (A67-0141-00.BKen-001-12)",
+          "revision": "Edition 2025-02-24"
+        },
+        "sources": {
+          "rated_kva": "Sec. 3.1 Tab. 5 pp. 16-17: 25 kVA per module; x2 = 50 kVA (DERIVED)"
+        },
+        "catalog_schema_version": 1,
+        "modified": false,
+        "current_limit_confirmed": false,
+        "tau_in_s": null
+      }
     }
   ],
   "load_profile": null,
@@ -98,11 +164,11 @@
       "overrides": [
         {
           "parameter_path": "loads/L1/p_kw",
-          "value": 60.0
+          "value": 65.22
         },
         {
           "parameter_path": "loads/L1/q_kvar",
-          "value": 24.0
+          "value": 26.09
         }
       ]
     },
@@ -113,11 +179,11 @@
       "overrides": [
         {
           "parameter_path": "loads/L1/p_kw",
-          "value": 100.0
+          "value": 108.7
         },
         {
           "parameter_path": "loads/L1/q_kvar",
-          "value": 40.0
+          "value": 43.48
         }
       ]
     }

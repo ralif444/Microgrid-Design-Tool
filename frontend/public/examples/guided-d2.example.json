@@ -5,9 +5,18 @@
   "screens": {
     "sizing": {
       "fields": {
-        "inverter_margin_ratio": { "value": 0.2, "source": "Author's study setting, D-92 K230" },
-        "unit_count": { "value": 2, "source": "Author's study setting (the two inverters of D2), D-92 K230" },
-        "redundancy": { "value": 0, "source": "Author's study setting, D-92 K230" }
+        "inverter_margin_ratio": {
+          "value": 0.2,
+          "source": "Author's study setting, D-92 K230"
+        },
+        "unit_count": {
+          "value": 2,
+          "source": "Author's study setting (the two inverters of D2), D-92 K230"
+        },
+        "redundancy": {
+          "value": 0,
+          "source": "Author's study setting, D-92 K230"
+        }
       },
       "needs_value": [],
       "guidance": {
@@ -17,8 +26,14 @@
     },
     "constraint-check": {
       "fields": {
-        "inverter_margin_ratio": { "value": 0.2, "source": "Author's study setting (demo script step 5, D-70), D-92 K230" },
-        "line_margin_ratio": { "value": 0.2, "source": "Author's study setting (demo script step 5, D-70), D-92 K230" }
+        "inverter_margin_ratio": {
+          "value": 0.2,
+          "source": "Author's study setting (demo script step 5, D-70), D-92 K230"
+        },
+        "line_margin_ratio": {
+          "value": 0.2,
+          "source": "Author's study setting (demo script step 5, D-70), D-92 K230"
+        }
       },
       "needs_value": [],
       "guidance": {
@@ -40,11 +55,20 @@
           "source": "Author's study setting (droop gains and ratings of both inverters), D-92 K230"
         },
         "output_metrics": {
-          "value": ["SYSTEM_FREQUENCY", "MIN_BUS_VOLTAGE", "MAX_BUS_VOLTAGE", "MAX_INVERTER_LOADING", "MAX_LINE_CURRENT", "TOTAL_LOSSES"],
+          "value": [
+            "SYSTEM_FREQUENCY",
+            "MIN_BUS_VOLTAGE",
+            "MAX_BUS_VOLTAGE",
+            "MAX_INVERTER_LOADING",
+            "MAX_LINE_CURRENT",
+            "TOTAL_LOSSES"
+          ],
           "source": "Author's study setting (all six metrics of Doc 3 §6.4), D-92 K230"
         }
       },
-      "needs_value": ["step_relative"],
+      "needs_value": [
+        "step_relative"
+      ],
       "guidance": {
         "text": "Sensitivity (M3a) changes each selected parameter by a small relative step and shows how each output metric responds. The example selects the droop gains and ratings of both inverters and all output metrics. Enter a relative step: the example does not set one, because the method has no default step.",
         "source": "manuscript 4.2.5; Eq. 4.17"
@@ -53,13 +77,27 @@
     "sweep": {
       "fields": {
         "axis": {
-          "value": { "kind": "LOAD_SCALE", "range_min": 1.0, "range_max": 4.0 },
+          "value": {
+            "kind": "LOAD_SCALE",
+            "range_min": 1.0,
+            "range_max": 4.0
+          },
           "source": "Author's study setting (spans D2, D2S and D2H of Doc 13 §4), D-92 K230"
         },
-        "point_metrics": { "value": ["ZETA_MIN"], "source": "Author's study setting (no LAMBDA_C per point, D-67), D-92 K230" },
-        "include_eigenvalues": { "value": false, "source": "Author's study setting, D-92 K230" }
+        "point_metrics": {
+          "value": [
+            "ZETA_MIN"
+          ],
+          "source": "Author's study setting (no LAMBDA_C per point, D-67), D-92 K230"
+        },
+        "include_eigenvalues": {
+          "value": false,
+          "source": "Author's study setting, D-92 K230"
+        }
       },
-      "needs_value": ["axis.step_count"],
+      "needs_value": [
+        "axis.step_count"
+      ],
       "guidance": {
         "text": "A sweep (M3b) repeats the power flow along one axis and shows how the metrics change along it. The example scales the load over a range that covers D2, D2S and D2H, and records the minimum damping ratio at each point. Enter the number of points: the example does not set it.",
         "source": "manuscript 4.2.5; Doc 13 §4"
@@ -68,11 +106,18 @@
     "envelope": {
       "fields": {
         "axis_x": {
-          "value": { "kind": "LOAD_SCALE", "range_min": 1.0, "range_max": 4.0 },
+          "value": {
+            "kind": "LOAD_SCALE",
+            "range_min": 1.0,
+            "range_max": 4.0
+          },
           "source": "Author's study setting (same range as the sweep), D-92 K230"
         }
       },
-      "needs_value": ["axis_x.step_count", "axis_y"],
+      "needs_value": [
+        "axis_x.step_count",
+        "axis_y"
+      ],
       "guidance": {
         "text": "The envelope (M3d) sweeps two axes at once and maps where the design stays feasible. The example sets the X axis to the load scale over the same range as the sweep. Choose the Y axis and the number of points on both axes: the example does not set them.",
         "source": "manuscript 4.2.5"
@@ -80,50 +125,131 @@
     },
     "transient": {
       "fields": {},
-      "needs_value": ["settling"],
+      "needs_value": [
+        "settling"
+      ],
       "presets": [
         {
-          "id": "DR-01",
-          "label": "DR-01 load step",
-          "source": "Doc 13 §5 case DR-01; duration read as permanent, D-92 K232",
+          "id": "SM-01",
+          "label": "SM-01 small load step +3 %: dominant mode",
+          "source": "Doc 13 §5 case SM-01 (small-signal check: ring-down gives the dominant mode); magnitude kept as the same % of load or of INV1 rating on the catalogue design, D-116; duration read as permanent, D-92 K232",
           "fields": {
-            "disturbance": { "kind": "LOAD_STEP", "element_id": "L1", "magnitude": 2.5, "magnitude_kvar": 1.0, "start_time_s": 1.0, "duration_s": null },
-            "simulation_end_s": 4.0
+            "disturbance": {
+              "kind": "LOAD_STEP",
+              "element_id": "L1",
+              "magnitude": 0.815,
+              "magnitude_kvar": 0.326,
+              "start_time_s": 1.0,
+              "duration_s": null
+            },
+            "simulation_end_s": 3.0
           }
         },
         {
-          "id": "TS-02",
-          "label": "TS-02 inverter outage",
-          "source": "Doc 13 §5 case TS-02 (an outage is always permanent, Doc 3 §6.9), D-92 K232",
-          "fields": { "disturbance": {"kind": "INVERTER_OUTAGE", "element_id": "INV2", "start_time_s": 1.0, "duration_s": null}, "simulation_end_s": 5.0 }
-        },
-        {
-          "id": "DR-02",
-          "label": "DR-02 P* step",
-          "source": "Doc 13 §5 case DR-02; duration read as permanent, D-92 K232",
+          "id": "SM-02",
+          "label": "SM-02 P* step +2.14 % of INV1: dominant mode",
+          "source": "Doc 13 §5 case SM-02 (small-signal check from a reference step); magnitude kept as the same % of load or of INV1 rating on the catalogue design, D-116; duration read as permanent, D-92 K232",
           "fields": {
             "disturbance": {
               "kind": "REFERENCE_STEP",
               "element_id": "INV1",
               "reference": "P_SETPOINT",
-              "magnitude": 2.0,
+              "magnitude": 1.607,
+              "start_time_s": 1.0,
+              "duration_s": null
+            },
+            "simulation_end_s": 3.0
+          }
+        },
+        {
+          "id": "DR-01",
+          "label": "DR-01 load step +10 %: dynamic response",
+          "source": "Doc 13 §5 case DR-01 (settling, overshoot and RoCoF after a load step); magnitude kept as the same % of load or of INV1 rating on the catalogue design, D-116; duration read as permanent, D-92 K232",
+          "fields": {
+            "disturbance": {
+              "kind": "LOAD_STEP",
+              "element_id": "L1",
+              "magnitude": 2.717,
+              "magnitude_kvar": 1.087,
               "start_time_s": 1.0,
               "duration_s": null
             },
             "simulation_end_s": 4.0
           }
+        },
+        {
+          "id": "DR-02",
+          "label": "DR-02 P* step +2.86 % of INV1: dynamic response",
+          "source": "Doc 13 §5 case DR-02 (response to a power-reference step); magnitude kept as the same % of load or of INV1 rating on the catalogue design, D-116; duration read as permanent, D-92 K232",
+          "fields": {
+            "disturbance": {
+              "kind": "REFERENCE_STEP",
+              "element_id": "INV1",
+              "reference": "P_SETPOINT",
+              "magnitude": 2.143,
+              "start_time_s": 1.0,
+              "duration_s": null
+            },
+            "simulation_end_s": 4.0
+          }
+        },
+        {
+          "id": "TS-01",
+          "label": "TS-01 load +300 %: large disturbance",
+          "source": "Doc 13 §5 case TS-01 (transient class after a large load step (to the D2H level)); magnitude kept as the same % of load or of INV1 rating on the catalogue design, D-116; duration read as permanent, D-92 K232",
+          "fields": {
+            "disturbance": {
+              "kind": "LOAD_STEP",
+              "element_id": "L1",
+              "magnitude": 81.51,
+              "magnitude_kvar": 32.61,
+              "start_time_s": 1.0,
+              "duration_s": null
+            },
+            "simulation_end_s": 5.0
+          }
+        },
+        {
+          "id": "TS-02",
+          "label": "TS-02 INV2 trip: inverter outage",
+          "source": "Doc 13 §5 case TS-02 (transient class when INV2 trips and INV1 carries the load); magnitude kept as the same % of load or of INV1 rating on the catalogue design, D-116; duration read as permanent, D-92 K232",
+          "fields": {
+            "disturbance": {
+              "kind": "INVERTER_OUTAGE",
+              "element_id": "INV2",
+              "start_time_s": 1.0,
+              "duration_s": null
+            },
+            "simulation_end_s": 5.0
+          }
+        },
+        {
+          "id": "TS-03",
+          "label": "TS-03 P* step +21.43 % of INV1: large reference step",
+          "source": "Doc 13 §5 case TS-03 (transient class after a large reference step); magnitude kept as the same % of load or of INV1 rating on the catalogue design, D-116; duration read as permanent, D-92 K232",
+          "fields": {
+            "disturbance": {
+              "kind": "REFERENCE_STEP",
+              "element_id": "INV1",
+              "reference": "P_SETPOINT",
+              "magnitude": 16.071,
+              "start_time_s": 1.0,
+              "duration_s": null
+            },
+            "simulation_end_s": 5.0
+          }
         }
       ],
       "guidance": {
-        "text": "Transient stability (M4b) simulates one disturbance in time on the reduced-order model. The three example disturbances are cases of the PSIM validation basis: a load step at L1, the trip of INV2, and a step in the active-power reference of INV1. RoCoF is reported as a description, not a pass or fail. The settling criteria are not set in the example, so the response gets no transient class until you enter them.",
+        "text": "Transient stability (M4b) simulates one disturbance in time on the reduced-order model. The example disturbances are the D2 cases of the PSIM validation basis: the small-signal cases (SM) are small steps for the dominant mode, the dynamic-response cases (DR) medium steps, and the transient cases (TS) large disturbances for the transient class. Load steps are a share of the D2 load and P* steps a share of the INV1 rating, as in the validation cases. RoCoF is reported as a description, not a pass or fail. The settling criteria are not set in the example, so the response gets no transient class until you enter them.",
         "source": "manuscript 4.2.6; Doc 13 §5"
       }
     },
     "loads": {
       "fields": {},
       "guidance": {
-        "text": "The guided example is the reference design D2: one constant-PQ load at bus B2, fed through two lines by two grid-forming droop inverters, INV1 at B1 and INV2 at B3. The two inverters have different ratings and different droop gains, so the example shows how droop shares one load. D2 is one of the reference designs of the PSIM validation basis.",
-        "source": "Doc 13 §4; manuscript 4.2.1c"
+        "text": "The guided example is the reference design D2 built from catalogue products: one constant-PQ load at bus B2, fed through two lines by two grid-forming droop inverters, INV1 (the larger TRUMPF unit) at B1 and INV2 (the smaller TRUMPF unit) at B3. Both droop gains are the same share of each unit's rating, so the load is shared in proportion to the ratings. D2 is one of the reference designs of the PSIM validation basis.",
+        "source": "Doc 13 §4; Doc 9 D-116; manuscript 4.2.1c"
       }
     },
     "network": {

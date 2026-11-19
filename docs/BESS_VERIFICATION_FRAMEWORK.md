@@ -1,7 +1,7 @@
 # BESS_VERIFICATION_FRAMEWORK — Hand cases V1–V6 for the battery adequacy advisories
 
 > Companion to `BESS_FEATURE_GUIDELINES.md`. Date: 2026-11-12.
-> Numbers below were computed on 2026-11-12 with `mgengine` 0.4.0 at repo commit `9d14e6e` (inverter powers) and an independent arithmetic script (everything else). They are a worked example and a fixture draft. **Before they enter the thesis, the author recomputes every expected value by hand from his own REAL M1 RunRecords** (§4).
+> Numbers below were recomputed on 2026-11-19 for the catalogue D2 (D-116): inverter powers from the Real Engine, everything else from an independent arithmetic script. The 2026-11-12 values on the prototype D2 are in git history (commit `9d14e6e`). They are a worked example and a fixture draft. **Before they enter the thesis, the author recomputes every expected value by hand from his own REAL M1 RunRecords** (§4).
 
 ## Ringkasan
 
@@ -25,12 +25,12 @@ The register (D-62) postponed these features until real D2 battery, DC-window an
 
 | Item | Values |
 |---|---|
-| Design | D2 as in `frontend/public/examples/d2.mgproj.json`: 0.44 kV, 50 Hz; INV1 70 kVA at B1, INV2 45 kVA at B3; load L1 25 kW, 10 kvar at B2. |
+| Design | D2 as in `frontend/public/examples/d2.mgproj.json` (catalogue design, Doc 13 §4, D-116): 0.44 kV, 50 Hz; INV1 75 kVA at B1, INV2 50 kVA at B3, equal per-unit droop; load L1 27.17 kW, 10.87 kvar at B2. |
 | Module MOD-T1 | $E_{mod}$ = 5 kWh; $V_{mod}^{min}$ = 44.8 V; $V_{mod}^{max}$ = 57.6 V; continuous discharge power 2.5 kW; recommended DoD 0.8. |
 | Module MOD-T2 | As MOD-T1, but no discharge power; C-rate 0.2 h⁻¹. |
 | DC window W-A | 350–800 V. |
 | DC window W-B | 400–440 V. |
-| Profile PF-T (kW per hour) | hours 0–5: 10; hours 6–17: 15; hours 18–21: 25; hours 22–23: 10. Daily energy 360 kWh; peak 25 kW = table total, so no $\lambda_h > 1$ warning. |
+| Profile PF-T (kW per hour) | hours 0–5: 10.868; hours 6–17: 16.302; hours 18–21: 27.17; hours 22–23: 10.868 (0.4, 0.6, 1.0, 0.4 × the D2 load). Daily energy 391.248 kWh; peak 27.17 kW = table total, so no $\lambda_h > 1$ warning. |
 | Load scale (12.9) | $\lambda_h$ = 0.4, 0.6, 1.0, 0.4 for the four blocks. |
 | Common settings | $\eta_{dc}$ = 0.95; DoD = 0.8; initial SoC = 1.0; start hour 0; PS autonomy 4 h. |
 
@@ -40,11 +40,11 @@ The register (D-62) postponed these features until real D2 battery, DC-window an
 
 | Load scale $\lambda$ | Load (kW) | Losses (kW) | $P_{INV1}$ (kW) | $P_{INV2}$ (kW) | Frequency (Hz) |
 |---|---|---|---|---|---|
-| 0.4 | 10 | 0.006818 | 6.158042 | 3.848776 | 49.950996 |
-| 0.6 | 15 | 0.015428 | 9.240264 | 5.775165 | 49.926468 |
-| 1.0 | 25 | 0.043353 | 15.411294 | 9.632059 | 49.877361 |
+| 0.4 | 10.868 | 0.017346 | 6.531208 | 4.354139 | 49.956459 |
+| 0.6 | 16.302 | 0.039222 | 9.804733 | 6.536489 | 49.934635 |
+| 1.0 | 27.17 | 0.110029 | 16.368018 | 10.912012 | 49.890880 |
 
-Sanity checks by hand: with equal setpoints and zero power references, droop sharing gives $P_{INV1}/P_{INV2} = m_{p,2}/m_{p,1} = 8/5 = 1.6$ (observed 1.600000 at all three levels), and $P_{INV1} + P_{INV2}$ = load + losses (25.043353 at $\lambda$ = 1). The $\lambda$ = 1 row equals the hand check already recorded in the gate log (49.87736 Hz, 15.4113 kW, 9.6321 kW).
+Sanity checks by hand: with equal setpoints, zero power references and equal per-unit droop, sharing follows the ratings, $P_{INV1}/P_{INV2} = k_{P,2}/k_{P,1} = 0.01/0.006667 = 1.5$ (observed 1.500000 at all three levels), and $P_{INV1} + P_{INV2}$ = load + losses (27.280029 at $\lambda$ = 1). The frequency is $50 - k_{P,1} P_{INV1}$ = 50 − 16.368018/150 = 49.890880 Hz.
 
 ### 3.1 V1 — B1, fit
 
@@ -52,12 +52,12 @@ Given: PF-T, autonomy 4 h, $\eta_{dc}$ 0.95, DoD 0.8, module MOD-T1, window W-A.
 
 | Step | Calculation | Result |
 |---|---|---|
-| PS, Eq. 4.4 | worst 4-hour window = hours 18–21 = 4 × 25 | $E_{ac}$ = 100 kWh |
-| PS, Eq. 4.13 | 100 / 0.95; then / 0.8 | $E_{dc}$ = 105.2632 kWh; $E_{nom}$ = 131.5789 kWh |
+| PS, Eq. 4.4 | worst 4-hour window = hours 18–21 = 4 × 27.17 | $E_{ac}$ = 108.68 kWh |
+| PS, Eq. 4.13 | 108.68 / 0.95; then / 0.8 | $E_{dc}$ = 114.4 kWh; $E_{nom}$ = 143.0 kWh |
 | (12.3) | $n \ge 350/44.8 = 7.81$; $n \le 800/57.6 = 13.89$ | $\mathcal{N}_s$ = {8, …, 13} → fit; hint uses $n_s$ = 8 |
-| (12.4) | ⌈131.5789 / 5⌉ | $N_{mod}$ = 27 |
-| (12.5) | ⌈27 / 8⌉; 8 × 4 | $n_p$ = 4; $N_{inst}$ = 32 |
-| shown | 32 × 5; 160 − 131.5789 | installed 160 kWh; extra 28.4211 kWh |
+| (12.4) | ⌈143.0 / 5⌉ | $N_{mod}$ = 29 |
+| (12.5) | ⌈29 / 8⌉; 8 × 4 | $n_p$ = 4; $N_{inst}$ = 32 |
+| shown | 32 × 5; 160 − 143.0 | installed 160 kWh; extra 17.0 kWh |
 
 ### 3.2 V2 — B1, no fit
 
@@ -66,7 +66,7 @@ Given: as V1 but window W-B.
 | Step | Calculation | Result |
 |---|---|---|
 | (12.3) | $n \ge 400/44.8 = 8.93$; $n \le 440/57.6 = 7.64$ | $\mathcal{N}_s = \emptyset$ → **no-fit** |
-| (12.4) | unchanged | $N_{mod}$ = 27 (shown); no $n_p$ |
+| (12.4) | unchanged | $N_{mod}$ = 29 (shown); no $n_p$ |
 
 Also check: with the window missing, the verdict is "unknown"; PS values are byte-identical in V1 and V2.
 
@@ -77,8 +77,8 @@ Given: INV1, bank MOD-T1, 8 in series × 2 in parallel, $\eta_{dc}$ 0.95, M1 at 
 | Step | Calculation | Result |
 |---|---|---|
 | (12.6) | 8 × 2 × 2.5 | $P_{bank}$ = 40 kW, source "discharge_power" |
-| (12.7) | 15.411294 / 0.95 | $P_{dc}$ = 16.2224 kW |
-| (12.8) | 40 − 16.2224 | $m_{bat}$ = +23.7776 kW → **OK** |
+| (12.7) | 16.368018 / 0.95 | $P_{dc}$ = 17.2295 kW |
+| (12.8) | 40 − 17.2295 | $m_{bat}$ = +22.7705 kW → **OK** |
 
 ### 3.4 V4 — B2, bank short (C-rate fallback)
 
@@ -87,8 +87,8 @@ Given: INV2, bank MOD-T2, 8 in series × 1 in parallel, $\eta_{dc}$ 0.95, M1 at 
 | Step | Calculation | Result |
 |---|---|---|
 | (12.6) | 0.2 × 8 × 1 × 5 | $P_{bank}$ = 8 kW, source "c_rate" |
-| (12.7) | 9.632059 / 0.95 | $P_{dc}$ = 10.1390 kW |
-| (12.8) | 8 − 10.1390 | $m_{bat}$ = −2.1390 kW → **SHORT** |
+| (12.7) | 10.912012 / 0.95 | $P_{dc}$ = 11.4863 kW |
+| (12.8) | 8 − 11.4863 | $m_{bat}$ = −3.4863 kW → **SHORT** |
 
 Also check: the M2 verdict and margins of the same design are unchanged by this outcome.
 
@@ -100,11 +100,11 @@ Given: INV2, bank MOD-T1, 8 × 2, $\eta_{dc}$ 0.95, DoD 0.8, initial SoC 1.0, st
 |---|---|---|
 | (12.14) | 8 × 2 × 5 | $E_{bank}$ = 80 kWh |
 | (12.15) | 0.95 × 80 × (1.0 − 0.2) | $E_{use}$ = 60.8 kWh |
-| (12.16), hours 0–5 | 6 × 3.848776 | $E_{cum}(5)$ = 23.0927 kWh |
-| (12.16), hours 6–11 | 23.0927 + 6 × 5.775165 | $E_{cum}(11)$ = 57.7436 kWh |
-| (12.16), hour 12 | 57.7436 + 5.775165 = 63.5188 > 60.8 | $j^*$ = 12 |
-| (12.18) | 12 + (60.8 − 57.7436) / 5.775165 | $t_{aut}$ = 12.5292 h → **DEPLETED**, during clock hour 12 |
-| (12.17) check | SoC at $j$ = 11: 1 − 57.7436 / (0.95 × 80) | 0.2402, still above the limit 0.2 |
+| (12.16), hours 0–5 | 6 × 4.354139 | $E_{cum}(5)$ = 26.1248 kWh |
+| (12.16), hours 6–10 | 26.1248 + 5 × 6.536489 | $E_{cum}(10)$ = 58.8073 kWh |
+| (12.16), hour 11 | 58.8073 + 6.536489 = 65.3438 > 60.8 | $j^*$ = 11 |
+| (12.18) | 11 + (60.8 − 58.8073) / 6.536489 | $t_{aut}$ = 11.3049 h → **DEPLETED**, during clock hour 11 |
+| (12.17) check | SoC at $j$ = 10: 1 − 58.8073 / (0.95 × 80) | 0.2262, still above the limit 0.2 |
 
 ### 3.6 V6 — B3, bank not depleted
 
@@ -114,9 +114,9 @@ Given: INV1, bank MOD-T1, 8 × 8, other settings as V5.
 |---|---|---|
 | (12.14) | 8 × 8 × 5 | $E_{bank}$ = 320 kWh |
 | (12.15) | 0.95 × 320 × 0.8 | $E_{use}$ = 243.2 kWh |
-| (12.16), full day | 6 × 6.158042 + 12 × 9.240264 + 4 × 15.411294 + 2 × 6.158042 | $E_{cum}(23)$ = 221.7927 kWh < 243.2 |
+| (12.16), full day | 6 × 6.531208 + 12 × 9.804733 + 4 × 16.368018 + 2 × 6.531208 | $E_{cum}(23)$ = 235.3785 kWh < 243.2 |
 | outcome | no $j^*$ within 24 h | **NOT_DEPLETED** |
-| (12.17) | 1 − 221.7927 / (0.95 × 320) | end SoC = 0.2704 (limit 0.2) |
+| (12.17) | 1 − 235.3785 / (0.95 × 320) | end SoC = 0.2257 (limit 0.2) |
 
 ### 3.7 Edge checks (unit tests, no hand table needed)
 
@@ -156,3 +156,4 @@ Claim wording allowed: the tool checks the power adequacy and the discharge auto
 |---|---|
 | 2026-11-12 | Drafted; inverter powers from `mgengine` 0.4.0 at `9d14e6e`, other values from an independent script. |
 | 2026-11-12 | BESS-5: the cases run as regression fixtures (`tests/fixtures/FAKE_battery_TEST_ONLY.json`, `tests/api/test_battery_cases.py`, D-111); all pass on the Real Engine; values unchanged; comparison table in `docs/design/bess5_verification_review.md`. |
+| 2026-11-19 | Recomputed on the catalogue D2 (D-116): PF-T scaled to the new load total (same λ blocks), §3.0 powers and all V1–V6 hand values updated; V5 now depletes during hour 11; fixture and tests follow. |

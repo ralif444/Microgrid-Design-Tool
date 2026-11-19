@@ -123,11 +123,13 @@ def test_v5_depletes_within_24_h(ba: dict[str, Any]) -> None:
     c, a = CASES["V5"], ba["V5"]["autonomy"]
     assert (a["outcome"], a["depletion_clock_hour"]) == (c["outcome"], c["depletion_clock_hour"])
     assert a["usable_energy_kwh"] == pytest.approx(c["usable_energy_kwh"], abs=1e-9)
-    assert a["curve"][11]["cumulative_energy_kwh"] == pytest.approx(c["cum_kwh_at_11"], abs=PRINTED)
-    assert a["curve"][11]["soc_ratio"] == pytest.approx(c["soc_at_11"], abs=PRINTED)
+    j = c["depletion_clock_hour"]  # the last full hour is j - 1
+    before = a["curve"][j - 1]
+    assert before["cumulative_energy_kwh"] == pytest.approx(c["cum_kwh_before_depletion"], abs=PRINTED)
+    assert before["soc_ratio"] == pytest.approx(c["soc_before_depletion"], abs=PRINTED)
     assert a["autonomy_h"] == pytest.approx(c["autonomy_h"], abs=PRINTED)
-    prev, p12 = a["curve"][11]["cumulative_energy_kwh"], a["curve"][12]["inverter_p_kw"]
-    assert a["autonomy_h"] == pytest.approx(12 + (a["usable_energy_kwh"] - prev) / p12, abs=1e-9)
+    prev, pj = before["cumulative_energy_kwh"], a["curve"][j]["inverter_p_kw"]
+    assert a["autonomy_h"] == pytest.approx(j + (a["usable_energy_kwh"] - prev) / pj, abs=1e-9)
 
 
 def test_v6_not_depleted(ba: dict[str, Any]) -> None:
@@ -143,5 +145,6 @@ def test_v6_not_depleted(ba: dict[str, Any]) -> None:
 
 def test_hours_follow_pf_t(ba: dict[str, Any]) -> None:
     lam = [h["lambda"] for h in ba["hours"]]
-    assert lam == pytest.approx([v / 25 for v in FIX["profile_pf_t_kw"]])
+    total = sum(ld["p_kw"] for ld in d2()["loads"])  # λ_h = profile / table total (Eq. 12.9)
+    assert lam == pytest.approx([v / total for v in FIX["profile_pf_t_kw"]])
     assert all(h["m1_status"] == "FEASIBLE" for h in ba["hours"])

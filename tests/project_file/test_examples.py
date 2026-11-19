@@ -1,8 +1,8 @@
 """Seam 4 (WP 1.5.1 P2): example Project files as regression fixtures (Doc 12 FR-85; D-64).
 
-Every example opens and validates; D2 on the Real Engine gives the operating point of the engine
-hand check (engine/tests/test_results.py, D-63 K124), which also checks the unit conversion of
-the Doc 13 droop gains into contract units.
+Every example opens and validates; D2 on the Real Engine shares P in proportion to the catalogue
+ratings and sits on its droop line, which also checks the conversion of the % droop (D-116) into
+contract units.
 """
 
 from __future__ import annotations
@@ -44,6 +44,9 @@ def test_d2_example_matches_the_engine_hand_check(client: TestClient) -> None:
     snap["design_constraints"] = {}
     body = {"project_snapshot": snap, "parameters": {}, "solver_config": SOLVER}
     p = client.post("/api/analyses/M1", json=body).json()["result"]["payload"]
-    assert p["system_frequency_hz"] == pytest.approx(49.87736, abs=1e-5)
-    assert [i["p_kw"] for i in p["inverter_results"]] == pytest.approx([15.4113, 9.6321], abs=1e-4)
-    assert p["sharing"][0]["q_deviation_kvar"] == pytest.approx(-0.3700, abs=1e-4)
+    # D-116: equal per-unit droop on the catalogue units shares P in proportion to rating (75 : 50)
+    p1, p2 = (i["p_kw"] for i in p["inverter_results"])
+    assert p1 / p2 == pytest.approx(1.5, rel=1e-9)
+    assert p["system_frequency_hz"] == pytest.approx(50 - (50 / 7500) * p1, abs=1e-9)  # f = f* - kP·P
+    assert p["system_frequency_hz"] == pytest.approx(49.89088, abs=1e-5)
+    assert not any(s["q_droop_not_rating_proportional"] for s in p["sharing"])

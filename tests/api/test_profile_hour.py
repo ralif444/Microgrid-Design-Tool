@@ -1,7 +1,7 @@
 """Seam 1: M3b axis kind LOAD_PROFILE_HOUR (P11; Doc 12 FR-78, Eq. 12.9; Doc 3 §6.5; D-113).
 
 Profile: PF-T of tests/fixtures/FAKE_battery_TEST_ONLY.json (fictitious, TEST ONLY), scaled from the
-25 kW of D2 to the 10 kW of the test design, so λ_h = 0.4, 0.6, 1.0, 0.4 per block.
+load total of D2 (its peak) to the 10 kW of the test design, so λ_h = 0.4, 0.6, 1.0, 0.4 per block.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ from mgapp.adapters.fake_engine import FakeEngine
 FIX = json.loads(
     (Path(__file__).parents[1] / "fixtures/FAKE_battery_TEST_ONLY.json").read_text(encoding="utf-8")
 )
-LAM = [v / 25 for v in FIX["profile_pf_t_kw"]]
+LAM = [v / max(FIX["profile_pf_t_kw"]) for v in FIX["profile_pf_t_kw"]]  # peak = D2 load total
 HOUR = {"kind": "LOAD_PROFILE_HOUR", "range_min": 0, "range_max": 23, "step_count": 24}
 
 

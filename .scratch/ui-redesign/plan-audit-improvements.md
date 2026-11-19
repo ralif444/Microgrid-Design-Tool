@@ -1,6 +1,6 @@
 # Plan: audit 2026-11-14 improvements
 
-Status: ready-for-agent (variant A chosen 2026-11-14)
+Status: done (variant A; merged in PR #12)
 
 Basis: `docs/ui-ux-audit-2026-11-14.md` (findings D-1 to D-33, out-of-scope O-1 to O-9, decisions §12) and the mockup `docs/design/redesign-2026-11-14/engineering-document-mockup.html`. Branch: a new branch `design/audit-improvements` from `design/ui-redesign` (PR #9 stays as it is). One commit per phase; full E2E after each phase.
 

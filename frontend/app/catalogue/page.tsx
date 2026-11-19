@@ -1,7 +1,8 @@
 "use client";
 // S-18 Catalogue (Doc 12 §5; FR-64 - FR-68; D-61): open, save, add, edit and delete entries with
 // provenance per value; the server's guard shows which entries may be used in a Project.
-// Independent of any Project, so no RequireProject. The app ships no entries (D-59 K107).
+// Independent of any Project, so no RequireProject. The app ships a read-only base catalogue (user
+// decision 2026-11-16, replacing D-59 K107's "no entries"); the user's own entries sit beside it.
 import { useState } from "react";
 import { getMeta, importCatalog } from "../../api-client";
 import type { CatalogEntry, FileCheckResult } from "../../api-types";
@@ -105,11 +106,19 @@ function EntryEditor({ e, onChange, x10 }: { e: CatalogEntry; onChange: (e: Cata
 
 export default function CataloguePage() {
   const { dialog, confirm } = useConfirmDelete();
-  const { catalog, checks, checkError, setCatalog } = useCatalog();
+  const { catalog, checks, checkError, setCatalog, isBase } = useCatalog();
   const [selected, setSelected] = useState<string | null>(null);
   const [note, setNote] = useState<FileCheckResult | string | null>(null);
   const entries = catalog.entries;
-  const sel = entries.find((e) => e.id === selected) ?? null;
+  const own = entries.filter((e) => !isBase(e.id)); // the user's entries: the ones saved, opened and edited
+  const sel = own.find((e) => e.id === selected) ?? null;
+
+  // a base entry is read-only; a copy under a new id is the user's to change
+  function copy(e: CatalogEntry) {
+    const id = nextId("E", entries);
+    setCatalog({ ...catalog, entries: [...entries, { ...structuredClone(e), id }] });
+    setSelected(id);
+  }
   const x10 = useCableSizingFlag() === true; // FR-105: nothing of X10 while the flag is off
 
   function add(kind: CatalogEntry["kind"]) {
@@ -127,11 +136,13 @@ export default function CataloguePage() {
     setNote(r.data.file_check);
     const next = r.data.catalog as unknown as typeof catalog | null;
     if (!r.data.file_check.accepted || !next) return;
-    // O7: opening a file replaces every entry, which the browser now keeps, so ask first when there are some
-    if (entries.length === 0) return void (setCatalog(next), setSelected(null));
+    const skipped = next.entries.filter((e) => isBase(e.id)).length;
+    if (skipped) setNote(`${r.data.file_check.message} ${skipped} of its entries are already in the base catalogue and were not added again.`);
+    // O7: opening a file replaces the user's entries, which the browser now keeps, so ask first when there are some
+    if (own.length === 0) return void (setCatalog(next), setSelected(null));
     confirm(
-      "Replace the Catalogue?",
-      `Opening ${file.name} replaces every entry now in the Catalogue (${entries.length}) with its own (${next.entries.length}). Save the Catalogue first to keep the current ones. ${CANNOT_UNDO}`,
+      "Replace your entries?",
+      `Opening ${file.name} replaces your entries (${own.length}) with its own (${next.entries.length - skipped}). The base catalogue stays. Save the Catalogue first to keep your current ones. ${CANNOT_UNDO}`,
       () => (setCatalog(next), setSelected(null)),
       "Replace",
     );
@@ -140,7 +151,7 @@ export default function CataloguePage() {
   async function save() {
     const meta = await getMeta();
     if (!meta.ok) return setNote(meta.message);
-    downloadJson("catalogue.mgcat.json", { ...catalog, app_version: meta.data.app_version });
+    downloadJson("catalogue.mgcat.json", { ...catalog, entries: own, app_version: meta.data.app_version });
   }
 
   return (
@@ -148,8 +159,15 @@ export default function CataloguePage() {
       <h1>Catalogue</h1>
       <p>
         A Catalogue is its own file, separate from any Project. Values copied into a Project stay there when the Catalogue
-        changes. The entries are also kept in this browser until you delete them; save the Catalogue to a file to keep or share it.
+        changes. Your entries are also kept in this browser until you delete them; save the Catalogue to a file to keep or share
+        them.
       </p>
+      {entries.length > own.length && (
+        <p className={styles.caveat}>
+          Base entries ship with the app and cannot be edited or deleted; copy one to change it. Their values were read from the named
+          manufacturer documents; check them against the datasheet before relying on them.
+        </p>
+      )}
       <p>
         <button type="button" onClick={() => void save()}>
           Save catalogue
@@ -194,6 +212,7 @@ export default function CataloguePage() {
             <tr>
               <th>Id</th>
               <th>Kind</th>
+              <th>Source</th>
               <th>Manufacturer and model</th>
               <th>Key values</th>
               <th>Use in a Project</th>
@@ -207,6 +226,7 @@ export default function CataloguePage() {
                 <tr key={e.id} aria-current={e.id === selected ? "true" : undefined}>
                   <th scope="row">{e.id}</th>
                   <td className={styles.kind}>{e.kind.toLowerCase().replace("_", " ")}</td>
+                  <td>{isBase(e.id) ? "Base" : "Yours"}</td>
                   <td>{[e.provenance?.manufacturer, e.provenance?.model].filter(Boolean).join(" ") || "—"}</td>
                   <td className={styles.kind}>{keyValues(e)}</td>
                   <td>
@@ -226,6 +246,12 @@ export default function CataloguePage() {
                     {noPowerCapability(e) && ` (${NO_POWER_WARNING})`}
                   </td>
                   <td>
+                    {isBase(e.id) ? (
+                      <button type="button" onClick={() => copy(e)}>
+                        Copy {e.id}
+                      </button>
+                    ) : (
+                      <>
                     <button type="button" onClick={() => setSelected(e.id)}>
                       Edit {e.id}
                     </button>{" "}
@@ -239,6 +265,8 @@ export default function CataloguePage() {
                     >
                       Delete {e.id}
                     </button>
+                      </>
+                    )}
                   </td>
                 </tr>
               );

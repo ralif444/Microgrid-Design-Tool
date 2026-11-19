@@ -49,7 +49,7 @@ const CLASS_WORDS: Record<string, string> = {
 
 function Transient() {
   const { design, fresh, busy, resp, stale, error, clearError, run, m2Infeasible } = useDependentRun("M4b");
-  // Example mode (Doc 12 X9 FR-103, D-92 K232): the Doc 13 §5 disturbances DR-01, TS-02, DR-02 as presets;
+  // Example mode (Doc 12 X9 FR-103, D-92 K232): the seven D2 cases of Doc 13 §5 (SM, DR, TS; D-116) as presets;
   // the first fills the form on arrival, choosing one refills it, any edit makes the values the user's.
   const { example } = useProject();
   const presets = example?.settings.screens.transient?.presets ?? [];

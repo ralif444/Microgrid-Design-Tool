@@ -1,6 +1,6 @@
 # Plan: functional items (delete confirmation, locale-safe number input, autosave)
 
-Status: ready-for-agent
+Status: done (F1 fae78a5, F2 ffc3bb1, F3 4d72a3e; merged in PR #9)
 
 Basis: `spec.md` ("Functional additions allowed"). Plan only; nothing here is implemented. Paths are relative to `frontend/` unless they start with `tests/`.
 

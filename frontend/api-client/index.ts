@@ -45,6 +45,11 @@ export function getExampleSettings(name: string): Promise<ApiOutcome<unknown>> {
   return call<unknown>(`/examples/${name}.example.json`);
 }
 
+// Base catalogue shipped with the app (user decision 2026-11-16); checked by the server guard after.
+export function getBaseCatalog(): Promise<ApiOutcome<unknown>> {
+  return call<unknown>("/catalogs/base-v2.json");
+}
+
 export function getMeta(): Promise<ApiOutcome<MetaInfo>> {
   return call<MetaInfo>("/api/meta");
 }
