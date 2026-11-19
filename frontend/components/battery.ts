@@ -2,6 +2,7 @@
 // BATTERY_MODULE and the S-04 module hint of FR-74 (Eq. 12.3 – 12.5, level L1: a hint over the PS
 // result, never stored, PS values unchanged).
 import type { CatalogEntry } from "../api-types";
+import { displayLang, translate } from "./i18n";
 
 type Module = NonNullable<CatalogEntry["battery_module"]>;
 
@@ -41,8 +42,8 @@ export function moduleHint(
   dc: { min: number | null | undefined; max: number | null | undefined },
   nsPick?: number | null,
 ): ModuleHint {
-  if (eNomKwh == null) return { verdict: "not evaluated", reason: "PS has no nominal energy" };
-  if (m.energy_kwh == null) return { verdict: "not evaluated", reason: "the module has no energy value" };
+  if (eNomKwh == null) return { verdict: "not evaluated", reason: translate(displayLang(), "PS has no nominal energy") };
+  if (m.energy_kwh == null) return { verdict: "not evaluated", reason: translate(displayLang(), "the module has no energy value") };
   const moduleCount = Math.ceil(eNomKwh / m.energy_kwh);
   const none = { series: [], ns: null, np: null, installedCount: null, installedKwh: null, extraKwh: null, moduleCount };
   if (dc.min == null || dc.max == null || m.voltage_min_v == null || m.voltage_max_v == null) return { verdict: "unknown", ...none };
@@ -118,7 +119,7 @@ export function socSeries(p: BaPayload, banks: { inverter_id: string; depth_of_d
     const dod = sent?.depth_of_discharge_ratio;
     if (b.autonomy.curve.length === 0 || soc0 == null || dod == null) continue;
     series.push({ name: b.inverter_id, values: x.map((k) => (k === 0 ? soc0 : (b.autonomy.curve[k - 1]?.soc_ratio ?? null))) });
-    series.push({ name: `${b.inverter_id} discharge limit`, values: x.map(() => 1 - dod) });
+    series.push({ name: translate(displayLang(), "{id} discharge limit", { id: b.inverter_id }), values: x.map(() => 1 - dod) });
   }
   return { x, series };
 }

@@ -6,7 +6,8 @@
 // A null λ is not drawn and is listed as "—" (guideline §1 rule 5).
 import { memo, useMemo } from "react";
 import type { M2Payload, RunRecord } from "../../api-types";
-import { fixed, num } from "../format";
+import { fixed, num, numText } from "../format";
+import { useLanguage } from "../Language";
 import { ChartFrame } from "./ChartFrame";
 import { MarkerShape, Swatch } from "./marks";
 import { DASH, SERIES, type Marker } from "./palette";
@@ -25,6 +26,7 @@ const MARKS: { key: "lambda_c" | "lambda_s" | "lambda_ub"; name: string; m: Mark
 ];
 
 export const LoadabilityAxis = memo(function LoadabilityAxis({ l, record }: { l: L; record?: RunRecord | null }) {
+  const { t } = useLanguage();
   const drawn = MARKS.map((d, k) => ({ ...d, k, v: l[d.key] })).filter((d) => d.v !== null) as (typeof MARKS[number] & { k: number; v: number })[];
   const g = useMemo(() => {
     const ends = drawn.flatMap((d) => (d.band ? [d.v, d.v + l.resolution] : [d.v]));
@@ -35,19 +37,19 @@ export const LoadabilityAxis = memo(function LoadabilityAxis({ l, record }: { l:
     // drawn is derived from l
   }, [l]);
   const h = AXIS + 40;
-  const lam = "Load scale λ (ratio)";
+  const lam = t("Load scale λ (ratio)");
   return (
     <ChartFrame
-      title="Loadability along the load scale λ"
+      title={t("Loadability along the load scale λ")}
       record={record}
-      note={`Stop reason: ${l.stop_reason}. Bands: the bisection bracket of ${num(l.resolution)} above λ_c and λ_s. λ_s is a solution-existence diagnostic, not a stability limit.${drawn.length < MARKS.length ? ` Not available: ${MARKS.filter((d) => l[d.key] === null).map((d) => d.name).join(", ")}.` : ""}`}
-      legend={MARKS.map((d, k) => ({ name: d.name, swatch: <Swatch color={SERIES[k]} marker={d.m} filled />, word: k === 0 ? "solid" : k === 1 ? "dashed" : "dotted" }))}
-      data={{ columns: ["Quantity", lam], rows: [...MARKS.map((d) => [d.name, l[d.key]]), ["Resolution", l.resolution], ["Grid step", l.grid_step]] }}
+      note={`${t("Stop reason: {reason}. Bands: the bisection bracket of {res} above λ_c and λ_s. λ_s is a solution-existence diagnostic, not a stability limit.", { reason: l.stop_reason ?? "", res: num(l.resolution) })}${drawn.length < MARKS.length ? ` ${t("Not available: {list}.", { list: MARKS.filter((d) => l[d.key] === null).map((d) => d.name).join(", ") })}` : ""}`}
+      legend={MARKS.map((d, k) => ({ name: d.name, swatch: <Swatch color={SERIES[k]} marker={d.m} filled />, word: t(k === 0 ? "solid" : k === 1 ? "dashed" : "dotted") }))}
+      data={{ columns: [t("Quantity"), lam], rows: [...MARKS.map((d) => [d.name, l[d.key]]), [t("Resolution"), l.resolution], [t("Grid step"), l.grid_step]] }}
     >
-      <svg role="img" aria-label={`${lam} axis, ${drawn.length} markers`} viewBox={`0 0 ${W} ${h}`} className="chart-svg">
+      <svg role="img" aria-label={t("{title} axis, {n} markers", { title: lam, n: drawn.length })} viewBox={`0 0 ${W} ${h}`} className="chart-svg">
         {drawn.length === 0 ? (
           <text x={W / 2} y={AXIS - 30} textAnchor="middle">
-            No loadability value: λ_c, λ_s and λ_ub are not available.
+            {t("No loadability value: λ_c, λ_s and λ_ub are not available.")}
           </text>
         ) : (
           <>
@@ -55,7 +57,7 @@ export const LoadabilityAxis = memo(function LoadabilityAxis({ l, record }: { l:
               <g key={t}>
                 <line x1={g.sx(t)} x2={g.sx(t)} y1={AXIS} y2={AXIS + 5} className="chart-axis" />
                 <text x={g.sx(t)} y={AXIS + 18} textAnchor="middle">
-                  {num(t)}
+                  {numText(t)}
                 </text>
               </g>
             ))}

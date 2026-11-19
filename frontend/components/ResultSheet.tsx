@@ -8,6 +8,8 @@ import type { AnalysisType, ProjectSnapshot, RunRecord } from "../api-types";
 import { useProject } from "../store";
 import { CONSTRAINT_FIELDS, M2_FIELDS } from "./elementFields";
 import { fixed } from "./format";
+import { useLanguage } from "./Language";
+import { displayLang, translate } from "./i18n";
 import { statusWord } from "./status-text";
 import styles from "./ResultSheet.module.css";
 
@@ -43,36 +45,38 @@ const PS_LABEL: Record<string, string> = { inverter_margin_ratio: "Inverter marg
 
 /** Scalar settings of the run and the limits it was checked against; nested settings stay in Run history. */
 export function basisRows(r: RunRecord): [string, string][] {
+  const tr = (s: string) => translate(displayLang(), s);
   const params = Object.entries((r.parameters ?? {}) as Record<string, unknown>)
     .filter(([k, v]) => LABEL[k] && typeof v === "number")
-    .map(([k, v]): [string, string] => [(r.analysis_type === "PS" && PS_LABEL[k]) || LABEL[k][0], `${fixed(v as number, LABEL[k][1])} ${LABEL[k][1]}`]);
+    .map(([k, v]): [string, string] => [tr((r.analysis_type === "PS" && PS_LABEL[k]) || LABEL[k][0]), `${fixed(v as number, LABEL[k][1])} ${LABEL[k][1]}`]);
   const limits = r.analysis_type === "M2"
     ? CONSTRAINT_FIELDS.flatMap(([k, l, u]): [string, string][] => {
         const v = (r.snapshot as ProjectSnapshot | null)?.design_constraints?.[k];
-        return typeof v === "number" ? [[l, `${fixed(v, u)} ${u}`]] : [];
+        return typeof v === "number" ? [[tr(l), `${fixed(v, u)} ${u}`]] : [];
       })
     : [];
   const dep = r.depends_on as { analysis_type?: string; record_id?: string } | null | undefined;
-  return [...params, ...limits, ...(dep?.record_id ? [["Operating point", `${dep.analysis_type ?? "M1"} run ${short(dep.record_id)}`] as [string, string]] : [])];
+  return [...params, ...limits, ...(dep?.record_id ? [[tr("Operating point"), `${dep.analysis_type ?? "M1"} ${tr("run")} ${short(dep.record_id)}`] as [string, string]] : [])];
 }
 
 // record null (an advice whose run is not in this Project): the result alone, without sheet data
 export function ResultSheet({ record, children, basis, sheet }: { record: RunRecord | null; children: ReactNode; basis?: [string, string][]; sheet?: string }) {
   const { project, runRecords } = useProject();
+  const { t } = useLanguage();
   if (!record) return <>{children}</>;
-  const name = sheet ?? SHEET_NAME[record.analysis_type] ?? record.analysis_type;
+  const name = t(sheet ?? SHEET_NAME[record.analysis_type] ?? record.analysis_type);
   const rows = basis ?? basisRows(record);
   const snap = record.snapshot as ProjectSnapshot | null;
   const same = runRecords.filter((x) => x.analysis_type === record.analysis_type);
   const revs = same.map((x, k) => ({ x, rev: k < 26 ? String.fromCharCode(65 + k) : String(k + 1) })).reverse().slice(0, 4);
   const fake = record.engine_kind === "FAKE";
   return (
-    <article className={styles.sheet} aria-label={`Sheet: ${name}`}>
+    <article className={styles.sheet} aria-label={t("Sheet: {name}", { name })}>
       <div className={styles.body}>
         <div className={styles.main}>{children}</div>
-        <aside className={styles.side} aria-label={`Sheet data: ${name}`}>
-          <section className={styles.basis} aria-label="Basis">
-            <h4>Basis of this result</h4>
+        <aside className={styles.side} aria-label={t("Sheet data: {name}", { name })}>
+          <section className={styles.basis} aria-label={t("Basis")}>
+            <h4>{t("Basis of this result")}</h4>
             {rows.length ? (
               <dl>
                 {rows.map(([l, v]) => (
@@ -83,16 +87,16 @@ export function ResultSheet({ record, children, basis, sheet }: { record: RunRec
                 ))}
               </dl>
             ) : (
-              <p>The settings of this run are listed in Run history.</p>
+              <p>{t("The settings of this run are listed in Run history.")}</p>
             )}
-            <p className={styles.src}>Model: balanced 3-phase, islanded, grid-forming droop (assumptions A1–A6).</p>
+            <p className={styles.src}>{t("Model: balanced 3-phase, islanded, grid-forming droop (assumptions A1–A6).")}</p>
           </section>
           {revs.length > 0 && (
-            <section className={styles.rev} aria-label="Revisions">
-              <h4>Revisions of this result</h4>
+            <section className={styles.rev} aria-label={t("Revisions")}>
+              <h4>{t("Revisions of this result")}</h4>
               <table>
                 <thead>
-                  <tr><th>Rev</th><th>Date</th><th>Run</th><th>Outcome</th></tr>
+                  <tr><th>{t("Rev")}</th><th>{t("Date")}</th><th>{t("Run")}</th><th>{t("Outcome")}</th></tr>
                 </thead>
                 <tbody>
                   {revs.map(({ x, rev }) => (
@@ -100,21 +104,21 @@ export function ResultSheet({ record, children, basis, sheet }: { record: RunRec
                       <td>{rev}</td>
                       <td>{date(x.created_at)}</td>
                       <td><code title={x.record_id}>{short(x.record_id)}</code></td>
-                      <td>{statusWord(x.analysis_type as AnalysisType, x.result)}</td>
+                      <td>{t(statusWord(x.analysis_type as AnalysisType, x.result))}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </section>
           )}
-          <dl className={styles.tblock} aria-label="Title block" data-testid="title-block">
-            <div className={styles.wide}><dt>Sheet</dt><dd className={styles.title}>{name}</dd></div>
-            <div className={styles.wide}><dt>Project</dt><dd>{project?.name ?? "—"}</dd></div>
-            <div><dt>System</dt><dd>{snap?.nominal_voltage_kv ?? "—"} kV LL, {snap?.nominal_frequency_hz ?? "—"} Hz</dd></div>
-            <div className={fake ? styles.fake : undefined}><dt>Engine</dt><dd>{record.engine_kind === null || record.engine_kind === undefined ? "not called" : `${record.engine_kind} ${record.engine_version ?? ""}`.trim()}{fake && ": placeholder, not an engine result"}</dd></div>
-            <div><dt>Run</dt><dd><code title={record.record_id} data-testid="sheet-run">{short(record.record_id)}</code></dd></div>
-            <div><dt>Date</dt><dd>{date(record.created_at)}</dd></div>
-            <div className={styles.wide}><dt>Design snapshot</dt><dd><code title={record.snapshot_hash} data-testid="sheet-snapshot">{short(record.snapshot_hash)}</code></dd></div>
+          <dl className={styles.tblock} aria-label={t("Title block")} data-testid="title-block">
+            <div className={styles.wide}><dt>{t("Sheet")}</dt><dd className={styles.title}>{name}</dd></div>
+            <div className={styles.wide}><dt>{t("Project")}</dt><dd>{project?.name ?? "—"}</dd></div>
+            <div><dt>{t("System")}</dt><dd>{snap?.nominal_voltage_kv ?? "—"} kV LL, {snap?.nominal_frequency_hz ?? "—"} Hz</dd></div>
+            <div className={fake ? styles.fake : undefined}><dt>{t("Engine")}</dt><dd>{record.engine_kind === null || record.engine_kind === undefined ? t("not called") : `${record.engine_kind} ${record.engine_version ?? ""}`.trim()}{fake && `: ${t("placeholder, not an engine result")}`}</dd></div>
+            <div><dt>{t("Run")}</dt><dd><code title={record.record_id} data-testid="sheet-run">{short(record.record_id)}</code></dd></div>
+            <div><dt>{t("Date")}</dt><dd>{date(record.created_at)}</dd></div>
+            <div className={styles.wide}><dt>{t("Design snapshot")}</dt><dd><code title={record.snapshot_hash} data-testid="sheet-snapshot">{short(record.snapshot_hash)}</code></dd></div>
           </dl>
         </aside>
       </div>

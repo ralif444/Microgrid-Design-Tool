@@ -6,6 +6,7 @@
 // close; Escape closes. It only displays stored values (guideline §1 rule 1).
 import Link from "next/link";
 import { useEffect, useRef, type ReactNode } from "react";
+import { useLanguage } from "./Language";
 import styles from "./Inspector.module.css";
 import type { SldRow, SldSection } from "./sld/buildSldModel";
 import { useSldModel } from "./sld/useSldModel";
@@ -18,14 +19,15 @@ const KIND = { bus: ["Bus", "buses"], line: ["Line", "lines"], inverter: ["Inver
 export const rowText = (r: SldRow) => `${r.value}${r.unit && r.value !== "—" ? ` ${r.unit}` : ""}`;
 
 function Pairs({ label, rows }: { label: string; rows: SldRow[] }) {
+  const { t } = useLanguage();
   return (
-    <dl aria-label={label} className={styles.pairs}>
+    <dl aria-label={t(label)} className={styles.pairs}>
       {rows.map((r, k) => (
         <div key={k}>
-          <dt>{r.label}</dt>
+          <dt>{t(r.label)}</dt>
           <dd>
             {rowText(r)}
-            {r.note && <span className={styles.note}> ({r.note})</span>}
+            {r.note && <span className={styles.note}> ({t(r.note)})</span>}
           </dd>
         </div>
       ))}
@@ -58,6 +60,7 @@ export function Inspector({
   /** Focus moves in when this changes; the workspace keeps it when a Bus is renamed. */
   focusKey?: string | number;
 }) {
+  const { t } = useLanguage();
   const { full, fake } = useSldModel();
   const head = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
@@ -72,7 +75,7 @@ export function Inspector({
 
   return (
     <aside
-      aria-label={`Inspector: ${word} ${target.id}`}
+      aria-label={`${t("Inspector")}: ${t(word)} ${target.id}`}
       className={`no-print ${docked ? styles.docked : styles.panel}`}
       onKeyDown={(e) => {
         if (e.key === "Escape") onClose();
@@ -80,35 +83,35 @@ export function Inspector({
     >
       <div className={styles.top}>
         <h2 ref={head} tabIndex={-1}>
-          {word} {target.id}
+          {t(word)} {target.id}
         </h2>
         <button type="button" onClick={onClose}>
-          Close inspector
+          {t("Close inspector")}
         </button>
       </div>
       {edit}
       {!el ? (
-        !edit && <p>Not in the current design.</p>
+        !edit && <p>{t("Not in the current design.")}</p>
       ) : (
         el.sections.filter((s) => !(edit && s.title === "Design data") && !(edit && s.title === "Issues")).map((s) => {
-          const t = SECTIONS[s.title];
-          const empty = s.empty ? (s.empty.startsWith("No current") ? t.none : `${s.empty}.`) : !s.rows.length ? t.nothing : null;
+          const sec = SECTIONS[s.title];
+          const empty = s.empty ? (s.empty.startsWith("No current") ? sec.none : `${s.empty}.`) : !s.rows.length ? sec.nothing : null;
           return (
-            <section key={s.title} aria-label={s.title}>
-              {t.head && <h3>{t.head}</h3>}
-              {empty ? <p>{empty}</p> : <Pairs label={t.label} rows={s.rows} />}
+            <section key={s.title} aria-label={t(s.title)}>
+              {sec.head && <h3>{t(sec.head)}</h3>}
+              {empty ? <p>{t(empty)}</p> : <Pairs label={sec.label} rows={s.rows} />}
             </section>
           );
         })
       )}
       {fake && (
         <p className={styles.fake}>
-          <strong>FAKE engine:</strong> placeholder values, not engine results.
+          <strong>{t("FAKE engine:")}</strong> {t("placeholder values, not engine results.")}
         </p>
       )}
       {!edit && (
         <p>
-          <Link href={editHref}>{target.kind === "load" ? "Edit in Loads" : "Edit in table"}</Link>
+          <Link href={editHref}>{t(target.kind === "load" ? "Edit in Loads" : "Edit in table")}</Link>
         </p>
       )}
     </aside>

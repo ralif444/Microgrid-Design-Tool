@@ -12,9 +12,10 @@ import { BarChart } from "../../components/charts/BarChart";
 import { CANNOT_UNDO, useConfirmDelete } from "../../components/ConfirmDelete";
 import { DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
-import { fixed, fixedOr, plural } from "../../components/format";
+import { fixed, fixedOr } from "../../components/format";
 import { applyOverrides, nMinus1, InfeasibleNote, OutOfDate, METRICS, numericPaths, ParamOptions, paramLabel, paramName, paramUnit, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
+import { useLanguage } from "../../components/Language";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
@@ -32,33 +33,34 @@ const KEY: Record<string, keyof M3cPayload["scenario_results"][number]["key_metr
 };
 
 function OverrideEditor({ sc, paths }: { sc: Scenario; paths: string[] }) {
+  const { t } = useLanguage();
   const dispatch = useProjectDispatch();
   const [path, setPath] = useState("");
   const [value, setValue] = useState<number | null>(null);
   const set = (overrides: Scenario["overrides"]) => dispatch({ type: "scenarioUpdated", id: sc.id, patch: { overrides } });
   return (
     <>
-      <ul aria-label={`Overrides of ${sc.name}`}>
+      <ul aria-label={t("Overrides of {name}", { name: sc.name })}>
         {sc.overrides.map((o) => (
           <li key={o.parameter_path}>
             {paramName(o.parameter_path)} = {o.value} {paramUnit(o.parameter_path)}{" "}
             <button type="button" onClick={() => set(sc.overrides.filter((x) => x !== o))}>
-              Remove {paramLabel(o.parameter_path)}
+              {t("Remove {label}", { label: paramLabel(o.parameter_path) })}
             </button>
           </li>
         ))}
       </ul>
       <p>
         <label htmlFor={`path-${sc.id}`}>
-          Parameter to change<span className="sr-only"> in {sc.name}</span>
+          {t("Parameter to change")}<span className="sr-only">{t(" in {name}", { name: sc.name })}</span>
         </label>{" "}
         <select id={`path-${sc.id}`} value={path} onChange={(e) => setPath(e.target.value)}>
-          <option value="">Choose…</option>
+          <option value="">{t("Choose…")}</option>
           <ParamOptions paths={paths} />
         </select>
       </p>
       <p>
-        <NumberField id={`value-${sc.id}`} label={<>New value<span className="sr-only"> for {sc.name}</span></>} unit={path ? paramUnit(path) : "—"} value={value} onChange={setValue} />
+        <NumberField id={`value-${sc.id}`} label={<>{t("New value")}<span className="sr-only">{t(" for {name}", { name: sc.name })}</span></>} unit={path ? paramUnit(path) : "—"} value={value} onChange={setValue} />
       </p>
       <button
         type="button"
@@ -70,7 +72,7 @@ function OverrideEditor({ sc, paths }: { sc: Scenario; paths: string[] }) {
           setValue(null);
         }}
       >
-        Add change to {sc.name}
+        {t("Add change to {name}", { name: sc.name })}
       </button>
     </>
   );
@@ -79,6 +81,7 @@ function OverrideEditor({ sc, paths }: { sc: Scenario; paths: string[] }) {
 type Row = (typeof METRICS)[number];
 
 function Scenarios() {
+  const { t } = useLanguage();
   const { dialog, confirm } = useConfirmDelete();
   const { example } = useProject();
   const { scenarios } = useProject();
@@ -101,7 +104,7 @@ function Scenarios() {
   const results = p?.scenario_results ?? [];
   const charted = METRICS.filter(([m]) => KEY[m] && results.some((s) => typeof s.key_metrics[KEY[m]] === "number"));
   const columns: DataColumn<Row>[] = [
-    { key: "metric", header: "Metric", cell: ([, text, unit]) => <strong>{`${text} (${unit})`}</strong> },
+    { key: "metric", header: t("Metric"), cell: ([, text, unit]) => <strong>{`${t(text)} (${unit})`}</strong> },
     ...results.map((s, k) => ({
       key: s.scenario_id,
       header: `${label(s.scenario_id)} (${s.status})`,
@@ -109,7 +112,7 @@ function Scenarios() {
         const d = p?.deltas.find((x) => x.metric === m && x.scenario_id === s.scenario_id);
         const v = KEY[m] ? s.key_metrics[KEY[m]] : null;
         const rel = d?.relative_delta_ratio;
-        return `${KEY[m] ? fixedOr(v as number | null, unit) : ""}${k > 0 && d ? ` (difference ${fixed(d.delta, d.unit)} ${d.unit}${rel === null || rel === undefined ? "" : `, relative ${fixed(rel, "ratio")} ratio`})` : ""}`;
+        return `${KEY[m] ? fixedOr(v as number | null, unit) : ""}${k > 0 && d ? t(" (difference {delta} {unit}{rel})", { delta: fixed(d.delta, d.unit), unit: d.unit, rel: rel === null || rel === undefined ? "" : t(", relative {value} ratio", { value: fixed(rel, "ratio") }) }) : ""}`;
       },
     })),
   ];
@@ -117,7 +120,7 @@ function Scenarios() {
     <>
       <div className={styles.head}>
         <h1>
-          Scenarios and comparison <span className="code-label">(M3c)</span>
+          {t("Scenarios and comparison")} <span className="code-label">(M3c)</span>
         </h1>
         <M1FreshnessBadge f={fresh} />
       </div>
@@ -126,14 +129,13 @@ function Scenarios() {
       <InfeasibleNote show={m2Infeasible} />
       {example && (
         <p data-testid="example-scenarios">
-          Example mode: the scenarios come from the guided example&apos;s Project file (the stressed design D2S and the
-          near-limit design D2H of the validation plan). The first, D2 base, is the reference of the comparison.
+          {t("Example mode: the scenarios come from the guided example's Project file (the stressed design D2S and the near-limit design D2H of the validation plan). The first, D2 base, is the reference of the comparison.")}
         </p>
       )}
       <div className={styles.study}>
       <div>
       <form
-        aria-label="New scenario"
+        aria-label={t("New scenario")}
         className={styles.form}
         onSubmit={(e) => {
           e.preventDefault();
@@ -143,15 +145,15 @@ function Scenarios() {
         }}
       >
         <p>
-          <label htmlFor="scenario-name">Scenario name</label> <input id="scenario-name" value={name} maxLength={100} onChange={(e) => setName(e.target.value)} />
+          <label htmlFor="scenario-name">{t("Scenario name")}</label> <input id="scenario-name" value={name} maxLength={100} onChange={(e) => setName(e.target.value)} />
         </p>
         <button type="submit" disabled={!name.trim()}>
-          Save current design as Scenario
+          {t("Save current design as Scenario")}
         </button>
       </form>
-      {scenarios.length === 0 && <p>No scenarios yet. Save the current design as a Scenario.</p>}
+      {scenarios.length === 0 && <p>{t("No scenarios yet. Save the current design as a Scenario.")}</p>}
       {scenarios.map((sc) => (
-        <section key={sc.id} aria-label={`Scenario ${sc.name}`} className={`${styles.form} ${styles.scenario}`}>
+        <section key={sc.id} aria-label={t("Scenario {name}", { name: sc.name })} className={`${styles.form} ${styles.scenario}`}>
           <h2>
             <label>
               <input
@@ -159,12 +161,12 @@ function Scenarios() {
                 checked={selected.includes(sc.id)}
                 onChange={() => setSelected(selected.includes(sc.id) ? selected.filter((x) => x !== sc.id) : [...selected, sc.id])}
               />{" "}
-              {sc.name} ({plural(sc.overrides.length, "change")})
+              {t(sc.overrides.length === 1 ? "{name} ({count} change)" : "{name} ({count} changes)", { name: sc.name, count: sc.overrides.length })}
             </label>
           </h2>
           <OverrideEditor sc={sc} paths={paths} />
-          <button type="button" onClick={() => confirm(`Delete ${sc.name}?`, `Scenario ${sc.name} and its changes are removed. ${CANNOT_UNDO}`, () => dispatch({ type: "scenarioRemoved", id: sc.id }))}>
-            Delete {sc.name}
+          <button type="button" onClick={() => confirm(t("Delete {name}?", { name: sc.name }), `${t("Scenario {name} and its changes are removed.", { name: sc.name })} ${t(CANNOT_UNDO)}`, () => dispatch({ type: "scenarioRemoved", id: sc.id }))}>
+            {t("Delete {name}", { name: sc.name })}
           </button>
         </section>
       ))}
@@ -177,15 +179,15 @@ function Scenarios() {
           aria-describedby={chosen.length < 2 ? "compare-missing" : undefined}
           onClick={() => compare(chosen.map((s) => ({ scenario_id: s.id, label: s.name, project_snapshot: applyOverrides(design, s.overrides) })))}
         >
-          {busy ? "Running..." : "Compare scenarios"}
+          {busy ? t("Running...") : t("Compare scenarios")}
         </button>
-        {chosen.length < 2 && <span id="compare-missing">Missing: two or more selected Scenarios.</span>}
+        {chosen.length < 2 && <span id="compare-missing">{t("Missing: two or more selected Scenarios.")}</span>}
       </p>
       <p className={styles.run}>
         <button type="button" disabled={busy || fresh !== "current" || inverterCount < 2} onClick={() => compare(nMinus1(design))}>
-          Run N−1 check (base plus one scenario per removed inverter)
+          {t("Run N−1 check (base plus one scenario per removed inverter)")}
         </button>
-        {inverterCount < 2 && <span>N−1 needs at least two inverters.</span>}
+        {inverterCount < 2 && <span>{t("N−1 needs at least two inverters.")}</span>}
       </p>
       </div>
       <div className={styles.result}>
@@ -199,30 +201,30 @@ function Scenarios() {
           {charted.map(([m, text, unit]) => (
             <BarChart
               key={m}
-              title={`${text} per scenario`}
-              valueTitle={`${text} (${unit})`}
-              categoryTitle="Scenario"
+              title={t("{text} per scenario", { text: t(text) })}
+              valueTitle={`${t(text)} (${unit})`}
+              categoryTitle={t("Scenario")}
               categories={results.map((s) => `${label(s.scenario_id)} (${s.status})`)}
-              series={[{ name: text, values: results.map((s) => (s.key_metrics[KEY[m]] as number | null | undefined) ?? null) }]}
+              series={[{ name: t(text), values: results.map((s) => (s.key_metrics[KEY[m]] as number | null | undefined) ?? null) }]}
               labelWidth={200}
               dots={m === "SYSTEM_FREQUENCY" || m === "MIN_BUS_VOLTAGE"} // far from zero: dots on a fitted axis, as the S-07 voltage profile
-              note={`In run order, reference first (${label(results[0]?.scenario_id ?? "")}); not a ranking (4.2.5). The table below gives the explicit differences.`}
+              note={t("In run order, reference first ({ref}); not a ranking (4.2.5). The table below gives the explicit differences.", { ref: label(results[0]?.scenario_id ?? "") })}
               record={resp.run_record}
             />
           ))}
           <DataTable
-            label="Scenario comparison"
-            caption={`Scenario comparison (reference: ${label(results[0]?.scenario_id ?? "")})`}
+            label={t("Scenario comparison")}
+            caption={t("Scenario comparison (reference: {ref})", { ref: label(results[0]?.scenario_id ?? "") })}
             columns={columns}
             rows={METRICS}
             rowKey={([m]) => m}
-            rowName={([, text]) => text}
+            rowName={([, text]) => t(text)}
           />
         </>
       )}
         </ResultSheet>
       )}
-      {!resp && <EmptyState title="Not compared yet.">Select two or more Scenarios and compare them, or run the N−1 check.</EmptyState>}
+      {!resp && <EmptyState title={t("Not compared yet.")}>{t("Select two or more Scenarios and compare them, or run the N−1 check.")}</EmptyState>}
       </div>
       </div>
       <ExampleNext screen="scenarios" ready={nextReady(r?.status)} />

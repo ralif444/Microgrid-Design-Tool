@@ -146,8 +146,9 @@ export const here = (path: string, area: string | null) => (path.startsWith(HOME
 export const areaOf = (list: Area[], at: string) => list.find((a) => a.screens.some(([h]) => h === at || (!h.startsWith(HOME) && at.startsWith(h)))) ?? null;
 
 export function AreaTabsView({ list, current }: { list: Area[]; current: AreaKey | null }) {
+  const { t } = useLanguage();
   return (
-    <nav aria-label="Areas" className={styles.tabs}>
+    <nav aria-label={t("Areas")} className={styles.tabs}>
       {list.map((a) => (
         <Link key={a.key} href={a.href} aria-current={a.key === current ? "page" : undefined}>
           {a.label}
@@ -158,16 +159,17 @@ export function AreaTabsView({ list, current }: { list: Area[]; current: AreaKey
 }
 
 export function AreaScreensView({ area, at, states, m1Missing = false, perScreen = {} }: { area: Area; at: string; states: StepState[]; m1Missing?: boolean; perScreen?: Record<string, StepState> }) {
+  const { t } = useLanguage();
   const flag = (state: StepState, testId?: string) =>
     (state === "stale" || state === "blocked") && (
       <Tag type={state === "stale" ? "warm-gray" : "cool-gray"} size="sm" renderIcon={() => <Icon name={state === "stale" ? "clock" : "ban"} />} className={styles.flag} data-testid={testId}>
-        {state === "stale" ? "Stale" : "Blocked"}
-        {state === "blocked" && <span className="sr-only">: M1 {m1Missing ? "missing" : "stale"}</span>}
+        {t(state === "stale" ? "Stale" : "Blocked")}
+        {state === "blocked" && <span className="sr-only">: {t(m1Missing ? "M1 missing" : "M1 stale")}</span>}
       </Tag>
     );
   return (
-    <nav aria-label="Screens" className={styles.screens}>
-      <ul aria-label={area.label}>
+    <nav aria-label={t("Screens")} className={styles.screens}>
+      <ul aria-label={t(`area.${area.key}`)}>
         {area.screens.map(([h, label, step]) => {
           const state = step === null ? (perScreen[h] ?? null) : (states[step] ?? "todo");
           return (
@@ -177,7 +179,7 @@ export function AreaScreensView({ area, at, states, m1Missing = false, perScreen
                 <CodedLabel text={label} />
               </Link>
               {/* state words sit beside the link, so its name stays the screen name */}
-              {state === "done" && <span className="sr-only">done</span>}
+              {state === "done" && <span className="sr-only">{t("done")}</span>}
               {state && flag(state, step === 6 && state === "blocked" ? "step-6-blocked" : undefined)}
             </li>
           );
@@ -210,12 +212,13 @@ export function AreaScreens() {
 
 // "Sensitivity (M3a)" → name, then the code as a smaller secondary label (audit D-26).
 export function CodedLabel({ text }: { text: string }) {
-  const m = /^(.*\S)\s+(\((?:M\d\w?|PS|CB|BA)\))$/.exec(text);
+  const { t } = useLanguage();
+  const m = /^(.*\S)\s+(\((?:M\d\w?|PS|CB|BA)\))$/.exec(t(text));
   return m ? (
     <>
       {m[1]} <span className="code-label">{m[2]}</span>
     </>
   ) : (
-    <>{text}</>
+    <>{t(text)}</>
   );
 }

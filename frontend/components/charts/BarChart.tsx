@@ -6,7 +6,8 @@
 // `labelWidth` widens the category column for long names.
 import { memo, useMemo } from "react";
 import type { RunRecord } from "../../api-types";
-import { fixed, num } from "../format";
+import { fixed, numText } from "../format";
+import { useLanguage } from "../Language";
 import { ChartFrame } from "./ChartFrame";
 import { MarkerShape, Swatch } from "./marks";
 import { SERIES } from "./palette";
@@ -51,6 +52,7 @@ export const BarChart = memo(function BarChart({
   negative?: string;
   labelWidth?: number;
 }) {
+  const { t } = useLanguage();
   const band = dots ? BAR : BAR * series.length;
   const h = M.t + categories.length * (band + GAP) + M.b;
   const g = useMemo(() => {
@@ -71,9 +73,9 @@ export const BarChart = memo(function BarChart({
       record={record}
       note={note}
       legend={series.map((s, k) => ({ name: s.name, swatch: <Swatch color={SERIES[k % SERIES.length]} dash={dots ? undefined : "bar"} marker={dots ? "circle" : undefined} filled /> }))}
-      data={{ columns: [categoryTitle, ...series.map((s) => (multi ? `${s.name}, ${valueTitle}` : valueTitle)), ...(limits ? [`Limit (${unit})`] : [])], rows: categories.map((c, i) => [c, ...series.map((s) => s.values[i] ?? null), ...(limits ? [limits[i] ?? null] : [])]) }}
+      data={{ columns: [categoryTitle, ...series.map((s) => (multi ? `${s.name}, ${valueTitle}` : valueTitle)), ...(limits ? [t("Limit ({unit})", { unit })] : [])], rows: categories.map((c, i) => [c, ...series.map((s) => s.values[i] ?? null), ...(limits ? [limits[i] ?? null] : [])]) }}
     >
-      <svg role="img" aria-label={`${valueTitle} ${dots ? "dot" : "bar"} chart, ${categories.length} ${dots ? "points" : "bars"}`} viewBox={`0 0 ${W} ${h}`} className="chart-svg">
+      <svg role="img" aria-label={t("{title} {kind} chart, {n} {what}", { title: valueTitle, kind: t(dots ? "dot" : "bar"), n: categories.length, what: t(dots ? "points" : "bars") })} viewBox={`0 0 ${W} ${h}`} className="chart-svg">
         {negative && g.zero !== null && g.lo < 0 && (
           <g>
             <rect x={g.sx(g.lo)} y={M.t} width={g.sx(0) - g.sx(g.lo)} height={h - M.t - M.b} className="chart-negative" />
@@ -86,7 +88,7 @@ export const BarChart = memo(function BarChart({
           <g key={t}>
             <line x1={g.sx(t)} x2={g.sx(t)} y1={M.t} y2={h - M.b} className="chart-grid" />
             <text x={g.sx(t)} y={h - M.b + 16} textAnchor="middle">
-              {num(t)}
+              {numText(t)}
             </text>
           </g>
         ))}

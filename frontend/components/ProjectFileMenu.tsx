@@ -10,6 +10,7 @@ import { HOME } from "./AreaNav";
 import { clearDraft, DRAFT_REPLACE, hasDraft, writeDraft } from "../store/draft";
 import { downloadJson, NOT_JSON, readJson } from "./files";
 import { useConfirmDelete } from "./ConfirmDelete";
+import { useLanguage } from "./Language";
 import styles from "./ui.module.css";
 
 // D-48 K23; [title, body, confirm word] for the in-app dialog (audit O9)
@@ -45,6 +46,7 @@ export function ProjectFileMenu() {
   const router = useRouter();
   const [note, setNote] = useState<FileCheckResult | string | null>(null);
   const { dialog, ask } = useConfirmDelete();
+  const { t: tr } = useLanguage();
 
   // Autosave (plan F3): crash recovery only; Save and the unsaved flag keep their meaning. A saved or
   // freshly loaded Project clears the draft; example mode is never autosaved.
@@ -106,12 +108,12 @@ export function ProjectFileMenu() {
       {dialog}
       {state.project && (
         <button type="button" onClick={() => void save()}>
-          Save
+          {tr("Save")}
         </button>
       )}
       {/* The native file input stays in the tab order; the label is drawn as a button. */}
       <label className={styles.fileButton}>
-        Open project file
+        {tr("Open project file")}
         <input
           type="file"
           accept=".json,application/json"
@@ -121,7 +123,7 @@ export function ProjectFileMenu() {
           }}
         />
       </label>
-      {note && <span className={styles.fileNote}>{typeof note === "string" ? <span role="status" data-testid="file-check">{note}</span> : <FileCheckText fc={note} />}</span>}
+      {note && <span className={styles.fileNote}>{typeof note === "string" ? <span role="status" data-testid="file-check">{tr(note)}</span> : <FileCheckText fc={note} />}</span>}
     </span>
   );
 }

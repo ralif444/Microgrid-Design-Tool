@@ -11,6 +11,7 @@ import { ExampleGuide, ExampleNext, ExampleTag, nextReady, NotSet, useExampleFor
 import { fixedOr } from "../../components/format";
 import { fmt, InfeasibleNote, OutOfDate, RunButton, tauMissing, useDependentRun } from "../../components/Further";
 import { IndicatorPanel } from "../../components/IndicatorPanel";
+import { useLanguage } from "../../components/Language";
 import { m4bKpis } from "../../components/kpi";
 import { KpiStrip } from "../../components/KpiStrip";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
@@ -48,6 +49,7 @@ const CLASS_WORDS: Record<string, string> = {
 };
 
 function Transient() {
+  const { t } = useLanguage();
   const { design, fresh, busy, resp, stale, error, clearError, run, m2Infeasible } = useDependentRun("M4b");
   // Example mode (Doc 12 X9 FR-103, D-92 K232): the seven D2 cases of Doc 13 §5 (SM, DR, TS; D-116) as presets;
   // the first fills the form on arrival, choosing one refills it, any edit makes the values the user's.
@@ -122,11 +124,11 @@ function Transient() {
   const lastT = p?.time_s.length ? p.time_s[p.time_s.length - 1] : null;
   const band = st?.window_s && lastT !== null ? { to: lastT, span: st.window_s } : undefined;
   const note = [
-    startS !== null ? `Dashed vertical line: disturbance start at ${fmt(startS)} s.` : null,
+    startS !== null ? t("Dashed vertical line: disturbance start at {value} s.", { value: fmt(startS) }) : null,
     band
-      ? `Shaded: the final window of ${fmt(st?.window_s)} s of the settling check (bands: frequency ${fmt(st?.frequency_band_hz)} Hz, voltage ${fmt(st?.voltage_band_kv)} kV, judged by the engine around the final value).`
-      : "No settling criteria in this run, so no final window is drawn.",
-    "Focus a chart and use ←/→, Home, End to read exact samples; Escape hides the readout.",
+      ? t("Shaded: the final window of {window} s of the settling check (bands: frequency {f} Hz, voltage {v} kV, judged by the engine around the final value).", { window: fmt(st?.window_s), f: fmt(st?.frequency_band_hz), v: fmt(st?.voltage_band_kv) })
+      : t("No settling criteria in this run, so no final window is drawn."),
+    t("Focus a chart and use ←/→, Home, End to read exact samples; Escape hides the readout."),
   ]
     .filter(Boolean)
     .join(" ");
@@ -134,7 +136,7 @@ function Transient() {
     <>
       <div className={styles.head}>
         <h1>
-          Transient <span className="code-label">(M4b)</span>
+          {t("Transient")} <span className="code-label">(M4b)</span>
         </h1>
         <M1FreshnessBadge f={fresh} />
       </div>
@@ -143,7 +145,7 @@ function Transient() {
       <InfeasibleNote show={m2Infeasible} />
       <div className={styles.study}>
       <form
-        aria-label="Transient settings"
+        aria-label={t("Transient settings")}
         className={styles.form}
         onSubmit={(e) => {
           e.preventDefault();
@@ -152,7 +154,7 @@ function Transient() {
       >
         {presets.length > 0 && (
           <p>
-            <label htmlFor="d-preset">Example disturbance</label>{" "}
+            <label htmlFor="d-preset">{t("Example disturbance")}</label>{" "}
             <select
               id="d-preset"
               value={preset}
@@ -166,13 +168,13 @@ function Transient() {
                   {x.label}
                 </option>
               ))}
-              <option value="">Your own values</option>
+              <option value="">{t("Your own values")}</option>
             </select>
-            {chosen && <ExampleTag label="Example disturbance" source={chosen.source} />}
+            {chosen && <ExampleTag label={t("Example disturbance")} source={chosen.source} />}
           </p>
         )}
         <p>
-          <label htmlFor="d-kind">Disturbance</label>{" "}
+          <label htmlFor="d-kind">{t("Disturbance")}</label>{" "}
           <select
             id="d-kind"
             value={kind}
@@ -183,13 +185,13 @@ function Transient() {
           >
             {KINDS.map(([k, label]) => (
               <option key={k} value={k}>
-                {label}
+                {t(label)}
               </option>
             ))}
           </select>{" "}
-          <label htmlFor="d-element">Element</label>{" "}
+          <label htmlFor="d-element">{t("Element")}</label>{" "}
           <select id="d-element" value={element} onChange={(e) => setElement(e.target.value)}>
-            <option value="">Choose…</option>
+            <option value="">{t("Choose…")}</option>
             {elements.map((id) => (
               <option key={id}>{id}</option>
             ))}
@@ -197,11 +199,11 @@ function Transient() {
         </p>
         {kind === "REFERENCE_STEP" && (
           <p>
-            <label htmlFor="d-ref">Reference</label>{" "}
+            <label htmlFor="d-ref">{t("Reference")}</label>{" "}
             <select id="d-ref" value={reference} onChange={(e) => setReference(e.target.value as Ref)}>
               {REFS.map(([k, label]) => (
                 <option key={k} value={k}>
-                  {label}
+                  {t(label)}
                 </option>
               ))}
             </select>
@@ -209,34 +211,34 @@ function Transient() {
         )}
         {kind !== "INVERTER_OUTAGE" && (
           <p>
-            <NumberField id="d-mag" label={kind === "LOAD_SCALING" ? "Scaling factor" : "Step size"} unit={magUnit} value={magnitude} onChange={setMagnitude} />
+            <NumberField id="d-mag" label={kind === "LOAD_SCALING" ? t("Scaling factor") : t("Step size")} unit={magUnit} value={magnitude} onChange={setMagnitude} />
           </p>
         )}
         {kind === "LOAD_STEP" && (
           <p>
-            <NumberField id="d-mag-kvar" label="Reactive step, optional" unit="kvar" value={magKvar} onChange={setMagKvar} />
+            <NumberField id="d-mag-kvar" label={t("Reactive step, optional")} unit="kvar" value={magKvar} onChange={setMagKvar} />
           </p>
         )}
         <p>
-          <NumberField id="d-start" label="Start time" unit="s" value={start} onChange={setStart} />
+          <NumberField id="d-start" label={t("Start time")} unit="s" value={start} onChange={setStart} />
         </p>
         <p>
-          <NumberField id="sim-end" label="Simulation end" unit="s" value={end} onChange={setEnd} />
+          <NumberField id="sim-end" label={t("Simulation end")} unit="s" value={end} onChange={setEnd} />
         </p>
         {kind !== "INVERTER_OUTAGE" && (
           <p>
             <label>
-              <input type="checkbox" checked={permanent} onChange={(e) => setPermanent(e.target.checked)} /> Permanent
+              <input type="checkbox" checked={permanent} onChange={(e) => setPermanent(e.target.checked)} /> {t("Permanent")}
             </label>{" "}
-            {!permanent && <NumberField id="d-duration" label="Duration" unit="s" value={duration} onChange={setDuration} />}
+            {!permanent && <NumberField id="d-duration" label={t("Duration")} unit="s" value={duration} onChange={setDuration} />}
           </p>
         )}
         <fieldset className={styles.settling}>
-          <legend>Settling criteria, optional (no defaults; without them no class is set)</legend>
+          <legend>{t("Settling criteria, optional (no defaults; without them no class is set)")}</legend>
           {ex.needs("settling") && fBand === null && vBand === null && win === null && <NotSet />}
-          <NumberField id="st-f" label="Frequency band" unit="Hz" value={fBand} onChange={setFBand} />
-          <NumberField id="st-v" label="Voltage band, line-to-line" unit="kV" value={vBand} onChange={setVBand} />
-          <NumberField id="st-w" label="Final window" unit="s" value={win} onChange={setWin} />
+          <NumberField id="st-f" label={t("Frequency band")} unit="Hz" value={fBand} onChange={setFBand} />
+          <NumberField id="st-v" label={t("Voltage band, line-to-line")} unit="kV" value={vBand} onChange={setVBand} />
+          <NumberField id="st-w" label={t("Final window")} unit="s" value={win} onChange={setWin} />
         </fieldset>
         {presets.length > 0 && ex.resetButton}
         <RunButton
@@ -259,21 +261,21 @@ function Transient() {
       {resp && r && (
         <ResultSheet record={resp.run_record}>
           <StatusBanner type="M4b" result={r} />
-      {p && resp && <KpiStrip label="Transient key figures" kpis={m4bKpis(p)} record={resp.run_record} />}
+      {p && resp && <KpiStrip label={t("Transient key figures")} kpis={m4bKpis(p)} record={resp.run_record} />}
       {p && resp && (
         <>
-          <h2>Class: {p.transient_class ?? "not set"}</h2>
+          <h2>{t("Class: {value}", { value: p.transient_class ?? t("not set") })}</h2>
           <p data-testid="transient-class">
-            {p.transient_class ? CLASS_WORDS[p.transient_class] : `No class: ${p.class_reason ?? "reason not given"}.`}
+            {p.transient_class ? t(CLASS_WORDS[p.transient_class]) : t("No class: {reason}.", { reason: p.class_reason ?? t("reason not given") })}
           </p>
           <ul className={styles.facts}>
-            <li>Settled: {p.settled === null || p.settled === undefined ? "not judged" : p.settled ? "yes" : "no"}</li>
-            <li>Largest rate of change of frequency (descriptive): {fixedOr(p.max_rocof_hz_per_s, "Hz/s")} Hz/s</li>
+            <li>{t("Settled: {value}", { value: p.settled === null || p.settled === undefined ? t("not judged") : p.settled ? t("yes") : t("no") })}</li>
+            <li>{t("Largest rate of change of frequency (descriptive): {value} Hz/s", { value: fixedOr(p.max_rocof_hz_per_s, "Hz/s") })}</li>
           </ul>
           <IndicatorPanel />
           {(
             [
-              ["System frequency", "Hz", [{ name: "system", values: p.system_frequency_hz }]],
+              ["System frequency", "Hz", [{ name: t("system"), values: p.system_frequency_hz }]],
               ["Bus voltage", "kV", p.bus_voltage_kv.map((b) => ({ name: b.bus_id, values: b.values }))],
               ["Inverter active power", "kW", p.inverter_p_kw.map((s) => ({ name: s.inverter_id, values: s.values }))],
               ["Inverter reactive power", "kvar", p.inverter_q_kvar.map((s) => ({ name: s.inverter_id, values: s.values }))],
@@ -281,13 +283,13 @@ function Transient() {
           ).map(([label, unit, series]) => (
             <LineChart
               key={label}
-              title={label}
-              xTitle="time (s)"
-              yTitle={`${label} (${unit})`}
+              title={t(label)}
+              xTitle={t("time (s)")}
+              yTitle={`${t(label)} (${unit})`}
               x={p.time_s}
               series={[...series]}
               crosshair={{ xName: "t", xUnit: "s", unit }}
-              vmarks={startS !== null ? [{ x: startS, label: "start" }] : []}
+              vmarks={startS !== null ? [{ x: startS, label: t("start") }] : []}
               xband={band}
               note={note}
               record={resp.run_record}
@@ -297,7 +299,7 @@ function Transient() {
       )}
         </ResultSheet>
       )}
-      {!resp && <EmptyState title="Not run yet.">Define a disturbance and run M4b to see the time responses and the transient class.</EmptyState>}
+      {!resp && <EmptyState title={t("Not run yet.")}>{t("Define a disturbance and run M4b to see the time responses and the transient class.")}</EmptyState>}
       </div>
       </div>
       <ExampleNext screen="transient" ready={nextReady(r?.status)} />

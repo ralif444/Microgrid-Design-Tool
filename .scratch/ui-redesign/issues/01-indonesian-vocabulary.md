@@ -1,6 +1,6 @@
 # 01: Align the Indonesian UI vocabulary with the manuscript
 
-Status: needs-info
+Status: done
 
 The Indonesian strings in the redesign mockup are a draft written without checking the manuscript. Before they ship, each term must match the manuscript (`Seminar.pdf`) and the glossary in `frontend/components/glossary.ts` / `docs/03_glossary_contracts.md`.
 
@@ -49,3 +49,4 @@ Needs from the user: the manuscript's own term for each row where it differs.
 ## Comments
 
 - 2026-11-13: user asked to leave this noted for later.
+- 2026-11-19: user approved the list, except these stay English in the Indonesian UI: Constraint, Line, Rating, Load, Loading, Overloaded, Power filter, Engine, Islanded, Inputs ("should stay as english phrases in the indonesian"). Applied in W5: dictionaries `frontend/components/lang/id-*.ts`, English text is the key (Doc 9 D-117 K353).

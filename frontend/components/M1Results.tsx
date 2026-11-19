@@ -8,6 +8,8 @@ import { BarChart, type RefLine } from "./charts/BarChart";
 import { DataTable, type DataColumn } from "./DataTable";
 import { fixed, fixedOr } from "./format";
 import { Icon } from "./Icon";
+import { useLanguage } from "./Language";
+import { displayLang, translate } from "./i18n";
 import type { ElementRef } from "./Inspector";
 import { ElementLink, marginStatus, type MarginStatus, STATUS_WORD, useMarginWarn } from "./M2Results";
 import m2Styles from "./M2Results.module.css";
@@ -58,7 +60,7 @@ const LINES: DataColumn<Line>[] = [
 ];
 
 const ref = (value: number | null | undefined, label: string): RefLine[] => (value === null || value === undefined ? [] : [{ value, label }]);
-const unset = (refs: RefLine[], what: string) => (refs.length ? undefined : `No ${what} set: not evaluated.`);
+const unset = (refs: RefLine[], what: string) => (refs.length ? undefined : translate(displayLang(), "No {what} set: not evaluated.", { what: translate(displayLang(), what) }));
 
 // `voltage: false`: the report keeps its own bus-voltage chart, so the profile is not drawn twice.
 export type M1Charts = { limits: DesignConstraints | null | undefined; record: RunRecord; voltage?: false };
@@ -72,15 +74,16 @@ const inspectable = <R,>(cols: DataColumn<R>[], kind: ElementRef["kind"], get: (
 export type M1Check = { design: ProjectSnapshot; m2: M2Payload | null };
 const ORDER: MarginStatus[] = ["violated", "near", "pass"];
 export function statusCell(id: string, kinds: string[], m2: M2Payload | null, marginWarn: number | null) {
-  if (!m2) return "Run the constraint check";
+  const t = (s: string) => translate(displayLang(), s);
+  if (!m2) return t("Run the constraint check");
   const own = m2.constraint_margins.filter((c) => c.element_id === id && kinds.includes(c.kind));
-  if (!own.length) return m2.not_evaluated.some((n) => n.element_id === id && kinds.includes(n.kind)) ? "Not evaluated" : "—";
-  if (marginWarn === null && own.every((c) => c.margin >= 0)) return "Checking";
+  if (!own.length) return m2.not_evaluated.some((n) => n.element_id === id && kinds.includes(n.kind)) ? t("Not evaluated") : "—";
+  if (marginWarn === null && own.every((c) => c.margin >= 0)) return t("Checking");
   const s = ORDER.find((k) => own.some((c) => marginStatus(c, marginWarn) === k)) ?? "pass";
   return (
     <span className={m2Styles.status} data-s={s}>
       <Icon name={STATUS_WORD[s].icon} size={16} />
-      {STATUS_WORD[s].word}
+      {t(STATUS_WORD[s].word)}
     </span>
   );
 }
@@ -90,9 +93,11 @@ const lineLimit = (d: ProjectSnapshot | undefined, limits: DesignConstraints, id
 export function M1Results({ p, charts, onInspect, check }: { p: M1Payload; charts?: M1Charts; onInspect?: OnInspect; check?: M1Check }) {
   const c = check?.design.design_constraints ?? charts?.limits ?? {};
   const marginWarn = useMarginWarn();
+  const { t } = useLanguage();
+  const tc = <R,>(cols: DataColumn<R>[]): DataColumn<R>[] => cols.map((c) => ({ ...c, header: t(c.header) }));
   const withCheck = <R,>(cols: DataColumn<R>[], limit: DataColumn<R>, id: (r: R) => string, kinds: string[]): DataColumn<R>[] =>
-    check ? [...cols, limit, { key: "status", header: "Status", cell: (r) => statusCell(id(r), kinds, check.m2, marginWarn) }] : cols;
-  const notSet = "not set";
+    check ? [...tc(cols), { ...limit, header: t(limit.header) }, { key: "status", header: t("Status"), cell: (r) => statusCell(id(r), kinds, check.m2, marginWarn) }] : tc(cols);
+  const notSet = t("not set");
   const busCols = withCheck(
     inspectable(BUSES, "bus", (b) => b.bus_id, onInspect),
     { key: "lim", header: "Limits", unit: "p.u.", cell: () => `${fixedOr(c.voltage_min_pu, "p.u.", notSet)} – ${fixedOr(c.voltage_max_pu, "p.u.", notSet)}` },
@@ -111,37 +116,38 @@ export function M1Results({ p, charts, onInspect, check }: { p: M1Payload; chart
     (l) => l.line_id,
     ["LINE_CURRENT"],
   );
+  const sharingCols = tc(SHARING).map((x) => (x.key === "qv" ? { ...x, cell: (s: Share) => t(s.q_droop_not_rating_proportional ? "yes" : "no") } : x));
   const lineLimits = p.line_results.map((l) => lineLimit(check?.design, c, l.line_id));
-  const vRefs = [...ref(c.voltage_min_pu, `min ${c.voltage_min_pu} p.u.`), ...ref(c.voltage_max_pu, `max ${c.voltage_max_pu} p.u.`)];
-  const iRefs = ref(c.inverter_loading_limit_ratio, `limit ${c.inverter_loading_limit_ratio}`);
+  const vRefs = [...ref(c.voltage_min_pu, t("min {v} p.u.", { v: c.voltage_min_pu ?? "" })), ...ref(c.voltage_max_pu, t("max {v} p.u.", { v: c.voltage_max_pu ?? "" }))];
+  const iRefs = ref(c.inverter_loading_limit_ratio, t("limit {v}", { v: c.inverter_loading_limit_ratio ?? "" }));
   const totals: Total[] = [
-    ["System frequency", p.system_frequency_hz, "Hz"],
-    ["Total load, active", p.total_load_kw, "kW"],
-    ["Total load, reactive", p.total_load_kvar, "kvar"],
-    ["Total losses", p.total_losses_kw, "kW"],
-    ["Iterations", p.iterations, "count"],
-    ["Validity indicator ε_X", p.epsilon_x_ratio, "ratio"],
+    [t("System frequency"), p.system_frequency_hz, "Hz"],
+    [t("Total load, active"), p.total_load_kw, "kW"],
+    [t("Total load, reactive"), p.total_load_kvar, "kvar"],
+    [t("Total losses"), p.total_losses_kw, "kW"],
+    [t("Iterations"), p.iterations, "count"],
+    [t("Validity indicator ε_X"), p.epsilon_x_ratio, "ratio"],
   ];
   return (
-    <section aria-label="Power flow results">
-      <DataTable label="System totals" caption="System" columns={TOTALS} rows={totals} rowKey={(t) => t[0]} rowName={(t) => t[0]} />
+    <section aria-label={t("Power flow results")}>
+      <DataTable label={t("System totals")} caption={t("System")} columns={tc(TOTALS)} rows={totals} rowKey={(t) => t[0]} rowName={(t) => t[0]} />
       {charts && charts.voltage !== false && (
         <BarChart
-          title="Bus voltage profile"
-          valueTitle="Bus voltage (p.u.)"
-          categoryTitle="Bus"
+          title={t("Bus voltage profile")}
+          valueTitle={t("Bus voltage (p.u.)")}
+          categoryTitle={t("Bus")}
           categories={p.bus_results.map((b) => b.bus_id)}
-          series={[{ name: "Voltage", values: p.bus_results.map((b) => b.voltage_pu) }]}
+          series={[{ name: t("Voltage"), values: p.bus_results.map((b) => b.voltage_pu) }]}
           refs={vRefs}
           note={unset(vRefs, "voltage limit")}
           record={charts.record}
           dots
         />
       )}
-      <DataTable label="Bus voltages" caption="Bus voltages" columns={busCols} rows={p.bus_results} rowKey={(b) => b.bus_id} rowName={(b) => b.bus_id} />
+      <DataTable label={t("Bus voltages")} caption={t("Bus voltages")} columns={busCols} rows={p.bus_results} rowKey={(b) => b.bus_id} rowName={(b) => b.bus_id} />
       <DataTable
-        label="Inverter outputs"
-        caption="Inverter outputs"
+        label={t("Inverter outputs")}
+        caption={t("Inverter outputs")}
         columns={invCols}
         rows={p.inverter_results}
         rowKey={(i) => i.inverter_id}
@@ -149,46 +155,46 @@ export function M1Results({ p, charts, onInspect, check }: { p: M1Payload; chart
       />
       {charts && (
         <BarChart
-          title="Inverter loading"
-          valueTitle="Inverter loading (ratio)"
-          categoryTitle="Inverter"
+          title={t("Inverter loading")}
+          valueTitle={t("Inverter loading (ratio)")}
+          categoryTitle={t("Inverter")}
           categories={p.inverter_results.map((i) => i.inverter_id)}
-          series={[{ name: "Loading", values: p.inverter_results.map((i) => i.loading_ratio) }]}
+          series={[{ name: t("Loading"), values: p.inverter_results.map((i) => i.loading_ratio) }]}
           refs={iRefs}
           note={unset(iRefs, "inverter loading limit")}
           record={charts.record}
         />
       )}
-      <AdvisoryPanel label="Power sharing advice" title="Power sharing against rating-proportional sharing (advisory, not a constraint)">
+      <AdvisoryPanel label={t("Power sharing advice")} title={t("Power sharing against rating-proportional sharing (advisory, not a constraint)")}>
         {charts && (
           <BarChart
-            title="Inverter output, P and Q"
-            valueTitle="P (kW) and Q (kvar)"
-            categoryTitle="Inverter"
+            title={t("Inverter output, P and Q")}
+            valueTitle={t("P (kW) and Q (kvar)")}
+            categoryTitle={t("Inverter")}
             categories={p.inverter_results.map((i) => i.inverter_id)}
             series={[
               { name: "P (kW)", values: p.inverter_results.map((i) => i.p_kw) },
               { name: "Q (kvar)", values: p.inverter_results.map((i) => i.q_kvar) },
             ]}
-            note="Deviations from rating-proportional sharing are in the table below."
+            note={t("Deviations from rating-proportional sharing are in the table below.")}
             record={charts.record}
           />
         )}
-        <DataTable label="Power sharing" columns={SHARING} rows={p.sharing} rowKey={(s) => s.inverter_id} rowName={(s) => s.inverter_id} />
+        <DataTable label={t("Power sharing")} columns={sharingCols} rows={p.sharing} rowKey={(s) => s.inverter_id} rowName={(s) => s.inverter_id} />
       </AdvisoryPanel>
       {charts && (
         <BarChart
-          title="Line loading"
-          valueTitle="Line current (A)"
-          categoryTitle="Line"
+          title={t("Line loading")}
+          valueTitle={t("Line current (A)")}
+          categoryTitle={t("Line")}
           categories={p.line_results.map((l) => l.line_id)}
-          series={[{ name: "Current", values: p.line_results.map((l) => l.current_a) }]}
+          series={[{ name: t("Current"), values: p.line_results.map((l) => l.current_a) }]}
           limits={lineLimits}
-          note={lineLimits.some((v) => v !== null) ? "Tick: each line's own current limit (the line's limit, else the Project limit)." : "No line current limit set: not evaluated."}
+          note={lineLimits.some((v) => v !== null) ? t("Tick: each line's own current limit (the line's limit, else the Project limit).") : t("No line current limit set: not evaluated.")}
           record={charts.record}
         />
       )}
-      <DataTable label="Line flows" caption="Line flows" columns={lineCols} rows={p.line_results} rowKey={(l) => l.line_id} rowName={(l) => l.line_id} />
+      <DataTable label={t("Line flows")} caption={t("Line flows")} columns={lineCols} rows={p.line_results} rowKey={(l) => l.line_id} rowName={(l) => l.line_id} />
     </section>
   );
 }

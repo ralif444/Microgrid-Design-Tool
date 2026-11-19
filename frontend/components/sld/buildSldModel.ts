@@ -3,7 +3,7 @@
 // the rows that tooltip, inspector and "View as table" all read. No layout, no store, and no physics:
 // values are copied from the Project or a payload and only rounded for display (`num`, R1, R2).
 import type { BatteryBank, LimitingConstraint, M1Payload, M2Payload, ProjectSnapshot, ValidationIssue } from "../../api-types";
-import { fixed, num } from "../format";
+import { fixed, numText } from "../format";
 import { KIND_WORDS, nearLimit } from "../M2Results";
 
 export type SldKind = "system" | "bus" | "inverter" | "load" | "line";
@@ -61,7 +61,7 @@ export type SldInput = {
 const NO_M1 = "No current power-flow result";
 const NO_M2 = "No current constraint check";
 
-const fmt = (v: number | null | undefined) => (v === null || v === undefined ? null : String(num(v)));
+const fmt = (v: number | null | undefined) => (v === null || v === undefined ? null : numText(v));
 // result labels on the diagram use the fixed result decimals (plan W1); design-data rows keep `fmt`
 const res = (v: number | null | undefined, unit: string) => (v === null || v === undefined ? "—" : fixed(v, unit));
 const row = (label: string, v: number | null | undefined, unit: string, missing = "not entered"): SldRow =>

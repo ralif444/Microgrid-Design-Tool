@@ -5,6 +5,7 @@ import { issueWhere } from "./elementFields";
 import { Icon, type IconName } from "./Icon";
 import styles from "./StatusBanner.module.css";
 import { Term } from "./Term";
+import { useLanguage } from "./Language";
 import { type BannerText, bannerText, statusWord } from "./status-text";
 
 // status-text roles → token roles (tokens.css, guideline §7.2)
@@ -22,13 +23,14 @@ export function statusIcon(r: Pick<AnalysisResult, "status" | "status_code">): I
 const plain = (s: string) => s.trim().replace(/\.$/, "");
 
 export function StatusBanner({ type, result }: { type: AnalysisType; result: AnalysisResult }) {
+  const { t: tr } = useLanguage();
   const t = bannerText(type, result);
   const issues = (result.diagnostics?.issues ?? []) as ValidationIssue[];
   const fake = result.warnings?.find((w) => w.code === "ENGINE_KIND_FAKE"); // D-48 K20
   // The engine message often repeats the headline; show it only when it adds something.
   const message = result.message && !t.headline.includes(plain(result.message)) ? result.message : null;
   return (
-    <section role="status" aria-label="Status" data-status={result.status} data-role={TOKEN_ROLE[t.role]} className={styles.banner}>
+    <section role="status" aria-label={tr("Status")} data-status={result.status} data-role={TOKEN_ROLE[t.role]} className={styles.banner}>
       <h2 className={styles.status}>
         <Icon name={statusIcon(result)} size={20} />
         {statusWord(type, result)}
@@ -38,11 +40,11 @@ export function StatusBanner({ type, result }: { type: AnalysisType; result: Ana
       {message && <p className={styles.message}>{message}</p>}
       {fake && (
         <p className="fake-note" data-testid="fake-warning">
-          <strong>FAKE engine:</strong> {fake.message}
+          <strong>{tr("FAKE engine:")}</strong> {fake.message}
         </p>
       )}
       {issues.length > 0 && (
-        <ul aria-label="Issues" className={styles.issues}>
+        <ul aria-label={tr("Issues")} className={styles.issues}>
           {issues.map((i, k) => (
             <li key={k}>
               <span className={styles.where}>{issueWhere(i)}</span>: {i.message}
@@ -51,12 +53,12 @@ export function StatusBanner({ type, result }: { type: AnalysisType; result: Ana
         </ul>
       )}
       <p className={styles.next}>
-        <strong>Next step:</strong> {t.hint}
+        <strong>{tr("Next step:")}</strong> {t.hint}
       </p>
       <details className={styles.details}>
-        <summary>Details</summary>
+        <summary>{tr("Details")}</summary>
         <dl>
-          <dt>Status</dt>
+          <dt>{tr("Status")}</dt>
           <dd>
             <code>{result.status}</code>
           </dd>
@@ -65,7 +67,7 @@ export function StatusBanner({ type, result }: { type: AnalysisType; result: Ana
             <code>{result.status_code}</code>
           </dd>
           <dt>warnings</dt>
-          <dd>{(result.warnings ?? []).map((w) => w.code).join(", ") || "none"}</dd>
+          <dd>{(result.warnings ?? []).map((w) => w.code).join(", ") || tr("none")}</dd>
         </dl>
       </details>
     </section>

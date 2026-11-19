@@ -8,6 +8,8 @@ import { useEffect, useRef, useState, type FocusEvent, type KeyboardEvent, type 
 import { DataTable, type DataColumn } from "../DataTable";
 import type { BreakerMark } from "../cable";
 import { fmt } from "../Further";
+import { displayLang, translate } from "../i18n";
+import { useLanguage } from "../Language";
 import type { ElementRef } from "../Inspector";
 import { rowText } from "../Inspector";
 import type { SldElement, SldModel, SldSection } from "./buildSldModel";
@@ -18,10 +20,11 @@ import { useSldLayout } from "./useSldLayout";
 
 const WORD = { system: "System", bus: "Bus", inverter: "Inverter", load: "Load", line: "Line" } as const;
 const key = (e: SldElement) => `${e.kind}:${e.id}`;
-const title = (e: SldElement) => (e.kind === "system" ? WORD.system : `${WORD[e.kind]} ${e.id}`);
+const tr = (s: string) => translate(displayLang(), s);
+const title = (e: SldElement) => (e.kind === "system" ? tr(WORD.system) : `${tr(WORD[e.kind])} ${e.id}`);
 const all = (m: SldModel) => [m.system, ...m.buses, ...m.inverters, ...m.loads, ...m.lines];
 const sectionText = (s: SldSection | undefined) =>
-  !s ? "—" : s.empty ? s.empty : s.rows.map((r) => `${r.label} ${rowText(r)}${r.note ? ` (${r.note})` : ""}`).join("; ") || "—";
+  !s ? "—" : s.empty ? tr(s.empty) : s.rows.map((r) => `${tr(r.label)} ${rowText(r)}${r.note ? ` (${tr(r.note)})` : ""}`).join("; ") || "—";
 
 const TABLE: DataColumn<SldElement>[] = [
   { key: "el", header: "Element", cell: (e) => <strong>{title(e)}</strong> },
@@ -36,6 +39,7 @@ const TABLE: DataColumn<SldElement>[] = [
 ];
 
 function Tooltip({ el }: { el: SldElement }) {
+  const { t } = useLanguage();
   return (
     <>
       <p className={styles.tipHead}>
@@ -44,15 +48,15 @@ function Tooltip({ el }: { el: SldElement }) {
       </p>
       {el.sections.map((s) => (
         <div key={s.title}>
-          <p className={styles.tipTitle}>{s.title}</p>
+          <p className={styles.tipTitle}>{t(s.title)}</p>
           {s.empty ? (
-            <p className={styles.tipEmpty}>{s.empty}</p>
+            <p className={styles.tipEmpty}>{t(s.empty)}</p>
           ) : (
             <ul>
               {s.rows.map((r, k) => (
                 <li key={k}>
-                  {r.label} · {rowText(r)}
-                  {r.note && <span className={styles.tipNote}> ({r.note})</span>}
+                  {t(r.label)} · {rowText(r)}
+                  {r.note && <span className={styles.tipNote}> ({t(r.note)})</span>}
                 </li>
               ))}
             </ul>
@@ -80,6 +84,7 @@ export function SingleLineDiagram({
   /** X10 breaker symbols after a current CB run (FR-113, D-104 K295) */
   breakers?: BreakerMark[];
 }) {
+  const { t } = useLanguage();
   const { layout, failed } = useSldLayout(drawing);
   const [tip, setTip] = useState<string | null>(null);
   const [zoom, setZoom] = useState<number | "fit">("fit");
@@ -143,7 +148,7 @@ export function SingleLineDiagram({
     return {
       tabIndex: 0,
       role: "img",
-      "aria-label": `Breaker ${m.id}: ${m.cls}, I_n ${fmt(m.in_a)} A, cable ${fmt(m.size_mm2)} mm², I_Z ${fmt(m.iz_a)} A`,
+      "aria-label": t("Breaker {id}: {cls}, I_n {in} A, cable {size} mm², I_Z {iz} A", { id: m.id, cls: m.cls, in: fmt(m.in_a), size: fmt(m.size_mm2), iz: fmt(m.iz_a) }),
       "aria-describedby": tip === k ? "sld-tooltip" : undefined,
       onMouseEnter: (e: MouseEvent<SVGGElement>) => show(k, e.currentTarget, 150),
       onMouseLeave: hide,
@@ -156,39 +161,39 @@ export function SingleLineDiagram({
   };
   const tipBreaker = breakers.find((m) => `breaker:${m.id}` === tip);
 
-  if (drawing.buses.length === 0) return <p>No buses yet. Add a bus to start.</p>;
-  if (failed) return <p>Diagram could not be drawn; the tables still work.</p>;
+  if (drawing.buses.length === 0) return <p>{t("No buses yet. Add a bus to start.")}</p>;
+  if (failed) return <p>{t("Diagram could not be drawn; the tables still work.")}</p>;
   const emph: Record<string, Emph> = selected ? { [selected]: "selected" } : {};
   const tipEl = tip ? byKey.get(tip) : undefined;
   const rows = all(details);
   return (
     <div className={styles.sld}>
-      <div className={`no-print ${styles.toolbar}`} role="toolbar" aria-label="Diagram view">
+      <div className={`no-print ${styles.toolbar}`} role="toolbar" aria-label={t("Diagram view")}>
         <button type="button" onClick={() => setZoom(Math.max(0.25, +(scale - 0.25).toFixed(2)))}>
-          Zoom out
+          {t("Zoom out")}
         </button>
         <button type="button" onClick={() => setZoom(Math.min(2, +(scale + 0.25).toFixed(2)))}>
-          Zoom in
+          {t("Zoom in")}
         </button>
         <button type="button" onClick={() => setZoom("fit")} aria-pressed={zoom === "fit"}>
-          Fit to view
+          {t("Fit to view")}
         </button>
         <span className={styles.zoom}>{Math.round(scale * 100)} %</span>
         {tools}
       </div>
       <div ref={box} className={styles.figure}>
-        {layout ? <SldSvg model={drawing} layout={layout} emph={emph} bind={bind} scale={scale} breakers={breakers} bindBreaker={bindBreaker} /> : <p className={styles.wait}>Laying out the diagram…</p>}
+        {layout ? <SldSvg model={drawing} layout={layout} emph={emph} bind={bind} scale={scale} breakers={breakers} bindBreaker={bindBreaker} /> : <p className={styles.wait}>{t("Laying out the diagram…")}</p>}
       </div>
       {tipBreaker && (
         <div ref={refs.setFloating} id="sld-tooltip" role="tooltip" className={styles.tooltip} style={floatingStyles}>
-          <p className={styles.tipHead}>Breaker {tipBreaker.id} (sizing result)</p>
+          <p className={styles.tipHead}>{t("Breaker {id} (sizing result)", { id: tipBreaker.id })}</p>
           <ul>
-            <li>Class · {tipBreaker.cls}</li>
+            <li>{t("Class")} · {tipBreaker.cls}</li>
             <li>I_n · {fmt(tipBreaker.in_a)} A</li>
-            <li>Cable size · {fmt(tipBreaker.size_mm2)} mm²</li>
+            <li>{t("Cable size")} · {fmt(tipBreaker.size_mm2)} mm²</li>
             <li>I_Z · {fmt(tipBreaker.iz_a)} A</li>
           </ul>
-          <p className={styles.tipEmpty}>Overload sizing advice only (experimental). Details on Cable and breaker sizing.</p>
+          <p className={styles.tipEmpty}>{t("Overload sizing advice only (experimental). Details on Cable and breaker sizing.")}</p>
         </div>
       )}
       {tipEl && (
@@ -196,7 +201,7 @@ export function SingleLineDiagram({
           <Tooltip el={tipEl} />
         </div>
       )}
-      {layout && layout.unplaced.length > 0 && <p className={styles.unplaced}>Not drawn (a Bus it needs is missing, or both ends are one Bus): {layout.unplaced.join(", ")}.</p>}
+      {layout && layout.unplaced.length > 0 && <p className={styles.unplaced}>{t("Not drawn (a Bus it needs is missing, or both ends are one Bus): {ids}.", { ids: layout.unplaced.join(", ") })}</p>}
       <SldLegend
         breakers={breakers.length > 0}
         tightest={[...drawing.buses, ...drawing.inverters, ...drawing.lines].some((e) => e.tightest)}
@@ -204,9 +209,9 @@ export function SingleLineDiagram({
         loading={drawing.inverters.some((e) => e.loading !== undefined)}
       />
       <button type="button" className={`no-print ${styles.tableToggle}`} aria-expanded={table} onClick={() => setTable(!table)}>
-        View as table
+        {t("View as table")}
       </button>
-      {table && <DataTable label="Diagram elements" caption="Diagram elements" columns={TABLE} rows={rows} rowKey={(e) => key(e)} rowName={title} />}
+      {table && <DataTable label={t("Diagram elements")} caption={t("Diagram elements")} columns={TABLE} rows={rows} rowKey={(e) => key(e)} rowName={title} />}
     </div>
   );
 }

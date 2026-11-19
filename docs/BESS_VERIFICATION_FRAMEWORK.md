@@ -21,7 +21,7 @@ Why no Simulink or PSIM case: a simulated battery would add behaviour the tool d
 
 None of this is a design value or a thesis source. File name in the repo: `tests/fixtures/FAKE_battery_TEST_ONLY.json`.
 
-The register (D-62) postponed these features until real D2 battery, DC-window and profile data exist, because values may not be invented. The fictitious set below tests the algebra only, like the fictitious table file of the cable round. If the thesis should show cases on real data, the author supplies a module datasheet, an inverter DC window and a daily profile with their sources, and the same six cases are recomputed on them; the method of §3 and §4 does not change.
+The register (D-62) postponed these features until real D2 battery, DC-window and profile data exist, because values may not be invented. The fictitious set below tests the algebra only, like the fictitious table file of the cable round. If the thesis should show cases on real data, the author supplies a module datasheet, an inverter DC window and a daily profile with their sources, and the same six cases are recomputed on them; the method of §3 and §4 does not change. Candidate real data with sources (a 754–936 V LFP rack, the TRUMPF DC window, Indonesian load-profile anchors) are collected in `docs/CASE_DATA_SOURCES.md` §1 (2026-11-19, not applied).
 
 | Item | Values |
 |---|---|

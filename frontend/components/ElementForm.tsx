@@ -11,6 +11,7 @@ import type { Column } from "./EntityTable";
 import { useRowDelete } from "./EntityTable";
 import { BankPick, CatalogPick } from "./ElementSource";
 import type { ElementRef } from "./Inspector";
+import { useLanguage } from "./Language";
 import { NumberField } from "./NumberField";
 import { Toast } from "./Toast";
 import { useValidation } from "./useValidation";
@@ -44,9 +45,10 @@ function Choice({
   onChange: (v: string | null) => void;
   error: string | null;
 }) {
+  const { t } = useLanguage();
   return (
     <span className={styles.field}>
-      <label htmlFor={id}>{label}</label>
+      <label htmlFor={id}>{t(label)}</label>
       <select
         id={id}
         value={(value as string) ?? ""}
@@ -54,10 +56,10 @@ function Choice({
         aria-describedby={error ? `${id}-error` : undefined}
         onChange={(e) => onChange(e.target.value || null)}
       >
-        <option value="">Choose…</option>
-        {options.map(([v, t]) => (
+        <option value="">{t("Choose…")}</option>
+        {options.map(([v, text]) => (
           <option key={v} value={v}>
-            {t}
+            {t(text)}
           </option>
         ))}
       </select>
@@ -74,6 +76,7 @@ function Choice({
 // A rename is refused when the id is taken (rows are matched by id) or the bus is in use: the reducer
 // does not carry the new id into lines, loads and inverters (same rule as the FR-11 delete guard).
 function BusId({ value, onCommit, error, refusal }: { value: string; onCommit: (v: string) => void; error: string | null; refusal: (v: string) => string | null }) {
+  const { t } = useLanguage();
   const [text, setText] = useState(value);
   const [note, setNote] = useState<string | null>(null);
   const commit = () => {
@@ -86,7 +89,7 @@ function BusId({ value, onCommit, error, refusal }: { value: string; onCommit: (
   error = note ?? error;
   return (
     <span className={styles.field}>
-      <label htmlFor="insp-id">Bus id</label>
+      <label htmlFor="insp-id">{t("Bus id")}</label>
       <input
         id="insp-id"
         value={text}
@@ -106,6 +109,7 @@ function BusId({ value, onCommit, error, refusal }: { value: string; onCommit: (
 }
 
 export function ElementForm({ target, onRename, onDeleted }: { target: ElementRef; onRename: (id: string) => void; onDeleted: () => void }) {
+  const { t } = useLanguage();
   const { design, batteryBanks } = useProject();
   const dispatch = useProjectDispatch();
   const [collection, entity, columns] = OF[target.kind];
@@ -125,7 +129,7 @@ export function ElementForm({ target, onRename, onDeleted }: { target: ElementRe
       const v = c.value(row);
       return (
         <span key={c.label} className={styles.derived}>
-          <span>{c.label}</span>{" "}
+          <span>{t(c.label)}</span>{" "}
           <span>
             {v ?? "—"}
             {v != null && c.unit !== "entry" ? ` ${c.unit}` : ""}
@@ -141,9 +145,9 @@ export function ElementForm({ target, onRename, onDeleted }: { target: ElementRe
           value={target.id}
           error={messages(issues, f)}
           refusal={(v) => {
-            if ((design.buses ?? []).some((b) => b.id === v)) return `Bus ${v} already exists.`;
+            if ((design.buses ?? []).some((b) => b.id === v)) return t("Bus {id} already exists.", { id: v });
             const deps = busDependents(design, target.id);
-            return deps.length ? `Bus ${target.id} cannot be renamed: it is used by ${deps.join(", ")}.` : null;
+            return deps.length ? t("Bus {id} cannot be renamed: it is used by {deps}.", { id: target.id, deps: deps.join(", ") }) : null;
           }}
           onCommit={(v) => (set({ [f]: v }), onRename(v))}
         />
@@ -181,7 +185,7 @@ export function ElementForm({ target, onRename, onDeleted }: { target: ElementRe
         onChange={(v) => set({ bus_id: v })}
       />,
       <NumberField key="p" id="insp-p_kw" label="P" unit="kW" value={l.p_kw} error={messages(issues, "p_kw")} onChange={(v) => set({ p_kw: v })} />,
-      <div key="mode" role="radiogroup" aria-label="Reactive power given as" className={styles.mode}>
+      <div key="mode" role="radiogroup" aria-label={t("Reactive power given as")} className={styles.mode}>
         <label>
           <input type="radio" name="insp-mode" checked={mode === "Q"} onChange={() => choose("Q")} /> Q
         </label>
@@ -216,7 +220,7 @@ export function ElementForm({ target, onRename, onDeleted }: { target: ElementRe
           ]
         : []),
       <p key="sign" className={styles.hint}>
-        {Q_SIGN_NOTE}
+        {t(Q_SIGN_NOTE)}
       </p>,
     ];
   }
@@ -224,10 +228,10 @@ export function ElementForm({ target, onRename, onDeleted }: { target: ElementRe
   // three forms side by side, not nested: the edit fields, the catalogue entry, the battery bank
   return (
     <>
-      <form aria-label={`Edit ${entity} ${target.id}`} className={styles.form} onSubmit={(e) => e.preventDefault()}>
+      <form aria-label={t("Edit {entity} {id}", { entity: t(entity), id: target.id })} className={styles.form} onSubmit={(e) => e.preventDefault()}>
         {body}
         {general.length > 0 && (
-          <ul aria-label="Issues of this element" className={styles.general}>
+          <ul aria-label={t("Issues of this element")} className={styles.general}>
             {general.map((i, k) => (
               <li key={k}>{i.message}</li>
             ))}
@@ -241,7 +245,7 @@ export function ElementForm({ target, onRename, onDeleted }: { target: ElementRe
       {target.kind === "inverter" && <BankPick inverter={target.id} />}
       <p className={styles.delete}>
         <button type="button" onClick={() => remove(target.id, target.id)}>
-          Delete {target.id}
+          {t("Delete {id}", { id: target.id })}
         </button>
       </p>
       {dialog}
@@ -252,6 +256,7 @@ export function ElementForm({ target, onRename, onDeleted }: { target: ElementRe
 /** The design limits (S-06) in the inspector column. */
 // Project and system (audit Phase 7, decision 4): the former S-02 fields, now in the workspace inspector.
 export function SystemForm() {
+  const { t } = useLanguage();
   const { project, design, runRecords } = useProject();
   const dispatch = useProjectDispatch();
   const issues = (useValidation(design)?.issues ?? []).filter((i) => i.entity === "Project");
@@ -263,22 +268,22 @@ export function SystemForm() {
     ["RunRecords", runRecords.length],
   ];
   return (
-    <form aria-label="Edit project and system" className={styles.form} onSubmit={(e) => e.preventDefault()}>
+    <form aria-label={t("Edit project and system")} className={styles.form} onSubmit={(e) => e.preventDefault()}>
       <div className={styles.field}>
-        <label htmlFor="sys-name">Project name</label>
+        <label htmlFor="sys-name">{t("Project name")}</label>
         <input id="sys-name" required maxLength={100} value={project?.name ?? ""} onChange={(e) => dispatch({ type: "projectUpdated", name: e.target.value })} />
       </div>
       <div className={styles.field}>
-        <label htmlFor="sys-description">Description, optional</label>
+        <label htmlFor="sys-description">{t("Description, optional")}</label>
         <textarea id="sys-description" rows={3} maxLength={1000} value={project?.description ?? ""} onChange={(e) => dispatch({ type: "projectUpdated", description: e.target.value || null })} />
       </div>
       <NumberField id="sys-kv" label="Nominal voltage, line-to-line" unit="kV" value={design.nominal_voltage_kv} error={messages(issues, "nominal_voltage_kv")} onChange={(v) => dispatch({ type: "projectUpdated", nominal_voltage_kv: v })} />
       <NumberField id="sys-hz" label="Nominal frequency" unit="Hz" value={design.nominal_frequency_hz} error={messages(issues, "nominal_frequency_hz")} onChange={(v) => dispatch({ type: "projectUpdated", nominal_frequency_hz: v })} />
-      <table aria-label="Counts">
+      <table aria-label={t("Counts")}>
         <tbody>
           {counts.map(([k, n]) => (
             <tr key={k}>
-              <th scope="row">{k}</th>
+              <th scope="row">{t(k)}</th>
               <td>{n}</td>
             </tr>
           ))}
@@ -289,17 +294,17 @@ export function SystemForm() {
 }
 
 export function LimitsForm() {
+  const { t } = useLanguage();
   const { design, example } = useProject();
   const dispatch = useProjectDispatch();
   const c = design.design_constraints ?? {};
   const issues = (useValidation(design)?.issues ?? []).filter((i) => i.entity === "DesignConstraints");
   return (
-    <form aria-label="Edit design limits" className={styles.form} onSubmit={(e) => e.preventDefault()}>
-      <p className={styles.hint}>Every limit starts empty. An empty limit is not evaluated and is never counted as satisfied.</p>
+    <form aria-label={t("Edit design limits")} className={styles.form} onSubmit={(e) => e.preventDefault()}>
+      <p className={styles.hint}>{t("Every limit starts empty. An empty limit is not evaluated and is never counted as satisfied.")}</p>
       {example && (
         <p className={styles.hint} data-testid="example-constraints">
-          Example mode: these limits come from the guided example&apos;s Project file, as the study settings of the
-          reference designs, not values from a standard. Editing one changes the design like any other edit.
+          {t("Example mode: these limits come from the guided example's Project file, as the study settings of the reference designs, not values from a standard. Editing one changes the design like any other edit.")}
         </p>
       )}
       {CONSTRAINT_FIELDS.map(([k, label, unit]) => (
@@ -310,7 +315,7 @@ export function LimitsForm() {
           unit={unit}
           value={c[k]}
           error={messages(issues, k)}
-          note={c[k] == null ? <span data-testid={`not-evaluated-${k}`}>not evaluated</span> : undefined}
+          note={c[k] == null ? <span data-testid={`not-evaluated-${k}`}>{t("not evaluated")}</span> : undefined}
           onChange={(v) => dispatch({ type: "constraintSet", field: k, value: v })}
         />
       ))}

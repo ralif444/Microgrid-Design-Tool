@@ -11,8 +11,9 @@ import { getExample, getExampleSettings, getMeta, importProject } from "../api-c
 import type { ProjectFile } from "../api-types";
 import { clearDraft, DRAFT_REPLACE, readDraft, type Draft } from "../store/draft";
 import { parseExampleSettings, type ExampleSettings } from "../store/example";
-import { CANNOT_UNDO, useConfirmDelete } from "../components/ConfirmDelete";
+import { useConfirmDelete } from "../components/ConfirmDelete";
 import { Icon } from "../components/Icon";
+import { useLanguage } from "../components/Language";
 import { NumberField } from "../components/NumberField";
 import uiStyles from "../components/ui.module.css";
 import { UNSAVED_CONFIRM } from "../components/ProjectFileMenu";
@@ -40,6 +41,7 @@ const EXAMPLES: { key: string; label: string; cases: string[] }[] = [
 
 export default function Home() {
   const { project, unsaved } = useProject();
+  const { t } = useLanguage();
   const dispatch = useProjectDispatch();
   const router = useRouter();
   const [name, setName] = useState("");
@@ -105,75 +107,77 @@ export default function Home() {
 
   return (
     <>
-      <h1>Microgrid design tool</h1>
-      {engine === "FAKE" && <p>The calculation engine is the Fake Engine; results are placeholders.</p>}
-      <p>To continue earlier work, use “Open project file” in the header.</p>
+      <h1>{t("Microgrid design tool")}</h1>
+      {engine === "FAKE" && <p>{t("The calculation engine is the Fake Engine; results are placeholders.")}</p>}
+      <p>{t("To continue earlier work, use “Open project file” in the header.")}</p>
       {project && (
         <p>
-          Open Project: <Link href={HOME}>{project.name}</Link>
+          {t("Open Project:")} <Link href={HOME}>{project.name}</Link>
         </p>
       )}
       {draft && !project && (
-        <section aria-label="Unsaved work" className={uiStyles.blocked}>
+        <section aria-label={t("Unsaved work")} className={uiStyles.blocked}>
           <Icon name="clock" />
           <p className={uiStyles.draftText}>
-            Unsaved work from {new Date(draft.saved_at).toLocaleString()}: {draft.file.project.name}. It was kept in this browser, not saved to a
-            file; results are not kept, run them again.
+            {t("Unsaved work from {date}: {name}. It was kept in this browser, not saved to a file; results are not kept, run them again.", {
+              date: new Date(draft.saved_at).toLocaleString(),
+              name: draft.file.project.name,
+            })}
           </p>
           <span>
             <button type="button" className="primary" onClick={() => void restore(draft)}>
-              Restore unsaved work
+              {t("Restore unsaved work")}
             </button>{" "}
             <button
               type="button"
               onClick={() =>
-                confirm("Discard unsaved work?", `The unsaved work on ${draft.file.project.name} is removed from this browser. ${CANNOT_UNDO}`, () => {
+                confirm(t("Discard unsaved work?"), t("The unsaved work on {name} is removed from this browser. This cannot be undone.", { name: draft.file.project.name }), () => {
                   clearDraft();
                   setDraft(null);
                 })
               }
             >
-              Discard
+              {t("Discard")}
             </button>
           </span>
         </section>
       )}
       {dialog}
-      <form onSubmit={(e) => void create(e)} aria-label="New project">
-        <h2>New project</h2>
+      <form onSubmit={(e) => void create(e)} aria-label={t("New project")}>
+        <h2>{t("New project")}</h2>
         <p>
-          <label htmlFor="name">Project name</label>{" "}
+          <label htmlFor="name">{t("Project name")}</label>{" "}
           <input id="name" required maxLength={100} value={name} onChange={(e) => setName(e.target.value)} />
         </p>
         <p>
-          <NumberField id="kv" label="Nominal voltage, line-to-line" unit="kV" value={kv} onChange={setKv} />
+          <NumberField id="kv" label={t("Nominal voltage, line-to-line")} unit="kV" value={kv} onChange={setKv} />
         </p>
         <p>
-          <NumberField id="hz" label="Nominal frequency" unit="Hz" value={hz} onChange={setHz} />
+          <NumberField id="hz" label={t("Nominal frequency")} unit="Hz" value={hz} onChange={setHz} />
         </p>
-        <button type="submit">Create project</button>
-        {project && <span> (replaces the open Project)</span>}
+        <button type="submit">{t("Create project")}</button>
+        {project && <span> {t("(replaces the open Project)")}</span>}
       </form>
-      <section aria-label="Example projects">
-        <h2>Example projects</h2>
+      <section aria-label={t("Example projects")}>
+        <h2>{t("Example projects")}</h2>
         {guided && (
           <div>
             <button type="button" className="primary" onClick={() => void openExample(guided.project, guided)}>
-              Open guided example (D2)
+              {t("Open guided example (D2)")}
             </button>
-            <p>Every screen is pre-filled. Press Run on each step to see the whole pipeline.</p>
+            <p>{t("Every screen is pre-filled. Press Run on each step to see the whole pipeline.")}</p>
           </div>
         )}
-        <p>Reference designs of the validation plan, built from catalogue products (TRUMPF inverters, First Cable N2XY 4×16 mm² lines). Opening one makes a new unsaved copy.</p>
+        <p>{t("Reference designs of the validation plan, built from catalogue products (TRUMPF inverters, First Cable N2XY 4×16 mm² lines). Opening one makes a new unsaved copy.")}</p>
         <ul>
           {EXAMPLES.map(({ key, label, cases }) => (
             <li key={key}>
               <button type="button" onClick={() => void openExample(key)}>
-                Open example {label}
+                {t("Open example {label}", { label: t(label) })}
               </button>
-              <ul aria-label={`Validation cases of ${key.toUpperCase()}`}>
+              <ul aria-label={t("Validation cases of {key}", { key: key.toUpperCase() })}>
                 {cases.map((c) => (
-                  <li key={c}>{c}</li>
+                  <li key={c}>{t(c)}</li>
                 ))}
               </ul>
             </li>

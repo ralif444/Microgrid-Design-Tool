@@ -175,6 +175,8 @@ Simulink stays open as a second comparator if a later feature needs validation b
 
 ## 12. Open points
 
+Sources found for these points (2026-11-19, layer-2 filter and loop procedures, TRUMPF current limits, PSIM 9.0 features, matrix pencil): `docs/CASE_DATA_SOURCES.md` §2. Nothing there is frozen yet; §7 still applies.
+
 | # | Item | Tag |
 |---|---|---|
 | 1 | Do the layer-1 numerical aids for the constant-PQ load (shunt C, voltage low-pass, step ramp) change the fidelity class to layer 2? The prototype guide left this to the operator. Recommendation: keep layer 1 if their steady effect is quantified below the layer-1 tolerance and declared; otherwise report under layer 2. | DECISION NEEDED |

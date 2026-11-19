@@ -5,12 +5,14 @@
 // competes with the row buttons ("Delete INV1") for an accessible name.
 import { Modal } from "@carbon/react";
 import { useRef, useState } from "react";
+import { useLanguage } from "./Language";
 
 type Ask = { title: string; body: string; onYes: () => void; yes: string };
 
 export const CANNOT_UNDO = "This cannot be undone.";
 
 export function useConfirmDelete() {
+  const { t } = useLanguage();
   const [ask, setAsk] = useState<Ask | null>(null);
   const back = useRef<HTMLElement | null>(null);
   const cancel = useRef<(() => void) | null>(null);
@@ -26,14 +28,14 @@ export function useConfirmDelete() {
       open
       danger
       size="xs"
-      modalHeading={ask.title}
-      primaryButtonText={ask.yes}
-      secondaryButtonText="Cancel"
+      modalHeading={t(ask.title)}
+      primaryButtonText={t(ask.yes)}
+      secondaryButtonText={t("Cancel")}
       selectorPrimaryFocus=".cds--btn--secondary"
       onRequestClose={() => close(false)}
       onRequestSubmit={() => close(true)}
     >
-      <p>{ask.body}</p>
+      <p>{t(ask.body)}</p>
     </Modal>
   );
   // `yes`: the confirm word when the removal is a replacement ("Replace"); default "Delete"

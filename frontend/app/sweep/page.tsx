@@ -16,7 +16,9 @@ import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../comp
 import { fixedOr } from "../../components/format";
 import { fmt, InfeasibleNote, OutOfDate, RunButton, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
+import { displayLang, translate } from "../../components/i18n";
 import { m3bKpis } from "../../components/kpi";
+import { useLanguage } from "../../components/Language";
 import { KpiStrip } from "../../components/KpiStrip";
 import { ConstraintTable } from "../../components/M2Results";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
@@ -42,7 +44,7 @@ const KEY_METRICS: [Metric, string, string][] = [
   ["r_tau", "r_τ line-to-filter time ratio", "ratio"],
   ["kappa", "κ dominant-mode speed", "ratio"],
 ];
-const title = ([, name, unit]: (typeof KEY_METRICS)[number]) => `${name} (${unit})`;
+const title = ([, name, unit]: (typeof KEY_METRICS)[number]) => `${translate(displayLang(), name)} (${unit})`;
 // Per-point metrics of Doc 3 §6.5 (D-95): stability ones run M4a at each admissible point and need tau on
 // every Inverter; nothing ticked and no eigenvalues = the request is the same as before.
 const POINT_METRICS: [PointMetric, string][] = [
@@ -55,6 +57,7 @@ type PointMetric = "LAMBDA_C" | "ZETA_MIN" | "RE_LAMBDA_DOM" | "INDICATORS";
 const OPTIONAL = new Set<Metric>(["max_q_sharing_error_pu", "lambda_c", "zeta_min", "re_lambda_dom_per_s", "r_tau", "kappa"]);
 
 function Sweep() {
+  const { t } = useLanguage();
   const { design, fresh, busy, resp, stale, error, clearError, run, m2Infeasible } = useDependentRun("M3b");
   const { example } = useProject();
   const s = example?.settings.screens.sweep;
@@ -71,26 +74,26 @@ function Sweep() {
   // the run's own axis decides the hour view, so a later form change does not relabel a result
   const ranHours = (resp?.run_record.parameters as { axis?: { kind?: string } } | undefined)?.axis?.kind === HOUR_AXIS.kind;
   const unit = ranHours ? "h" : ax.unit;
-  const xName = ranHours ? "Hour" : ax.name;
+  const xName = ranHours ? t("Hour") : ax.name;
 
   const r = resp?.result;
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as M3bPayload) : null;
   const shown = KEY_METRICS.filter(([k]) => !OPTIONAL.has(k) || p?.points.some((pt) => typeof pt.key_metrics[k] === "number"));
   const columns: DataColumn<SweepPoint>[] = [
-    { key: "v", header: ranHours ? "Hour" : "Value", unit, numeric: true, cell: (pt) => fmt(pt.value) },
-    { key: "s", header: "Status", cell: (pt) => pt.status },
-    ...shown.map(([k, name, u]) => ({ key: k, header: name, unit: u, numeric: true, cell: (pt: SweepPoint) => fixedOr(pt.key_metrics[k], u) })),
+    { key: "v", header: ranHours ? t("Hour") : t("Value"), unit, numeric: true, cell: (pt) => fmt(pt.value) },
+    { key: "s", header: t("Status"), cell: (pt) => pt.status },
+    ...shown.map(([k, name, u]) => ({ key: k, header: t(name), unit: u, numeric: true, cell: (pt: SweepPoint) => fixedOr(pt.key_metrics[k], u) })),
     {
       key: "l",
-      header: "Limiting constraint",
-      cell: (pt) => (pt.limiting_constraint ? <ConstraintTable label={`Limiting constraint at ${fmt(pt.value)}`} rows={[pt.limiting_constraint]} note={false} /> : "—"),
+      header: t("Limiting constraint"),
+      cell: (pt) => (pt.limiting_constraint ? <ConstraintTable label={t("Limiting constraint at {value}", { value: fmt(pt.value) })} rows={[pt.limiting_constraint]} note={false} /> : "—"),
     },
   ];
   return (
     <>
       <div className={styles.head}>
         <h1>
-          Sweep <span className="code-label">(M3b)</span>
+          {t("Sweep")} <span className="code-label">(M3b)</span>
         </h1>
         <M1FreshnessBadge f={fresh} />
       </div>
@@ -99,7 +102,7 @@ function Sweep() {
       <InfeasibleNote show={m2Infeasible} />
       <div className={styles.study}>
       <form
-        aria-label="Sweep settings"
+        aria-label={t("Sweep settings")}
         className={styles.form}
         onSubmit={(e) => {
           e.preventDefault();
@@ -114,7 +117,7 @@ function Sweep() {
       >
         {ax.fields}
         <fieldset className={styles.box}>
-          <legend>Per-point metrics, optional</legend>
+          <legend>{t("Per-point metrics, optional")}</legend>
           {ex.tag("point_metrics", "Per-point metrics")}
           {POINT_METRICS.map(([m, label]) => (
             <label key={m}>
@@ -123,15 +126,15 @@ function Sweep() {
                 checked={pointMetrics.includes(m)}
                 onChange={() => ex.set("point_metrics", pointMetrics.includes(m) ? pointMetrics.filter((x) => x !== m) : [...pointMetrics, m])}
               />{" "}
-              {label}
+              {t(label)}
             </label>
           ))}
-          <p>Each ticked metric adds work at every point. The last three run M4a at each admissible point and need τ on every inverter.</p>
+          <p>{t("Each ticked metric adds work at every point. The last three run M4a at each admissible point and need τ on every inverter.")}</p>
           <label>
-            <input type="checkbox" checked={eigenvalues} onChange={() => ex.set("include_eigenvalues", !eigenvalues)} /> Include the eigenvalues of each point
+            <input type="checkbox" checked={eigenvalues} onChange={() => ex.set("include_eigenvalues", !eigenvalues)} /> {t("Include the eigenvalues of each point")}
           </label>
           {ex.tag("include_eigenvalues", "Include the eigenvalues of each point")}
-          <p>The eigenvalue list is stored in the RunRecord; this screen does not plot it.</p>
+          <p>{t("The eigenvalue list is stored in the RunRecord; this screen does not plot it.")}</p>
         </fieldset>
         <SizeIndicator points={ax.steps} cap={cap} />
         {ex.resetButton}
@@ -150,16 +153,16 @@ function Sweep() {
             {w.message}
           </p>
         ))}
-      {p && resp && <KpiStrip label="Sweep key figures" kpis={m3bKpis(p, unit)} record={resp.run_record} />}
+      {p && resp && <KpiStrip label={t("Sweep key figures")} kpis={m3bKpis(p, unit)} record={resp.run_record} />}
       {p && resp && (
         <>
           <p data-testid="first-infeasible">
-            {ranHours ? "First hour not FEASIBLE: " : "First infeasible value: "}
-            {p.first_infeasible_value === null ? "none in range" : `${fmt(p.first_infeasible_value)} ${unit}`}
+            {ranHours ? t("First hour not FEASIBLE: ") : t("First infeasible value: ")}
+            {p.first_infeasible_value === null ? t("none in range") : `${fmt(p.first_infeasible_value)} ${unit}`}
           </p>
           {ranHours && <HourSummary points={p.points} fNominal={design.nominal_frequency_hz} />}
           <p>
-            <label htmlFor="plot-metric">Plot</label>{" "}
+            <label htmlFor="plot-metric">{t("Plot")}</label>{" "}
             <select id="plot-metric" value={metric} onChange={(e) => setMetric(e.target.value as Metric)}>
               {shown.map((m) => (
                 <option key={m[0]} value={m[0]}>
@@ -169,12 +172,12 @@ function Sweep() {
             </select>
           </p>
           <SweepPlot points={p.points} metric={KEY_METRICS.find(([k]) => k === metric) ?? KEY_METRICS[0]} xName={xName} xUnit={unit} first={p.first_infeasible_value} record={resp.run_record} />
-          <DataTable label="Sweep points" caption="Sweep points" columns={columns} rows={p.points} rowKey={(_, k) => k} rowName={(pt) => fmt(pt.value)} />
+          <DataTable label={t("Sweep points")} caption={t("Sweep points")} columns={columns} rows={p.points} rowKey={(_, k) => k} rowName={(pt) => fmt(pt.value)} />
         </>
       )}
         </ResultSheet>
       )}
-      {!resp && <EmptyState title="No sweep run yet.">Choose an axis and run the sweep to see each point&apos;s status and key metrics.</EmptyState>}
+      {!resp && <EmptyState title={t("No sweep run yet.")}>{t("Choose an axis and run the sweep to see each point's status and key metrics.")}</EmptyState>}
       </div>
       </div>
       <ExampleNext screen="sweep" ready={nextReady(r?.status)} />
@@ -184,21 +187,22 @@ function Sweep() {
 
 // FR-79: the worst FEASIBLE hour per key metric (D-113 K338), only for an hour sweep.
 function HourSummary({ points, fNominal }: { points: SweepPoint[]; fNominal: number | null | undefined }) {
+  const { t } = useLanguage();
   const rows = worstHours(points, fNominal);
   const meta = (k: Metric) => KEY_METRICS.find(([m]) => m === k);
   return (
     <div data-testid="hour-summary">
     <DataTable
-      label="Worst hour per key metric"
-      caption="Worst hour per key metric (FEASIBLE hours only; frequency by its distance from the nominal)"
+      label={t("Worst hour per key metric")}
+      caption={t("Worst hour per key metric (FEASIBLE hours only; frequency by its distance from the nominal)")}
       columns={[
-        { key: "m", header: "Key metric", cell: (w: Worst) => meta(w.metric)?.[1] ?? w.metric },
-        { key: "h", header: "Worst hour", unit: "h", numeric: true, cell: (w: Worst) => String(w.hour) }, // a clock hour, not a duration: no decimals
-        { key: "v", header: "Value there", numeric: true, cell: (w: Worst) => `${fixedOr(w.value, meta(w.metric)?.[2] ?? "")} ${meta(w.metric)?.[2] ?? ""}` },
+        { key: "m", header: t("Key metric"), cell: (w: Worst) => t(meta(w.metric)?.[1] ?? w.metric) },
+        { key: "h", header: t("Worst hour"), unit: "h", numeric: true, cell: (w: Worst) => String(w.hour) }, // a clock hour, not a duration: no decimals
+        { key: "v", header: t("Value there"), numeric: true, cell: (w: Worst) => `${fixedOr(w.value, meta(w.metric)?.[2] ?? "")} ${meta(w.metric)?.[2] ?? ""}` },
       ]}
       rows={rows}
       rowKey={(w) => w.metric}
-      rowName={(w) => meta(w.metric)?.[1] ?? w.metric}
+      rowName={(w) => t(meta(w.metric)?.[1] ?? w.metric)}
       rowTestId={(w) => `hour-${w.metric}`}
     />
     </div>
@@ -230,24 +234,25 @@ function SweepPlot({
   first: number | null;
   record: RunRecord;
 }) {
+  const { t } = useLanguage();
   const [k, name, unit] = metric;
   const shown = points.filter((p) => typeof p.value === "number");
-  const legend = (Object.keys(FEAS) as (keyof typeof FEAS)[]).map((f) => ({ name: f, swatch: <Swatch color={FEAS[f].color} marker={FEAS[f].marker} filled={FEAS[f].filled} /> }));
+  const legend = (Object.keys(FEAS) as (keyof typeof FEAS)[]).map((f) => ({ name: t(f), swatch: <Swatch color={FEAS[f].color} marker={FEAS[f].marker} filled={FEAS[f].filled} /> }));
   const mark = (p: SweepPoint) => {
     const f = typeof p.key_metrics[k] !== "number" ? FEAS.unavailable : p.status === "FEASIBLE" ? FEAS.feasible : FEAS.infeasible;
     return { m: f.marker, color: f.color, filled: f.filled };
   };
   return (
     <LineChart
-      title="Sweep"
+      title={t("Sweep")}
       xTitle={`${xName} (${xUnit})`}
       yTitle={title(metric)}
       x={shown.map((p) => p.value as number)}
-      series={[{ name, values: shown.map((p) => (typeof p.key_metrics[k] === "number" ? (p.key_metrics[k] as number) : null)), marker: (i) => mark(shown[i]) }]}
+      series={[{ name: t(name), values: shown.map((p) => (typeof p.key_metrics[k] === "number" ? (p.key_metrics[k] as number) : null)), marker: (i) => mark(shown[i]) }]}
       legend={legend}
       crosshair={{ xName, xUnit, unit }}
-      vmarks={first === null ? [] : [{ x: first, label: "first infeasible" }]}
-      note={`A point without a value (no operating point) leaves a gap in the line and is marked – on the x axis.${first === null ? "" : " The dashed vertical line marks the first infeasible value."} Focus the chart and use ←/→, Home, End to read exact points; Escape hides the readout.`}
+      vmarks={first === null ? [] : [{ x: first, label: t("first infeasible") }]}
+      note={`${t("A point without a value (no operating point) leaves a gap in the line and is marked – on the x axis.")}${first === null ? "" : ` ${t("The dashed vertical line marks the first infeasible value.")}`} ${t("Focus the chart and use ←/→, Home, End to read exact points; Escape hides the readout.")}`}
       record={record}
     />
   );

@@ -6,6 +6,7 @@ import type { ReactNode, SVGProps } from "react";
 import { Icon, type IconName } from "../Icon";
 import type { SldElement } from "./buildSldModel";
 import type { BreakerMark } from "../cable";
+import { useLanguage } from "../Language";
 import { BAR_H, type Attach, type BusBox, type LineRoute, type Pt } from "./layoutSld";
 import styles from "./sld.module.css";
 
@@ -30,21 +31,24 @@ export function decorations(el: SldElement, isolated = false): Deco[] {
 }
 
 function DecoLine({ x, y, decos, anchor = "start" }: { x: number; y: number; decos: Deco[]; anchor?: "start" | "middle" }) {
+  const { t } = useLanguage();
   if (!decos.length) return null;
-  const width = decos.reduce((w, d) => w + 20 + d.word.length * CHAR + 8, 0);
+  // "3 issues" carries its count; every other word is a plain key
+  const say = (word: string) => (/^\d+ issues$/.test(word) ? t("{n} issues", { n: parseInt(word, 10) }) : t(word));
+  const width = decos.reduce((w, d) => w + 20 + say(d.word).length * CHAR + 8, 0);
   let cx = anchor === "middle" ? x - width / 2 : x;
   return (
     <g>
       {decos.map((d) => {
         const at = cx;
-        cx += 20 + d.word.length * CHAR + 8;
+        cx += 20 + say(d.word).length * CHAR + 8;
         return (
           <g key={d.word} className={styles[d.tone]}>
             <g transform={`translate(${at} ${y - 11})`} className={styles.icon}>
               <Icon name={d.icon} size={14} />
             </g>
             <text x={at + 18} y={y} className={styles.deco}>
-              {d.word}
+              {say(d.word)}
             </text>
           </g>
         );
@@ -195,6 +199,7 @@ export function BreakerSymbol({ mark, at, props }: { mark: BreakerMark; at: Pt; 
 
 /** Text box, not a symbol: nominal kV (line-to-line) and Hz, the network kind, the M1 system frequency. */
 export function SystemBlock({ el, x, y, w, h, emph, bind }: Common & { x: number; y: number; w: number; h: number }) {
+  const { t: tr } = useLanguage();
   const [kv, hz, ...res] = el.tags;
   const decos = decorations(el);
   return (
@@ -204,7 +209,7 @@ export function SystemBlock({ el, x, y, w, h, emph, bind }: Common & { x: number
         {kv}, {hz}
       </text>
       <text x={x + 10} y={y + 20 + LH} className={styles.sec}>
-        Balanced 3-phase, islanded
+        {tr("Balanced 3-phase, islanded")}
       </text>
       {res.map((t, k) => (
         <text key={t} x={x + 10} y={y + 20 + (k + 2) * LH} className={styles.sec}>
@@ -219,6 +224,7 @@ export function SystemBlock({ el, x, y, w, h, emph, bind }: Common & { x: number
 /** HTML legend strip under the diagram (guideline §3): each symbol with its name. */
 // `checks`: the diagram shows M2 marks, so the status words and the loading bar are explained too (audit D-19).
 export function SldLegend({ breakers = false, tightest = false, checks = false, loading = false }: { breakers?: boolean; tightest?: boolean; checks?: boolean; loading?: boolean }) {
+  const { t } = useLanguage();
   const status = (name: string, icon: IconName, tone: "negative" | "caution" | "neutral") => (
     <li key={name} className={styles[tone]}>
       <svg width={20} height={36} viewBox="0 0 20 36" aria-hidden="true" focusable="false">
@@ -226,7 +232,7 @@ export function SldLegend({ breakers = false, tightest = false, checks = false, 
           <Icon name={icon} size={16} />
         </g>
       </svg>
-      {name}
+      {t(name)}
     </li>
   );
   const item = (name: string, svg: ReactNode) => (
@@ -234,11 +240,11 @@ export function SldLegend({ breakers = false, tightest = false, checks = false, 
       <svg width={44} height={36} viewBox="0 0 44 36" aria-hidden="true" focusable="false">
         {svg}
       </svg>
-      {name}
+      {t(name)}
     </li>
   );
   return (
-    <ul className={styles.legend} aria-label="Diagram legend">
+    <ul className={styles.legend} aria-label={t("Diagram legend")}>
       {item("Bus (busbar)", <rect x={2} y={15} width={40} height={BAR_H} className={styles.bar} />)}
       {item(
         "Grid-forming inverter",

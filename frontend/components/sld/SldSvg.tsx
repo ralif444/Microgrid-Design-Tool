@@ -4,6 +4,7 @@ import type { SldElement, SldModel } from "./buildSldModel";
 import type { SVGProps } from "react";
 import type { BreakerMark } from "../cable";
 import { BAR_H, type Pt, type SldLayout } from "./layoutSld";
+import { useLanguage } from "../Language";
 import styles from "./sld.module.css";
 import { BreakerSymbol, BusSymbol, InverterSymbol, LineSymbol, LoadSymbol, SystemBlock, type Bind, type Emph } from "./symbols";
 
@@ -33,6 +34,7 @@ export function SldSvg({
   breakers?: BreakerMark[];
   bindBreaker?: (m: BreakerMark) => SVGProps<SVGGElement>;
 }) {
+  const { t } = useLanguage();
   const at = <T extends { id: string }>(xs: T[]) => new Map(xs.map((x) => [x.id, x]));
   const [bus, inv, load, line] = [at(layout.buses), at(layout.inverters), at(layout.loads), at(layout.lines)];
   const placed = (els: SldElement[], m: Map<string, unknown>) => els.filter((e) => m.has(e.id));
@@ -56,7 +58,7 @@ export function SldSvg({
     return { x: a.x + ((b.x - a.x) * d) / len, y: a.y + ((b.y - a.y) * d) / len };
   };
   return (
-    <svg role="group" aria-label={label} width={w * scale} height={h * scale} viewBox={`${x} ${-PAD} ${w} ${h}`}>
+    <svg role="group" aria-label={t(label)} width={w * scale} height={h * scale} viewBox={`${x} ${-PAD} ${w} ${h}`}>
       <SystemBlock el={model.system} {...layout.system} emph={emph.SYSTEM} bind={bind} />
       {/* DOM order is the Tab order of guideline §8: system, buses, inverters, loads, lines */}
       {model.buses.map((e) => (
@@ -77,7 +79,7 @@ export function SldSvg({
       })}
       {layout.isolatedCaption && (
         <text x={layout.isolatedCaption.x} y={layout.isolatedCaption.y} className={styles.sec}>
-          Not connected
+          {t("Not connected")}
         </text>
       )}
     </svg>

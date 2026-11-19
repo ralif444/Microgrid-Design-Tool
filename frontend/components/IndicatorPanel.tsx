@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { getMeta } from "../api-client";
 import type { M1Payload, M4aPayload, RunRecord } from "../api-types";
 import { fixed } from "./format";
+import { displayLang, translate } from "./i18n";
+import { useLanguage } from "./Language";
 import { useValidation } from "./useValidation";
 import { useProject } from "../store";
 
@@ -39,12 +41,12 @@ export function indicatorRows(records: RunRecord[], current: string | null): Ind
     if (m4a) {
       const i = (m4a.result.payload as unknown as M4aPayload).indicators[key];
       const value = i.evaluated ? i.value : null;
-      return { ...row, value, reason: value === null ? (i.reason ?? "reason not given") : null, record: m4a };
+      return { ...row, value, reason: value === null ? (i.reason ?? translate(displayLang(), "reason not given")) : null, record: m4a };
     }
     if (key === "epsilon_x" && m1)
       return { ...row, value: (m1.result.payload as unknown as M1Payload).epsilon_x_ratio, reason: null, record: m1 };
     const run = key === "epsilon_x" ? "power flow (M1) or small-signal (M4a)" : "small-signal (M4a)";
-    return { ...row, value: null, reason: `run ${run} on the current design`, record: null };
+    return { ...row, value: null, reason: translate(displayLang(), "run {run} on the current design", { run: translate(displayLang(), run) }), record: null };
   });
 }
 
@@ -55,34 +57,35 @@ export function useIndicatorRows(): IndicatorRow[] {
 }
 
 export const indicatorText = (r: IndicatorRow) =>
-  r.value === null ? `not evaluated: ${r.reason}` : fixed(r.value, "ratio");
+  r.value === null ? `${translate(displayLang(), "not evaluated")}: ${r.reason}` : fixed(r.value, "ratio");
 
 export const sourceText = (r: IndicatorRow) =>
-  r.record ? `${r.record.analysis_type} run ${r.record.record_id}${r.record.engine_kind === "FAKE" ? " (Fake Engine)" : ""}` : "none";
+  r.record ? `${r.record.analysis_type} ${translate(displayLang(), "run")} ${r.record.record_id}${r.record.engine_kind === "FAKE" ? ` (${translate(displayLang(), "Fake Engine")})` : ""}` : translate(displayLang(), "none");
 
 export function IndicatorPanel() {
   const rows = useIndicatorRows();
+  const { t } = useLanguage();
   const [version, setVersion] = useState<string | null>(null);
   useEffect(() => {
     void getMeta().then((m) => m.ok && setVersion(m.data.indicator_threshold_version ?? null));
   }, []);
   return (
-    <table aria-label="Validity indicators" data-testid="indicator-panel">
+    <table aria-label={t("Validity indicators")} data-testid="indicator-panel">
       <caption>
-        Validity indicators: {version === null ? "threshold not yet calibrated" : `threshold version ${version}`}
+        {t("Validity indicators")}: {version === null ? t("threshold not yet calibrated") : t("threshold version {v}", { v: version })}
       </caption>
       <thead>
         <tr>
-          <th>Indicator</th>
-          <th>Checks assumption</th>
-          <th>Value (ratio)</th>
-          <th>From</th>
+          <th>{t("Indicator")}</th>
+          <th>{t("Checks assumption")}</th>
+          <th>{t("Value (ratio)")}</th>
+          <th>{t("From")}</th>
         </tr>
       </thead>
       <tbody>
         {rows.map((r) => (
           <tr key={r.key}>
-            <td>{r.label}</td>
+            <td>{t(r.label)}</td>
             <td>{r.assumption}</td>
             <td>{indicatorText(r)}</td>
             <td>{sourceText(r)}</td>

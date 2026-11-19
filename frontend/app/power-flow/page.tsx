@@ -10,6 +10,7 @@ import { EmptyState } from "../../components/EmptyState";
 import { asResponse } from "../../components/Further";
 import { CheckStrip } from "../../components/CheckStrip";
 import { Icon } from "../../components/Icon";
+import { useLanguage } from "../../components/Language";
 import { IndicatorPanel } from "../../components/IndicatorPanel";
 import { Inspector, type ElementRef } from "../../components/Inspector";
 import { m1Kpis } from "../../components/kpi";
@@ -28,6 +29,7 @@ import styles from "./power-flow.module.css";
 
 function PowerFlow() {
   const { design, runRecords } = useProject();
+  const { t } = useLanguage();
   const dispatch = useProjectDispatch();
   const { busy, error, setError, call } = useAnalysisCall();
   const [inspect, setInspect] = useState<ElementRef | null>(null);
@@ -50,28 +52,28 @@ function PowerFlow() {
     <>
       <div className={styles.head}>
         <h1>
-          Power flow <span className="code-label">(M1)</span>
+          {t("Power flow")} <span className="code-label">(M1)</span>
         </h1>
         <button type="button" className="primary" onClick={() => void run()} disabled={busy} aria-busy={busy || undefined}>
-          {busy ? "Running..." : "Run M1"}
+          {busy ? t("Running...") : t("Run M1")}
         </button>
       </div>
       <CheckStrip fresh={fresh} m1={payload} m1Record={m1Record} />
       <ExampleGuide screen="power-flow" />
-      <h2>Readiness</h2>
+      <h2>{t("Readiness")}</h2>
       {check.error ? (
         <CheckFailed error={check.error} onRetry={check.retry} />
       ) : report === null ? (
-        <p className={styles.checking}>Checking the design…</p>
+        <p className={styles.checking}>{t("Checking the design…")}</p>
       ) : report.valid ? (
         <p className="all-clear">
           <Icon name="feasible" />
-          No problems found.
+          {t("No problems found.")}
         </p>
       ) : (
         <div className="problems">
           <Icon name="list" size={20} />
-          <ul aria-label="Readiness warnings">
+          <ul aria-label={t("Readiness warnings")}>
             {report.issues.map((i, k) => (
               <li key={k}>
                 {issueWhere(i)}: {i.message}
@@ -80,22 +82,22 @@ function PowerFlow() {
           </ul>
         </div>
       )}
-      {report && !report.valid && <p className={styles.note}>You can still run M1; the result will list every problem.</p>}
+      {report && !report.valid && <p className={styles.note}>{t("You can still run M1; the result will list every problem.")}</p>}
       {error && <Toast message={error} onDismiss={() => setError(null)} />}
       {!resp &&
         !busy &&
         (fresh === "missing" ? (
-          <EmptyState title="Not run yet.">Run M1 to see bus voltages, inverter outputs and line flows.</EmptyState>
+          <EmptyState title={t("Not run yet.")}>{t("Run M1 to see bus voltages, inverter outputs and line flows.")}</EmptyState>
         ) : (
           // the design changed after the last run (FR-93); that run stays in Run history and the Report
-          <EmptyState title="No result on this screen." action={<Link href="/runs/">Open run history</Link>}>
-            The design changed after the last run. Run M1 again to see the results here.
+          <EmptyState title={t("No result on this screen.")} action={<Link href="/runs/">{t("Open run history")}</Link>}>
+            {t("The design changed after the last run. Run M1 again to see the results here.")}
           </EmptyState>
         ))}
       {resp && (
         <ResultSheet record={resp.run_record}>
           <StatusBanner type="M1" result={resp.result} />
-          {payload && <KpiStrip label="Power flow key figures" kpis={m1Kpis(payload)} record={resp.run_record} />}
+          {payload && <KpiStrip label={t("Power flow key figures")} kpis={m1Kpis(payload)} record={resp.run_record} />}
           {payload && <M1Results p={payload} charts={{ limits: design.design_constraints, record: resp.run_record }} onInspect={setInspect} check={{ design, m2 }} />}
           {payload && <IndicatorPanel />}
         </ResultSheet>
@@ -104,7 +106,7 @@ function PowerFlow() {
       {inspect && <Inspector target={inspect} onClose={() => setInspect(null)} />}
       {payload && (
         <p className={styles.next}>
-          <Link href="/constraint-check/">Continue to the constraint check (M2)</Link>
+          <Link href="/constraint-check/">{t("Continue to the constraint check (M2)")}</Link>
         </p>
       )}
       <ExampleNext screen="power-flow" ready={nextReady(resp?.result.status)} />

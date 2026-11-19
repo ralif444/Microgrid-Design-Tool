@@ -1,12 +1,15 @@
 // Status presentation texts (Doc 7 §5). Headline and next-step hint per Status / reason.
 import type { AnalysisResult, AnalysisType } from "../api-types";
-import { plural } from "./format";
+import { displayLang, translate } from "./i18n";
 
 export interface BannerText {
   role: "success" | "warning" | "error" | "caution" | "attention" | "neutral";
   headline: string;
   hint: string;
 }
+
+// Texts go through translate(displayLang()) so every caller shows the chosen language.
+const T = (en: string, vars?: Record<string, string | number>) => translate(displayLang(), en, vars);
 
 // One violated count for banner, KPI and strip (audit D-21): evaluated margins below zero.
 export const violatedCount = (p: { constraint_margins?: { margin: number }[] } | null | undefined) =>
@@ -23,67 +26,72 @@ export function bannerText(type: AnalysisType, r: AnalysisResult): BannerText {
         return {
           role: "success",
           headline:
-            "Power flow completed: an operating point was found. This is not yet a check against your limits.",
-          hint: "Run the constraint check (M2).",
+            T("Power flow completed: an operating point was found. This is not yet a check against your limits."),
+          hint: T("Run the constraint check (M2)."),
         };
       if (type === "M2") {
         // WP 1.7.4: a check without a limit is not satisfied, so "all constraints" would overstate it.
         const skipped = ((r.payload as { not_evaluated?: unknown[] } | null)?.not_evaluated ?? []).length;
         if (m2NothingChecked(r.payload))
-          return { role: "neutral", headline: "Nothing was checked: no limit is set, so every check was not evaluated.", hint: "Enter the limits on Constraints, then re-run M2." };
+          return { role: "neutral", headline: T("Nothing was checked: no limit is set, so every check was not evaluated."), hint: T("Enter the limits on Constraints, then re-run M2.") };
         const headline = skipped
-          ? `The design meets every evaluated constraint; ${skipped === 1 ? "1 check had no limit and was" : `${skipped} checks had no limit and were`} not evaluated.`
-          : "The design meets all constraints.";
-        return { role: "success", headline, hint: skipped ? "Enter the missing limits on Constraints, then re-run M2." : "Explore further analyses or open the report." };
+          ? skipped === 1
+            ? T("The design meets every evaluated constraint; 1 check had no limit and was not evaluated.")
+            : T("The design meets every evaluated constraint; {count} checks had no limit and were not evaluated.", { count: skipped })
+          : T("The design meets all constraints.");
+        return { role: "success", headline, hint: T(skipped ? "Enter the missing limits on Constraints, then re-run M2." : "Explore further analyses or open the report.") };
       }
       if (type === "CB")
-        return { role: "success", headline: "Sizing completed: advice for the overload rating and the conductor size only.", hint: "Check each element's outcome; open a row for its factors." };
+        return { role: "success", headline: T("Sizing completed: advice for the overload rating and the conductor size only."), hint: T("Check each element's outcome; open a row for its factors.") };
       if (type === "BA")
-        return { role: "success", headline: "Battery check completed: advice on the discharge power of each bank.", hint: "Check each bank's outcome and reason." };
-      if (type === "PS") return { role: "success", headline: "Advice produced.", hint: "Accept or skip." }; // Edit deferred (Doc 9 D-45 K5)
-      return { role: "success", headline: "Analysis completed.", hint: "Explore further analyses or open the report." };
+        return { role: "success", headline: T("Battery check completed: advice on the discharge power of each bank."), hint: T("Check each bank's outcome and reason.") };
+      if (type === "PS") return { role: "success", headline: T("Advice produced."), hint: T("Accept or skip.") }; // Edit deferred (Doc 9 D-45 K5)
+      return { role: "success", headline: T("Analysis completed."), hint: T("Explore further analyses or open the report.") };
     case "INFEASIBLE":
       return {
         role: "warning",
-        headline: `A valid operating point exists, but the design violates ${plural(violatedCount(r.payload as never) ?? r.limiting_constraints?.length ?? 0, "constraint")}.`,
-        hint: "Change the element named first, then re-run M1 and M2.",
+        headline: (() => {
+          const c = violatedCount(r.payload as never) ?? r.limiting_constraints?.length ?? 0;
+          return T(c === 1 ? "A valid operating point exists, but the design violates {count} constraint." : "A valid operating point exists, but the design violates {count} constraints.", { count: c });
+        })(),
+        hint: T("Change the element named first, then re-run M1 and M2."),
       };
     case "SOLVER_FAILED":
       return {
         role: "error",
-        headline: "The calculation did not reach a solution. This is a calculation problem, not a limit violation.",
-        hint: "Check Inverter and Line data, then retry; keep the RunRecord for the developer.",
+        headline: T("The calculation did not reach a solution. This is a calculation problem, not a limit violation."),
+        hint: T("Check Inverter and Line data, then retry; keep the RunRecord for the developer."),
       };
     case "PHYSICALLY_INADMISSIBLE":
       return {
         role: "error",
-        headline: "A solution was found but it is not physically possible, so it is not used.",
-        hint: "Review loads, ratings and impedances; later analyses stay blocked.",
+        headline: T("A solution was found but it is not physically possible, so it is not used."),
+        hint: T("Review loads, ratings and impedances; later analyses stay blocked."),
       };
     case "INPUT_INVALID":
       if (r.status_code === "SWEEP_CAP_EXCEEDED")
-        return { role: "caution", headline: "This sweep has too many points. Nothing was calculated.", hint: "Reduce the range or step count." };
-      return { role: "caution", headline: `The input has ${plural(n, "problem")}. Nothing was calculated.`, hint: "Fix the listed fields." };
+        return { role: "caution", headline: T("This sweep has too many points. Nothing was calculated."), hint: T("Reduce the range or step count.") };
+      return { role: "caution", headline: T(n === 1 ? "The input has {count} problem. Nothing was calculated." : "The input has {count} problems. Nothing was calculated.", { count: n }), hint: T("Fix the listed fields.") };
     case "UNAVAILABLE":
       switch (r.status_code) {
         case "TIMEOUT":
-          return { role: "attention", headline: "The analysis took longer than the time budget and was stopped.", hint: "Retry, or reduce the problem size. The attempt is kept in Run history." };
+          return { role: "attention", headline: T("The analysis took longer than the time budget and was stopped."), hint: T("Retry, or reduce the problem size. The attempt is kept in Run history.") };
         case "DEPENDENCY_NOT_MET":
           if (type === "CB")
-            return { role: "attention", headline: "Cable sizing needs a current constraint check (M2) result, and none is available.", hint: "Re-run M1 and M2 on this design, then retry." };
+            return { role: "attention", headline: T("Cable sizing needs a current constraint check (M2) result, and none is available."), hint: T("Re-run M1 and M2 on this design, then retry.") };
           switch (r.diagnostics?.dependency_reason) {
             case "STALE":
             case "ALTERED":
-              return { role: "attention", headline: "The power flow result is out of date because the design changed. M1 must be re-run.", hint: "Re-run M1, then retry." };
+              return { role: "attention", headline: T("The power flow result is out of date because the design changed. M1 must be re-run."), hint: T("Re-run M1, then retry.") };
             case "NOT_FEASIBLE":
-              return { role: "attention", headline: "The power flow (M1) did not produce a usable result, so this analysis cannot run.", hint: "Fix the M1 problem first." };
+              return { role: "attention", headline: T("The power flow (M1) did not produce a usable result, so this analysis cannot run."), hint: T("Fix the M1 problem first.") };
             default:
-              return { role: "attention", headline: "This analysis needs a valid power flow (M1) result, and none is available.", hint: "Go to Power flow and run M1." };
+              return { role: "attention", headline: T("This analysis needs a valid power flow (M1) result, and none is available."), hint: T("Go to Power flow and run M1.") };
           }
         case "ENGINE_ERROR":
-          return { role: "error", headline: "The calculation engine reported an unexpected error. Your data is unchanged.", hint: "Retry; if it repeats, export the RunRecord and report it." };
+          return { role: "error", headline: T("The calculation engine reported an unexpected error. Your data is unchanged."), hint: T("Retry; if it repeats, export the RunRecord and report it.") };
         default:
-          return { role: "neutral", headline: "This analysis does not apply to this design.", hint: "Choose another analysis or change the design." };
+          return { role: "neutral", headline: T("This analysis does not apply to this design."), hint: T("Choose another analysis or change the design.") };
       }
   }
 }
@@ -99,22 +107,22 @@ const CLASS_WORD: Record<string, string> = { STABLE: "Stable", MARGINAL: "Margin
 export function statusWord(type: AnalysisType, r: AnalysisResult): string {
   switch (r.status) {
     case "FEASIBLE":
-      if (type === "M1") return "Solved";
-      if (type === "M4a") return CLASS_WORD[(r.payload as { stability_class?: string } | null)?.stability_class ?? ""] ?? "Analysed";
-      if (type === "M4b") return "Simulated";
-      if (type === "M2") return m2NothingChecked(r.payload) ? "Not evaluated" : "Meets the limits";
-      if (type === "BA" && baNothingEvaluated(r)) return "Not evaluated";
-      if (type === "PS" || type === "CB" || type === "BA") return "Advice ready";
-      return "Completed";
+      if (type === "M1") return T("Solved");
+      if (type === "M4a") return T(CLASS_WORD[(r.payload as { stability_class?: string } | null)?.stability_class ?? ""] ?? "Analysed");
+      if (type === "M4b") return T("Simulated");
+      if (type === "M2") return T(m2NothingChecked(r.payload) ? "Not evaluated" : "Meets the limits");
+      if (type === "BA" && baNothingEvaluated(r)) return T("Not evaluated");
+      if (type === "PS" || type === "CB" || type === "BA") return T("Advice ready");
+      return T("Completed");
     case "INFEASIBLE":
-      return "Limits violated";
+      return T("Limits violated");
     case "SOLVER_FAILED":
-      return "No solution";
+      return T("No solution");
     case "PHYSICALLY_INADMISSIBLE":
-      return "Not physically possible";
+      return T("Not physically possible");
     case "INPUT_INVALID":
-      return "Input needs fixing";
+      return T("Input needs fixing");
     case "UNAVAILABLE":
-      return ({ TIMEOUT: "Timed out", DEPENDENCY_NOT_MET: "Needs an earlier result", ENGINE_ERROR: "Engine error" } as Record<string, string>)[r.status_code] ?? "Not applicable";
+      return T(({ TIMEOUT: "Timed out", DEPENDENCY_NOT_MET: "Needs an earlier result", ENGINE_ERROR: "Engine error" } as Record<string, string>)[r.status_code] ?? "Not applicable");
   }
 }

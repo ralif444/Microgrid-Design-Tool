@@ -11,6 +11,8 @@ import { useCableSizingFlag } from "../../components/cable";
 import { block, BLOCK_KEY, ENTRY_FIELDS, ENTRY_OPTIONS, keyValues, PROVENANCE, reasonText, useCatalog } from "../../components/Catalog";
 import { downloadJson, NOT_JSON, readJson } from "../../components/files";
 import { CANNOT_UNDO, useConfirmDelete } from "../../components/ConfirmDelete";
+import { displayLang, translate } from "../../components/i18n";
+import { useLanguage } from "../../components/Language";
 import { NumberField } from "../../components/NumberField";
 import { FileCheckText } from "../../components/ProjectFileMenu";
 import { nextId } from "../../store/reducer";
@@ -18,42 +20,43 @@ import styles from "./catalogue.module.css";
 
 // One caveat per screen (audit 2026-11-15, user decision 2); the source column says "recorded only".
 const CAVEAT = {
-  recorded: (codes: string[]) => `Recorded only: kept with the entry, not used by the model (${codes.join(", ")}).`,
+  recorded: (codes: string[]) => translate(displayLang(), "Recorded only: kept with the entry, not used by the model ({codes}).", { codes: codes.join(", ") }),
   x10: "Cable sizing only: used only for the cable sizing match (experimental).",
   bess: "used only by the battery advice, not by the network model (A2)",
 } as const;
 
 function EntryEditor({ e, onChange, x10 }: { e: CatalogEntry; onChange: (e: CatalogEntry) => void; x10: boolean }) {
+  const { t } = useLanguage();
   const b = block(e);
   const setValue = (k: string, v: unknown) =>
     onChange({ ...e, [BLOCK_KEY[e.kind]]: { ...b, [k]: v } });
   const setSource = (k: string, v: string) => onChange({ ...e, sources: { ...e.sources, [k]: v } });
   const text = (id: string, label: string, value: string | null | undefined, set: (v: string | null) => void) => (
     <span className={styles.text}>
-      <label htmlFor={id}>{label}</label>
+      <label htmlFor={id}>{t(label)}</label>
       <input id={id} value={value ?? ""} onChange={(x) => set(x.target.value || null)} />
     </span>
   );
   const fields = ENTRY_FIELDS[e.kind].filter(([, , , use]) => x10 || use !== "x10");
   const recorded = [...new Set(fields.flatMap(([, , , use]) => (use === "A2" || use === "A4" ? [use] : [])))];
   return (
-    <form aria-label={`Entry ${e.id}`} className={styles.editor} onSubmit={(x) => x.preventDefault()}>
+    <form aria-label={t("Entry {id}", { id: e.id })} className={styles.editor} onSubmit={(x) => x.preventDefault()}>
       <fieldset>
-        <legend>Provenance</legend>
+        <legend>{t("Provenance")}</legend>
         {PROVENANCE.map(([k, label]) => (
           <p key={k}>{text(`prov-${k}`, label, e.provenance?.[k], (v) => onChange({ ...e, provenance: { ...e.provenance, [k]: v } }))}</p>
         ))}
       </fieldset>
       <fieldset>
-        <legend>Values</legend>
-        {e.kind === "BATTERY_MODULE" && <p className={styles.caveat}>All values {CAVEAT.bess}.</p>}
+        <legend>{t("Values")}</legend>
+        {e.kind === "BATTERY_MODULE" && <p className={styles.caveat}>{t("All values {note}.", { note: t(CAVEAT.bess) })}</p>}
         {recorded.length > 0 && <p className={styles.caveat}>{CAVEAT.recorded(recorded)}</p>}
-        {fields.some(([, , , use]) => use === "x10") && <p className={styles.caveat}>{CAVEAT.x10}</p>}
-        <table className={styles.values} aria-label={`Values of ${e.id}`}>
+        {fields.some(([, , , use]) => use === "x10") && <p className={styles.caveat}>{t(CAVEAT.x10)}</p>}
+        <table className={styles.values} aria-label={t("Values of {id}", { id: e.id })}>
           <thead>
             <tr>
-              <th scope="col">Value</th>
-              <th scope="col">Source (page or section)</th>
+              <th scope="col">{t("Value")}</th>
+              <th scope="col">{t("Source (page or section)")}</th>
             </tr>
           </thead>
           <tbody>
@@ -62,9 +65,9 @@ function EntryEditor({ e, onChange, x10 }: { e: CatalogEntry; onChange: (e: Cata
                 <td>
                   {ENTRY_OPTIONS[k] ? (
                     <span className={styles.text}>
-                      <label htmlFor={`val-${k}`}>{label}</label>
+                      <label htmlFor={`val-${k}`}>{t(label)}</label>
                       <select id={`val-${k}`} value={(b[k] as string | null) ?? ""} onChange={(x) => setValue(k, x.target.value || null)}>
-                        <option value="">Choose…</option>
+                        <option value="">{t("Choose…")}</option>
                         {ENTRY_OPTIONS[k].map((o) => (
                           <option key={o}>{o}</option>
                         ))}
@@ -78,21 +81,20 @@ function EntryEditor({ e, onChange, x10 }: { e: CatalogEntry; onChange: (e: Cata
                 </td>
                 <td>
                   {(use === "model" || use === "bess") && unit !== null ? (
-                    <input aria-label={`${label}: page or section`} value={e.sources?.[k] ?? ""} onChange={(x) => setSource(k, x.target.value)} />
+                    <input aria-label={`${t(label)}: ${t("page or section")}`} value={e.sources?.[k] ?? ""} onChange={(x) => setSource(k, x.target.value)} />
                   ) : (
-                    <span className={styles.muted}>{use === "x10" ? "cable sizing only" : use === "text" ? "—" : "recorded only"}</span>
+                    <span className={styles.muted}>{use === "x10" ? t("cable sizing only") : use === "text" ? "—" : t("recorded only")}</span>
                   )}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        {noPowerCapability(e) && <p role="note">{NO_POWER_WARNING}</p>}
+        {noPowerCapability(e) && <p role="note">{t(NO_POWER_WARNING)}</p>}
         {e.kind === "INVERTER" && (
           <p>
             <label>
-              <input type="checkbox" checked={!!b.grid_forming} onChange={(x) => setValue("grid_forming", x.target.checked)} /> Declared
-              grid-forming in the datasheet
+              <input type="checkbox" checked={!!b.grid_forming} onChange={(x) => setValue("grid_forming", x.target.checked)} /> {t("Declared grid-forming in the datasheet")}
             </label>{" "}
             {text("val-gfm-ref", "Grid-forming declaration: page or section", b.grid_forming_reference as string | null, (v) =>
               setValue("grid_forming_reference", v),
@@ -105,6 +107,7 @@ function EntryEditor({ e, onChange, x10 }: { e: CatalogEntry; onChange: (e: Cata
 }
 
 export default function CataloguePage() {
+  const { t } = useLanguage();
   const { dialog, confirm } = useConfirmDelete();
   const { catalog, checks, checkError, setCatalog, isBase } = useCatalog();
   const [selected, setSelected] = useState<string | null>(null);
@@ -130,21 +133,21 @@ export default function CataloguePage() {
   async function open(file: File | undefined) {
     if (!file) return;
     const read = await readJson(file);
-    if (!read) return setNote(NOT_JSON);
+    if (!read) return setNote(t(NOT_JSON));
     const r = await importCatalog(read.doc);
     if (!r.ok) return setNote(r.message);
     setNote(r.data.file_check);
     const next = r.data.catalog as unknown as typeof catalog | null;
     if (!r.data.file_check.accepted || !next) return;
     const skipped = next.entries.filter((e) => isBase(e.id)).length;
-    if (skipped) setNote(`${r.data.file_check.message} ${skipped} of its entries are already in the base catalogue and were not added again.`);
+    if (skipped) setNote(`${r.data.file_check.message} ${t("{skipped} of its entries are already in the base catalogue and were not added again.", { skipped })}`);
     // O7: opening a file replaces the user's entries, which the browser now keeps, so ask first when there are some
     if (own.length === 0) return void (setCatalog(next), setSelected(null));
     confirm(
-      "Replace your entries?",
-      `Opening ${file.name} replaces your entries (${own.length}) with its own (${next.entries.length - skipped}). The base catalogue stays. Save the Catalogue first to keep your current ones. ${CANNOT_UNDO}`,
+      t("Replace your entries?"),
+      `${t("Opening {file} replaces your entries ({own}) with its own ({next}). The base catalogue stays. Save the Catalogue first to keep your current ones.", { file: file.name, own: own.length, next: next.entries.length - skipped })} ${t(CANNOT_UNDO)}`,
       () => (setCatalog(next), setSelected(null)),
-      "Replace",
+      t("Replace"),
     );
   }
 
@@ -156,24 +159,21 @@ export default function CataloguePage() {
 
   return (
     <>
-      <h1>Catalogue</h1>
+      <h1>{t("Catalogue")}</h1>
       <p>
-        A Catalogue is its own file, separate from any Project. Values copied into a Project stay there when the Catalogue
-        changes. Your entries are also kept in this browser until you delete them; save the Catalogue to a file to keep or share
-        them.
+        {t("A Catalogue is its own file, separate from any Project. Values copied into a Project stay there when the Catalogue changes. Your entries are also kept in this browser until you delete them; save the Catalogue to a file to keep or share them.")}
       </p>
       {entries.length > own.length && (
         <p className={styles.caveat}>
-          Base entries ship with the app and cannot be edited or deleted; copy one to change it. Their values were read from the named
-          manufacturer documents; check them against the datasheet before relying on them.
+          {t("Base entries ship with the app and cannot be edited or deleted; copy one to change it. Their values were read from the named manufacturer documents; check them against the datasheet before relying on them.")}
         </p>
       )}
       <p>
         <button type="button" onClick={() => void save()}>
-          Save catalogue
+          {t("Save catalogue")}
         </button>{" "}
         <label>
-          Open catalogue file{" "}
+          {t("Open catalogue file")}{" "}
           <input
             type="file"
             accept=".json,application/json"
@@ -187,36 +187,36 @@ export default function CataloguePage() {
       {note && (typeof note === "string" ? <p role="alert">{note}</p> : <FileCheckText fc={note} />)}
       <p>
         <button type="button" onClick={() => add("INVERTER")}>
-          + Add inverter entry
+          {t("+ Add inverter entry")}
         </button>{" "}
         <button type="button" onClick={() => add("CONDUCTOR")}>
-          + Add conductor entry
+          {t("+ Add conductor entry")}
         </button>{" "}
         <button type="button" onClick={() => add("BATTERY_MODULE")}>
-          + Add battery module entry
+          {t("+ Add battery module entry")}
         </button>
         {x10 && (
           <>
             {" "}
             <button type="button" onClick={() => add("BREAKER")}>
-              + Add breaker entry
+              {t("+ Add breaker entry")}
             </button>
           </>
         )}
       </p>
       {entries.length === 0 ? (
-        <p>The Catalogue is empty.</p>
+        <p>{t("The Catalogue is empty.")}</p>
       ) : (
-        <table aria-label="Catalogue entries" className={styles.list}>
+        <table aria-label={t("Catalogue entries")} className={styles.list}>
           <thead>
             <tr>
-              <th>Id</th>
-              <th>Kind</th>
-              <th>Source</th>
-              <th>Manufacturer and model</th>
-              <th>Key values</th>
-              <th>Use in a Project</th>
-              <th>Actions</th>
+              <th>{t("Id")}</th>
+              <th>{t("Kind")}</th>
+              <th>{t("Source")}</th>
+              <th>{t("Manufacturer and model")}</th>
+              <th>{t("Key values")}</th>
+              <th>{t("Use in a Project")}</th>
+              <th>{t("Actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -225,45 +225,45 @@ export default function CataloguePage() {
               return (
                 <tr key={e.id} aria-current={e.id === selected ? "true" : undefined}>
                   <th scope="row">{e.id}</th>
-                  <td className={styles.kind}>{e.kind.toLowerCase().replace("_", " ")}</td>
-                  <td>{isBase(e.id) ? "Base" : "Yours"}</td>
+                  <td className={styles.kind}>{t(e.kind.toLowerCase().replace("_", " "))}</td>
+                  <td>{t(isBase(e.id) ? "Base" : "Yours")}</td>
                   <td>{[e.provenance?.manufacturer, e.provenance?.model].filter(Boolean).join(" ") || "—"}</td>
                   <td className={styles.kind}>{keyValues(e)}</td>
                   <td>
                     {!c ? (
-                      checkError ? `Not checked: ${checkError}` : "Checking…"
+                      checkError ? t("Not checked: {error}", { error: checkError }) : t("Checking…")
                     ) : c.usable ? (
-                      "Usable"
+                      t("Usable")
                     ) : c.reasons.length <= 2 ? (
-                      `Information only: ${c.reasons.map((r) => reasonText(e.kind, r)).join("; ")}`
+                      t("Information only: {reasons}", { reasons: c.reasons.map((r) => reasonText(e.kind, r)).join("; ") })
                     ) : (
                       // a long list folds away; the count says how much is left to enter
                       <details>
-                        <summary>Information only: {c.reasons.length} things to fix</summary>
+                        <summary>{t("Information only: {count} things to fix", { count: c.reasons.length })}</summary>
                         {c.reasons.map((r) => reasonText(e.kind, r)).join("; ")}
                       </details>
                     )}
-                    {noPowerCapability(e) && ` (${NO_POWER_WARNING})`}
+                    {noPowerCapability(e) && ` (${t(NO_POWER_WARNING)})`}
                   </td>
                   <td>
                     {isBase(e.id) ? (
                       <button type="button" onClick={() => copy(e)}>
-                        Copy {e.id}
+                        {t("Copy {id}", { id: e.id })}
                       </button>
                     ) : (
                       <>
                     <button type="button" onClick={() => setSelected(e.id)}>
-                      Edit {e.id}
+                      {t("Edit {id}", { id: e.id })}
                     </button>{" "}
                     <button
                       type="button"
                       onClick={() =>
-                        confirm(`Delete ${e.id}?`, `Catalogue entry ${e.id} is removed; designs that used it keep their values. ${CANNOT_UNDO}`, () =>
+                        confirm(t("Delete {id}?", { id: e.id }), `${t("Catalogue entry {id} is removed; designs that used it keep their values.", { id: e.id })} ${t(CANNOT_UNDO)}`, () =>
                           setCatalog({ ...catalog, entries: entries.filter((x) => x.id !== e.id) }),
                         )
                       }
                     >
-                      Delete {e.id}
+                      {t("Delete {id}", { id: e.id })}
                     </button>
                       </>
                     )}
@@ -277,7 +277,7 @@ export default function CataloguePage() {
       {sel && (
         <>
           <h2>
-            Entry {sel.id} ({sel.kind.toLowerCase().replace("_", " ")})
+            {t("Entry {id} ({kind})", { id: sel.id, kind: t(sel.kind.toLowerCase().replace("_", " ")) })}
           </h2>
           <EntryEditor e={sel} x10={x10} onChange={(n) => setCatalog({ ...catalog, entries: entries.map((x) => (x.id === sel.id ? n : x)) })} />
         </>

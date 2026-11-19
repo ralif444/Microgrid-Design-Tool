@@ -5,9 +5,10 @@
 // Each row and its error line share one <tbody>, so a row's test id covers its messages too.
 import { useRef, type KeyboardEvent, type ReactNode } from "react";
 import styles from "./DataTable.module.css";
-import { NOT_A_NUMBER, fixed, num } from "./format";
+import { NOT_A_NUMBER, fixed, numText } from "./format";
 import { UNIT_TERM, type GlossaryKey } from "./glossary";
 import { Icon } from "./Icon";
+import { useLanguage } from "./Language";
 import { useNumberText } from "./NumberField";
 import { Term } from "./Term";
 
@@ -34,7 +35,7 @@ export const headerText = (c: { header: string; unit?: string }) => (c.unit ? `$
 
 // a bare number in a column with a unit is a result: fixed decimals (audit 2026-11-14 decision 2)
 function show(v: ReactNode, unit?: string): ReactNode {
-  return typeof v === "number" ? (unit ? fixed(v, unit) : num(v)) : v === null || v === undefined ? "—" : v;
+  return typeof v === "number" ? (unit ? fixed(v, unit) : numText(v)) : v === null || v === undefined ? "—" : v;
 }
 
 // Enter: same column, next row. Escape: restore the value the cell had on focus.
@@ -80,11 +81,12 @@ function TextCell({ label, value, onChange, invalid = false }: CellProps<string>
 function NumberCell({ label, value, onChange, invalid = false }: CellProps<number | null>) {
   const start = useRef<number | null>(null);
   const t = useNumberText(value, onChange);
+  const { t: tr } = useLanguage();
   return (
     <input
       aria-label={label}
       aria-invalid={invalid || t.bad || undefined}
-      title={t.bad ? NOT_A_NUMBER : undefined}
+      title={t.bad ? tr(NOT_A_NUMBER) : undefined}
       type="text"
       inputMode="decimal"
       value={t.text}
@@ -109,6 +111,7 @@ export function CellSelect({
   invalid?: boolean;
 }) {
   const start = useRef<string | null>(null);
+  const { t: tr } = useLanguage();
   return (
     <select
       aria-label={label}
@@ -118,10 +121,10 @@ export function CellSelect({
       onChange={(e) => onChange(e.target.value || null)}
       onKeyDown={(e) => keys(e, () => onChange(start.current))}
     >
-      <option value="">Choose…</option>
-      {options.map(([v, t]) => (
+      <option value="">{tr("Choose…")}</option>
+      {options.map(([v, text]) => (
         <option key={v} value={v}>
-          {t}
+          {tr(text)}
         </option>
       ))}
     </select>
@@ -165,18 +168,20 @@ export function DataTable<R>({
   rowViolated?: (r: R) => boolean; // violated constraint row: orange left edge (guideline §7.3)
   empty?: ReactNode;
 }) {
+  const { t } = useLanguage();
   if (!rows.length && empty) return <>{empty}</>;
+  const head = (c: { header: string; unit?: string }) => headerText({ ...c, header: t(c.header) });
   const span = columns.length + (actions ? 1 : 0);
   const owner = (field: string | null | undefined) => columns.find((c) => (c.fields ?? [c.key]).includes(field ?? ""));
   return (
-    <div className={`table-scroll ${styles.scroll}`} role="region" aria-label={`${label}, scrolls sideways`} tabIndex={0}>
-      <table aria-label={label} className={styles.table}>
-        {caption && <caption>{caption}</caption>}
+    <div className={`table-scroll ${styles.scroll}`} role="region" aria-label={t("{label}, scrolls sideways", { label: t(label) })} tabIndex={0}>
+      <table aria-label={t(label)} className={styles.table}>
+        {caption && <caption>{t(caption)}</caption>}
         <thead>
           <tr>
             {columns.map((c) => (
               <th key={c.key} scope="col" className={c.numeric ? "num" : undefined}>
-                {c.header}
+                {t(c.header)}
                 {c.unit && <span className={styles.unit}> ({c.unit})</span>}
                 {c.term && <Term k={c.term} />}
                 {c.unit && UNIT_TERM[c.unit] && <Term k={UNIT_TERM[c.unit]} />}
@@ -184,7 +189,7 @@ export function DataTable<R>({
             ))}
             {actions && (
               <th scope="col">
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">{t("Actions")}</span>
               </th>
             )}
           </tr>
@@ -198,10 +203,10 @@ export function DataTable<R>({
                   <td
                     key={c.key}
                     className={c.numeric ? "num" : undefined}
-                    aria-label={c.labelCell ? `${headerText(c)} of ${rowName(r, k)}` : undefined}
+                    aria-label={c.labelCell ? t("{name} of {row}", { name: head(c), row: rowName(r, k) }) : undefined}
                   >
                     {c.edit ? (
-                      <EditCell row={r} edit={c.edit} name={`${headerText(c)} of ${rowName(r, k)}`} invalid={errors.some((x) => owner(x.field) === c)} />
+                      <EditCell row={r} edit={c.edit} name={t("{name} of {row}", { name: head(c), row: rowName(r, k) })} invalid={errors.some((x) => owner(x.field) === c)} />
                     ) : (
                       show(c.cell?.(r), c.unit)
                     )}
@@ -216,7 +221,7 @@ export function DataTable<R>({
                     {errors
                       .map((x) => {
                         const col = owner(x.field);
-                        return `${col ? `${col.header}: ` : x.field ? `${x.field}: ` : ""}${x.message}`;
+                        return `${col ? `${t(col.header)}: ` : x.field ? `${x.field}: ` : ""}${x.message}`;
                       })
                       .join(" ")}
                   </td>

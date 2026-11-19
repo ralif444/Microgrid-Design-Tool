@@ -358,7 +358,7 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | 21 | X9: guidance text in English, the UI language (EX-D5); glossary toggletips stay Indonesian (FR-91). | DECIDED (user 2026-11-05, D-92 K229) |
 | 22 | X9: values with no source yet stay empty until the user gives one with a reason: M3a `step_relative`, M3b `step_count`, M3d `axis_y` and both step counts. M4a damping threshold stays empty; M4b settling criteria stay empty and are revisited after one REAL run (EX-D4). | OPEN (owner, D-92 K231) |
 | 23 | X9: the M3c reference is the first scenario (Doc 3 §6.6 default; S-11 has no reference field), so "D2 base" is stored first in the guided Project. | DECIDED (from Doc 3, D-92 K234) |
-| 24 | X10: protection is out of the manuscript scope; X10 enters the thesis only with supervisor approval and stays behind the feature flag until then. | KONFLIK (supervisor approval pending, D-100 K258, Doc 9 K-07) |
+| 24 | X10: protection is out of the manuscript scope; X10 enters the thesis only with supervisor approval and stays behind the feature flag until then. | KONFLIK, RESOLVED 2026-11-19: supervisor approved (Doc 9 K-07, D-117; D-100 K258, Doc 9 K-07) |
 | 25 | X10: technical baseline PUIL 2011 (the edition the user holds) while Permen ESDM 7/2021 lists PUIL 2020 as mandatory; migrate when PUIL 2020 is obtained. | KONFLIK (open, D-100 K259, Doc 9 K-08) |
 | 26 | X10: form of (CB.3) assumed from PUIL 523.2 and A.52.2; confirm the wording against 523.2 before it enters Bab III. | OPEN (owner, D-100 K260) |
 | 27 | X10: MCB/MCCB threshold 63 A, configurable (guideline D6). | DECIDED (user 2026-11-08, D-100 K261) |

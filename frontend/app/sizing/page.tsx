@@ -7,7 +7,8 @@ import type { AnalysisResponse, PsPayload } from "../../api-types";
 import { moduleHint } from "../../components/battery";
 import { catalogHints, useCatalog } from "../../components/Catalog";
 import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
-import { fixed, fixedOr, plural } from "../../components/format";
+import { fixed, fixedOr } from "../../components/format";
+import { useLanguage } from "../../components/Language";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
 import { ResultSheet } from "../../components/ResultSheet";
@@ -41,48 +42,58 @@ const FIELDS: [keyof PsParameters, string, string, string][] = [
 ];
 
 function AdvicePanel({ a }: { a: SizingAdvice }) {
+  const { t } = useLanguage();
   const p = a.result;
   const plan = p.inverter_plan;
   return (
-    <section className="advice" aria-label="Sizing advice">
-      <p className="advice-tag">Advice (not design data)</p>
-      <table aria-label="Advice values">
+    <section className="advice" aria-label={t("Sizing advice")}>
+      <p className="advice-tag">{t("Advice (not design data)")}</p>
+      <table aria-label={t("Advice values")}>
         <thead>
           <tr>
-            <th scope="col">Quantity</th>
-            <th scope="col">Value</th>
-            <th scope="col">Basis</th>
+            <th scope="col">{t("Quantity")}</th>
+            <th scope="col">{t("Value")}</th>
+            <th scope="col">{t("Basis")}</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <th scope="row">Load apparent power</th>
+            <th scope="row">{t("Load apparent power")}</th>
             <td>{fixed(p.load_apparent_kva, "kVA")} kVA</td>
             <td />
           </tr>
           <tr>
-            <th scope="row">Total inverter rating</th>
+            <th scope="row">{t("Total inverter rating")}</th>
             <td>{fixed(p.required_inverter_kva.value_kva, "kVA")} kVA</td>
             <td>
               {p.required_inverter_kva.basis} {p.required_inverter_kva.assumptions.join(" ")}
             </td>
           </tr>
           <tr>
-            <th scope="row">Inverters</th>
+            <th scope="row">{t("Inverters")}</th>
             <td>
-              {plan.unit_count} × {fixed(plan.unit_rating_kva, "kVA")} kVA (installed {fixed(plan.installed_kva, "kVA")} kVA, redundancy {plan.redundancy})
+              {t("{count} × {rating} kVA (installed {installed} kVA, redundancy {redundancy})", {
+                count: plan.unit_count,
+                rating: fixed(plan.unit_rating_kva, "kVA"),
+                installed: fixed(plan.installed_kva, "kVA"),
+                redundancy: plan.redundancy,
+              })}
             </td>
             <td>
               {plan.basis} {plan.assumptions.join(" ")}
             </td>
           </tr>
           <tr>
-            <th scope="row">Storage energy</th>
+            <th scope="row">{t("Storage energy")}</th>
             {p.storage_energy ? (
               <>
                 <td>
-                  AC {fixed(p.storage_energy.e_ac_kwh, "kWh")} kWh, DC {fixedOr(p.storage_energy.e_dc_kwh, "kWh")} kWh, nominal{" "}
-                  {fixedOr(p.storage_energy.e_nom_kwh, "kWh")} kWh (stage {p.storage_energy.stage})
+                  {t("AC {ac} kWh, DC {dc} kWh, nominal {nom} kWh (stage {stage})", {
+                    ac: fixed(p.storage_energy.e_ac_kwh, "kWh"),
+                    dc: fixedOr(p.storage_energy.e_dc_kwh, "kWh"),
+                    nom: fixedOr(p.storage_energy.e_nom_kwh, "kWh"),
+                    stage: p.storage_energy.stage,
+                  })}
                 </td>
                 <td>
                   {p.storage_energy.basis} {p.storage_energy.assumptions.join(" ")}
@@ -90,13 +101,13 @@ function AdvicePanel({ a }: { a: SizingAdvice }) {
               </>
             ) : (
               <td colSpan={2}>
-                Storage advice needs a LoadProfile and an autonomy time. <Link href="/loads/#profile">Add the profile on Loads</Link>
+                {t("Storage advice needs a LoadProfile and an autonomy time.")} <Link href="/loads/#profile">{t("Add the profile on Loads")}</Link>
               </td>
             )}
           </tr>
         </tbody>
       </table>
-      <p data-testid="advice-state">State: {({ PROPOSED: "Proposed", ACCEPTED: "Accepted", SKIPPED: "Skipped" } as Record<string, string>)[a.state] ?? a.state}</p>
+      <p data-testid="advice-state">{t("State:")} {t(({ PROPOSED: "Proposed", ACCEPTED: "Accepted", SKIPPED: "Skipped" } as Record<string, string>)[a.state] ?? a.state)}</p>
       <CatalogHints unitKva={plan.unit_rating_kva} />
       <ModuleHint eNomKwh={p.storage_energy?.e_nom_kwh ?? null} />
     </section>
@@ -106,14 +117,16 @@ function AdvicePanel({ a }: { a: SizingAdvice }) {
 // FR-09: accepted advice offers editable Inverter drafts (unit_count rows at the unit rating) for
 // S-05; Accept itself changes no design entity (FR-08).
 function InverterDrafts({ adviceId, plan }: { adviceId: string; plan: PsPayload["inverter_plan"] }) {
+  const { t } = useLanguage();
   const { design, draftsAdded } = useProject();
+  const drafts = (n: number) => t(n === 1 ? "{n} inverter draft" : "{n} inverter drafts", { n });
   const dispatch = useProjectDispatch();
   // O-1: remembered per advice in the store, so a second visit does not offer the drafts again
   const added = draftsAdded[adviceId];
   if (added)
     return (
       <p role="status">
-        {plural(added, "inverter draft")} added. <Link href="/network/?tab=Inverters">Complete them in Network</Link>
+        {t("{drafts} added.", { drafts: drafts(added) })} <Link href="/network/?tab=Inverters">{t("Complete them in Network")}</Link>
       </p>
     );
   // not remembered after a reload (store only): name the rows that still lack a bus instead
@@ -121,22 +134,23 @@ function InverterDrafts({ adviceId, plan }: { adviceId: string; plan: PsPayload[
   return (
     <p>
       <button type="button" onClick={() => dispatch({ type: "draftsAdded", adviceId, count: plan.unit_count, ratedKva: plan.unit_rating_kva })}>
-        Add {plural(plan.unit_count, "inverter draft")} of {plan.unit_rating_kva} kVA
+        {t("Add {drafts} of {rating} kVA", { drafts: drafts(plan.unit_count), rating: plan.unit_rating_kva })}
       </button>
-      {unplaced > 0 && ` ${plural(unplaced, "inverter")} without a bus already in the design.`}
+      {unplaced > 0 && ` ${t("{inverters} without a bus already in the design.", { inverters: t(unplaced === 1 ? "{n} inverter" : "{n} inverters", { n: unplaced }) })}`}
     </p>
   );
 }
 
 // Doc 12 FR-72: a hint only; the advice values above are never changed or rounded.
 function CatalogHints({ unitKva }: { unitKva: number }) {
+  const { t } = useLanguage();
   const { catalog, checks } = useCatalog();
   const fits = catalogHints(catalog.entries, unitKva, checks);
   return (
-    <section aria-label="Catalogue hints">
+    <section aria-label={t("Catalogue hints")}>
       <p>
-        Usable catalogue inverter entries rated at least {unitKva} kVA (hint only):{" "}
-        {fits.length === 0 ? "none" : fits.map((e) => `${e.id} (${e.inverter?.rated_kva} kVA)`).join(", ")}
+        {t("Usable catalogue inverter entries rated at least {unitKva} kVA (hint only):", { unitKva })}{" "}
+        {fits.length === 0 ? t("none") : fits.map((e) => `${e.id} (${e.inverter?.rated_kva} kVA)`).join(", ")}
       </p>
     </section>
   );
@@ -146,6 +160,7 @@ function CatalogHints({ unitKva }: { unitKva: number }) {
 // computed here and never stored, the advice values above are unchanged. Shown only when the
 // Catalogue holds a usable battery module.
 function ModuleHint({ eNomKwh }: { eNomKwh: number | null }) {
+  const { t } = useLanguage();
   const { catalog, checks } = useCatalog();
   const [modId, setModId] = useState("");
   const [invId, setInvId] = useState("");
@@ -159,10 +174,10 @@ function ModuleHint({ eNomKwh }: { eNomKwh: number | null }) {
   const h = moduleHint(eNomKwh, mod.battery_module ?? {}, { min: inv?.dc_voltage_min_v, max: inv?.dc_voltage_max_v }, ns);
   const kwh = (v: number) => `${fixed(v, "kWh")} kWh`;
   return (
-    <section aria-label="Battery module hint">
-      <p>Battery module hint (hint only; the advice values above do not change):</p>
+    <section aria-label={t("Battery module hint")}>
+      <p>{t("Battery module hint (hint only; the advice values above do not change):")}</p>
       <p>
-        <label htmlFor="hint-module">Module entry</label>{" "}
+        <label htmlFor="hint-module">{t("Module entry")}</label>{" "}
         <select id="hint-module" value={mod.id} onChange={(x) => setModId(x.target.value)}>
           {modules.map((e) => (
             <option key={e.id} value={e.id}>
@@ -170,9 +185,9 @@ function ModuleHint({ eNomKwh }: { eNomKwh: number | null }) {
             </option>
           ))}
         </select>{" "}
-        <label htmlFor="hint-inverter">DC window from inverter entry</label>{" "}
+        <label htmlFor="hint-inverter">{t("DC window from inverter entry")}</label>{" "}
         <select id="hint-inverter" value={invId} onChange={(x) => setInvId(x.target.value)}>
-          <option value="">(none)</option>
+          <option value="">{t("(none)")}</option>
           {inverters.map((e) => (
             <option key={e.id} value={e.id}>
               {e.id} ({e.inverter?.dc_voltage_min_v ?? "—"}–{e.inverter?.dc_voltage_max_v ?? "—"} V)
@@ -181,21 +196,21 @@ function ModuleHint({ eNomKwh }: { eNomKwh: number | null }) {
         </select>
       </p>
       {h.verdict === "not evaluated" ? (
-        <p data-testid="module-hint">Not evaluated: {h.reason}.</p>
+        <p data-testid="module-hint">{t("Not evaluated: {reason}.", { reason: h.reason })}</p>
       ) : (
         <p data-testid="module-hint">
-          Verdict: {h.verdict}
-          {h.verdict === "unknown" && " (DC window or module voltage limits missing)"}. Modules needed {h.moduleCount}
+          {t("Verdict:")} {t(h.verdict)}
+          {h.verdict === "unknown" && ` ${t("(DC window or module voltage limits missing)")}`}. {t("Modules needed")} {h.moduleCount}
           {h.verdict === "fit" && (
             <>
-              ; admissible series counts {h.series[0]}–{h.series.at(-1)};{" "}
-              <label htmlFor="hint-ns">series count</label>{" "}
+              ; {t("admissible series counts")} {h.series[0]}–{h.series.at(-1)};{" "}
+              <label htmlFor="hint-ns">{t("series count")}</label>{" "}
               <select id="hint-ns" value={h.ns ?? ""} onChange={(x) => setNs(Number(x.target.value))}>
                 {h.series.map((n) => (
                   <option key={n}>{n}</option>
                 ))}
               </select>{" "}
-              × {h.np} in parallel = {h.installedCount} modules, installed {kwh(h.installedKwh!)}, extra {kwh(h.extraKwh!)}
+              {t("× {np} in parallel = {count} modules, installed {installed}, extra {extra}", { np: h.np!, count: h.installedCount!, installed: kwh(h.installedKwh!), extra: kwh(h.extraKwh!) })}
             </>
           )}
           .
@@ -206,6 +221,7 @@ function ModuleHint({ eNomKwh }: { eNomKwh: number | null }) {
 }
 
 function Sizing() {
+  const { t } = useLanguage();
   const { design, sizingAdvice, runRecords } = useProject();
   const dispatch = useProjectDispatch();
   // Last advice first, then the guided example (Doc 12 X9, D-92 K230), else empty.
@@ -249,11 +265,11 @@ function Sizing() {
   return (
     <>
       <h1>
-        Sizing advice <span className="code-label">(power system parameters, PS)</span>
+        {t("Sizing advice")} <span className="code-label">{t("(power system parameters, PS)")}</span>
       </h1>
       <ExampleGuide screen="sizing" />
       <form
-        aria-label="Sizing advice settings"
+        aria-label={t("Sizing advice settings")}
         style={{ "--field-label": "17rem" } as React.CSSProperties}
         onSubmit={(e) => {
           e.preventDefault();
@@ -276,12 +292,12 @@ function Sizing() {
         ))}
         {ex.resetButton}{ex.resetButton && " "}
         <button type="submit" disabled={busy || !hasLoad}>
-          {busy ? "Running..." : latest ? "Re-run advice" : "Run advice"}
+          {t(busy ? "Running..." : latest ? "Re-run advice" : "Run advice")}
         </button>
         {!hasLoad && (
           <span>
             {" "}
-            Add at least one load first. <Link href="/loads/">Go to Loads</Link>
+            {t("Add at least one load first.")} <Link href="/loads/">{t("Go to Loads")}</Link>
           </span>
         )}
       </form>
@@ -293,37 +309,37 @@ function Sizing() {
         </p>
       ))}
       {!latest ? (
-        <p>No advice yet.</p>
+        <p>{t("No advice yet.")}</p>
       ) : (
         <ResultSheet record={runRecords.find((x) => x.record_id === latest.id) ?? resp?.run_record ?? null}>
           {resp?.result.status === "FEASIBLE" && <StatusBanner type="PS" result={resp.result} />}
           {stale && (
             <p role="alert" data-testid="advice-stale">
-              The loads or settings changed after this advice was made. Run the advice again.
+              {t("The loads or settings changed after this advice was made. Run the advice again.")}
             </p>
           )}
           <AdvicePanel a={latest} />
           {latest.state === "PROPOSED" && (
-            <div aria-label="Decide on the advice" role="group">
+            <div aria-label={t("Decide on the advice")} role="group">
               <ul>
-                <li>Accept: keep this advice as the sizing basis and offer inverter drafts from it. The design does not change.</li>
-                <li>Skip: go on without this advice. The design does not change.</li>
+                <li>{t("Accept: keep this advice as the sizing basis and offer inverter drafts from it. The design does not change.")}</li>
+                <li>{t("Skip: go on without this advice. The design does not change.")}</li>
               </ul>
               <p>
                 <button type="button" disabled={stale} onClick={() => dispatch({ type: "adviceDecided", id: latest.id, state: "ACCEPTED" })}>
-                  Accept
+                  {t("Accept")}
                 </button>{" "}
                 <button type="button" disabled={stale} onClick={() => dispatch({ type: "adviceDecided", id: latest.id, state: "SKIPPED" })}>
-                  Skip
+                  {t("Skip")}
                 </button>
-                {stale && " Run the advice again to accept or skip it."}
+                {stale && ` ${t("Run the advice again to accept or skip it.")}`}
               </p>
             </div>
           )}
           {latest.state === "ACCEPTED" && <InverterDrafts adviceId={latest.id} plan={latest.result.inverter_plan} />}
           {latest.state === "SKIPPED" && (
             <p role="status">
-              Skipped. Enter the inverters yourself in <Link href="/network/?tab=Inverters">Network</Link>.
+              {t("Skipped. Enter the inverters yourself in")} <Link href="/network/?tab=Inverters">{t("Network")}</Link>.
             </p>
           )}
         </ResultSheet>

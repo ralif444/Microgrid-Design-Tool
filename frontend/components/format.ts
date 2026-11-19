@@ -1,5 +1,8 @@
+import { displayLang, localize } from "./i18n";
 // K147: 6 significant digits hide unit round-trip noise (49.75000000000001 Hz); display only.
 export const num = (v: number) => Number(v.toPrecision(6));
+/** num() as display text: decimal separator of the display language. */
+export const numText = (v: number) => localize(String(num(v)), displayLang());
 
 // Locale-safe input (plan F1): a dot or a comma is the decimal separator. null = empty, undefined = not a number.
 // shortcut: "1,500" is refused as ambiguous (1.5 or 1500); once the language switch exists, resolve it by locale.
@@ -23,7 +26,8 @@ const DP: Record<string, number> = {
 // significant digits; one below 10^-(d+2) is shown as a bound ("< 0.000001" p.u.), never in e-notation.
 export const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
-export const fixed = (v: number, unit: string) => {
+export const fixed = (v: number, unit: string) => localize(fixedEn(v, unit), displayLang());
+const fixedEn = (v: number, unit: string) => {
   const d = DP[unit];
   if (d === undefined) return String(num(v));
   const a = Math.abs(v);

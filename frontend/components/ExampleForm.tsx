@@ -13,6 +13,7 @@ import { useProject } from "../store";
 import { initialValue } from "../store/example";
 import styles from "./ExampleForm.module.css";
 import { Icon } from "./Icon";
+import { useLanguage } from "./Language";
 import { FURTHER, STEPS } from "./AreaNav";
 import banner from "./StatusBanner.module.css";
 import { Toggletip } from "./Term";
@@ -20,18 +21,20 @@ import { Toggletip } from "./Term";
 export const NOT_SET = "Not set in the example: enter a value.";
 
 export function ExampleTag({ label, source }: { label: string; source: string }) {
+  const { t } = useLanguage();
   return (
     <span className={styles.tag}>
       <Tag type="blue" size="sm">
-        Example
+        {t("Example")}
       </Tag>
-      <Toggletip label={`Example source: ${label}`}>Example value. Source: {source}.</Toggletip>
+      <Toggletip label={t("Example source: {label}", { label: t(label) })}>{t("Example value. Source: {source}.", { source })}</Toggletip>
     </span>
   );
 }
 
 export function NotSet() {
-  return <span className={styles.note}>{NOT_SET}</span>;
+  const { t } = useLanguage();
+  return <span className={styles.note}>{t(NOT_SET)}</span>;
 }
 
 // `resolve` checks an example value against the open Project (Doc 7 §2.3: a parameter_path that does
@@ -43,6 +46,7 @@ export function useExampleForm<T extends object>(
   opts: { resolve?: (field: string, value: unknown) => unknown; onReset?: () => void } = {},
 ) {
   const { example } = useProject();
+  const { t } = useLanguage();
   const s = example?.settings.screens[screen];
   const exampleValue = (k: string, v: unknown): unknown => {
     const r = opts.resolve ? opts.resolve(k, v) : v;
@@ -88,7 +92,7 @@ export function useExampleForm<T extends object>(
   const resetButton =
     s && (Object.keys(s.fields).length > 0 || s.presets.length > 0) ? (
       <button type="button" className={styles.reset} onClick={reset}>
-        Reset to example values
+        {t("Reset to example values")}
       </button>
     ) : null;
   return { values: form.values, set, tag, note, needs, resetButton, inExample: !!s };
@@ -98,6 +102,7 @@ export function useExampleForm<T extends object>(
 // source in a "What this step shows" disclosure; the Fake Engine line of PRD §3 rule 3.
 export function ExampleGuide({ screen, runnable = true }: { screen: string; runnable?: boolean }) {
   const { example } = useProject();
+  const { t } = useLanguage();
   const [fake, setFake] = useState(false);
   useEffect(() => {
     if (example) void getMeta().then((r) => setFake(r.ok && r.data.engine.engine_kind === "FAKE"));
@@ -105,23 +110,25 @@ export function ExampleGuide({ screen, runnable = true }: { screen: string; runn
   if (!example) return null;
   const g = example.settings.screens[screen]?.guidance;
   return (
-    <section aria-label="Example guidance" data-testid="example-guide" data-role="info" className={`no-print ${banner.banner}`}>
+    <section aria-label={t("Example guidance")} data-testid="example-guide" data-role="info" className={`no-print ${banner.banner}`}>
       <p className={styles.lead}>
         <Icon name="info" size={20} />
         {runnable
-          ? "Example mode: this screen is pre-filled from the guided example. Press Run."
-          : "Example mode: this screen shows the guided example."}
+          ? t("Example mode: this screen is pre-filled from the guided example. Press Run.")
+          : t("Example mode: this screen shows the guided example.")}
       </p>
       {fake && (
         <p>
-          Results on the Fake Engine are placeholders. Start with <code>MGAPP_ENGINE=REAL</code> to see engine results.
+          {t("Results on the Fake Engine are placeholders. Start with {code} to see engine results.")
+            .split("{code}")
+            .flatMap((part, i) => (i === 0 ? [part] : [<code key="c">MGAPP_ENGINE=REAL</code>, part]))}
         </p>
       )}
       {g && (
         <details className={banner.details}>
-          <summary>What this step shows</summary>
+          <summary>{t("What this step shows")}</summary>
           <p>{g.text}</p>
-          <p className={styles.source}>Source: {g.source}.</p>
+          <p className={styles.source}>{t("Source: {source}.", { source: g.source })}</p>
         </details>
       )}
     </section>
@@ -141,12 +148,13 @@ export const nextReady = (status: Status | undefined) => status === "FEASIBLE" |
 // without a Run button.
 export function ExampleNext({ screen, ready }: { screen: string; ready: boolean }) {
   const { example } = useProject();
+  const { t } = useLanguage();
   const i = ORDER.findIndex(([href]) => href === `/${screen}/` || href === screen); // screen: a key, or the workspace limits href
   const next = ORDER[i + 1];
   if (!example || !ready || i < 0 || !next) return null;
   return (
     <p className={`no-print ${styles.next}`} data-testid="example-next">
-      <Link href={next[0]}>Next: {next[1]}</Link>
+      <Link href={next[0]}>{t("Next: {step}", { step: t(next[1]) })}</Link>
     </p>
   );
 }

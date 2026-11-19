@@ -8,7 +8,7 @@ Dokumen ini memetakan setiap dokumen arsitektur (Dokumen 1–10 dan kesepuluh AD
 ---
 
 ## 1. Proposal structure assumed
-Whole table is **[ASSUMPTION]** pending supervisor: the proposal follows the skripsi outline (`TA_outline_v2.md`) but Bab I–III describe the web app; no mathematical formulation (decision 19, K1).
+Whole table was **[ASSUMPTION]** pending supervisor (supervisor approvals accepted 2026-11-19, Doc 9 D-117): the proposal follows the skripsi outline (`TA_outline_v2.md`) but Bab I–III describe the web app; no mathematical formulation (decision 19, K1).
 
 | Proposal section | Content at proposal level |
 |---|---|
@@ -129,7 +129,7 @@ Plain statement: **T1 is fully covered; T2–T6 are covered only at specificatio
 | A | Proposal keeps RM/T identical to the skripsi; Bab III states that T2–T6 are realised after implementation, with specification-level design in the proposal. | Single objective set, easy traceability; reviewers may ask where the models are. | — |
 | B | Proposal has its own RM/T focused on the web app (framework, architecture, methodology, verification plan); skripsi RM/T stay as approved and are mapped in Bab I scope. | Proposal internally consistent with Bab III; two objective sets to keep in sync (the double bookkeeping Doc 1 §11 warned about). | **Recommended** by this doc (not decided): Bab III can then justify every Tujuan. Needs supervisor consent. |
 
-### 4.1 Proposal RM-P / T-P — Approved by user 2026-10-18 (Q-PD-1); supervisor approval pending (Option B) (UP-10, 2026-10-18)
+### 4.1 Proposal RM-P / T-P — Approved by user 2026-10-18 (Q-PD-1); supervisor approval pending (Option B) (UP-10, 2026-10-18); supervisor approved 2026-11-19 (Doc 9 K-03, D-117)
 
 Skripsi RM1–RM6 / T1–T6 stay unchanged. The proposal gets its own problem statements and objectives, worded in Indonesian with Bloom-taxonomy verbs (level in brackets, revised Bloom: C4 analyse, C5 evaluate, C6 create) [ASSUMPTION: verb levels per the common revised-Bloom reading; confirm against the faculty guideline].
 
@@ -157,7 +157,7 @@ Expected proposal outputs (in place of K for Bab V, which the proposal does not 
 | Parameter variation | M3a–d are sensitivity, sweep, scenario, envelope features of the app; skripsi methodology draft (DRAF_TA v2 §3.8–3.10) defines 4 reference designs, 7 independent variables, sweep plan and rule R1 | Method and results are skripsi scope; proposal Bab IV 4.6 records the design without results (K-06, 2026-10-21); contract gaps open (Doc 9 Q-17) |
 | Specifications and brands | Doc 8 §3, §9 #5 list tool categories; Doc 4 §8 local deployment | Tool names are [ASSUMPTION]; versions not pinned; no laptop/OS/browser specification (browser list [ASSUMPTION], Doc 8 #4) |
 | Replicable | Start procedure (NFR-02), RunRecord with engine commit (FR-47), tool versions pinned at P0 (XG-P0 item 5a) and engine version/commit at P2, Doc 10 gates, fixtures (Doc 8 §5) | Versions unpinned until P0; replicability is of the tool, not of experimental results (C5.20, 2026-10-21) |
-| Mathematical modelling | Spec-level only (decision 19) | **KONFLIK (pending supervisor)**: K1 resolved by user, K2 accepted by user; no supervisor confirmation yet; proposal v2 adds method-level plan (D-41) (UP-15, 2026-10-18) |
+| Mathematical modelling | Spec-level only (decision 19) | **KONFLIK, RESOLVED**: K1 resolved by user, K2 accepted by user; proposal v2 adds method-level plan (D-41) (UP-15, 2026-10-18); supervisor confirmation accepted 2026-11-19 (Doc 9 D-117) |
 
 ## 6. Ringkasan Eksekutif (untuk Dosen Pembimbing)
 
@@ -187,8 +187,8 @@ Expected proposal outputs (in place of K for Bab V, which the proposal does not 
 | # | Item | Tag | → doc |
 |---|---|---|---|
 | 1 | Proposal Bab I–III structure (§1) | [ASSUMPTION] | 9 |
-| 2 | KONFLIK-T resolved: Option B chosen by user; RM-P/T-P wording in §4.1 approved by user 2026-10-18 (Q-PD-1), supervisor approval pending (UP-10, 2026-10-18) | DECIDED (user) / wording approved by user, supervisor pending | 9 |
-| 3 | Supervisor "mathematical modelling" note (K1, K2) | KONFLIK (pending supervisor) | 9 |
+| 2 | KONFLIK-T resolved: Option B chosen by user; RM-P/T-P wording in §4.1 approved by user 2026-10-18 (Q-PD-1), supervisor approved 2026-11-19 (Doc 9 K-03, D-117) | RESOLVED (user) / wording approved by user, supervisor pending | 9 |
+| 3 | Supervisor "mathematical modelling" note (K1, K2) | RESOLVED: supervisor approvals accepted 2026-11-19 (Doc 9 D-117) | 9 |
 | 4 | S1 existing-tool claims; S2 traceability claim | [NEEDS SOURCE] | 9 |
 | 5 | Bab II literature (~30 papers) and standards content absent from the doc set | [NEEDS SOURCE] | 9 |
 | 6 | Independent/dependent variables for a software methodology | [ASSUMPTION] pending supervisor | 9 |

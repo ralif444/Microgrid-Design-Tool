@@ -10,6 +10,7 @@ import { CANNOT_UNDO, useConfirmDelete } from "../../components/ConfirmDelete";
 import { CellInput, CellSelect, DataTable, type DataColumn } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
 import { Icon } from "../../components/Icon";
+import { useLanguage } from "../../components/Language";
 import { RequireProject } from "../../components/RequireProject";
 import { loadMode, modePatch, PF_DIRECTIONS, issueWhere, Q_SIGN_NOTE, type LoadMode } from "../../components/elementFields";
 import { useValidation } from "../../components/useValidation";
@@ -19,6 +20,7 @@ import styles from "./loads.module.css";
 type HourValue = NonNullable<NonNullable<ProjectSnapshot["load_profile"]>["values"]>[number];
 // O-2: the one LoadProfile (Doc 3 §3.5), 24 hourly values of system active power; the server checks it.
 function ProfileEditor({ issues, confirm }: { issues: ValidationIssue[]; confirm: (title: string, body: string, ok: () => void) => void }) {
+  const { t } = useLanguage();
   const { design } = useProject();
   const dispatch = useProjectDispatch();
   const lp = design.load_profile;
@@ -31,36 +33,36 @@ function ProfileEditor({ issues, confirm }: { issues: ValidationIssue[]; confirm
   return (
     <section aria-labelledby="profile-h" id="profile">
       <div className={styles.toolbar}>
-        <h2 id="profile-h">Daily load profile</h2>
+        <h2 id="profile-h">{t("Daily load profile")}</h2>
         {lp ? (
           <button
             type="button"
-            onClick={() => confirm("Remove the load profile?", `The 24 hourly values are removed from the design. ${CANNOT_UNDO}`, () => dispatch({ type: "profileSet", profile: null }))}
+            onClick={() => confirm(t("Remove the load profile?"), `${t("The 24 hourly values are removed from the design.")} ${t(CANNOT_UNDO)}`, () => dispatch({ type: "profileSet", profile: null }))}
           >
-            Remove profile
+            {t("Remove profile")}
           </button>
         ) : (
           <button
             type="button"
             onClick={() => dispatch({ type: "profileSet", profile: { id: "LP1", values: Array.from({ length: 24 }, (_, hour) => ({ hour, p_kw: null })) } })}
           >
-            + Add a 24-hour profile
+            {t("+ Add a 24-hour profile")}
           </button>
         )}
       </div>
       <p className={styles.note}>
-        System active power for each hour of a day. Storage advice, the hour sweep and Battery use it; power flow uses the Load table above.
+        {t("System active power for each hour of a day. Storage advice, the hour sweep and Battery use it; power flow uses the Load table above.")}
       </p>
-      {lp && <DataTable label="Load profile" columns={columns} rows={lp.values ?? []} rowKey={(v, k) => v.hour ?? k} rowName={(v) => `hour ${v.hour}`} />}
+      {lp && <DataTable label={t("Load profile")} columns={columns} rows={lp.values ?? []} rowKey={(v, k) => v.hour ?? k} rowName={(v) => t("hour {hour}", { hour: v.hour ?? "" })} />}
       {issues.length > 0 && (
         <div className="problems">
           <Icon name="list" size={20} />
-          <ul aria-label="Load profile problems">
+          <ul aria-label={t("Load profile problems")}>
             {/* one line per message: an empty new profile would otherwise list the same message 24 times */}
             {[...Map.groupBy(issues, (i) => i.message)].map(([m, all]) => (
               <li key={m}>
                 {m}
-                {all.length > 1 && ` (${all.length} hourly values)`}
+                {all.length > 1 && ` (${t("{count} hourly values", { count: all.length })})`}
               </li>
             ))}
           </ul>
@@ -72,6 +74,7 @@ function ProfileEditor({ issues, confirm }: { issues: ValidationIssue[]; confirm
 
 
 function Loads() {
+  const { t } = useLanguage();
   const { dialog, confirm } = useConfirmDelete();
   const { design } = useProject();
   const dispatch = useProjectDispatch();
@@ -94,14 +97,14 @@ function Loads() {
     {
       key: "bus_id",
       header: "Bus",
-      cell: (l) => <CellSelect label={`Bus of ${l.id}`} options={buses} value={l.bus_id} onChange={(v) => set(l, { bus_id: v })} invalid={bad(l, "bus_id")} />,
+      cell: (l) => <CellSelect label={t("Bus of {id}", { id: l.id ?? "" })} options={buses} value={l.bus_id} onChange={(v) => set(l, { bus_id: v })} invalid={bad(l, "bus_id")} />,
     },
     {
       key: "p_kw",
       header: "P",
       unit: "kW",
       numeric: true,
-      cell: (l) => <CellInput label={`P of ${l.id} (kW)`} kind="number" value={l.p_kw} onChange={(v: number | null) => set(l, { p_kw: v })} invalid={bad(l, "p_kw")} />,
+      cell: (l) => <CellInput label={t("P of {id} (kW)", { id: l.id ?? "" })} kind="number" value={l.p_kw} onChange={(v: number | null) => set(l, { p_kw: v })} invalid={bad(l, "p_kw")} />,
     },
     {
       key: "mode",
@@ -109,7 +112,7 @@ function Loads() {
       fields: [],
       cell: (l) => (
         // a radiogroup instead of fieldset + legend: the legend box shifts the radios in a table cell
-        <div role="radiogroup" aria-label={`Reactive power of ${l.id} given as`} className={styles.mode}>
+        <div role="radiogroup" aria-label={t("Reactive power of {id} given as", { id: l.id ?? "" })} className={styles.mode}>
           <label>
             <input type="radio" name={`mode-${l.id}`} checked={modeOf(l) === "Q"} onChange={() => choose(l, "Q")} /> Q
           </label>
@@ -127,7 +130,7 @@ function Loads() {
       numeric: true,
       cell: (l) =>
         modeOf(l) === "Q" ? (
-          <CellInput label={`Q of ${l.id} (kvar)`} kind="number" value={l.q_kvar} onChange={(v: number | null) => set(l, { q_kvar: v })} invalid={bad(l, "q_kvar")} />
+          <CellInput label={t("Q of {id} (kvar)", { id: l.id ?? "" })} kind="number" value={l.q_kvar} onChange={(v: number | null) => set(l, { q_kvar: v })} invalid={bad(l, "q_kvar")} />
         ) : null,
     },
     {
@@ -138,7 +141,7 @@ function Loads() {
       cell: (l) =>
         modeOf(l) === "PF" ? (
           <CellInput
-            label={`Power factor of ${l.id} (ratio)`}
+            label={t("Power factor of {id} (ratio)", { id: l.id ?? "" })}
             kind="number"
             value={l.power_factor}
             onChange={(v: number | null) => set(l, { power_factor: v })}
@@ -152,7 +155,7 @@ function Loads() {
       cell: (l) =>
         modeOf(l) === "PF" ? (
           <CellSelect
-            label={`PF direction of ${l.id}`}
+            label={t("PF direction of {id}", { id: l.id ?? "" })}
             options={PF_DIRECTIONS}
             value={l.pf_direction}
             onChange={(v) => set(l, { pf_direction: v as Load["pf_direction"] })}
@@ -165,25 +168,25 @@ function Loads() {
   const other = issues.filter((i) => i.entity !== "Load" && i.entity !== "LoadProfile");
   return (
     <>
-      <h1>Loads</h1>
+      <h1>{t("Loads")}</h1>
       <ExampleGuide screen="loads" runnable={false} />
       {(design.buses?.length ?? 0) === 0 && (
-        <EmptyState title="No buses yet." icon="link" action={<Link href="/network/">Add buses in the network editor</Link>}>
-          Loads are placed on buses.
+        <EmptyState title={t("No buses yet.")} icon="link" action={<Link href="/network/">{t("Add buses in the network editor")}</Link>}>
+          {t("Loads are placed on buses.")}
         </EmptyState>
       )}
       <div className={styles.toolbar}>
-        <h2>Load table</h2>
+        <h2>{t("Load table")}</h2>
         <button
           type="button"
           onClick={() => dispatch({ type: "rowAdded", collection: "loads", row: { bus_id: design.buses?.[0]?.id ?? null, p_kw: null, q_kvar: null } })}
         >
-          + Add load
+          {t("+ Add load")}
         </button>
       </div>
       {(loads.length > 0 || (design.buses?.length ?? 0) > 0) && (
         <DataTable
-          label="Loads"
+          label={t("Loads")}
           columns={columns}
           rows={loads}
           rowKey={(l) => l.id ?? ""}
@@ -193,20 +196,20 @@ function Loads() {
           actions={(l) => (
             <button
               type="button"
-              onClick={() => confirm(`Delete ${l.id}?`, `Load ${l.id} is removed from the design. ${CANNOT_UNDO}`, () => dispatch({ type: "rowRemoved", collection: "loads", id: l.id ?? "" }))}
+              onClick={() => confirm(t("Delete {id}?", { id: l.id ?? "" }), `${t("Load {id} is removed from the design.", { id: l.id ?? "" })} ${t(CANNOT_UNDO)}`, () => dispatch({ type: "rowRemoved", collection: "loads", id: l.id ?? "" }))}
             >
-              Delete {l.id}
+              {t("Delete {id}", { id: l.id ?? "" })}
             </button>
           )}
-          empty={<EmptyState title="No loads yet.">Add the first load.</EmptyState>}
+          empty={<EmptyState title={t("No loads yet.")}>{t("Add the first load.")}</EmptyState>}
         />
       )}
-      <p className={styles.note}>{Q_SIGN_NOTE}</p>
+      <p className={styles.note}>{t(Q_SIGN_NOTE)}</p>
       <ProfileEditor issues={issues.filter((i) => i.entity === "LoadProfile")} confirm={confirm} />
       {other.length > 0 && (
         <div className="problems">
           <Icon name="list" size={20} />
-          <ul aria-label="Other problems">
+          <ul aria-label={t("Other problems")}>
             {other.map((i, k) => (
               <li key={k}>
                 {issueWhere(i)}: {i.message}
@@ -216,8 +219,8 @@ function Loads() {
         </div>
       )}
       <p className={styles.next}>
-        <Link href="/sizing/">Go to sizing advice</Link>
-        {loads.length === 0 && " Needs at least one load."}
+        <Link href="/sizing/">{t("Go to sizing advice")}</Link>
+        {loads.length === 0 && ` ${t("Needs at least one load.")}`}
       </p>
       <ExampleNext screen="loads" ready={true} />
       {dialog}

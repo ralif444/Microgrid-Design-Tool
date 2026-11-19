@@ -2,16 +2,18 @@
 // Tag, never design data.
 import { Tag } from "@carbon/react";
 import type { ReactNode } from "react";
+import { useLanguage } from "./Language";
 import styles from "./ui.module.css";
 
 export function AdvisoryPanel({ label, title, tag = "Advice", children }: { label: string; title: string; tag?: string; children: ReactNode }) {
+  const { t } = useLanguage();
   return (
-    <section className={styles.advice} aria-label={label}>
+    <section className={styles.advice} aria-label={t(label)}>
       <div className={styles.adviceHead}>
         <Tag type="purple" size="sm" className={styles.adviceTag}>
-          {tag}
+          {t(tag)}
         </Tag>
-        {title}
+        {t(title)}
       </div>
       {children}
     </section>

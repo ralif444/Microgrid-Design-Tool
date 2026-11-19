@@ -3,6 +3,7 @@
 // `adornment` sits after the unit and `note` under the input (example mode, Doc 12 X9); both absent = as before.
 import { useEffect, useState, type ReactNode } from "react";
 import { NOT_A_NUMBER, parseNumber } from "./format";
+import { useLanguage } from "./Language";
 import styles from "./NumberField.module.css";
 
 // Keeps the typed text (so "0," or "-" survive while typing) and sends only parsed numbers or null.
@@ -49,11 +50,12 @@ export function NumberField({
   note?: ReactNode;
 }) {
   const t = useNumberText(value, onChange, step === "1");
-  const shown = error ?? (t.bad ? NOT_A_NUMBER : null);
+  const { t: tr } = useLanguage();
+  const shown = error ?? (t.bad ? tr(NOT_A_NUMBER) : null);
   return (
     <span className={styles.field}>
       <label htmlFor={id} className={styles.label}>
-        {label}
+        {typeof label === "string" ? tr(label) : label}
         <span className="sr-only"> ({unit})</span>
       </label>
       <span className={styles.control}>

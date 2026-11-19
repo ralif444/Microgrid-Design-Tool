@@ -10,6 +10,7 @@ import { ExampleGuide, ExampleNext, nextReady, useExampleForm } from "../../comp
 import { asResponse } from "../../components/Further";
 import { CheckStrip, useSizingMarginNote } from "../../components/CheckStrip";
 import { Icon } from "../../components/Icon";
+import { useLanguage } from "../../components/Language";
 import { Inspector, type ElementRef } from "../../components/Inspector";
 import { m2Kpis } from "../../components/kpi";
 import { KpiStrip } from "../../components/KpiStrip";
@@ -29,6 +30,7 @@ import styles from "./constraint-check.module.css";
 
 function ConstraintCheck() {
   const { design, runRecords } = useProject();
+  const { t } = useLanguage();
   const dispatch = useProjectDispatch();
   // K147: start from the user's own last M2 entry (RunRecord), never from a default; in example mode
   // an empty field takes the guided example's value (Doc 12 X9, D-92 K230).
@@ -59,14 +61,14 @@ function ConstraintCheck() {
     <>
       <div className={styles.head}>
         <h1>
-          Constraint check <span className="code-label">(M2)</span>
+          {t("Constraint check")} <span className="code-label">(M2)</span>
         </h1>
       </div>
       <CheckStrip fresh={fresh} m1={m1} m1Record={m1Record} m2={payload} m2Record={payload ? (resp?.run_record ?? null) : null} />
       <ExampleGuide screen="constraint-check" />
       <M1BlockedNote f={fresh} />
       <form
-        aria-label="Constraint check settings"
+        aria-label={t("Constraint check settings")}
         className={styles.form}
         onSubmit={(e) => {
           e.preventDefault();
@@ -77,7 +79,7 @@ function ConstraintCheck() {
           <NumberField
             key={k}
             id={k}
-            label={label}
+            label={t(label)}
             unit={unit}
             step={step}
             value={params[k]}
@@ -88,21 +90,21 @@ function ConstraintCheck() {
         ))}
         {ex.resetButton}
         <button type="submit" disabled={busy || fresh !== "current"} aria-busy={busy || undefined}>
-          {busy ? "Running..." : "Run M2"}
+          {busy ? t("Running...") : t("Run M2")}
         </button>
       </form>
       {error && <Toast message={error} onDismiss={() => setError(null)} />}
       {r && resp && (
         <ResultSheet record={resp.run_record}>
           <StatusBanner type="M2" result={r} />
-          {payload && <KpiStrip label="Constraint check key figures" kpis={m2Kpis(payload)} record={resp.run_record} />}
+          {payload && <KpiStrip label={t("Constraint check key figures")} kpis={m2Kpis(payload)} record={resp.run_record} />}
           {notices.map((w, k) => (
             <p key={k} data-testid="m2-warning" className="problems">
               <Icon name="warn" size={20} />
               {w.message}
             </p>
           ))}
-          {r.status === "INFEASIBLE" && <ConstraintTable label="Limiting constraints" rows={r.limiting_constraints ?? []} shortcut note={false} />}
+          {r.status === "INFEASIBLE" && <ConstraintTable label={t("Limiting constraints")} rows={r.limiting_constraints ?? []} shortcut note={false} />}
           {payload && <M2Results p={payload} charts={{ record: resp.run_record }} />}
         </ResultSheet>
       )}
@@ -112,11 +114,11 @@ function ConstraintCheck() {
         fresh === "current" &&
         (runRecords.some((x) => x.analysis_type === "M2") ? (
           // the design changed after the last M2 (FR-93); that run stays in Run history and the Report
-          <EmptyState title="No result on this screen." action={<Link href="/runs/">Open run history</Link>}>
-            The design changed after the last run. Run M2 again to see the results here.
+          <EmptyState title={t("No result on this screen.")} action={<Link href="/runs/">{t("Open run history")}</Link>}>
+            {t("The design changed after the last run. Run M2 again to see the results here.")}
           </EmptyState>
         ) : (
-          <EmptyState title="Not run yet.">Enter both design margins, then run M2.</EmptyState>
+          <EmptyState title={t("Not run yet.")}>{t("Enter both design margins, then run M2.")}</EmptyState>
         ))}
       <ExampleNext screen="constraint-check" ready={nextReady(r?.status)} />
     </>

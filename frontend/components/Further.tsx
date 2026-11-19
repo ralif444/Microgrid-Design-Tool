@@ -6,7 +6,9 @@ import { Icon } from "./Icon";
 import styles from "./Further.module.css";
 import { FIELD_NAME, fieldName } from "./elementFields";
 export { fieldName };
-import { num } from "./format";
+import { numText } from "./format";
+import { displayLang, translate } from "./i18n";
+import { useLanguage } from "./Language";
 import { SOLVER, useAnalysisCall } from "./useAnalysisCall";
 import { m1Freshness, useValidation } from "./useValidation";
 
@@ -60,7 +62,7 @@ export const unitOf = (path: string) => SUFFIX.find(([s]) => path.endsWith(s))?.
 // "inverters/INV1/rated_kva" → "INV1, Rating"; paramLabel adds the unit: "INV1, Rating (kVA)".
 export const paramName = (path: string) => {
   const [, id, f] = path.split("/");
-  return f ? `${id}, ${fieldName(f)}` : path;
+  return f ? `${id}, ${translate(displayLang(), fieldName(f))}` : path;
 };
 export const paramUnit = (path: string) => FIELD_NAME[path.split("/")[2] ?? ""]?.[1] ?? unitOf(path);
 export const paramLabel = (path: string) => `${paramName(path)} (${paramUnit(path)})`;
@@ -152,28 +154,31 @@ function lastM2Infeasible(records: { analysis_type: string; result: { status: st
 
 // FR-41 note (Doc 7 §3.1).
 export function InfeasibleNote({ show }: { show: boolean }) {
-  return show ? <p>This design violates constraints; further analyses are still allowed.</p> : null;
+  const { t } = useLanguage();
+  return show ? <p>{t("This design violates constraints; further analyses are still allowed.")}</p> : null;
 }
 
-export const fmt = (v: number | null | undefined) => (v === null || v === undefined ? "—" : String(num(v)));
+export const fmt = (v: number | null | undefined) => (v === null || v === undefined ? "—" : numText(v));
 
 // O-3: an out-of-date result stays on screen, greyed after this band (Further.module.css), instead of "Not run yet."
 export function OutOfDate({ show }: { show: boolean }) {
+  const { t } = useLanguage();
   return show ? (
     <p role="note" className={styles.outOfDate} data-testid="out-of-date">
-      <Icon name="clock" /> Out of date: the design changed after this run. Re-run.
+      <Icon name="clock" /> {t("Out of date: the design changed after this run. Re-run.")}
     </p>
   ) : null;
 }
 
 // Run gate (Phase 5): the button stays disabled until the form is complete, and says what is missing.
 export function RunButton({ label, busy, fresh, missing }: { label: string; busy: boolean; fresh: string; missing: string[] }) {
+  const { t } = useLanguage();
   return (
     <p className={styles.run}>
       <button type="submit" className="primary" disabled={busy || fresh !== "current" || missing.length > 0} aria-busy={busy || undefined} aria-describedby={missing.length ? "run-missing" : undefined}>
-        {busy ? "Running..." : label}
+        {busy ? t("Running...") : t(label)}
       </button>
-      {missing.length > 0 && <span id="run-missing">Missing: {missing.join(", ")}.</span>}
+      {missing.length > 0 && <span id="run-missing">{t("Missing: {list}.", { list: missing.map((m) => t(m)).join(", ") })}</span>}
     </p>
   );
 }
@@ -181,5 +186,5 @@ export function RunButton({ label, busy, fresh, missing }: { label: string; busy
 // M4a and M4b need τ_P and τ_Q on every inverter (Doc 3 §3.6); named for the Run button.
 export function tauMissing(d: ProjectSnapshot): string[] {
   const ids = (d.inverters ?? []).filter((x) => x.tau_p_s == null || x.tau_q_s == null).map((x) => x.id);
-  return ids.length ? [`τ_P and τ_Q on ${ids.join(", ")}`] : [];
+  return ids.length ? [translate(displayLang(), "τ_P and τ_Q on {ids}", { ids: ids.join(", ") })] : [];
 }

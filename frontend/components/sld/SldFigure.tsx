@@ -6,6 +6,7 @@
 import { useMemo, useRef } from "react";
 import type { M1Payload, ProjectSnapshot, RunRecord } from "../../api-types";
 import { captionLines, downloadSvg, FAKE_CAPTION } from "../charts/exportSvg";
+import { useLanguage } from "../Language";
 import { buildSldModel } from "./buildSldModel";
 import styles from "./sld.module.css";
 import { SldSvg } from "./SldSvg";
@@ -26,6 +27,7 @@ export function printParts(width: number, part = PART_W): [number, number][] {
 }
 
 export function SldFigure({ record }: { record: RunRecord }) {
+  const { t } = useLanguage();
   const model = useMemo(() => {
     const m1 = record.result.status === "FEASIBLE" ? (record.result.payload as unknown as M1Payload) : null;
     return buildSldModel({ design: record.snapshot as ProjectSnapshot, m1 });
@@ -33,32 +35,32 @@ export function SldFigure({ record }: { record: RunRecord }) {
   const { layout, failed } = useSldLayout(model);
   const box = useRef<HTMLDivElement>(null);
   const fake = record.engine_kind === "FAKE";
-  if (failed) return <p>Diagram could not be drawn; the tables still work.</p>;
+  if (failed) return <p>{t("Diagram could not be drawn; the tables still work.")}</p>;
   const parts = layout ? printParts(layout.width) : [];
   return (
-    <figure className={styles.report} aria-label={SLD_TITLE}>
-      <p className={styles.reportTitle}>{SLD_TITLE}</p>
+    <figure className={styles.report} aria-label={t(SLD_TITLE)}>
+      <p className={styles.reportTitle}>{t(SLD_TITLE)}</p>
       {!layout ? (
-        <p className={styles.wait}>Laying out the diagram…</p>
+        <p className={styles.wait}>{t("Laying out the diagram…")}</p>
       ) : (
         <>
           <div ref={box} className={parts.length > 1 ? styles.screenOnly : undefined}>
-            <SldSvg model={model} layout={layout} label={SLD_TITLE} />
+            <SldSvg model={model} layout={layout} label={t(SLD_TITLE)} />
           </div>
           {parts.length > 1 &&
             parts.map((c, k) => (
               <div key={k} className={styles.printOnly}>
-                <SldSvg model={model} layout={layout} label={`${SLD_TITLE}, part ${k + 1} of ${parts.length}`} clip={c} />
+                <SldSvg model={model} layout={layout} label={`${t(SLD_TITLE)}, ${t("part {k} of {n}", { k: k + 1, n: parts.length })}`} clip={c} />
                 <p className={styles.partNote}>
-                  Part {k + 1} of {parts.length}
+                  {t("Part {k} of {n}", { k: k + 1, n: parts.length })}
                 </p>
               </div>
             ))}
         </>
       )}
       <figcaption data-testid="sld-caption" className={styles.caption}>
-        {record.analysis_type}, RunRecord {record.record_id}, snapshot {record.snapshot_hash.slice(0, 12)}, engine {record.engine_kind ?? "not called"}
-        {record.result.status !== "FEASIBLE" && `; ${record.result.status}: no result labels`}
+        {record.analysis_type}, RunRecord {record.record_id}, snapshot {record.snapshot_hash.slice(0, 12)}, engine {record.engine_kind ?? t("not called")}
+        {record.result.status !== "FEASIBLE" && `; ${t("{status}: no result labels", { status: record.result.status })}`}
         {fake && <strong>. {FAKE_CAPTION}</strong>}
       </figcaption>
       <SldLegend />
@@ -71,7 +73,7 @@ export function SldFigure({ record }: { record: RunRecord }) {
           if (svg) downloadSvg(`single-line-diagram-${record.record_id}.svg`, svg, captionLines(SLD_TITLE, record));
         }}
       >
-        Download SVG
+        {t("Download SVG")}
       </button>
     </figure>
   );

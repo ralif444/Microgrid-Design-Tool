@@ -11,6 +11,7 @@ import { BankPick, CatalogPick } from "../../components/ElementSource";
 import { EmptyState } from "../../components/EmptyState";
 import { EntityTable } from "../../components/EntityTable";
 import { Icon } from "../../components/Icon";
+import { useLanguage } from "../../components/Language";
 import { Inspector, type ElementRef } from "../../components/Inspector";
 import { RequireProject } from "../../components/RequireProject";
 import { SingleLineDiagram } from "../../components/sld/SingleLineDiagram";
@@ -23,6 +24,7 @@ type Tab = "Buses" | "Lines" | "Inverters";
 const ROW_ENTITIES = new Set(["Bus", "Line", "Inverter"]);
 
 function Network() {
+  const { t } = useLanguage();
   const { design, batteryBanks } = useProject();
   const dispatch = useProjectDispatch();
   const [tab, setTab] = useState<Tab>("Buses");
@@ -31,17 +33,17 @@ function Network() {
   const [inspect, setInspect] = useState<ElementRef | null>(null);
   const sld = useSldModel();
   const TAB_OF = { bus: "Buses", line: "Lines", inverter: "Inverters" } as const;
-  const open = (t: ElementRef) => {
-    setInspect(t);
-    setFocus(t.id);
-    if (t.kind !== "load") setTab(TAB_OF[t.kind]);
+  const open = (el: ElementRef) => {
+    setInspect(el);
+    setFocus(el.id);
+    if (el.kind !== "load") setTab(TAB_OF[el.kind]);
   };
   // D-48 K22: ?focus=<id> from a limiting constraint opens the tab holding that element;
   // ?tab=<Tab> from the workspace "Table view" links opens that tab.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const t = params.get("tab");
-    if (t === "Lines" || t === "Inverters") setTab(t);
+    const wanted = params.get("tab");
+    if (wanted === "Lines" || wanted === "Inverters") setTab(wanted);
     const id = params.get("focus");
     if (!id) return;
     setFocus(id);
@@ -58,17 +60,17 @@ function Network() {
 
   return (
     <>
-      <h1>Network</h1>
+      <h1>{t("Network")}</h1>
       <ExampleGuide screen="network" runnable={false} />
-      {!enabled.Lines && <p className={styles.hint}>Lines need two buses; inverters need one.</p>}
-      <div role="tablist" aria-label="Network tables" className={styles.tabs}>
-        {(["Buses", "Lines", "Inverters"] as Tab[]).map((t) => (
-          <button key={t} type="button" role="tab" aria-selected={tab === t} disabled={!enabled[t]} onClick={() => setTab(t)}>
-            {t}
+      {!enabled.Lines && <p className={styles.hint}>{t("Lines need two buses; inverters need one.")}</p>}
+      <div role="tablist" aria-label={t("Network tables")} className={styles.tabs}>
+        {(["Buses", "Lines", "Inverters"] as Tab[]).map((name) => (
+          <button key={name} type="button" role="tab" aria-selected={tab === name} disabled={!enabled[name]} onClick={() => setTab(name)}>
+            {t(name)}
           </button>
         ))}
       </div>
-      <section role="tabpanel" aria-label={tab} className={styles.panel}>
+      <section role="tabpanel" aria-label={t(tab)} className={styles.panel}>
         {tab === "Buses" && (
           <>
             <form
@@ -79,19 +81,19 @@ function Network() {
                 setBusId("");
               }}
             >
-              <label htmlFor="bus-id">Bus id</label>{" "}
+              <label htmlFor="bus-id">{t("Bus id")}</label>{" "}
               <input id="bus-id" required value={busId} onChange={(e) => setBusId(e.target.value)} />{" "}
-              <button type="submit">Add bus</button>
+              <button type="submit">{t("Add bus")}</button>
             </form>
             {busCount === 0 ? (
-              <EmptyState title="No buses yet." icon="link">
-                Add a bus to start; lines and inverters connect to buses.
+              <EmptyState title={t("No buses yet.")} icon="link">
+                {t("Add a bus to start; lines and inverters connect to buses.")}
               </EmptyState>
             ) : (
               <EntityTable
                 collection="buses"
                 entity="Bus"
-                label="Buses"
+                label={t("Buses")}
                 columns={BUS_COLUMNS}
                 issues={issues}
                 focus={focus}
@@ -106,38 +108,38 @@ function Network() {
               type="button"
               onClick={() => dispatch({ type: "rowAdded", collection: "lines", row: { from_bus_id: null, to_bus_id: null } })}
             >
-              + Add line
+              {t("+ Add line")}
             </button>
-            <EntityTable collection="lines" entity="Line" label="Lines" columns={LINE_COLUMNS} issues={issues} focus={focus} onInspect={(id) => open({ kind: "line", id })} />
+            <EntityTable collection="lines" entity="Line" label={t("Lines")} columns={LINE_COLUMNS} issues={issues} focus={focus} onInspect={(id) => open({ kind: "line", id })} />
             <CatalogPick collection="lines" />
           </>
         )}
         {tab === "Inverters" && (
           <>
             <button type="button" onClick={() => dispatch({ type: "rowAdded", collection: "inverters", row: { bus_id: firstBus } })}>
-              + Add inverter
+              {t("+ Add inverter")}
             </button>
-            <EntityTable collection="inverters" entity="Inverter" label="Inverters" columns={INVERTER_COLUMNS} issues={issues} focus={focus} onInspect={(id) => open({ kind: "inverter", id })} />
+            <EntityTable collection="inverters" entity="Inverter" label={t("Inverters")} columns={INVERTER_COLUMNS} issues={issues} focus={focus} onInspect={(id) => open({ kind: "inverter", id })} />
             <CatalogPick collection="inverters" />
             <BankPick />
           </>
         )}
       </section>
       <details className={styles.diagram}>
-        <summary>Diagram (read-only)</summary>
+        <summary>{t("Diagram (read-only)")}</summary>
         <SingleLineDiagram drawing={sld.design} details={sld.full} selected={inspect?.id ?? null} onSelect={open} breakers={sld.breakers} />
       </details>
       {inspect && <Inspector target={inspect} onClose={() => setInspect(null)} />}
-      <h2>Issues</h2>
+      <h2>{t("Issues")}</h2>
       {listed.length === 0 ? (
         <p className="all-clear">
           <Icon name="feasible" />
-          No network-level problems found.
+          {t("No network-level problems found.")}
         </p>
       ) : (
         <div className="problems">
           <Icon name="list" size={20} />
-          <ul aria-label="Network issues">
+          <ul aria-label={t("Network issues")}>
             {listed.map((i, k) => (
               <li key={k}>
                 {issueWhere(i)}: {i.message}

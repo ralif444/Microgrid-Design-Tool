@@ -4,7 +4,10 @@
 import { useEffect, useState } from "react";
 import { getMeta } from "../api-client";
 import type { RunRecord, RunRecordRef } from "../api-types";
+import { displayLang, translate } from "./i18n";
 import type { IconName } from "./Icon";
+
+const tr = (k: string, v?: Record<string, string | number>) => translate(displayLang(), k, v);
 
 export type Outcome = "SIZED" | "NO_DEVICE_FITS" | "NO_SIZE_FITS" | "OUT_OF_TABLE" | "TABLE_GAP";
 
@@ -92,7 +95,7 @@ type Tables = {
   k_group?: Record<string, Src>;
 };
 
-const cite = (table: string | undefined, page: string | undefined) => (table ? `${table}${page ? `, p. ${page}` : ""}` : "not named in the table file");
+const cite = (table: string | undefined, page: string | undefined) => (table ? (page ? tr("{table}, p. {page}", { table, page }) : table) : tr("not named in the table file"));
 
 // The table and page behind each factor of a sized cable, read from the table file that was sent
 // (guideline §3.2: the same choices the method makes).
@@ -105,7 +108,7 @@ export function factorSources(tables: unknown, c: NonNullable<CbElement["cable"]
   return {
     i_tab: cite(amp?.table, amp?.page),
     k_theta: cite(theta?.table, theta?.page),
-    k_rho: d ? cite(t.k_rho?.table, t.k_rho?.page) : "none, k_ρ is 1 outside method D",
+    k_rho: d ? cite(t.k_rho?.table, t.k_rho?.page) : tr("none, k_ρ is 1 outside method D"),
     k_g: cite(t.k_group?.[gKey] ? gKey : undefined, t.k_group?.[gKey]?.page),
   };
 }
@@ -204,8 +207,12 @@ export function catalogueMatch(e: CbElement, construction: string | null, entrie
 export function matchText(m: CatalogueMatch): string {
   const c = m.cable?.conductor;
   const cable = m.cable
-    ? `cable ${m.cable.id} (${c?.size_mm2} mm²${c?.ampacity_a != null ? `, datasheet ${c.ampacity_a} A${c.ampacity_conditions ? ` at ${c.ampacity_conditions}` : ""}` : ""})`
-    : "no catalogue cable";
-  const breaker = m.breaker ? `breaker ${m.breaker.id}` : "no catalogue breaker";
-  return `${cable}; ${breaker}. A check only.`;
+    ? c?.ampacity_a != null
+      ? c.ampacity_conditions
+        ? tr("cable {id} ({size} mm², datasheet {a} A at {cond})", { id: m.cable.id, size: c.size_mm2 ?? "", a: c.ampacity_a, cond: c.ampacity_conditions })
+        : tr("cable {id} ({size} mm², datasheet {a} A)", { id: m.cable.id, size: c.size_mm2 ?? "", a: c.ampacity_a })
+      : tr("cable {id} ({size} mm²)", { id: m.cable.id, size: c?.size_mm2 ?? "" })
+    : tr("no catalogue cable");
+  const breaker = m.breaker ? tr("breaker {id}", { id: m.breaker.id }) : tr("no catalogue breaker");
+  return `${cable}; ${breaker}. ${tr("A check only.")}`;
 }

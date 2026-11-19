@@ -8,6 +8,8 @@ import type { M2Params } from "./elementFields";
 import styles from "./CheckStrip.module.css";
 import { fixed } from "./format";
 import { Icon, type IconName } from "./Icon";
+import { displayLang, translate } from "./i18n";
+import { useLanguage } from "./Language";
 import { pick } from "./kpi";
 import { M1FreshnessBadge } from "./M1Freshness";
 import { m2NothingChecked } from "./status-text";
@@ -15,33 +17,46 @@ import { marginStatus, useMarginWarn } from "./M2Results";
 import type { Freshness } from "./useValidation";
 
 type Tone = "quiet" | "negative";
-const Chip = ({ icon, tone = "quiet", children }: { icon: IconName; tone?: Tone; children: string }) => (
-  <span className={styles.chip} data-tone={tone}>
-    <Icon name={icon} />
-    {children}
-  </span>
-);
-const Fact = ({ label, value, unit, at }: { label: string; value: string; unit?: string; at?: string }) => (
-  <span className={styles.fact}>
-    <span className={styles.label}>{label}</span> {value}
-    {unit && ` ${unit}`}
-    {at && <span className={styles.label}> at {at}</span>}
-  </span>
-);
+const Chip = ({ icon, tone = "quiet", children }: { icon: IconName; tone?: Tone; children: string }) => {
+  const { t } = useLanguage();
+  return (
+    <span className={styles.chip} data-tone={tone}>
+      <Icon name={icon} />
+      {t(children)}
+    </span>
+  );
+};
+const Fact = ({ label, value, unit, at }: { label: string; value: string; unit?: string; at?: string }) => {
+  const { t } = useLanguage();
+  return (
+    <span className={styles.fact}>
+      <span className={styles.label}>{t(label)}</span> {value}
+      {unit && ` ${unit}`}
+      {at && <span className={styles.label}> {t("at {bus}", { bus: at })}</span>}
+    </span>
+  );
+};
 
 /** Counts of the margins table: pass, near limit, violated, not evaluated (zeros left out except pass). */
 export function countsText(p: M2Payload, marginWarn: number | null): string {
   const s = p.constraint_margins.map((c) => marginStatus(c, marginWarn));
   const n = (k: string) => s.filter((x) => x === k).length;
+  const t = (key: string, count: number) => translate(displayLang(), key, { count });
   return [
-    `${n("pass") + n("near")} pass${n("near") ? ` (${n("near")} near limit)` : ""}`,
-    ...(n("violated") ? [`${n("violated")} violated`] : []),
-    ...(p.not_evaluated.length ? [`${p.not_evaluated.length} not evaluated`] : []),
+    `${t("{count} pass", n("pass") + n("near"))}${n("near") ? ` (${t("{count} near limit", n("near"))})` : ""}`,
+    ...(n("violated") ? [t("{count} violated", n("violated"))] : []),
+    ...(p.not_evaluated.length ? [t("{count} not evaluated", p.not_evaluated.length)] : []),
   ].join(", ");
 }
 
 const runTitle = (r: RunRecord | null) =>
-  r ? `Power flow run ${r.created_at.slice(0, 16).replace("T", " ")}, engine ${r.engine_kind ?? "not called"}${r.engine_version ? ` ${r.engine_version}` : ""}, RunRecord ${r.record_id}` : undefined;
+  r
+    ? translate(displayLang(), "Power flow run {at}, engine {engine}, RunRecord {id}", {
+        at: r.created_at.slice(0, 16).replace("T", " "),
+        engine: `${r.engine_kind ?? translate(displayLang(), "not called")}${r.engine_version ? ` ${r.engine_version}` : ""}`,
+        id: r.record_id,
+      })
+    : undefined;
 
 export function CheckStrip({
   fresh,
@@ -59,11 +74,12 @@ export function CheckStrip({
   /** its RunRecord, to restate the design margins the check used (audit D-9) */
   m2Record?: RunRecord | null;
 }) {
+  const { t } = useLanguage();
   const used = m2Record?.parameters as { inverter_margin_ratio?: number; line_margin_ratio?: number } | undefined;
   const marginWarn = useMarginWarn();
   const lo = m1 && pick(m1.bus_results, (b) => b.voltage_pu);
   return (
-    <section aria-label="Check status" className={styles.strip}>
+    <section aria-label={t("Check status")} className={styles.strip}>
       {m1 ? <Chip icon="feasible">Power flow solved</Chip> : <Chip icon="dot">No current power flow</Chip>}
       {m2 !== undefined &&
         (m2 ? (
@@ -90,7 +106,7 @@ export function CheckStrip({
           <Fact label="Total losses" value={fixed(m1.total_losses_kw, "kW")} unit="kW" />
         </>
       )}
-      {m2 && <Fact label="λ_c" value={m2.loadability.lambda_c === null ? "not available" : fixed(m2.loadability.lambda_c, "ratio")} />}
+      {m2 && <Fact label="λ_c" value={m2.loadability.lambda_c === null ? t("not available") : fixed(m2.loadability.lambda_c, "ratio")} />}
       <span className={styles.spacer} />
       <M1FreshnessBadge f={fresh} title={runTitle(m1Record)} />
     </section>
@@ -107,6 +123,7 @@ const FROM_SIZING: Partial<Record<keyof M2Params, string>> = {
   depth_of_discharge_ratio: "ratio",
 };
 export function useSizingMarginNote(ex: { values: M2Params; set: (k: keyof M2Params, v: number | null) => void; note: (k: string) => ReactNode }) {
+  const { t } = useLanguage();
   const { sizingAdvice } = useProject();
   const ps = sizingAdvice.findLast((a) => a.state === "ACCEPTED")?.ps_parameters;
   return (k: keyof M2Params): ReactNode => {
@@ -116,12 +133,12 @@ export function useSizingMarginNote(ex: { values: M2Params; set: (k: keyof M2Par
     const v = `${fixed(m, unit!)}${unit === "h" ? " h" : ""}`;
     return (
       <>
-        {ex.note(k)} Accepted sizing advice used {v}.
+        {ex.note(k)} {t("Accepted sizing advice used {v}.", { v })}
         {ex.values[k] !== m && (
           <>
             {" "}
             <button type="button" onClick={() => ex.set(k, m)}>
-              Use {v} from sizing advice
+              {t("Use {v} from sizing advice", { v })}
             </button>
           </>
         )}

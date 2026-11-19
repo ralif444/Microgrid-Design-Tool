@@ -1,30 +1,35 @@
 "use client";
-// Language context (W5 groundwork): a per-viewer convenience in localStorage like the theme, never
-// project data. <html lang> follows it. The switch stays hidden until Indonesian strings exist.
+// Language context (W5): a per-viewer convenience in localStorage like the theme, never
+// project data. <html lang> follows it. 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { LANGS, localize, translate, type Key, type Lang } from "./i18n";
+import { LANGS, localize, setDisplayLang, translate, type Key, type Lang, type Vars } from "./i18n";
 
 const LANG_KEY = "mdt-lang";
-// shortcut: hidden while issue 01 (Indonesian vocabulary) is open; show it once ID holds the strings
-export const LANGUAGE_SWITCH_SHOWN = false;
+// Shown since issue 01 was decided (user 2026-11-19).
+export const LANGUAGE_SWITCH_SHOWN = true;
 
-type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (k: Key) => string; n: (s: string | number) => string };
-const LangCtx = createContext<Ctx>({ lang: "en", setLang: () => undefined, t: (k) => translate("en", k), n: String });
+type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (k: Key | string, vars?: Vars) => string; n: (s: string | number) => string };
+const LangCtx = createContext<Ctx>({ lang: "en", setLang: () => undefined, t: (k, v) => translate("en", k, v), n: String });
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("en");
   useEffect(() => {
     try {
       const saved = localStorage.getItem(LANG_KEY);
-      if (LANGUAGE_SWITCH_SHOWN && LANGS.includes(saved as Lang)) setLangState(saved as Lang);
+      if (LANGUAGE_SWITCH_SHOWN && LANGS.includes(saved as Lang)) {
+        setDisplayLang(saved as Lang);
+        setLangState(saved as Lang);
+      }
     } catch {
       // storage blocked: English
     }
   }, []);
   useEffect(() => {
     document.documentElement.lang = lang;
+    setDisplayLang(lang);
   }, [lang]);
   const setLang = useCallback((l: Lang) => {
+    setDisplayLang(l);
     setLangState(l);
     try {
       localStorage.setItem(LANG_KEY, l);
@@ -32,7 +37,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       // storage blocked: the choice lasts for this page only
     }
   }, []);
-  const t = useCallback((k: Key) => translate(lang, k), [lang]);
+  const t = useCallback((k: Key | string, v?: Vars) => translate(lang, k, v), [lang]);
   const n = useCallback((s: string | number) => localize(String(s), lang), [lang]);
   return <LangCtx.Provider value={{ lang, setLang, t, n }}>{children}</LangCtx.Provider>;
 }

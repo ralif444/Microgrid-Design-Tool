@@ -5,7 +5,8 @@
 // Opt-in crosshair (Doc 12 X4, FR-89): snaps to the nearest real sample, lists every series there.
 import { memo, useContext, useId, useMemo, useState, type KeyboardEvent, type PointerEvent } from "react";
 import type { RunRecord } from "../../api-types";
-import { fixed, num } from "../format";
+import { fixed, numText } from "../format";
+import { useLanguage } from "../Language";
 import { ChartFrame, ReportCharts, type LegendItem } from "./ChartFrame";
 import { MarkerShape, Swatch, type Mark } from "./marks";
 import { DASH, DASH_WORD, dashIndex, SERIES } from "./palette";
@@ -53,6 +54,7 @@ export const LineChart = memo(function LineChart({
   vmarks?: VMark[];
   xband?: XBand;
 }) {
+  const { t } = useLanguage();
   const [at, setAt] = useState<number | null>(null);
   const readout = useId();
   const report = useContext(ReportCharts);
@@ -81,7 +83,7 @@ export const LineChart = memo(function LineChart({
     setAt(nearestIndex(x.map(g.sx), ((e.clientX - box.left) / box.width) * W));
   };
   const band = xband && x.length ? [Math.max(M.l, g.sx(xband.to) - (g.sx(xband.span) - g.sx(0))), g.sx(xband.to)] : null;
-  const items = legend ?? series.map((s, k) => ({ name: s.name, word: DASH_WORD[dashIndex(k)], swatch: <Swatch color={SERIES[k % SERIES.length]} dash={DASH[dashIndex(k)]} /> }));
+  const items = legend ?? series.map((s, k) => ({ name: s.name, word: t(DASH_WORD[dashIndex(k)]), swatch: <Swatch color={SERIES[k % SERIES.length]} dash={DASH[dashIndex(k)]} /> }));
   return (
     <ChartFrame
       title={title}
@@ -92,7 +94,7 @@ export const LineChart = memo(function LineChart({
     >
       <svg
         role="img"
-        aria-label={`${yTitle} against ${xTitle}, ${x.length} points`}
+        aria-label={t("{y} against {x}, {n} points", { y: yTitle, x: xTitle, n: x.length })}
         viewBox={`0 0 ${W} ${H}`}
         className="chart-svg"
         {...(cross && {
@@ -110,18 +112,18 @@ export const LineChart = memo(function LineChart({
           <g key={`y${t}`}>
             <line x1={M.l} x2={W - M.r} y1={g.sy(t)} y2={g.sy(t)} className="chart-grid" />
             <text x={M.l - 6} y={g.sy(t) + 4} textAnchor="end">
-              {num(t)}
+              {numText(t)}
             </text>
           </g>
         ))}
         {g.xt.map((t) => (
           <text key={`x${t}`} x={g.sx(t)} y={H - M.b + 16} textAnchor="middle">
-            {num(t)}
+            {numText(t)}
           </text>
         ))}
         {x.length === 0 && (
           <text x={(M.l + W - M.r) / 2} y={(M.t + H - M.b) / 2} textAnchor="middle">
-            No data
+            {t("No data")}
           </text>
         )}
         {vmarks.map((v) => (
@@ -187,7 +189,7 @@ export const LineChart = memo(function LineChart({
       {cross && at !== null && (
         <div id={readout} data-testid="crosshair" className={`no-print ${styles.readout}`} style={g.sx(x[at]) < W / 2 ? { left: `${(g.sx(x[at]) / W) * 100}%` } : { right: `${100 - (g.sx(x[at]) / W) * 100}%` }}>
           <strong>
-            {crosshair.xName} {num(x[at])} {crosshair.xUnit}
+            {crosshair.xName} {numText(x[at])} {crosshair.xUnit}
           </strong>
           {series.map((s) => (
             <span key={s.name}>

@@ -74,6 +74,7 @@ Apply the seven mockup phases to `/power-flow/` and `/constraint-check/` without
 - Dictionary plus a language context, no new dependency; `html lang` follows it; number separators follow it through `Intl.NumberFormat`.
 - Blocked on `issues/01-indonesian-vocabulary.md` for the Indonesian strings. The English side can ship first with the switch hidden.
 - Groundwork done 2026-11-14: `components/i18n.ts` (dictionary `EN`, empty `ID`, `translate`, `localize` swaps the decimal separator through `Intl.NumberFormat`, no grouping) and `components/Language.tsx` (`LanguageProvider` in the root layout sets `<html lang>`, `useLanguage()` gives `t` and `n`, `LanguageSwitch` renders nothing while `LANGUAGE_SWITCH_SHOWN` is false). Only the area tab names go through `t` so far. Left for W5 proper: the Indonesian strings, moving the other labels into `EN`, and routing displayed numbers (`num`, `fixed`) through `n`.
+- Done 2026-11-19: switch shown. The English text is the key; `ID` merges six group dictionaries in `components/lang/` (shell, pages, model, studies, report, shared); `t(text, {vars})` fills `{name}` placeholders; module helpers use `translate(displayLang(), …)`; `fixed` localizes the decimal separator through the module-level display language. English output unchanged (e2e uses English names). Kept English per issue 01: Constraint, Line, Rating, Load, Loading, Overloaded, Power filter, Engine, Islanded, Inputs; engine and API messages, codes and units stay as sent.
 
 ### W6. Studies and Report areas (not planned in detail)
 
@@ -81,12 +82,12 @@ Apply the seven mockup phases to `/power-flow/` and `/constraint-check/` without
 - Any redesign of them gets its own mockup and approval first, as the Check screen did.
 - Done 2026-11-14: the Studies area hosts the step-7 pages (the six M3/M4 pages, cable sizing behind its flag, battery with a bank) under a sub-navigation; the Report area hosts `/report/` and `/runs/`. Pages unchanged; their routes stay. The workspace bar is not printed, so the report prints as on its own route.
 
-## Left for later, needs model or engine change
+## Left for later (checked 2026-11-19: no model or engine change needed)
 
-- Line current limit (ampacity) so lines get a status: X10 cable work.
-- Power balance as an evaluated check.
-- A test case that produces the "Near limit" state.
+- Line current limit so lines get a status: already supported. M2 evaluates LINE_CURRENT when a line has `current_limit_a` (typed in, or the catalogue ampacity with the FR-70 confirmation); cable sizing (CB) reports I_z per line. The examples leave it empty on purpose: the catalogue ampacity holds only under the datasheet reference conditions, so the user confirms it.
+- Power balance as an evaluated check: already supported. M2 evaluates POWER_BALANCE when "Power-balance tolerance, optional" (kW) is set (`engine/src/mgengine/m2.py`, Doc 9 D-54 K84). The examples leave it empty: no sourced tolerance exists, and none is invented.
+- "Near limit" state: covered by the Fake profile e2e `test_fr_26_near_limit_highlight` and the unit tests in `CheckStrip.test.ts` and `symbols.test.ts`. The Real Engine examples have no near-limit constraint (the guided D2 smallest normalised margin is 0.28, FREQUENCY_MIN); a Real Engine case would need a limit chosen to sit near the value, which is a constructed case, so none is added.
 
 ## Decisions needed from you
 
-None open for W1 to W4. W5 waits on the vocabulary issue.
+None open for W1 to W4. W5 unblocked 2026-11-19 (vocabulary approved with kept-English terms, issue 01).

@@ -7,6 +7,7 @@ import { busDependents, useProject, useProjectDispatch, type Collection } from "
 import { CANNOT_UNDO, useConfirmDelete } from "./ConfirmDelete";
 import { DataTable, type DataColumn } from "./DataTable";
 import type { GlossaryKey } from "./glossary";
+import { useLanguage } from "./Language";
 import { Toast } from "./Toast";
 
 export type Column =
@@ -19,6 +20,7 @@ type Row = { id?: string | null; [field: string]: unknown };
 
 /** Delete with the FR-11 Bus guard and the F2 confirmation; shared by the tables and the workspace inspector. */
 export function useRowDelete(collection: Collection, onDone?: () => void) {
+  const { t } = useLanguage();
   const { design, batteryBanks } = useProject();
   const { dialog, confirm } = useConfirmDelete();
   const [refused, setRefused] = useState<string | null>(null);
@@ -26,11 +28,11 @@ export function useRowDelete(collection: Collection, onDone?: () => void) {
   function remove(id: string, name: string) {
     const deps = collection === "buses" ? busDependents(design, id) : [];
     // FR-11: refuse and name the dependents; the Bus stays
-    if (deps.length) return setRefused(`Bus ${id} cannot be deleted: it is used by ${deps.join(", ")}.`);
+    if (deps.length) return setRefused(t("Bus {id} cannot be deleted: it is used by {deps}.", { id, deps: deps.join(", ") }));
     setRefused(null);
     // reducer.ts: removing an Inverter also removes its battery bank
-    const bank = collection === "inverters" && batteryBanks.some((b) => b.inverter_id === id) ? ` Its battery bank is removed too.` : "";
-    confirm(`Delete ${name}?`, `${name} is removed from the design.${bank} ${CANNOT_UNDO}`, () => {
+    const bank = collection === "inverters" && batteryBanks.some((b) => b.inverter_id === id) ? ` ${t("Its battery bank is removed too.")}` : "";
+    confirm(t("Delete {name}?", { name }), `${t("{name} is removed from the design.", { name })}${bank} ${t(CANNOT_UNDO)}`, () => {
       dispatch({ type: "rowRemoved", collection, id });
       onDone?.();
     });
@@ -56,13 +58,14 @@ export function EntityTable({
   /** FR-90 table path (UX-4, D-79): an "Inspect <id>" button per row opens the Inspector. */
   onInspect?: (id: string) => void;
 }) {
+  const { t } = useLanguage();
   const { design } = useProject();
   const { dialog, refused, setRefused, remove } = useRowDelete(collection);
   const dispatch = useProjectDispatch();
   const rows: Row[] = design[collection] ?? [];
   const busIds = (design.buses ?? []).map((b) => b.id ?? "");
   const set = (row: Row, patch: Row) => dispatch({ type: "rowUpdated", collection, id: row.id ?? "", patch });
-  const name = (row: Row, k: number) => row.id || `row ${k + 1}`;
+  const name = (row: Row, k: number) => row.id || t("row {n}", { n: k + 1 });
 
   const cols: DataColumn<Row>[] = columns.map((c): DataColumn<Row> => {
     const unit = "unit" in c ? c.unit : undefined;
@@ -97,14 +100,14 @@ export function EntityTable({
           <>
           {onInspect && row.id && (
             <button type="button" onClick={() => onInspect(row.id ?? "")}>
-              Inspect {row.id}
+              {t("Inspect {id}", { id: row.id })}
             </button>
           )}{" "}
           <button
             type="button"
             onClick={() => remove(row.id ?? "", name(row, k))}
           >
-            Delete {name(row, k)}
+            {t("Delete {name}", { name: name(row, k) })}
           </button>
           </>
         )}

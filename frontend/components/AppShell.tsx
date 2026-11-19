@@ -13,15 +13,16 @@ import { EngineBadge } from "./EngineBadge";
 import { AreaScreens, AreaTabs } from "./AreaNav";
 import { ProjectFileMenu } from "./ProjectFileMenu";
 import { Toggletip } from "./Term";
-import { LanguageSwitch } from "./Language";
+import { LanguageSwitch, useLanguage } from "./Language";
 import { ThemeSwitch } from "./ThemeSwitch";
 
 // The visible mark is a dot; the text stays for assistive tech and tests.
 export function UnsavedFlag() {
+  const { t } = useLanguage();
   return (
-    <span className={styles.unsaved} title="Unsaved changes">
+    <span className={styles.unsaved} title={t("Unsaved changes")}>
       <span aria-hidden="true" className={styles.dot} />
-      <span className="sr-only"> *unsaved</span>
+      <span className="sr-only"> {t("*unsaved")}</span>
     </span>
   );
 }
@@ -29,6 +30,7 @@ export function UnsavedFlag() {
 export function AppShell({ children }: { children: ReactNode }) {
   const { project, unsaved, example } = useProject();
   const dispatch = useProjectDispatch();
+  const { t } = useLanguage();
   return (
     <>
       <Header aria-label="Microgrid Design Tool" className={styles.header}>
@@ -49,10 +51,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
         <span className={styles.spacer} />
         <Link href="/catalogue/" className={styles.util}>
-          Catalogue
+          {t("Catalogue")}
         </Link>
         <Link href="/about/" className={styles.util}>
-          About
+          {t("About")}
         </Link>
         <ProjectFileMenu />
         <ThemeSwitch className={styles.seg} />
@@ -60,14 +62,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         {example && (
           <span className={styles.example} data-testid="example-mode">
             <Tag type="blue" size="md">
-              Example mode
+              {t("Example mode")}
             </Tag>
-            <Toggletip label="About example mode" className={styles.tip}>
-              Analysis forms are pre-filled from the guided example D2, each value with its source. Save writes a
-              normal Project file: the example settings are not saved, so reopening the file opens a normal Project.
+            <Toggletip label={t("About example mode")} className={styles.tip}>
+              {t("Analysis forms are pre-filled from the guided example D2, each value with its source. Save writes a normal Project file: the example settings are not saved, so reopening the file opens a normal Project.")}
             </Toggletip>
             <button type="button" onClick={() => dispatch({ type: "exampleLeft" })}>
-              Leave example mode
+              {t("Leave example mode")}
             </button>
           </span>
         )}

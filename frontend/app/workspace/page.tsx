@@ -15,6 +15,7 @@ import { EmptyState } from "../../components/EmptyState";
 import { ExampleNext, nextReady, useExampleForm } from "../../components/ExampleForm";
 import { asResponse } from "../../components/Further";
 import { Icon } from "../../components/Icon";
+import { useLanguage } from "../../components/Language";
 import { Inspector, type ElementRef } from "../../components/Inspector";
 import inspectorStyles from "../../components/Inspector.module.css";
 import { CheckFailed, M1BlockedNote } from "../../components/M1Freshness";
@@ -47,6 +48,7 @@ function parseEl(v: string | null): Selection {
 const MARK_WORD = { violated: "Violated", limiting: "Limiting", near: "Near limit" } as const;
 
 function ElementList({ selected, onSelect, editable }: { selected: Selection; onSelect: (s: Selection) => void; editable: boolean }) {
+  const { t } = useLanguage();
   const { design } = useProject();
   const dispatch = useProjectDispatch();
   const { full } = useSldModel();
@@ -67,33 +69,33 @@ function ElementList({ selected, onSelect, editable }: { selected: Selection; on
   ] as const;
   const isSel = (kind: string, id?: string) => selected?.kind === kind && (!id || ("id" in selected && selected.id === id));
   return (
-    <nav aria-label="Elements" className={styles.list}>
-      <section aria-label="System">
+    <nav aria-label={t("Elements")} className={styles.list}>
+      <section aria-label={t("System")}>
         <h2>
-          <span>System</span>
+          <span>{t("System")}</span>
         </h2>
         <ul>
           <li>
             <button type="button" aria-pressed={isSel("system")} onClick={() => onSelect({ kind: "system" })}>
-              Project and system
+              {t("Project and system")}
             </button>
           </li>
         </ul>
       </section>
       {groups.map((g) => (
-        <section key={g.title} aria-label={g.title}>
+        <section key={g.title} aria-label={t(g.title)}>
           <h2>
-            <span>{g.title}</span>
+            <span>{t(g.title)}</span>
             <span>{g.list.length}</span>
           </h2>
           {/* bulk entry stays a table (audit Phase 7): the Loads and Network screens */}
-          <Link href={g.table} className={styles.tableView} aria-label={`Table view: ${g.title}`}>
-            Table view
+          <Link href={g.table} className={styles.tableView} aria-label={t("Table view: {title}", { title: t(g.title) })}>
+            {t("Table view")}
           </Link>
           <ul>
             {g.list.map((e) => {
               const flag =
-                e.mark && e.mark !== "pass" ? MARK_WORD[e.mark] : e.issues.length ? `${e.issues.length} ${e.issues.length === 1 ? "issue" : "issues"}` : null;
+                e.mark && e.mark !== "pass" ? t(MARK_WORD[e.mark]) : e.issues.length ? t(e.issues.length === 1 ? "{n} issue" : "{n} issues", { n: e.issues.length }) : null;
               return (
                 <li key={e.id}>
                   <button type="button" aria-pressed={isSel(g.kind, e.id)} onClick={() => onSelect({ kind: g.kind, id: e.id })}>
@@ -116,34 +118,34 @@ function ElementList({ selected, onSelect, editable }: { selected: Selection; on
                 e.preventDefault();
                 const id = busId.trim();
                 // rows are matched by id, so a blank or repeated id would edit and delete two buses at once
-                if (!id || (design.buses ?? []).some((b) => b.id === id)) return setBusNote(id ? `Bus ${id} already exists.` : "Enter a bus id.");
+                if (!id || (design.buses ?? []).some((b) => b.id === id)) return setBusNote(id ? t("Bus {id} already exists.", { id }) : t("Enter a bus id."));
                 setBusNote(null);
                 dispatch({ type: "rowAdded", collection: "buses", row: { id } });
                 onSelect({ kind: "bus", id });
                 setBusId("");
               }}
             >
-              <label htmlFor="ws-bus-id">New bus id</label>
+              <label htmlFor="ws-bus-id">{t("New bus id")}</label>
               <input id="ws-bus-id" required value={busId} onChange={(e) => setBusId(e.target.value)} />
-              <button type="submit">Add bus</button>
+              <button type="submit">{t("Add bus")}</button>
               {busNote && <span role="alert">{busNote}</span>}
             </form>
           )}
           {editable && g.add && (
             <button type="button" className={styles.add} onClick={g.add}>
-              + Add {g.kind}
+              {t("+ Add {kind}", { kind: t(g.kind) })}
             </button>
           )}
         </section>
       ))}
-      <section aria-label="Limits">
+      <section aria-label={t("Limits")}>
         <h2>
-          <span>Limits</span>
+          <span>{t("Limits")}</span>
         </h2>
         <ul>
           <li>
             <button type="button" aria-pressed={isSel("limits")} onClick={() => onSelect({ kind: "limits" })}>
-              Design limits
+              {t("Design limits")}
             </button>
           </li>
         </ul>
@@ -153,6 +155,7 @@ function ElementList({ selected, onSelect, editable }: { selected: Selection; on
 }
 
 function Workspace() {
+  const { t } = useLanguage();
   const { design, runRecords } = useProject();
   const dispatch = useProjectDispatch();
   const search = useSearchParams();
@@ -203,10 +206,10 @@ function Workspace() {
   return (
     <div className={styles.ws} data-area={area}>
       <div className={`no-print ${styles.bar}`}>
-        <h1>{area === "check" ? "Check" : "Model"}</h1>
+        <h1>{t(area === "check" ? "Check" : "Model")}</h1>
         <span className={styles.spacer} />
         <button type="button" onClick={() => void runM1()} disabled={busy} aria-busy={busy || undefined}>
-          Run M1
+          {t("Run M1")}
         </button>
         <button
           type="button"
@@ -215,7 +218,7 @@ function Workspace() {
           disabled={busy || fresh !== "current" || !marginsSet}
           aria-busy={busy || undefined}
         >
-          Run M2
+          {t("Run M2")}
         </button>
       </div>
 
@@ -226,8 +229,8 @@ function Workspace() {
         {area === "check" && <M1BlockedNote f={fresh} />}
         {area === "check" && (
           <details className={styles.settings} open={settingsOpen || !marginsSet} onToggle={(e) => setSettingsOpen(e.currentTarget.open)}>
-            <summary>Constraint check settings{marginsSet ? "" : ": enter both design margins to run M2"}</summary>
-            <form aria-label="Constraint check settings" onSubmit={(e) => (e.preventDefault(), void runM2())}>
+            <summary>{t("Constraint check settings")}{marginsSet ? "" : `: ${t("enter both design margins to run M2")}`}</summary>
+            <form aria-label={t("Constraint check settings")} onSubmit={(e) => (e.preventDefault(), void runM2())}>
               {M2_FIELDS.map(([k, label, unit, step]) => (
                 <NumberField
                   key={k}
@@ -250,29 +253,29 @@ function Workspace() {
         {/* Run M1 here shows its outcome here; the tables stay in Check (audit 2026-11-15 E14) */}
         {area === "model" && m1Resp && (
           <p role="status">
-            Power flow (M1): {statusWord("M1", m1Resp.result)}.{" "}
-            <Link href={`${HOME}?area=check`}>See the results in Check</Link>
+            {t("Power flow (M1):")} {statusWord("M1", m1Resp.result)}.{" "}
+            <Link href={`${HOME}?area=check`}>{t("See the results in Check")}</Link>
           </p>
         )}
         {area === "model" ? (
-          <section aria-label="Single-line diagram">
-            <h2 className="sr-only">Single-line diagram</h2>
+          <section aria-label={t("Single-line diagram")}>
+            <h2 className="sr-only">{t("Single-line diagram")}</h2>
             <SingleLineDiagram drawing={sld.design} details={sld.full} selected={element?.id ?? null} onSelect={select} breakers={sld.breakers} />
           </section>
         ) : (
           <ResultsDiagram fresh={fresh} checks selected={element?.id ?? null} onSelect={select} />
         )}
         {area === "model" && (
-          <section aria-label="Design issues" className={styles.issues}>
-            <h2>Design issues</h2>
+          <section aria-label={t("Design issues")} className={styles.issues}>
+            <h2>{t("Design issues")}</h2>
             {check.error ? (
               <CheckFailed error={check.error} onRetry={check.retry} />
             ) : report === null ? (
-              <p>Checking the design…</p>
+              <p>{t("Checking the design…")}</p>
             ) : designIssues.length === 0 ? (
               <p className="all-clear">
                 <Icon name="feasible" />
-                No network-level problems found.
+                {t("No network-level problems found.")}
               </p>
             ) : (
               <ul>
@@ -289,22 +292,22 @@ function Workspace() {
 
       <div className={styles.insp}>
         {sel?.kind === "limits" ? (
-          <aside aria-label="Inspector: Design limits" className={`no-print ${inspectorStyles.docked}`}>
+          <aside aria-label={`${t("Inspector")}: ${t("Design limits")}`} className={`no-print ${inspectorStyles.docked}`}>
             <div className={inspectorStyles.top}>
-              <h2>Design limits</h2>
+              <h2>{t("Design limits")}</h2>
               <button type="button" onClick={() => setSel(null)}>
-                Close inspector
+                {t("Close inspector")}
               </button>
             </div>
             <LimitsForm />
             <ExampleNext screen="/workspace/?el=limits" ready />
           </aside>
         ) : sel?.kind === "system" ? (
-          <aside aria-label="Inspector: Project and system" className={`no-print ${inspectorStyles.docked}`}>
+          <aside aria-label={`${t("Inspector")}: ${t("Project and system")}`} className={`no-print ${inspectorStyles.docked}`}>
             <div className={inspectorStyles.top}>
-              <h2>Project and system</h2>
+              <h2>{t("Project and system")}</h2>
               <button type="button" onClick={() => setSel(null)}>
-                Close inspector
+                {t("Close inspector")}
               </button>
             </div>
             <SystemForm />
@@ -327,36 +330,36 @@ function Workspace() {
             }
           />
         ) : (
-          <p className={styles.empty}>Choose an element in the list or on the diagram.</p>
+          <p className={styles.empty}>{t("Choose an element in the list or on the diagram.")}</p>
         )}
       </div>
 
       {area === "check" && (
-        <section aria-label="Results" className={styles.dock}>
+        <section aria-label={t("Results")} className={styles.dock}>
           <div className={styles.tabs}>
-            <div role="tablist" aria-label="Result tables">
+            <div role="tablist" aria-label={t("Result tables")}>
               <button type="button" role="tab" aria-selected={tab === "margins"} onClick={() => (setTab("margins"), setDrawer(true))}>
-                Margins
+                {t("Margins")}
               </button>
               <button type="button" role="tab" aria-selected={tab === "pf"} onClick={() => (setTab("pf"), setDrawer(true))}>
-                Power flow
+                {t("Power flow")}
               </button>
             </div>
             <span className={styles.spacer} />
             <button type="button" aria-expanded={drawer} onClick={() => setDrawer(!drawer)}>
-              {drawer ? "Hide results" : "Show results"}
+              {t(drawer ? "Hide results" : "Show results")}
             </button>
           </div>
           {drawer && (
-            <div role="tabpanel" aria-label={tab === "margins" ? "Margins" : "Power flow"} className={styles.panel}>
+            <div role="tabpanel" aria-label={t(tab === "margins" ? "Margins" : "Power flow")} className={styles.panel}>
               {tab === "margins" ? (
                 <>
                   {r2 && <StatusBanner type="M2" result={r2} />}
-                  {r2?.status === "INFEASIBLE" && <ConstraintTable label="Limiting constraints" rows={r2.limiting_constraints ?? []} shortcut note={false} onInspect={select} />}
+                  {r2?.status === "INFEASIBLE" && <ConstraintTable label={t("Limiting constraints")} rows={r2.limiting_constraints ?? []} shortcut note={false} onInspect={select} />}
                   {m2 && m2Resp ? (
                     <M2Results p={m2} charts={{ record: m2Resp.run_record }} onInspect={select} />
                   ) : (
-                    !r2 && <EmptyState title="No current constraint check.">Run M2 on the current design to see the margins.</EmptyState>
+                    !r2 && <EmptyState title={t("No current constraint check.")}>{t("Run M2 on the current design to see the margins.")}</EmptyState>
                   )}
                   <ExampleNext screen="constraint-check" ready={nextReady(r2?.status)} />
                 </>
@@ -367,7 +370,7 @@ function Workspace() {
                     <M1Results p={m1} charts={{ limits: design.design_constraints, record: m1Resp.run_record }} onInspect={select} check={{ design, m2 }} />
                   ) : (
                     !m1Resp && (
-                      <EmptyState title="No current power flow.">Run M1 on the current design to see bus voltages, inverter outputs and line flows.</EmptyState>
+                      <EmptyState title={t("No current power flow.")}>{t("Run M1 on the current design to see bus voltages, inverter outputs and line flows.")}</EmptyState>
                     )
                   )}
                   <ExampleNext screen="power-flow" ready={nextReady(m1Resp?.result.status)} />

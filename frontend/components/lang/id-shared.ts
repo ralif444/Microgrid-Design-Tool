@@ -1,0 +1,48 @@
+// Indonesian strings for the "shared" group (W5; vocabulary issue 01, user decision 2026-11-19), keyed by
+// the exact English text. A missing key shows the English text.
+// Static tables (OUTCOME, POWER_OUTCOME, METHODS, NOT_JSON, ...) stay English in the module; wrap them with t() at the render site.
+export const ID_SHARED: Record<string, string> = {
+  // battery.ts
+  "No continuous discharge power and no C-rate: the battery power check (B2) cannot use this module.": "Tidak ada daya pengosongan kontinu dan tidak ada C-rate: pemeriksaan daya baterai (B2) tidak dapat memakai modul ini.",
+  "PS has no nominal energy": "PS tidak punya energi nominal",
+  "the module has no energy value": "modul tidak punya nilai energi",
+  "{id} discharge limit": "Batas pelepasan {id}",
+  "module datasheet": "datasheet modul",
+  "Sizing advice": "Saran ukuran",
+  "entered on the bank": "diisi pada bank",
+  "OK": "OK",
+  "Short": "Kurang",
+  "Not evaluated": "Tidak dievaluasi",
+  "Not depleted": "Tidak habis",
+  "Depleted": "Habis",
+  // cable.ts
+  "Sized": "Ukuran ditetapkan",
+  "No device fits": "Tidak ada perangkat yang cocok",
+  "No cable size fits": "Tidak ada ukuran kabel yang cocok",
+  "Outside the table": "Di luar tabel",
+  "Gap in the table": "Celah pada tabel",
+  "D (buried duct)": "D (duct terkubur)",
+  "Copper (Cu)": "Tembaga (Cu)",
+  "Aluminium (Al)": "Aluminium (Al)",
+  "Multicore": "Multicore",
+  "Single-core": "Single-core",
+  "Bunched": "Berkas",
+  "Single layer on a wall": "Satu lapis pada dinding",
+  "Under a ceiling": "Di bawah langit-langit",
+  "Ducts touching": "Duct bersentuhan",
+  "Ducts 0.25 m apart": "Duct berjarak 0,25 m",
+  "Ducts 0.5 m apart": "Duct berjarak 0,5 m",
+  "Ducts 1 m apart": "Duct berjarak 1 m",
+  "{table}, p. {page}": "{table}, hlm. {page}",
+  "not named in the table file": "tidak disebut dalam berkas tabel",
+  "none, k_ρ is 1 outside method D": "tidak ada, k_ρ bernilai 1 di luar metode D",
+  "cable {id} ({size} mm², datasheet {a} A at {cond})": "kabel {id} ({size} mm², datasheet {a} A pada {cond})",
+  "cable {id} ({size} mm², datasheet {a} A)": "kabel {id} ({size} mm², datasheet {a} A)",
+  "cable {id} ({size} mm²)": "kabel {id} ({size} mm²)",
+  "no catalogue cable": "tidak ada kabel katalog",
+  "breaker {id}": "pemutus (breaker) {id}",
+  "no catalogue breaker": "tidak ada pemutus (breaker) katalog",
+  "A check only.": "Hanya pemeriksaan.",
+  // files.ts
+  "This file is not a JSON document. Nothing was loaded.": "Berkas ini bukan dokumen JSON. Tidak ada yang dimuat.",
+};

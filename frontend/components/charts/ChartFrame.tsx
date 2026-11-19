@@ -7,6 +7,7 @@
 import { createContext, useContext, useRef, useState, type ReactNode } from "react";
 import type { RunRecord } from "../../api-types";
 import { DataTable, type DataColumn } from "../DataTable";
+import { useLanguage } from "../Language";
 import styles from "./charts.module.css";
 import { captionLines, downloadSvg } from "./exportSvg";
 
@@ -30,6 +31,7 @@ export function ChartFrame({
   data: ChartData;
   children: ReactNode;
 }) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const report = useContext(ReportCharts);
   const plot = useRef<HTMLDivElement>(null);
@@ -46,7 +48,7 @@ export function ChartFrame({
         {children}
       </div>
       {legend && legend.length > 1 && (
-        <ul className={styles.legend} aria-label={`${title} legend`}>
+        <ul className={styles.legend} aria-label={t("{title} legend", { title })}>
           {legend.map((l) => (
             <li key={l.name}>
               {l.swatch}
@@ -60,30 +62,30 @@ export function ChartFrame({
       {record && (
         <p className={styles.meta}>
           {/* the sheet's title block carries the run; the caption keeps a short reference (audit §8) */}
-          Run <code title={record.record_id}>{record.record_id.slice(0, 8)}</code>, {record.analysis_type}, engine {record.engine_kind ?? "not called"}
-          {report && <>, result hash <code>{record.result_hash}</code></>}.
+          {t("Run")} <code title={record.record_id}>{record.record_id.slice(0, 8)}</code>, {record.analysis_type}, {t("engine")} {record.engine_kind ?? t("not called")}
+          {report && <>, {t("result hash")} <code>{record.result_hash}</code></>}.
           {record.engine_kind === "FAKE" && (
-            <strong className={styles.fake}> FAKE engine: placeholder, not an engine result</strong>
+            <strong className={styles.fake}> {t("FAKE engine: placeholder, not an engine result")}</strong>
           )}
         </p>
       )}
-      <button type="button" className={`no-print ${styles.toggle}`} aria-expanded={open} aria-label={`Show data: ${title}`} onClick={() => setOpen(!open)}>
-        Show data
+      <button type="button" className={`no-print ${styles.toggle}`} aria-expanded={open} aria-label={t("Show data: {title}", { title })} onClick={() => setOpen(!open)}>
+        {t("Show data")}
       </button>
       {record && (
         <button
           type="button"
           className={`no-print ${styles.toggle}`}
-          aria-label={`Download SVG: ${title}`}
+          aria-label={t("Download SVG: {title}", { title })}
           onClick={() => {
             const svg = plot.current?.querySelector<SVGSVGElement>("svg.chart-svg");
             if (svg) downloadSvg(`${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${record.record_id}.svg`, svg, captionLines(title, record));
           }}
         >
-          Download SVG
+          {t("Download SVG")}
         </button>
       )}
-      {open && <DataTable label={`${title} data`} columns={columns} rows={data.rows} rowKey={(_, k) => k} rowName={(r) => String(r[0])} />}
+      {open && <DataTable label={t("{title} data", { title })} columns={columns} rows={data.rows} rowKey={(_, k) => k} rowName={(r) => String(r[0])} />}
     </figure>
   );
 }

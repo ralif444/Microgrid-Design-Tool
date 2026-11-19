@@ -2,6 +2,7 @@
 // S-20 Battery adequacy (Doc 12 B2, B3, FR-116, FR-117, FR-119, FR-120; Doc 7 §2.5; ADR-015; Doc 9
 // D-109, D-110): start hour (prefilled 0) → Run gated on a current M1 → Status banner → fixed caveat →
 // one row per bank (power and autonomy) → depletion chart. Advice only.
+import { Fragment, type ReactNode } from "react";
 import { useKept } from "../../components/useKept";
 import type { BatteryBank, RunRecord } from "../../api-types";
 import { AUTONOMY_OUTCOME, POWER_OUTCOME, valueSource, type BaBank, type BaPayload } from "../../components/battery";
@@ -13,6 +14,7 @@ import { EmptyState } from "../../components/EmptyState";
 import { fixedOr } from "../../components/format";
 import { OutOfDate, RunButton, useDependentRun } from "../../components/Further";
 import { Icon } from "../../components/Icon";
+import { useLanguage } from "../../components/Language";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
@@ -34,41 +36,51 @@ const TERMS = {
   aut: { term: "Otonomi", short: "Lama bank dapat memasok inverter dari jam mulai sampai batas pengosongan tercapai (h), hanya pengosongan.", source: "Pedoman BESS §3.3 (Pers. 12.18)" },
 } as const;
 
+// a translated sentence with {name} slots filled by elements
+const withSlots = (s: string, slots: Record<string, ReactNode>) =>
+  s.split(/(\{\w+\})/).map((part, i) => {
+    const m = /^\{(\w+)\}$/.exec(part);
+    return m ? <Fragment key={i}>{slots[m[1]]}</Fragment> : part;
+  });
+
 function Tip({ k }: { k: keyof typeof TERMS }) {
+  const { t } = useLanguage();
   const e = TERMS[k];
   return (
-    <Toggletip label={`Glossary: ${e.term}`} lang="id">
+    <Toggletip label={t("Glossary: {term}", { term: e.term })} lang="id">
       <strong>{e.term}</strong> {e.short} <span>Sumber: {e.source}</span>
     </Toggletip>
   );
 }
 
 function Tag({ o }: { o: { word: string; role: string; icon: "feasible" | "warn" | "dot" } }) {
+  const { t } = useLanguage();
   return (
     <span className={styles.tag} data-role={o.role}>
       <Icon name={o.icon} />
-      {o.word}
+      {t(o.word)}
     </span>
   );
 }
 
 function Row({ b }: { b: BaBank }) {
+  const { t } = useLanguage();
   const p = b.power;
   return (
     <tr data-testid={`ba-row-${b.inverter_id}`}>
       <td>{b.inverter_id}</td>
       <td>
-        {b.bank.series_count} × {b.bank.parallel_count} ({b.bank.module_count} modules)
+        {b.bank.series_count} × {b.bank.parallel_count} {t("({count} modules)", { count: b.bank.module_count })}
       </td>
       <td>
         <Tag o={POWER_OUTCOME[p.outcome]} />
       </td>
       <td className="num">{fixedOr(p.capability_kw, "kW")}</td>
-      <td>{p.capability_source ? SOURCE[p.capability_source] : "—"}</td>
+      <td>{p.capability_source ? t(SOURCE[p.capability_source]) : "—"}</td>
       <td className="num">{fixedOr(p.inverter_p_kw, "kW")}</td>
       <td className="num">{fixedOr(p.dc_side_power_kw, "kW")}</td>
       <td className="num">{fixedOr(p.margin_kw, "kW")}</td>
-      <td>{p.reason ? `Not evaluated: ${p.reason}.` : "—"}</td>
+      <td>{p.reason ? t("Not evaluated: {reason}.", { reason: p.reason }) : "—"}</td>
       <td>
         <Tag o={AUTONOMY_OUTCOME[b.autonomy.outcome]} />
       </td>
@@ -79,6 +91,7 @@ function Row({ b }: { b: BaBank }) {
 }
 
 function Battery() {
+  const { t } = useLanguage();
   const { batteryBanks, sizingAdvice } = useProject();
   const { catalog } = useCatalog();
   const sizing = sizingAdvice.at(-1)?.ps_parameters;
@@ -87,7 +100,7 @@ function Battery() {
     (((rec.parameters as { banks?: BatteryBank[] } | null)?.banks) ?? []).flatMap((b) => {
       const modDod = catalog.entries.find((e) => e.id === b.module.catalog_ref.entry_id)?.battery_module?.recommended_dod_ratio;
       const row = (name: string, v: number | null | undefined, s: string | null): [string, string] =>
-        [`${name} of ${b.inverter_id}`, v == null ? "not set" : `${fixedOr(v, "ratio")} (${s})`];
+        [t("{name} of {id}", { name: t(name), id: b.inverter_id }), v == null ? t("not set") : `${fixedOr(v, "ratio")} (${s})`];
       return [
         row("DC efficiency η_dc", b.dc_efficiency_ratio, valueSource(b.dc_efficiency_ratio, sizing?.dc_efficiency_ratio)),
         row("Depth of discharge", b.depth_of_discharge_ratio, valueSource(b.depth_of_discharge_ratio, sizing?.depth_of_discharge_ratio, modDod)),
@@ -99,20 +112,20 @@ function Battery() {
   const p = r?.status === "FEASIBLE" ? (r.payload as unknown as BaPayload) : null;
   if (batteryBanks.length === 0)
     return (
-      <EmptyState title="No battery bank.">
-        Attach a battery bank to an inverter on Network first.
+      <EmptyState title={t("No battery bank.")}>
+        {t("Attach a battery bank to an inverter on Network first.")}
       </EmptyState>
     );
   return (
     <>
       <div className={further.head}>
-        <h1>Battery adequacy</h1>
+        <h1>{t("Battery adequacy")}</h1>
         <M1FreshnessBadge f={fresh} />
       </div>
       <M1BlockedNote f={fresh} />
       <div className={further.study}>
       <form
-        aria-label="Battery adequacy settings"
+        aria-label={t("Battery adequacy settings")}
         className={further.form}
         onSubmit={(e) => {
           e.preventDefault();
@@ -120,7 +133,7 @@ function Battery() {
         }}
       >
         <p>
-          <NumberField id="ba-start-hour" label="Start hour" unit="h" step="1" value={startHour} onChange={setStartHour} />
+          <NumberField id="ba-start-hour" label={t("Start hour")} unit="h" step="1" value={startHour} onChange={setStartHour} />
         </p>
         <RunButton label="Run battery adequacy" busy={busy} fresh={fresh} missing={startHour === null ? ["Start hour"] : []} />
       </form>
@@ -137,49 +150,49 @@ function Battery() {
             {p.caveat_text}
           </p>
           <DataTable
-            label="Battery adequacy summary"
-            caption="Battery adequacy per bank (Eq. 12.6 – 12.8, 12.14 – 12.18)"
+            label={t("Battery adequacy summary")}
+            caption={t("Battery adequacy per bank (Eq. 12.6 – 12.8, 12.14 – 12.18)")}
             columns={BA_SUMMARY_COLUMNS}
             rows={p.banks}
             rowKey={(b) => b.inverter_id}
             rowName={(b) => b.inverter_id}
           />
           <p className={further.source}>
-            Terms: autonomy <Tip k="aut" />, depth of discharge <Tip k="dod" />, C-rate <Tip k="c" />.
+            {withSlots(t("Terms: autonomy {aut}, depth of discharge {dod}, C-rate {c}."), { aut: <Tip k="aut" />, dod: <Tip k="dod" />, c: <Tip k="c" /> })}
           </p>
           <details className={styles.details}>
-            <summary>Show details: capability, inverter power and DC-side power per bank</summary>
-          <div className={`table-scroll ${table.scroll}`} role="region" aria-label="Battery power check, scrolls sideways" tabIndex={0}>
-            <table aria-label="Battery power check" className={table.table}>
-              <caption>Power check (Eq. 12.6 – 12.8) and autonomy (Eq. 12.14 – 12.18) per bank, discharge only</caption>
+            <summary>{t("Show details: capability, inverter power and DC-side power per bank")}</summary>
+          <div className={`table-scroll ${table.scroll}`} role="region" aria-label={t("Battery power check, scrolls sideways")} tabIndex={0}>
+            <table aria-label={t("Battery power check")} className={table.table}>
+              <caption>{t("Power check (Eq. 12.6 – 12.8) and autonomy (Eq. 12.14 – 12.18) per bank, discharge only")}</caption>
               <thead>
                 <tr>
-                  <th scope="col">Inverter</th>
-                  <th scope="col">Bank</th>
-                  <th scope="col">Power outcome</th>
+                  <th scope="col">{t("Inverter")}</th>
+                  <th scope="col">{t("Bank")}</th>
+                  <th scope="col">{t("Power outcome")}</th>
                   <th scope="col" className="num">
-                    Capability (kW)
+                    {t("Capability (kW)")}
                   </th>
                   <th scope="col">
-                    Capability from
+                    {t("Capability from")}
                   </th>
                   <th scope="col" className="num">
-                    Inverter P (kW)
+                    {t("Inverter P (kW)")}
                   </th>
                   <th scope="col" className="num">
-                    DC-side power (kW)
+                    {t("DC-side power (kW)")}
                   </th>
                   <th scope="col" className="num">
-                    Margin (kW)
+                    {t("Margin (kW)")}
                   </th>
-                  <th scope="col">Power reason</th>
+                  <th scope="col">{t("Power reason")}</th>
                   <th scope="col">
-                    Autonomy outcome
+                    {t("Autonomy outcome")}
                   </th>
                   <th scope="col" className="num">
-                    Usable energy (kWh)
+                    {t("Usable energy (kWh)")}
                   </th>
-                  <th scope="col">Autonomy</th>
+                  <th scope="col">{t("Autonomy")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -191,18 +204,20 @@ function Battery() {
           </div>
           </details>
           <p className={further.source}>
-            State of charge <Tip k="soc" /> per bank over the profile day; the flat line of each bank is its discharge limit 1 − DoD.
+            {withSlots(t("State of charge {soc} per bank over the profile day; the flat line of each bank is its discharge limit 1 − DoD."), { soc: <Tip k="soc" /> })}
           </p>
           <SocChart p={p} record={resp.run_record} />
           <p className={further.record} data-testid="ba-record">
-            Computed by the app from {String(r?.diagnostics?.engine_calls ?? 0)} hourly power flow runs
-            {resp.run_record.engine_kind ? ` (${resp.run_record.engine_kind} engine)` : ""}.
+            {t("Computed by the app from {count} hourly power flow runs{engine}.", {
+              count: String(r?.diagnostics?.engine_calls ?? 0),
+              engine: resp.run_record.engine_kind ? t(" ({kind} engine)", { kind: resp.run_record.engine_kind }) : "",
+            })}
           </p>
         </>
       )}
         </ResultSheet>
       )}
-      {!resp && <EmptyState title="Not run yet.">Run the battery adequacy check after a current M1.</EmptyState>}
+      {!resp && <EmptyState title={t("Not run yet.")}>{t("Run the battery adequacy check after a current M1.")}</EmptyState>}
       </div>
       </div>
     </>

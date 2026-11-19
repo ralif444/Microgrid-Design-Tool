@@ -13,7 +13,9 @@ import { EmptyState } from "../../components/EmptyState";
 import { fixed, fixedOr } from "../../components/format";
 import { fmt, InfeasibleNote, OutOfDate, RunButton, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
+import { translate, displayLang } from "../../components/i18n";
 import { Icon, type IconName } from "../../components/Icon";
+import { useLanguage } from "../../components/Language";
 import { m3dKpis } from "../../components/kpi";
 import { KpiStrip } from "../../components/KpiStrip";
 import { KIND_WORDS } from "../../components/M2Results";
@@ -31,10 +33,12 @@ const CELL: Record<string, [IconName, string, string]> = {
 const cell = (s: string): [IconName, string, string] => CELL[s] ?? ["warn", s.toLowerCase().replace(/_/g, " "), styles.other];
 const limiting = (g: SweepPoint) => {
   const c = g.limiting_constraint;
-  return c ? `${KIND_WORDS[c.kind] ?? c.kind}, ${c.element_id}, normalised margin ${fixedOr(c.normalised_margin, "ratio")}` : "none";
+  const tr = (k: string, v?: Record<string, string | number>) => translate(displayLang(), k, v);
+  return c ? tr("{kind}, {id}, normalised margin {margin}", { kind: tr(KIND_WORDS[c.kind] ?? c.kind), id: c.element_id, margin: fixedOr(c.normalised_margin, "ratio") }) : tr("none");
 };
 
 function Envelope() {
+  const { t } = useLanguage();
   const { design, fresh, busy, resp, stale, error, clearError, run, m2Infeasible } = useDependentRun("M3d");
   // Example mode (Doc 12 X9, D-92 K230/K231): X axis from the guided example, Y axis left to the user.
   const { example } = useProject();
@@ -51,7 +55,7 @@ function Envelope() {
     <>
       <div className={styles.head}>
         <h1>
-          Envelope <span className="code-label">(M3d)</span>
+          {t("Envelope")} <span className="code-label">(M3d)</span>
         </h1>
         <M1FreshnessBadge f={fresh} />
       </div>
@@ -60,7 +64,7 @@ function Envelope() {
       <InfeasibleNote show={m2Infeasible} />
       <div className={styles.study}>
       <form
-        aria-label="Envelope settings"
+        aria-label={t("Envelope settings")}
         className={styles.form}
         onSubmit={(e) => {
           e.preventDefault();
@@ -68,11 +72,11 @@ function Envelope() {
         }}
       >
         <fieldset className={styles.box}>
-          <legend>X axis</legend>
+          <legend>{t("X axis")}</legend>
           {x.fields}
         </fieldset>
         <fieldset className={styles.box}>
-          <legend>Y axis</legend>
+          <legend>{t("Y axis")}</legend>
           {y.fields}
         </fieldset>
         <SizeIndicator points={points} cap={cap} />
@@ -85,16 +89,16 @@ function Envelope() {
       {resp && r && (
         <ResultSheet record={resp.run_record}>
           <StatusBanner type="M3d" result={r} />
-      {p && resp && <KpiStrip label="Envelope key figures" kpis={m3dKpis(p)} record={resp.run_record} />}
+      {p && resp && <KpiStrip label={t("Envelope key figures")} kpis={m3dKpis(p)} record={resp.run_record} />}
       {p && resp && (
         <>
-          <p data-testid="feasible-fraction">Feasible fraction: {fixed(p.feasible_fraction * 100, "%")} % of {p.grid.length} points</p>
+          <p data-testid="feasible-fraction">{t("Feasible fraction: {pct} % of {count} points", { pct: fixed(p.feasible_fraction * 100, "%"), count: p.grid.length })}</p>
           <StatusGrid p={p} x={x} y={y} record={resp.run_record} />
         </>
       )}
         </ResultSheet>
       )}
-      {!resp && <EmptyState title="No envelope run yet.">Choose two axes and run the envelope to see the status of every point.</EmptyState>}
+      {!resp && <EmptyState title={t("No envelope run yet.")}>{t("Choose two axes and run the envelope to see the status of every point.")}</EmptyState>}
       </div>
       </div>
       <ExampleNext screen="envelope" ready={nextReady(r?.status)} />
@@ -105,6 +109,7 @@ function Envelope() {
 type Ax = { name: string; unit: string };
 
 function StatusGrid({ p, x, y, record }: { p: M3dPayload; x: Ax; y: Ax; record: RunRecord }) {
+  const { t } = useLanguage();
   const xs = [...new Set(p.grid.map((g) => g.x_value))];
   const ys = [...new Set(p.grid.map((g) => g.y_value))];
   const at = (r: number, c: number) => p.grid.find((q) => q.x_value === xs[c] && q.y_value === ys[r]);
@@ -120,24 +125,24 @@ function StatusGrid({ p, x, y, record }: { p: M3dPayload; x: Ax; y: Ax; record: 
     e.currentTarget.querySelector<HTMLElement>(`[data-cell="${next[0]}-${next[1]}"]`)?.focus();
   };
   const legend = [
-    { name: "feasible", swatch: <Icon name="feasible" /> },
-    { name: "infeasible", swatch: <Icon name="misuse" /> },
-    { name: "other Status, named in the cell", swatch: <Icon name="warn" /> },
+    { name: t("feasible"), swatch: <Icon name="feasible" /> },
+    { name: t("infeasible"), swatch: <Icon name="misuse" /> },
+    { name: t("other Status, named in the cell"), swatch: <Icon name="warn" /> },
   ];
   return (
     <ChartFrame
-      title="Status per point"
+      title={t("Status per point")}
       record={record}
       legend={legend}
-      note="Every cell names its Status with an icon and a word. Focus the grid (arrow keys move) or point at a cell to read its limiting constraint."
+      note={t("Every cell names its Status with an icon and a word. Focus the grid (arrow keys move) or point at a cell to read its limiting constraint.")}
       data={{
-        columns: [`${x.name} (${x.unit})`, `${y.name} (${y.unit})`, "Status", "Limiting constraint"],
+        columns: [`${x.name} (${x.unit})`, `${y.name} (${y.unit})`, t("Status"), t("Limiting constraint")],
         rows: p.grid.map((g) => [g.x_value ?? null, g.y_value ?? null, g.status, limiting(g)]),
       }}
     >
-      <table aria-label="Envelope grid" className={styles.grid} onKeyDown={keys}>
+      <table aria-label={t("Envelope grid")} className={styles.grid} onKeyDown={keys}>
         <caption>
-          Status per point: rows {y.name} ({y.unit}), columns {x.name} ({x.unit})
+          {t("Status per point: rows {y} ({yu}), columns {x} ({xu})", { y: y.name, yu: y.unit, x: x.name, xu: x.unit })}
         </caption>
         <thead>
           <tr>
@@ -171,7 +176,7 @@ function StatusGrid({ p, x, y, record }: { p: M3dPayload; x: Ax; y: Ax; record: 
                     }}
                     onMouseEnter={() => setShown(g)}
                   >
-                    <Icon name={icon} /> {word}
+                    <Icon name={icon} /> {t(word)}
                   </td>
                 );
               })}
@@ -181,8 +186,8 @@ function StatusGrid({ p, x, y, record }: { p: M3dPayload; x: Ax; y: Ax; record: 
       </table>
       <p data-testid="envelope-readout" className={styles.readout} aria-live="polite">
         {shown
-          ? `${x.name} ${fmt(shown.x_value)} ${x.unit}, ${y.name} ${fmt(shown.y_value)} ${y.unit}: ${shown.status}; limiting constraint: ${limiting(shown)}.`
-          : "Focus or point at a cell to read its Status and limiting constraint."}
+          ? t("{x} {xv} {xu}, {y} {yv} {yu}: {status}; limiting constraint: {limit}.", { x: x.name, xv: fmt(shown.x_value), xu: x.unit, y: y.name, yv: fmt(shown.y_value), yu: y.unit, status: shown.status, limit: limiting(shown) })
+          : t("Focus or point at a cell to read its Status and limiting constraint.")}
       </p>
     </ChartFrame>
   );

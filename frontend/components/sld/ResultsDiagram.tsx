@@ -5,6 +5,7 @@
 // reason is shown above the diagram.
 import { useState } from "react";
 import type { ElementRef } from "../Inspector";
+import { useLanguage } from "../Language";
 import { Icon } from "../Icon";
 import uiStyles from "../ui.module.css";
 import type { Freshness } from "../useValidation";
@@ -23,6 +24,7 @@ export function ResultsDiagram({
   selected: string | null;
   onSelect: (t: ElementRef) => void;
 }) {
+  const { t } = useLanguage();
   const sld = useSldModel();
   const [show, setShow] = useState(true);
   const on = show && fresh === "current" && sld.has.m1;
@@ -37,17 +39,17 @@ export function ResultsDiagram({
           ? "No current constraint check. Run M2 to show the checks on the diagram."
           : null;
   return (
-    <section aria-label="Single-line diagram">
-      <h2>Single-line diagram</h2>
+    <section aria-label={t("Single-line diagram")}>
+      <h2>{t("Single-line diagram")}</h2>
       {show && reason && (
         <p role="status" data-testid="sld-overlay-note" className={uiStyles.blocked}>
           <Icon name={fresh === "stale" ? "clock" : "dot"} />
-          {reason}
+          {t(reason)}
         </p>
       )}
       {on && sld.fake && (
         <p data-testid="sld-fake">
-          <strong>FAKE engine:</strong> placeholder values on the diagram, not engine results.
+          <strong>{t("FAKE engine:")}</strong> {t("placeholder values on the diagram, not engine results.")}
         </p>
       )}
       <SingleLineDiagram
@@ -58,7 +60,7 @@ export function ResultsDiagram({
         breakers={sld.breakers}
         tools={
           <button type="button" aria-pressed={show} onClick={() => setShow(!show)}>
-            Show results
+            {t("Show results")}
           </button>
         }
       />

@@ -3,9 +3,11 @@
 // The route stays as a redirect so old links and bookmarks still land on them.
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useLanguage } from "../../components/Language";
 
 export default function Redirect() {
+  const { t } = useLanguage();
   const router = useRouter();
   useEffect(() => router.replace("/workspace/?el=limits"), [router]);
-  return <p>Opening the workspace…</p>;
+  return <p>{t("Opening the workspace…")}</p>;
 }

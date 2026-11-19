@@ -13,6 +13,7 @@ import type { ExampleSettings } from "../store/example";
 import { applyOverrides } from "./Further";
 import { statusWord } from "./status-text";
 import { Icon, type IconName } from "./Icon";
+import { useLanguage } from "./Language";
 import { SOLVER } from "./useAnalysisCall";
 
 const STEPS: [AnalysisType, string, string][] = [
@@ -66,6 +67,7 @@ export function RunWholeExample() {
   const state = useProject();
   const dispatch = useProjectDispatch();
   const router = useRouter();
+  const { t } = useLanguage();
   const [outcomes, setOutcomes] = useState<Outcome[] | null>(null);
   const [stopped, setStopped] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -127,27 +129,29 @@ export function RunWholeExample() {
   }
 
   return (
-    <section aria-label="Run the whole example">
-      <h2>Run the whole example</h2>
-      <p>Runs every analysis of the pipeline in order with the example values, then opens the Report. Nothing is accepted or edited.</p>
+    <section aria-label={t("Run the whole example")}>
+      <h2>{t("Run the whole example")}</h2>
+      <p>{t("Runs every analysis of the pipeline in order with the example values, then opens the Report. Nothing is accepted or edited.")}</p>
       <button type="button" className="primary" onClick={() => void runAll()} disabled={busy} aria-busy={busy || undefined}>
-        {busy ? "Running..." : "Run the whole example"}
+        {busy ? t("Running...") : t("Run the whole example")}
       </button>
       {outcomes && (
-        <ol aria-label="Example run progress" data-testid="example-run">
+        <ol aria-label={t("Example run progress")} data-testid="example-run">
           {STEPS.map(([type, label], i) => {
             const o = outcomes[i];
             return (
               <li key={type} data-step={type} data-state={o.kind === "done" ? o.status : o.kind}>
-                {label}:{" "}
+                {t(label)}:{" "}
                 {o.kind === "done" ? (
                   <>
-                    <Icon name={ICON[o.status] ?? "info"} size={16} /> {o.word}
+                    <Icon name={ICON[o.status] ?? "info"} size={16} /> {t(o.word)}
                   </>
                 ) : o.kind === "running" ? (
-                  "running…"
+                  t("running…")
                 ) : o.kind === "pending" ? (
-                  "not run"
+                  t("not run")
+                ) : o.kind === "skipped" ? (
+                  t(o.text ?? "")
                 ) : (
                   o.text
                 )}
@@ -158,7 +162,7 @@ export function RunWholeExample() {
       )}
       {stopped && (
         <p role="alert" data-testid="example-run-stopped">
-          Stopped at {stopped}. Open that screen to see the result.
+          {t("Stopped at {step}. Open that screen to see the result.", { step: t(stopped) })}
         </p>
       )}
     </section>

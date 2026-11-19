@@ -10,6 +10,7 @@ import type { ExampleField } from "../store/example";
 import { ExampleTag, NotSet } from "./ExampleForm";
 import { FIELDS, fieldName, numericPaths, ParamOptions, paramName, paramUnit } from "./Further";
 import { NumberField } from "./NumberField";
+import { useLanguage } from "./Language";
 import { HOUR_AXIS } from "./profileHour";
 
 type Kind = "PARAMETER" | "SCALE_FACTOR" | "LOAD_SCALE" | "LOAD_PROFILE_HOUR";
@@ -41,6 +42,8 @@ export function axisNeeds(needs: string[] | undefined, key: string): string[] {
 // shortcut: the example sets kind, range and step count only (LOAD_SCALE in guided D2); a PARAMETER or
 // SCALE_FACTOR example axis would also need its path or element set here.
 export function useAxis(design: ProjectSnapshot, prefix = "", example?: AxisExample, hourOk = false): AxisInput {
+  const { t } = useLanguage();
+  const pre = prefix ? t(prefix) : ""; // `prefix` stays English: it keys the kept state and the ids
   const init = example?.ex?.value as { kind?: Kind; range_min?: number; range_max?: number; step_count?: number } | undefined;
   const [tagged, setTagged] = useKept(`${prefix}tagged`, !!init);
   const [kind, setKindRaw] = useKept<Kind>(`${prefix}kind`, init?.kind ?? "PARAMETER");
@@ -79,28 +82,28 @@ export function useAxis(design: ProjectSnapshot, prefix = "", example?: AxisExam
   const fields = (
     <>
       <p>
-        <label htmlFor={id("kind")}>{prefix}Axis</label>{" "}
+        <label htmlFor={id("kind")}>{pre}{t("Axis")}</label>{" "}
         <select id={id("kind")} value={kind} onChange={(e) => setKind(e.target.value as Kind)}>
-          <option value="PARAMETER">One parameter</option>
-          <option value="SCALE_FACTOR">Shared scale factor over a set of elements</option>
-          <option value="LOAD_SCALE">Load scale λ (all loads, fixed power factor)</option>
-          {hourOk && <option value="LOAD_PROFILE_HOUR">Profile hour (24 h, loads scaled by the load profile)</option>}
+          <option value="PARAMETER">{t("One parameter")}</option>
+          <option value="SCALE_FACTOR">{t("Shared scale factor over a set of elements")}</option>
+          <option value="LOAD_SCALE">{t("Load scale λ (all loads, fixed power factor)")}</option>
+          {hourOk && <option value="LOAD_PROFILE_HOUR">{t("Profile hour (24 h, loads scaled by the load profile)")}</option>}
         </select>
-        {tagged && example?.ex && <ExampleTag label={`${prefix}Axis`} source={example.ex.source} />}
+        {tagged && example?.ex && <ExampleTag label={`${pre}${t("Axis")}`} source={example.ex.source} />}
         {needs.includes("axis") && !tagged && lo === null && hi === null && <NotSet />}
       </p>
       {kind === "PARAMETER" && (
         <p>
-          <label htmlFor={id("path")}>{prefix}Parameter</label>{" "}
+          <label htmlFor={id("path")}>{pre}{t("Parameter")}</label>{" "}
           <select id={id("path")} value={path} onChange={(e) => setPath(e.target.value)}>
-            <option value="">Choose…</option>
+            <option value="">{t("Choose…")}</option>
             <ParamOptions paths={numericPaths(design)} />
           </select>
         </p>
       )}
       {kind === "SCALE_FACTOR" && (
         <p>
-          <label htmlFor={id("coll")}>{prefix}Elements</label>{" "}
+          <label htmlFor={id("coll")}>{pre}{t("Elements")}</label>{" "}
           <select
             id={id("coll")}
             value={coll}
@@ -110,34 +113,34 @@ export function useAxis(design: ProjectSnapshot, prefix = "", example?: AxisExam
               setField(FIELDS[c][0]);
             }}
           >
-            <option value="inverters">Inverters</option>
-            <option value="loads">Loads</option>
-            <option value="lines">Lines</option>
+            <option value="inverters">{t("Inverters")}</option>
+            <option value="loads">{t("Loads")}</option>
+            <option value="lines">{t("Lines")}</option>
           </select>{" "}
-          <label htmlFor={id("field")}>{prefix}Field</label>{" "}
+          <label htmlFor={id("field")}>{pre}{t("Field")}</label>{" "}
           <select id={id("field")} value={field} onChange={(e) => setField(e.target.value)}>
             {FIELDS[coll].map((f) => (
               <option key={f} value={f}>
-                {fieldName(f)}
+                {t(fieldName(f))}
               </option>
             ))}
           </select>{" "}
-          <span>Applies to: {elementSet.join(", ") || "none"}</span>
+          <span>{t("Applies to: {list}", { list: elementSet.join(", ") || t("none") })}</span>
         </p>
       )}
-      {hour && <p>Hours 0 to 23, one point per hour; each hour scales every load by its profile value over the load table total (Eq. 12.9).</p>}
+      {hour && <p>{t("Hours 0 to 23, one point per hour; each hour scales every load by its profile value over the load table total (Eq. 12.9).")}</p>}
       {!hour && (
         <>
       <p>
-        <NumberField id={id("min")} label={`${prefix}From`} unit={unit} value={lo} onChange={setLo} />
+        <NumberField id={id("min")} label={`${pre}${t("From")}`} unit={unit} value={lo} onChange={setLo} />
       </p>
       <p>
-        <NumberField id={id("max")} label={`${prefix}To`} unit={unit} value={hi} onChange={setHi} />
+        <NumberField id={id("max")} label={`${pre}${t("To")}`} unit={unit} value={hi} onChange={setHi} />
       </p>
       <p>
         <NumberField
           id={id("steps")}
-          label={`${prefix}Points`}
+          label={`${pre}${t("Points")}`}
           unit="count"
           step="1"
           value={steps}
@@ -149,7 +152,7 @@ export function useAxis(design: ProjectSnapshot, prefix = "", example?: AxisExam
       )}
     </>
   );
-  if (hour) return { axis: { ...HOUR_AXIS }, unit, name: "Hour", steps: HOUR_AXIS.step_count, fields, reset, missing: [] };
+  if (hour) return { axis: { ...HOUR_AXIS }, unit, name: t("Hour"), steps: HOUR_AXIS.step_count, fields, reset, missing: [] };
   const missing = [
     kind === "PARAMETER" && !path && "Parameter",
     kind === "SCALE_FACTOR" && !elementSet.length && "Elements",
@@ -159,16 +162,16 @@ export function useAxis(design: ProjectSnapshot, prefix = "", example?: AxisExam
     // SWEEP_RANGE_INVALID (Doc 3 §5): min ≥ max or fewer than 2 steps; named before Run instead of after
     lo !== null && hi !== null && lo >= hi && "To above From",
     steps !== null && steps < 2 && "at least 2 Points",
-  ].flatMap((m) => (m ? [`${prefix}${m}`] : []));
+  ].flatMap((m) => (m ? [`${pre}${t(m)}`] : []));
   return {
     axis: { ...shape, range_min: lo, range_max: hi, step_count: steps },
     unit,
     name:
       kind === "PARAMETER"
-        ? paramName(path) || "Parameter"
+        ? paramName(path) || t("Parameter")
         : kind === "SCALE_FACTOR"
-          ? `Scale factor on ${fieldName(field)} of ${coll}`
-          : "Load scale λ",
+          ? t("Scale factor on {field} of {coll}", { field: t(fieldName(field)), coll: t(coll) })
+          : t("Load scale λ"),
     steps,
     fields,
     reset,
@@ -186,10 +189,11 @@ export function useSweepCap(): number | null {
 }
 
 export function SizeIndicator({ points, cap }: { points: number | null; cap: number | null }) {
+  const { t } = useLanguage();
   const over = cap !== null && points !== null && points > cap;
   return (
     <p data-testid="sweep-size" role={over ? "alert" : undefined}>
-      Points: {points ?? "—"} of cap {cap ?? "unknown"} ({over ? "too many; the request will be refused" : "ok"})
+      {t("Points: {points} of cap {cap} ({note})", { points: points ?? "—", cap: cap ?? t("unknown"), note: t(over ? "too many; the request will be refused" : "ok") })}
     </p>
   );
 }

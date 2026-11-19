@@ -10,7 +10,9 @@ import { LoadabilityAxis } from "./charts/LoadabilityAxis";
 import { DataTable, type DataColumn } from "./DataTable";
 import { fixed, fixedOr } from "./format";
 import { Icon, type IconName } from "./Icon";
+import { useLanguage } from "./Language";
 import type { ElementRef } from "./elementFields";
+import { displayLang, translate } from "./i18n";
 import styles from "./M2Results.module.css";
 
 // FR-26: a satisfied constraint with normalised margin below MARGIN_WARN (Eq. 4.18) is near its limit.
@@ -53,8 +55,9 @@ export const workspaceHref = (t: ElementRef) => `/workspace/?el=${t.kind}:${enco
 
 /** An element id that selects it: in the inspector when `onInspect` is given, else via the workspace. */
 export function ElementLink({ target, onInspect }: { target: ElementRef; onInspect?: (t: ElementRef) => void }) {
+  const { t } = useLanguage();
   return onInspect ? (
-    <button type="button" className="inspect" aria-label={`Inspect ${target.id}`} onClick={() => onInspect(target)}>
+    <button type="button" className="inspect" aria-label={t("Inspect {id}", { id: target.id })} onClick={() => onInspect(target)}>
       {target.id}
     </button>
   ) : (
@@ -62,7 +65,7 @@ export function ElementLink({ target, onInspect }: { target: ElementRef; onInspe
   );
 }
 
-const fmt = (v: number | null | undefined) => fixedOr(v, "ratio", "not available"); // loadability values are ratios
+const fmt = (v: number | null | undefined) => fixedOr(v, "ratio", translate(displayLang(), "not available")); // loadability values are ratios
 
 // A number with its unit in a fixed-width slot, so values and units each share an edge (mockup phase 3).
 const withUnit = (text: string, unit: string) => (
@@ -89,29 +92,30 @@ export function ConstraintTable({
   onInspect?: (t: ElementRef) => void;
 }) {
   const marginWarn = useMarginWarn();
+  const { t } = useLanguage();
   const sorted = [...rows].sort((a, b) => a.normalised_margin - b.normalised_margin);
   const columns: DataColumn<LimitingConstraint>[] = [
-    { key: "kind", header: "Constraint", cell: (c) => KIND_WORDS[c.kind] ?? c.kind },
+    { key: "kind", header: t("Constraint"), cell: (c) => t(KIND_WORDS[c.kind] ?? c.kind) },
     {
       key: "element",
-      header: "Element",
+      header: t("Element"),
       cell: (c) => {
         const kind = KIND_ELEMENT[c.kind];
         return kind ? <ElementLink target={{ kind, id: c.element_id }} onInspect={onInspect} /> : c.element_id;
       },
     },
-    { key: "value", header: "Value", numeric: true, cell: (c) => withUnit(fixed(c.value, c.unit), c.unit) },
-    { key: "limit", header: "Limit", numeric: true, cell: (c) => withUnit(fixed(c.limit, c.unit), c.unit) },
+    { key: "value", header: t("Value"), numeric: true, cell: (c) => withUnit(fixed(c.value, c.unit), c.unit) },
+    { key: "limit", header: t("Limit"), numeric: true, cell: (c) => withUnit(fixed(c.limit, c.unit), c.unit) },
     {
       key: "margin",
-      header: "Margin",
+      header: t("Margin"),
       term: "margin",
       numeric: true,
-      cell: (c) => (c.margin < 0 ? withUnit(`Violated by ${fixed(-c.margin, c.unit)}`, c.unit) : withUnit(fixed(c.margin, c.unit), c.unit)),
+      cell: (c) => (c.margin < 0 ? withUnit(t("Violated by {v}", { v: fixed(-c.margin, c.unit) }), c.unit) : withUnit(fixed(c.margin, c.unit), c.unit)),
     },
     {
       key: "normalised",
-      header: "Normalised margin",
+      header: t("Normalised margin"),
       term: "nmargin",
       numeric: true,
       // bar: normalised margin clamped to 0–1, longer = more room; a violated row has an empty bar
@@ -126,15 +130,15 @@ export function ConstraintTable({
     },
     {
       key: "status",
-      header: "Status",
+      header: t("Status"),
       cell: (c) => {
         // O-5: without MARGIN_WARN a satisfied row cannot yet be told from a near-limit one
-        if (marginWarn === null && c.margin >= 0) return <span className={styles.status}>Checking</span>;
+        if (marginWarn === null && c.margin >= 0) return <span className={styles.status}>{t("Checking")}</span>;
         const s = marginStatus(c, marginWarn);
         return (
           <span className={styles.status} data-s={s}>
             <Icon name={STATUS_WORD[s].icon} size={16} />
-            {STATUS_WORD[s].word}
+            {t(STATUS_WORD[s].word)}
           </span>
         );
       },
@@ -143,18 +147,18 @@ export function ConstraintTable({
   if (shortcut)
     columns.push({
       key: "next",
-      header: "Next step",
+      header: t("Next step"),
       cell: (c) =>
         c.kind !== "POWER_BALANCE" && (
           <Link href={`/sensitivity/?kind=${encodeURIComponent(c.kind)}&element=${encodeURIComponent(c.element_id)}`}>
-            Most influential parameters for {c.element_id}
+            {t("Most influential parameters for {id}", { id: c.element_id })}
           </Link>
         ),
     });
   return (
     <>
-      <DataTable label={label} caption={label} columns={columns} rows={sorted} rowKey={(_, k) => k} rowName={(c) => c.element_id} rowViolated={(c) => c.margin < 0} />
-      {note && marginWarn !== null && <p className={styles.basis}>Near limit: a satisfied constraint with normalised margin below {fixed(marginWarn, "ratio")} (Eq. 4.18).</p>}
+      <DataTable label={t(label)} caption={t(label)} columns={columns} rows={sorted} rowKey={(_, k) => k} rowName={(c) => c.element_id} rowViolated={(c) => c.margin < 0} />
+      {note && marginWarn !== null && <p className={styles.basis}>{t("Near limit: a satisfied constraint with normalised margin below {v} (Eq. 4.18).", { v: fixed(marginWarn, "ratio") })}</p>}
     </>
   );
 }
@@ -176,51 +180,54 @@ const LINE_SIZING: DataColumn<LineSize>[] = [
 ];
 
 export function M2Results({ p, charts, onInspect }: { p: M2Payload; charts?: { record: RunRecord }; onInspect?: (t: ElementRef) => void }) {
+  const { t } = useLanguage();
+  const tc = <R,>(cols: DataColumn<R>[]): DataColumn<R>[] => cols.map((c) => ({ ...c, header: t(c.header) }));
+  const invCols = tc(INV_SIZING).map((c) => (c.key === "short" ? { ...c, cell: (i: InvSize) => t(i.rating_margin_short ? "yes" : "no") } : c));
   const l = p.loadability;
   const s = p.sizing_check;
   return (
-    <section aria-label="Constraint check results">
+    <section aria-label={t("Constraint check results")}>
       {p.constraint_margins.length > 0 && <ConstraintTable label="All evaluated margins" rows={p.constraint_margins} onInspect={onInspect} />}
       {/* audit §8: no bar chart of the margins; the table's inline bars carry the same numbers */}
-      <h2>Not evaluated</h2>
+      <h2>{t("Not evaluated")}</h2>
       {p.not_evaluated.length === 0 ? (
         <p className="all-clear">
           <Icon name="feasible" />
-          Every check had a limit.
+          {t("Every check had a limit.")}
         </p>
       ) : (
         <div className={`problems ${styles.notEvaluated}`}>
           <Icon name="info" size={20} />
-          <ul aria-label="Not evaluated">
+          <ul aria-label={t("Not evaluated")}>
             {p.not_evaluated.map((n, k) => (
               <li key={k}>
-                {KIND_WORDS[n.kind] ?? n.kind}, {n.element_id}: no limit given; not counted as satisfied.
+                {t("{kind}, {id}: no limit given; not counted as satisfied.", { kind: t(KIND_WORDS[n.kind] ?? n.kind), id: n.element_id })}
               </li>
             ))}
           </ul>
         </div>
       )}
-      <h2>Loadability</h2>
+      <h2>{t("Loadability")}</h2>
       <dl className={styles.loadability}>
-        <dt>λ_c (constraint loadability, ratio)</dt>
+        <dt>{t("λ_c (constraint loadability, ratio)")}</dt>
         <dd>{fmt(l.lambda_c)}</dd>
         <dt>
-          λ_s (ratio) <span className={styles.qualifier}>solution existence, not a stability limit</span>
+          λ_s (ratio) <span className={styles.qualifier}>{t("solution existence, not a stability limit")}</span>
         </dt>
         <dd>{fmt(l.lambda_s)}</dd>
-        <dt>Resolution (ratio)</dt>
+        <dt>{t("Resolution (ratio)")}</dt>
         <dd>{fmt(l.resolution)}</dd>
-        <dt>Grid step (ratio)</dt>
+        <dt>{t("Grid step (ratio)")}</dt>
         <dd>{fmt(l.grid_step)}</dd>
-        <dt>Stop reason</dt>
-        <dd className={styles.text}>{l.stop_reason ?? "none"}</dd>
+        <dt>{t("Stop reason")}</dt>
+        <dd className={styles.text}>{l.stop_reason ?? t("none")}</dd>
       </dl>
       {charts && <LoadabilityAxis l={l} record={charts.record} />}
-      <AdvisoryPanel label="Sizing check" tag="Sizing check, from the network" title="Sizing check (advisory, from the network)">
-        <DataTable label="Inverter ratings" columns={INV_SIZING} rows={s.per_inverter} rowKey={(i) => i.inverter_id} rowName={(i) => i.inverter_id} />
-        <DataTable label="Line currents" columns={LINE_SIZING} rows={s.per_line} rowKey={(x) => x.line_id} rowName={(x) => x.line_id} />
+      <AdvisoryPanel label={t("Sizing check")} tag={t("Sizing check, from the network")} title={t("Sizing check (advisory, from the network)")}>
+        <DataTable label={t("Inverter ratings")} columns={invCols} rows={s.per_inverter} rowKey={(i) => i.inverter_id} rowName={(i) => i.inverter_id} />
+        <DataTable label={t("Line currents")} columns={tc(LINE_SIZING)} rows={s.per_line} rowKey={(x) => x.line_id} rowName={(x) => x.line_id} />
         <p className={styles.basis}>
-          {s.storage ? `Storage energy: AC ${fixed(s.storage.e_ac_kwh, "kWh")} kWh (stage ${s.storage.stage}). ` : "No storage check. "}
+          {s.storage ? `${t("Storage energy: AC {e} kWh (stage {stage}).", { e: fixed(s.storage.e_ac_kwh, "kWh"), stage: s.storage.stage })} ` : `${t("No storage check.")} `}
           {s.basis} {s.assumptions.join(" ")}
         </p>
       </AdvisoryPanel>

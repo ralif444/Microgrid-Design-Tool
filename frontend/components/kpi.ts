@@ -2,10 +2,14 @@
 // argmin, argmax) and count; no arithmetic on physical quantities (guideline §1 rule 1).
 import { violatedCount } from "./status-text";
 import type { M1Payload, M2Payload, M3bPayload, M3dPayload, M4aPayload, M4bPayload } from "../api-types";
-import { num } from "./format";
+import { numText } from "./format";
+import { displayLang, translate } from "./i18n";
 import type { GlossaryKey } from "./glossary";
 import type { IconName } from "./Icon";
 import { KIND_WORDS } from "./M2Results";
+
+// Dynamic details are translated here; static labels and details are wrapped at the render site (KpiStrip).
+const T = (s: string, v?: Record<string, string | number>) => translate(displayLang(), s, v);
 
 // `value` is a payload number, or a payload word (the M2 verdict) shown with `icon`.
 export type Kpi = { label: string; value: number | string | null; unit: string; detail?: string; icon?: IconName; term?: GlossaryKey };
@@ -35,7 +39,7 @@ export function m1Kpis(p: M1Payload): Kpi[] {
 export function m2Kpis(p: M2Payload): Kpi[] {
   const tight = pick(p.constraint_margins, (c) => c.normalised_margin);
   const l = p.loadability;
-  const res = `resolution ${num(l.resolution)}`;
+  const res = T("resolution {v}", { v: numText(l.resolution) });
   return [
     { label: "Verdict", value: p.verdict === "FEASIBLE" ? "Meets the limits" : "Limits violated", unit: "", term: p.verdict, icon: p.verdict === "FEASIBLE" ? "feasible" : "misuse" },
     { label: "Violated constraints", value: violatedCount(p) ?? 0, unit: "count", term: "margin" },
@@ -44,11 +48,11 @@ export function m2Kpis(p: M2Payload): Kpi[] {
       value: tight?.normalised_margin ?? null,
       unit: "ratio",
       term: "nmargin",
-      detail: tight ? `normalised margin; ${KIND_WORDS[tight.kind] ?? tight.kind}, ${tight.element_id}` : "no evaluated constraint",
+      detail: tight ? T("normalised margin; {kind}, {id}", { kind: T(KIND_WORDS[tight.kind] ?? tight.kind), id: tight.element_id }) : "no evaluated constraint",
     },
     { label: "Not evaluated", value: p.not_evaluated.length, unit: "count", detail: "no limit given" },
     { label: "Constraint loadability λ_c", value: l.lambda_c, unit: "ratio", term: "lambda_c", detail: res },
-    { label: "λ_s", value: l.lambda_s, unit: "ratio", term: "lambda_s", detail: `solution-existence diagnostic, not a stability limit; ${res}` },
+    { label: "λ_s", value: l.lambda_s, unit: "ratio", term: "lambda_s", detail: T("solution-existence diagnostic, not a stability limit; {res}", { res }) },
   ];
 }
 
@@ -63,7 +67,7 @@ export function m4aKpis(p: M4aPayload, thresholdGiven: boolean): Kpi[] {
     ...(thresholdGiven
       ? [{ label: "Damping check", value: p.damping_pass === null || p.damping_pass === undefined ? null : p.damping_pass ? "passes" : "fails", unit: "", detail: p.damping_pass == null ? "not judged: no oscillatory mode" : "against the given threshold" }]
       : []),
-    { label: "Dominant mode frequency", value: dom?.frequency_hz ?? null, unit: "Hz", detail: dom ? `eigenvalue #${dom.eigenvalue_index}${dom.associated_element_ids.length ? `, ${dom.associated_element_ids.join(", ")}` : ""}` : "no dominant mode" },
+    { label: "Dominant mode frequency", value: dom?.frequency_hz ?? null, unit: "Hz", detail: dom ? `${T("eigenvalue")} #${dom.eigenvalue_index}${dom.associated_element_ids.length ? `, ${dom.associated_element_ids.join(", ")}` : ""}` : "no dominant mode" },
     { label: "Outside definition", value: p.outside_definition ? "yes" : "no", unit: "", detail: p.outside_definition ? "the operating point violates constraints [19]" : undefined },
   ];
 }
@@ -86,7 +90,7 @@ const STATUS_ORDER = ["FEASIBLE", "INFEASIBLE", "PHYSICALLY_INADMISSIBLE", "SOLV
 function perStatus(points: { status: string }[]): Kpi[] {
   return STATUS_ORDER.map((s) => [s, points.filter((p) => p.status === s).length] as const)
     .filter(([, n]) => n > 0)
-    .map(([s, n]) => ({ label: `Points ${s}`, value: n, unit: "count" }));
+    .map(([s, n]) => ({ label: T("Points {status}", { status: s }), value: n, unit: "count" }));
 }
 
 /** S-10 tiles (guideline §4): points, first infeasible value, points per Status. */

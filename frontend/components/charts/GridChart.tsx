@@ -7,6 +7,7 @@
 import { memo } from "react";
 import type { RunRecord } from "../../api-types";
 import { fixed } from "../format";
+import { useLanguage } from "../Language";
 import { ChartFrame } from "./ChartFrame";
 
 const CW = 64;
@@ -34,11 +35,12 @@ export const GridChart = memo(function GridChart({
   note?: string;
   record?: RunRecord | null;
 }) {
+  const { t } = useLanguage();
   const w = LW + columns.length * CW + 8;
   const h = TOP + rows.length * CH + 8;
   return (
     <ChartFrame title={title} record={record} note={note} data={{ columns: [rowTitle, ...columns], rows: rows.map((r) => [r.label, ...r.values]) }}>
-      <svg role="img" aria-label={`${title} grid, ${rows.length} rows by ${columns.length} columns`} viewBox={`0 0 ${w} ${h}`} style={{ width: w, minWidth: 0 }} className="chart-svg">
+      <svg role="img" aria-label={t("{title} grid, {rows} rows by {cols} columns", { title, rows: rows.length, cols: columns.length })} viewBox={`0 0 ${w} ${h}`} style={{ width: w, minWidth: 0 }} className="chart-svg">
         {columns.map((c, j) => (
           <text key={c} x={LW + j * CW + CW / 2} y={TOP - 10} textAnchor="middle">
             {c}

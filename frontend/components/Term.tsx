@@ -6,12 +6,14 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { GLOSSARY, type GlossaryKey } from "./glossary";
 import { Icon } from "./Icon";
+import { useLanguage } from "./Language";
 import styles from "./Term.module.css";
 
 export function Term({ k }: { k: GlossaryKey }) {
   const e = GLOSSARY[k];
+  const { t } = useLanguage();
   return (
-    <Toggletip label={`Glossary: ${e.term}`} lang="id">
+    <Toggletip label={t("Glossary: {term}", { term: e.term })} lang="id">
       <strong>{e.term}</strong> {e.short} <span className={styles.source}>Sumber: {e.source}</span>
     </Toggletip>
   );

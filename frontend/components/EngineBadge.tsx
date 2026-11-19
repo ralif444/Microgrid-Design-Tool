@@ -5,13 +5,15 @@
 import { Tag } from "@carbon/react";
 import { useEffect, useState } from "react";
 import { getMeta } from "../api-client";
+import { useLanguage } from "./Language";
 
 const TYPE: Record<string, "warm-gray" | "cool-gray" | "red"> = { FAKE: "warm-gray", REAL: "cool-gray", unreachable: "red" };
 
 export function EngineBadgeView({ kind }: { kind: string }) {
+  const { t } = useLanguage();
   return (
-    <Tag type={TYPE[kind] ?? "cool-gray"} size="md" data-kind={kind} data-testid="engine-badge" title="Calculation engine">
-      Engine: {kind}
+    <Tag type={TYPE[kind] ?? "cool-gray"} size="md" data-kind={kind} data-testid="engine-badge" title={t("Calculation engine")}>
+      {t("Engine:")} {kind}
     </Tag>
   );
 }

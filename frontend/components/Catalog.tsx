@@ -5,6 +5,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { getBaseCatalog, importCatalog } from "../api-client";
 import type { Catalog, CatalogEntry, CatalogRef, EntryCheck } from "../api-types";
+import { displayLang, translate } from "./i18n";
 
 // "x10": used only by the X10 cable sizing match (D-104 K293, K296), shown only with the flag on;
 // "bess": used only by the battery advice B1/B2 (D-106), never by the network model, with a source.
@@ -71,9 +72,9 @@ export function reasonText(kind: CatalogEntry["kind"], reason: string): string {
   const labels: Record<string, string> = Object.fromEntries([
     ...PROVENANCE,
     ...ENTRY_FIELDS[kind].map(([k, l]) => [k, l.replace(/, optional$/, "")]),
-  ]);
+  ].map(([k, l]) => [k, translate(displayLang(), l)]));
   return reason.replace(/(?:(?:sources|provenance)\.)?\b([a-z][a-z0-9_]*)\b( \(page or section\))?/g, (m, k: string, src?: string) =>
-    labels[k] ? labels[k] + (src ? ": page or section" : "") : m,
+    labels[k] ? labels[k] + (src ? `: ${translate(displayLang(), "page or section")}` : "") : m,
   );
 }
 
@@ -149,17 +150,19 @@ export function entryWarnings(
   const inv = e.inverter;
   if (e.kind !== "INVERTER" || !inv) return [];
   const out: string[] = [];
+  const tr = (s: string, vars: Record<string, string | number | null | undefined>) =>
+    translate(displayLang(), s, Object.fromEntries(Object.entries(vars).map(([k, v]) => [k, v ?? ""])));
   const differs = (a: unknown, b: unknown) => typeof a === "number" && typeof b === "number" && a !== b;
   if (differs(inv.nominal_voltage_kv, nominal.nominal_voltage_kv))
-    out.push(`entry nominal voltage ${inv.nominal_voltage_kv} kV differs from the Project ${nominal.nominal_voltage_kv} kV`);
+    out.push(tr("entry nominal voltage {entry} kV differs from the Project {project} kV", { entry: inv.nominal_voltage_kv, project: nominal.nominal_voltage_kv }));
   if (differs(inv.nominal_frequency_hz, nominal.nominal_frequency_hz))
-    out.push(`entry nominal frequency ${inv.nominal_frequency_hz} Hz differs from the Project ${nominal.nominal_frequency_hz} Hz`);
+    out.push(tr("entry nominal frequency {entry} Hz differs from the Project {project} Hz", { entry: inv.nominal_frequency_hz, project: nominal.nominal_frequency_hz }));
   const outside = (v: unknown, lo: unknown, hi: unknown) =>
     typeof v === "number" && typeof lo === "number" && typeof hi === "number" && (v < lo || v > hi);
   if (outside(row.frequency_droop_hz_per_kw, inv.frequency_droop_min_hz_per_kw, inv.frequency_droop_max_hz_per_kw))
-    out.push(`P–f droop ${row.frequency_droop_hz_per_kw} Hz/kW is outside the entry range ${inv.frequency_droop_min_hz_per_kw}–${inv.frequency_droop_max_hz_per_kw} Hz/kW`);
+    out.push(tr("P–f droop {value} Hz/kW is outside the entry range {lo}–{hi} Hz/kW", { value: row.frequency_droop_hz_per_kw as number, lo: inv.frequency_droop_min_hz_per_kw, hi: inv.frequency_droop_max_hz_per_kw }));
   if (outside(row.voltage_droop_kv_per_kvar, inv.voltage_droop_min_kv_per_kvar, inv.voltage_droop_max_kv_per_kvar))
-    out.push(`Q–V droop ${row.voltage_droop_kv_per_kvar} kV/kvar is outside the entry range ${inv.voltage_droop_min_kv_per_kvar}–${inv.voltage_droop_max_kv_per_kvar} kV/kvar`);
+    out.push(tr("Q–V droop {value} kV/kvar is outside the entry range {lo}–{hi} kV/kvar", { value: row.voltage_droop_kv_per_kvar as number, lo: inv.voltage_droop_min_kv_per_kvar, hi: inv.voltage_droop_max_kv_per_kvar }));
   return out;
 }
 
@@ -167,8 +170,8 @@ export function refText(ref: CatalogRef | null | undefined): string {
   if (!ref) return "—";
   return [
     ref.entry_id,
-    ref.modified ? "modified from catalogue" : null,
-    ref.current_limit_confirmed ? "current limit: datasheet reference conditions" : null,
+    ref.modified ? translate(displayLang(), "modified from catalogue") : null,
+    ref.current_limit_confirmed ? translate(displayLang(), "current limit: datasheet reference conditions") : null,
   ]
     .filter(Boolean)
     .join("; ");

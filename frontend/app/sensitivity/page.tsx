@@ -15,6 +15,7 @@ import { fixedOr } from "../../components/format";
 import { InfeasibleNote, METRICS, numericPaths, OutOfDate, paramLabel, RunButton, shortcutPrefill, useDependentRun } from "../../components/Further";
 import styles from "../../components/Further.module.css";
 import { Icon } from "../../components/Icon";
+import { useLanguage } from "../../components/Language";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { NumberField } from "../../components/NumberField";
 import { RequireProject } from "../../components/RequireProject";
@@ -26,6 +27,7 @@ type Sens = M3aPayload["sensitivities"][number];
 const FLAG = "status differs between the two sides";
 
 function Sensitivity() {
+  const { t } = useLanguage();
   const { design, fresh, busy, resp, stale, error, clearError, run, m2Infeasible } = useDependentRun("M3a");
   // Example mode (Doc 12 X9, D-92 K230): paths and metrics from the guided example; a path that does not
   // resolve on this Project is dropped (Doc 7 §2.3). The step stays the user's (D-92 K231).
@@ -62,7 +64,7 @@ function Sensitivity() {
     <>
       <div className={styles.head}>
         <h1>
-          Sensitivity <span className="code-label">(M3a)</span>
+          {t("Sensitivity")} <span className="code-label">(M3a)</span>
         </h1>
         <M1FreshnessBadge f={fresh} />
       </div>
@@ -71,7 +73,7 @@ function Sensitivity() {
       <InfeasibleNote show={m2Infeasible} />
       <div className={styles.study}>
       <form
-        aria-label="Sensitivity settings"
+        aria-label={t("Sensitivity settings")}
         className={styles.form}
         onSubmit={(e) => {
           e.preventDefault();
@@ -79,13 +81,13 @@ function Sensitivity() {
         }}
       >
         <fieldset className={`${styles.box} ${styles.params}`}>
-          <legend>Parameters ({paths.length} selected)</legend>
+          <legend>{t("Parameters ({count} selected)", { count: paths.length })}</legend>
           {ex.tag("parameter_paths", "Parameters")}
           {/* grouped per element, bounded height (audit 2026-11-15 D14) */}
           {[...Map.groupBy(numericPaths(design), (pp) => pp.split("/")[1])].map(([id, pps]) => (
             <details key={id} open>
               <summary>
-                {id} ({pps.filter((pp) => paths.includes(pp)).length} of {pps.length} selected)
+                {t("{id} ({count} of {total} selected)", { id, count: pps.filter((pp) => paths.includes(pp)).length, total: pps.length })}
               </summary>
               {pps.map((pp) => (
                 <label key={pp}>
@@ -96,28 +98,28 @@ function Sensitivity() {
           ))}
         </fieldset>
         <fieldset className={styles.box}>
-          <legend>Output metrics</legend>
+          <legend>{t("Output metrics")}</legend>
           {ex.tag("output_metrics", "Output metrics")}
           {METRICS.map(([m, label, unit]) => (
             <label key={m}>
-              <input type="checkbox" checked={metrics.includes(m)} onChange={() => setMetrics(toggle(metrics, m))} /> {label} ({unit})
+              <input type="checkbox" checked={metrics.includes(m)} onChange={() => setMetrics(toggle(metrics, m))} /> {t(label)} ({unit})
             </label>
           ))}
         </fieldset>
         <fieldset className={styles.box}>
           <legend>
-            Step size <span className="code-label">(Eq. 4.17)</span>
+            {t("Step size")} <span className="code-label">{t("(Eq. 4.17)")}</span>
           </legend>
           <label>
-            <input type="radio" name="step-kind" checked={stepKind === "step_relative"} onChange={() => setStepKind("step_relative")} /> relative to the parameter value
+            <input type="radio" name="step-kind" checked={stepKind === "step_relative"} onChange={() => setStepKind("step_relative")} /> {t("relative to the parameter value")}
           </label>
           <label>
-            <input type="radio" name="step-kind" checked={stepKind === "step_absolute"} onChange={() => setStepKind("step_absolute")} /> absolute, in the parameter unit
+            <input type="radio" name="step-kind" checked={stepKind === "step_absolute"} onChange={() => setStepKind("step_absolute")} /> {t("absolute, in the parameter unit")}
           </label>
           <NumberField
             id="step"
-            label="Step"
-            unit={stepKind === "step_relative" ? "ratio" : "parameter unit"}
+            label={t("Step")}
+            unit={stepKind === "step_relative" ? "ratio" : t("parameter unit")}
             value={step}
             onChange={setStep}
             note={ex.needs("step_relative") && step === null ? <NotSet /> : undefined}
@@ -143,19 +145,19 @@ function Sensitivity() {
           const missing = rows.filter((s) => !drawn.includes(s));
           const flagged = rows.filter((s) => s.status_change);
           const columns: DataColumn<Sens>[] = [
-            { key: "rank", header: "Rank", numeric: true, cell: (s) => rank.get(s.parameter_path) ?? "—" },
-            { key: "path", header: "Parameter", cell: (s) => paramLabel(s.parameter_path) },
+            { key: "rank", header: t("Rank"), numeric: true, cell: (s) => rank.get(s.parameter_path) ?? "—" },
+            { key: "path", header: t("Parameter"), cell: (s) => paramLabel(s.parameter_path) },
             { key: "v", header: "dy/dp", cell: (s) => `${fixedOr(s.value, s.unit ?? "")}${s.value === null || !s.unit ? "" : ` ${s.unit}`}` },
-            { key: "n", header: "Normalised", unit: "ratio", numeric: true, cell: (s) => fixedOr(s.normalised_value, "ratio") },
-            { key: "s", header: "Scheme", cell: (s) => s.scheme ?? "—" },
+            { key: "n", header: t("Normalised"), unit: "ratio", numeric: true, cell: (s) => fixedOr(s.normalised_value, "ratio") },
+            { key: "s", header: t("Scheme"), cell: (s) => s.scheme ?? "—" },
             {
               key: "note",
-              header: "Note",
+              header: t("Note"),
               cell: (s) => (
                 <>
                   {s.status_change && (
                     <>
-                      <Icon name="warn" /> {FLAG}
+                      <Icon name="warn" /> {t(FLAG)}
                       {s.reason ? "; " : ""}
                     </>
                   )}
@@ -165,30 +167,30 @@ function Sensitivity() {
             },
           ];
           return (
-            <section key={m} aria-label={`Results for ${label}`}>
+            <section key={m} aria-label={t("Results for {label}", { label: t(label) })}>
               <BarChart
-                title={`Tornado: ${label}`}
-                valueTitle="Normalised sensitivity (ratio)"
-                categoryTitle="Parameter"
-                categories={drawn.map((s) => `${paramLabel(s.parameter_path)}${s.status_change ? " (status differs)" : ""}`)}
-                series={[{ name: label, values: drawn.map((s) => s.normalised_value ?? null) }]}
+                title={t("Tornado: {label}", { label: t(label) })}
+                valueTitle={t("Normalised sensitivity (ratio)")}
+                categoryTitle={t("Parameter")}
+                categories={drawn.map((s) => `${paramLabel(s.parameter_path)}${s.status_change ? ` ${t("(status differs)")}` : ""}`)}
+                series={[{ name: t(label), values: drawn.map((s) => s.normalised_value ?? null) }]}
                 labelWidth={230}
                 note={[
-                  `Bars in the payload's rank order (largest absolute normalised effect first); metric unit ${unit}.`,
-                  missing.length ? `Not reported: ${missing.map((s) => `${paramLabel(s.parameter_path)} (${s.reason ?? "no reason given"})`).join("; ")}.` : null,
-                  flagged.length ? `Status differs between the two sides for: ${flagged.map((s) => paramLabel(s.parameter_path)).join(", ")}.` : null,
+                  t("Bars in the payload's rank order (largest absolute normalised effect first); metric unit {unit}.", { unit }),
+                  missing.length ? t("Not reported: {list}.", { list: missing.map((s) => `${paramLabel(s.parameter_path)} (${s.reason ?? t("no reason given")})`).join("; ") }) : null,
+                  flagged.length ? t("Status differs between the two sides for: {list}.", { list: flagged.map((s) => paramLabel(s.parameter_path)).join(", ") }) : null,
                 ]
                   .filter(Boolean)
                   .join(" ")}
                 record={resp.run_record}
               />
-              <DataTable label={`Sensitivity of ${label}`} caption={`Sensitivity of ${label}`} columns={columns} rows={rows} rowKey={(s) => s.parameter_path} rowName={(s) => paramLabel(s.parameter_path)} />
+              <DataTable label={t("Sensitivity of {label}", { label: t(label) })} caption={t("Sensitivity of {label}", { label: t(label) })} columns={columns} rows={rows} rowKey={(s) => s.parameter_path} rowName={(s) => paramLabel(s.parameter_path)} />
             </section>
           );
         })}
         </ResultSheet>
       )}
-      {!resp && <EmptyState title="Not run yet.">Pick parameters, output metrics and a step, then run M3a to rank the parameters by effect.</EmptyState>}
+      {!resp && <EmptyState title={t("Not run yet.")}>{t("Pick parameters, output metrics and a step, then run M3a to rank the parameters by effect.")}</EmptyState>}
       </div>
       </div>
       <ExampleNext screen="sensitivity" ready={nextReady(r?.status)} />

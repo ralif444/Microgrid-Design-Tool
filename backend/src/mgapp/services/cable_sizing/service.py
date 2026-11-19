@@ -25,8 +25,8 @@ CAVEAT_TEXT = (  # fixed text, guideline §0
     "not trip on a fault in islanded operation. Fault protection is not assessed by this tool."
 )
 EXPERIMENTAL_TEXT = (
-    "Experimental: cable and overload-protection sizing awaits supervisor approval "
-    "(protection is out of the thesis scope)."
+    "Advice only: cable and overload-protection sizing is not a protection or coordination "
+    "study (protection is outside the model; scope extension approved by the supervisor)."
 )
 
 
