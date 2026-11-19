@@ -446,6 +446,9 @@ DOC 7 COMPLETE
 - C5.1 F3 outcome edge: Status equal and result_hash equal.
 - C5.4 first phase per key flow stated in §4.
 
+## Change log 2026-11-19 (base catalogue v2; Doc 9 D-115)
+- S-18: the base catalogue is replaced by v2 from the 2026-11-17 search (38 entries, 34 usable); no screen change.
+
 ## Change log 2026-11-16 (base catalogue, cable sizing on; Doc 9 D-114, Doc 14 D13, D14, D18)
 - S-18: a read-only base catalogue ships with the app; a Source column (Base / Yours), Copy instead of Edit and Delete on base rows, the list sorted by kind then id; Save and Open act on the user's entries only.
 - S-19 Cable and breaker sizing is listed under Studies by default (the flag is on unless set to 0); the table file is still loaded by the user.

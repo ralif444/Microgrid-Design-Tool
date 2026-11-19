@@ -114,22 +114,20 @@
    "provenance": {
     "manufacturer": "Dyness",
     "model": "S51314 module (STACK314 system)",
-    "document": "STACK314 User Manual",
-    "revision": "V0 2026-03-30 (First Published)"
+    "document": "STACK314 standard datasheet (dyness.com, STACK314biaozhun.pdf)",
+    "revision": "no revision printed; retrieved 2026-11-17 (catalogue_results_2026-11-17)"
    },
    "sources": {
-    "energy_kwh": "Sec. 2.2 Tab. 2-2 p. 10",
-    "nominal_voltage_v": "Sec. 2.2 Tab. 2-2 p. 10",
-    "voltage_min_v": "DERIVED: Sec. 2.1 Tab. 2-1, 314-15s operating 672-876 V / 15 modules (3s: 134-175 V / 3 agrees)",
-    "voltage_max_v": "DERIVED: Sec. 2.1 Tab. 2-1, 876 V / 15 modules",
-    "discharge_power_kw": "DERIVED: Tab. 2-1 max continuous discharge current 200 A x module nominal 51.2 V",
-    "recommended_dod_ratio": "Sec. 2.1 Tab. 2-1: Depth of Discharge 95 %"
+    "energy_kwh": "Specification table: module energy 16.08 kWh",
+    "nominal_voltage_v": "Specification table: nominal module voltage 51.2 V",
+    "discharge_power_kw": "DERIVED: specification table maximum continuous current 200 A x module nominal 51.2 V",
+    "recommended_dod_ratio": "Specification table: DoD 95 %"
    },
    "battery_module": {
     "energy_kwh": 16.08,
     "nominal_voltage_v": 51.2,
-    "voltage_min_v": 44.8,
-    "voltage_max_v": 58.4,
+    "voltage_min_v": null,
+    "voltage_max_v": null,
     "discharge_power_kw": 10.24,
     "c_rate_per_h": null,
     "recommended_dod_ratio": 0.95
@@ -869,11 +867,11 @@
    "provenance": {
     "manufacturer": "Schneider Electric",
     "model": "Acti9 iC60N 3P 40 A curve C (A9F74340)",
-    "document": "Acti9 catalogue (Acti9_Catalogue_2017)",
-    "revision": "Version 2.0, May 2017"
+    "document": "Acti9 iC60N product data sheet A9F74340 (se.com/ww/en/product/A9F74340)",
+    "revision": "no revision printed; retrieved 2026-11-17 (catalogue_results_2026-11-17)"
    },
    "sources": {
-    "in_a": "p. 9 catalogue-number table, curve C In series 0.5-63 A; product page A9F74340"
+    "in_a": "Product data A9F74340: In 40 A, EN/IEC 60898-1, 3P, curve C, reference temperature 30 C, 6 kA at 400 V"
    },
    "breaker": {
     "standard": "IEC 60898-1",
@@ -889,11 +887,11 @@
    "provenance": {
     "manufacturer": "Schneider Electric",
     "model": "Acti9 iC60N 3P 63 A curve C (A9F74363)",
-    "document": "Acti9 catalogue (Acti9_Catalogue_2017)",
-    "revision": "Version 2.0, May 2017"
+    "document": "Acti9 iC60N product data sheet A9F74363 (se.com/ww/en/product/A9F74363)",
+    "revision": "no revision printed; retrieved 2026-11-17 (catalogue_results_2026-11-17)"
    },
    "sources": {
-    "in_a": "p. 9 catalogue-number table, curve C In series 0.5-63 A; product page A9F74363"
+    "in_a": "Product data A9F74363: In 63 A, EN/IEC 60898-1, 3P, curve C, reference temperature 30 C, 6 kA at 400 V"
    },
    "breaker": {
     "standard": "IEC 60898-1",
@@ -904,103 +902,132 @@
    }
   },
   {
-   "id": "BRK-SE-EASYPACT-CVS100F-TMD63",
-   "kind": "BREAKER",
+   "id": "BAT-TESVOLT-TS-HV-70-E",
+   "kind": "BATTERY_MODULE",
    "provenance": {
-    "manufacturer": "Schneider Electric",
-    "model": "EasyPact CVS100F TM-D 63 A 3P3d (LV510335)",
-    "document": "Product data sheet LV510335",
-    "revision": "date as printed on the sheet (re-check; extraction showed Oct-Nov 2026)"
+    "manufacturer": "TESVOLT",
+    "model": "TS HV 70 E (system, entered as one module)",
+    "document": "Technical data sheet TS HV 70 E / RD.TI.074.E.en-EN",
+    "revision": "v.A.01; retrieved 2026-11-17 (catalogue_results_2026-11-17)"
    },
    "sources": {
-    "in_a": "LV510335 data sheet p. 1: rated current 63 A at 40 C"
+    "energy_kwh": "Technical data: energy 72 kWh",
+    "nominal_voltage_v": "Technical data: nominal voltage 729 V",
+    "voltage_min_v": "Technical data: minimum operating voltage 634 V",
+    "voltage_max_v": "Technical data: maximum operating voltage 822 V",
+    "discharge_power_kw": "DERIVED: technical data continuous (nominal charge/discharge) current 100 A x nominal 729 V"
    },
-   "breaker": {
-    "standard": "IEC 60947-2",
-    "class": "MCCB",
-    "in_a": 63,
-    "curve": "TM-D",
-    "poles": 3
+   "battery_module": {
+    "energy_kwh": 72,
+    "nominal_voltage_v": 729,
+    "voltage_min_v": 634,
+    "voltage_max_v": 822,
+    "discharge_power_kw": 72.9,
+    "c_rate_per_h": null,
+    "recommended_dod_ratio": null
    }
   },
   {
-   "id": "BRK-SE-EASYPACT-CVS100F-TMD80",
-   "kind": "BREAKER",
+   "id": "BAT-BYD-HVM-MODULE",
+   "kind": "BATTERY_MODULE",
    "provenance": {
-    "manufacturer": "Schneider Electric",
-    "model": "EasyPact CVS100F TM-D 80 A 3P3d (LV510336)",
-    "document": "Product data sheet LV510336",
-    "revision": "date as printed on the sheet (re-check; extraction showed Oct-Nov 2026)"
+    "manufacturer": "BYD",
+    "model": "Battery-Box Premium HVM module (3-8 in series)",
+    "document": "241212_Datasheet_Battery-Box HVM_V1 (Technical Parameters Premium HVM)",
+    "revision": "V1.4 / 2024-12-12; retrieved 2026-11-17 (catalogue_results_2026-11-17)"
    },
    "sources": {
-    "in_a": "LV510336 data sheet p. 1: rated current 80 A at 40 C"
+    "energy_kwh": "Technical Parameters: module energy 2.76 kWh",
+    "nominal_voltage_v": "Technical Parameters: module nominal voltage 51.2 V",
+    "voltage_min_v": "DERIVED: printed operating window 120 V at 3 modules / 3 (320 V at 8 modules / 8 agrees)",
+    "voltage_max_v": "DERIVED: printed operating window 177 V at 3 modules / 3 (472 V at 8 modules / 8 agrees)"
    },
-   "breaker": {
-    "standard": "IEC 60947-2",
-    "class": "MCCB",
-    "in_a": 80,
-    "curve": "TM-D",
-    "poles": 3
+   "battery_module": {
+    "energy_kwh": 2.76,
+    "nominal_voltage_v": 51.2,
+    "voltage_min_v": 40,
+    "voltage_max_v": 59,
+    "discharge_power_kw": null,
+    "c_rate_per_h": null,
+    "recommended_dod_ratio": null
    }
   },
   {
-   "id": "BRK-SE-EASYPACT-CVS100F-TMD100",
-   "kind": "BREAKER",
+   "id": "BAT-FREEDOMWON-LITE-300-240-HVPLUS",
+   "kind": "BATTERY_MODULE",
    "provenance": {
-    "manufacturer": "Schneider Electric",
-    "model": "EasyPact CVS100F TM-D 100 A 3P3d (LV510337)",
-    "document": "Product data sheet LV510337",
-    "revision": "date as printed on the sheet (re-check; extraction showed Oct-Nov 2026)"
+    "manufacturer": "Freedom Won",
+    "model": "LiTE Commercial 300/240 HV+ (rack, entered as one module)",
+    "document": "LiTE Commercial 300/240 HV+ Specification Sheet",
+    "revision": "Last Update 05-Feb-25; retrieved 2026-11-17 (catalogue_results_2026-11-17)"
    },
    "sources": {
-    "in_a": "LV510337 data sheet p. 1: rated current 100 A at 40 C"
+    "nominal_voltage_v": "Main specification table: nominal voltage 736 V",
+    "voltage_min_v": "Main specification table: minimum operating voltage 655 V",
+    "voltage_max_v": "Main specification table: maximum operating voltage 817 V",
+    "discharge_power_kw": "DERIVED: main specification table continuous current 400 A x nominal 736 V"
    },
-   "breaker": {
-    "standard": "IEC 60947-2",
-    "class": "MCCB",
-    "in_a": 100,
-    "curve": "TM-D",
-    "poles": 3
+   "battery_module": {
+    "energy_kwh": null,
+    "nominal_voltage_v": 736,
+    "voltage_min_v": 655,
+    "voltage_max_v": 817,
+    "discharge_power_kw": 294.4,
+    "c_rate_per_h": null,
+    "recommended_dod_ratio": null
    }
   },
   {
-   "id": "BRK-SE-EASYPACT-CVS160F-TMD160",
-   "kind": "BREAKER",
+   "id": "CBL-FIRSTCABLE-NYY-1X25",
+   "kind": "CONDUCTOR",
    "provenance": {
-    "manufacturer": "Schneider Electric",
-    "model": "EasyPact CVS160F TM-D 160 A 3P3d (LV516333)",
-    "document": "Product data sheet LV516333",
-    "revision": "date as printed on the sheet (re-check; extraction showed Oct-Nov 2026)"
+    "manufacturer": "PT First Cable",
+    "model": "NYY 0.6/1 kV 1 x 25 mm2",
+    "document": "NYY Cu/PVC/PVC 600/1000 V, IEC 60502-1:2009 (firstcable.co.id/product/nyy-2), Construction and Electrical Data",
+    "revision": "web product page, no revision printed; retrieved 2026-11-17 (catalogue_results_2026-11-17)"
    },
    "sources": {
-    "in_a": "LV516333 data sheet p. 1: rated current 160 A at 40 C"
+    "r_ohm_per_km": "Construction and Electrical Data, 1 x 25 mm2 row: R20 0.727 ohm/km",
+    "x_ohm_per_km": "DERIVED: X = 2*pi*50*L, L = 0.312 mH/km printed (trefoil)",
+    "ampacity_a": "1 x 25 mm2 row: current-carrying capacity trefoil in air, 30 C"
    },
-   "breaker": {
-    "standard": "IEC 60947-2",
-    "class": "MCCB",
-    "in_a": 160,
-    "curve": "TM-D",
-    "poles": 3
+   "conductor": {
+    "r_ohm_per_km": 0.727,
+    "x_ohm_per_km": 0.098,
+    "rx_conditions": "R: DC at 20 C (printed). X: derived from printed inductance 0.312 mH/km (trefoil) at 50 Hz; flat 0.358 mH/km gives 0.1125 ohm/km",
+    "ampacity_a": 114,
+    "ampacity_conditions": "in air, 30 C, trefoil; flat in air 117 A; in ground 127 A trefoil, 130 A flat; burial depth and soil resistivity not printed",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "PVC",
+    "cores": 1,
+    "size_mm2": 25
    }
   },
   {
-   "id": "BRK-SE-EASYPACT-CVS250F-TMD250",
-   "kind": "BREAKER",
+   "id": "CBL-SUCACO-N2XY-1X16",
+   "kind": "CONDUCTOR",
    "provenance": {
-    "manufacturer": "Schneider Electric",
-    "model": "EasyPact CVS250F TM-D 250 A 3P3d (LV525333)",
-    "document": "Product data sheet LV525333",
-    "revision": "date as printed on the sheet (re-check; extraction showed Oct-Nov 2026)"
+    "manufacturer": "Supreme Cable (SUCACO)",
+    "model": "N2XY 0.6/1(1.2) kV 1 x 16 mm2",
+    "document": "Catalog Low Voltage Non Armour XLPE Cable (IEC 60502-1 / SPLN 43-6)",
+    "revision": "no revision printed; retrieved 2026-11-17 (catalogue_results_2026-11-17)"
    },
    "sources": {
-    "in_a": "LV525333 data sheet p. 1: rated current 250 A at 40 C"
+    "r_ohm_per_km": "N2XY 1-core data: R20 1.15 ohm/km",
+    "ampacity_a": "N2XY 1-core data: in air 99 A (conservative printed value), one three-phase circuit, 30 C"
    },
-   "breaker": {
-    "standard": "IEC 60947-2",
-    "class": "MCCB",
-    "in_a": 250,
-    "curve": "TM-D",
-    "poles": 3
+   "conductor": {
+    "r_ohm_per_km": 1.15,
+    "x_ohm_per_km": null,
+    "rx_conditions": "R: DC at 20 C (printed). X: no reactance or inductance printed",
+    "ampacity_a": 99,
+    "ampacity_conditions": "in air, 30 C, one three-phase circuit; in ground 111 A at 70 cm depth and 100 C.cm/W soil (reference factors 1.00)",
+    "shunt_capacitance_uf_per_km": null,
+    "material": "CU",
+    "insulation": "XLPE",
+    "cores": 1,
+    "size_mm2": 16
    }
   }
  ]

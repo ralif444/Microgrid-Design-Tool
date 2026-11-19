@@ -17,7 +17,7 @@ from _common import BACKEND, uv
 from playwright.sync_api import Browser, Page, sync_playwright
 
 STATIC_INDEX = BACKEND / "src" / "mgapp" / "static" / "index.html"
-BASE_CATALOG_PATH = "/catalogs/base-v1.json"
+BASE_CATALOG_PATH = "/catalogs/base-v2.json"
 
 
 def pytest_configure(config: pytest.Config) -> None:

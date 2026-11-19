@@ -256,15 +256,20 @@ def test_fr_73_module_values_out_of_range_refused(
 
 
 def test_shipped_base_catalogue_passes_the_guard(client: TestClient) -> None:
-    """The base catalogue opens; every entry is usable except Huawei, whose rating and droop
-    limits are not printed (information only on purpose)."""
+    """The base catalogue opens; four entries are information only, each for a value its
+    documents do not print (catalogue_results_2026-11-17)."""
     import json
     from pathlib import Path
 
-    base = Path(__file__).parents[2] / "frontend" / "public" / "catalogs" / "base-v1.json"
+    base = Path(__file__).parents[2] / "frontend" / "public" / "catalogs" / "base-v2.json"
     r = client.post("/api/catalogs/import", json=json.loads(base.read_text(encoding="utf-8")))
     body = r.json()
     assert body["file_check"]["accepted"]
     not_usable = {c["entry_id"] for c in body["entry_checks"] if not c["usable"]}
     assert len(body["entry_checks"]) == 38
-    assert not_usable == {"INV-HUAWEI-LUNA2000-100KTL-M1"}
+    assert not_usable == {
+        "INV-HUAWEI-LUNA2000-100KTL-M1",  # rating and droop limits not printed
+        "BAT-DYNESS-S51314",  # per-module voltage window contradicted, left empty
+        "BAT-FREEDOMWON-LITE-300-240-HVPLUS",  # nominal energy not printed
+        "CBL-SUCACO-N2XY-1X16",  # no reactance printed
+    }
