@@ -119,9 +119,9 @@ def test_fr_85_example_opens_as_copy(server: Callable[[str], str], page: Page) -
     expect(page.get_by_test_id("project-name")).to_have_text(re.compile(r"^Example D2\s*\*unsaved"))
     step(page, "Network")
     page.get_by_role("tab", name="Inverters").click()
-    expect(page.get_by_label("Rating (kVA) of INV2")).to_have_value("45")
-    page.get_by_label("Rating (kVA) of INV2").fill("50")
+    expect(page.get_by_label("Rating (kVA) of INV2")).to_have_value("50")
+    page.get_by_label("Rating (kVA) of INV2").fill("45")
     # The shipped example is unchanged: it is a static file of the frontend.
     shipped = page.request.get(base + "/examples/d2.mgproj.json").json()
-    assert shipped["inverters"][1]["rated_kva"] == 45
+    assert shipped["inverters"][1]["rated_kva"] == 50
     assert shipped["project"]["id"] == "example-d2"
