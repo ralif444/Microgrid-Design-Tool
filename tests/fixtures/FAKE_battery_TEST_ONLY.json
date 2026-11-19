@@ -1,6 +1,6 @@
 {
   "TEST_ONLY": "Fictitious test data for the battery rounds (docs/BESS_VERIFICATION_FRAMEWORK.md §2). Not a design value, not a datasheet, not a thesis source.",
-  "design": "frontend/public/examples/d2.mgproj.json",
+  "design": "tests/fixtures/d2_prototype.mgproj.json",
   "modules": {
     "MOD-T1": {"energy_kwh": 5, "voltage_min_v": 44.8, "voltage_max_v": 57.6, "discharge_power_kw": 2.5, "c_rate_per_h": null, "recommended_dod_ratio": 0.8},
     "MOD-T2": {"energy_kwh": 5, "voltage_min_v": 44.8, "voltage_max_v": 57.6, "discharge_power_kw": null, "c_rate_per_h": 0.2, "recommended_dod_ratio": 0.8}

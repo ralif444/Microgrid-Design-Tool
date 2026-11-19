@@ -218,13 +218,14 @@ def test_fr_103_s13_runs_and_s14_offers_the_doc13_disturbances(
     step(page, "Transient (M4b)")
     preset = page.get_by_label("Example disturbance", exact=True)
     kind = page.get_by_label("Disturbance", exact=True)
-    expect(preset).to_have_value("DR-01")  # first preset fills the form on arrival
+    expect(preset).to_have_value("SM-01")  # first preset fills the form on arrival
+    expect(preset.locator("option")).to_have_count(8)  # the seven D2 cases of Doc 13 §5 and the empty choice
     expect(kind).to_have_value("LOAD_STEP")
     expect(page.get_by_label("Element", exact=True)).to_have_value("L1")
-    expect(page.get_by_label("Step size (kW)")).to_have_value("2.5")
-    expect(page.get_by_label("Reactive step, optional (kvar)")).to_have_value("1")
+    expect(page.get_by_label("Step size (kW)")).to_have_value("0.815")
+    expect(page.get_by_label("Reactive step, optional (kvar)")).to_have_value("0.326")
     expect(page.get_by_label("Start time (s)")).to_have_value("1")
-    expect(page.get_by_label("Simulation end (s)")).to_have_value("4")
+    expect(page.get_by_label("Simulation end (s)")).to_have_value("3")
     expect(page.get_by_label("Permanent")).to_be_checked()
     expect(_tags(page)).to_have_count(1)
     expect(page.get_by_text("Not set in the example: enter a value.")).to_have_count(1)
@@ -233,7 +234,7 @@ def test_fr_103_s13_runs_and_s14_offers_the_doc13_disturbances(
     expect(kind).to_have_value("REFERENCE_STEP")
     expect(page.get_by_label("Reference", exact=True)).to_have_value("P_SETPOINT")
     expect(page.get_by_label("Element", exact=True)).to_have_value("INV1")
-    expect(page.get_by_label("Step size (kW)")).to_have_value("2")
+    expect(page.get_by_label("Step size (kW)")).to_have_value("2.143")
 
     preset.select_option("TS-02")
     expect(kind).to_have_value("INVERTER_OUTAGE")
@@ -255,7 +256,7 @@ def test_fr_103_s13_runs_and_s14_offers_the_doc13_disturbances(
     expect(preset).to_have_value("")
     expect(_tags(page)).to_have_count(0)
     page.get_by_role("button", name="Reset to example values").click()
-    expect(preset).to_have_value("DR-01")
+    expect(preset).to_have_value("SM-01")
     expect(page.get_by_label("Start time (s)")).to_have_value("1")
 
 

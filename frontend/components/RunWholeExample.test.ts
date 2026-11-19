@@ -18,7 +18,7 @@ describe("run the whole example: step requests", () => {
       expect(stepRequest(t, screen, s, settings), t).toBeNull(); // NEEDS VALUE (D-92 K231)
     expect(stepRequest("M4a", "small-signal", s, settings)?.parameters).toEqual({});
     const m4b = stepRequest("M4b", "transient", s, settings)!.parameters as Record<string, unknown>;
-    expect(m4b).toEqual({ disturbance: settings.screens.transient.presets[0].fields.disturbance, simulation_end_s: 4 }); // DR-01, no settling
+    expect(m4b).toEqual({ disturbance: settings.screens.transient.presets[0].fields.disturbance, simulation_end_s: 3 }); // SM-01, no settling
     expect(stepRequest("M3c", "scenarios", s, settings)!.scenarios!.map((x) => x.label)).toEqual(["D2 base", "D2S load × 2.4", "D2H load × 4.0"]);
   });
 

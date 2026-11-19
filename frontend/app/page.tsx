@@ -19,12 +19,23 @@ import { UNSAVED_CONFIRM } from "../components/ProjectFileMenu";
 import { useProject, useProjectDispatch } from "../store";
 import { HOME } from "../components/AreaNav";
 
-// Doc 13 §4 reference designs (prototype values until WP 1.6.1).
-const EXAMPLES: [string, string][] = [
-  ["d1", "D1: one inverter, 20 kW + 8 kvar"],
-  ["d2", "D2: two inverters with different droop gains, 25 kW + 10 kvar"],
-  ["d2s", "D2S: D2 stressed, 60 kW + 24 kvar"],
-  ["d2h", "D2H: D2 near the limit, 100 kW + 40 kvar"],
+// Doc 13 §4 reference designs on the base catalogue (D-116), one example per design; each lists the
+// Doc 13 §5 validation cases it serves and what each case tests.
+const EXAMPLES: { key: string; label: string; cases: string[] }[] = [
+  { key: "d1", label: "D1: one TRUMPF 50 kVA inverter, 20 kW + 8 kvar", cases: ["SS-01 steady state: V, f, P, Q, losses"] },
+  {
+    key: "d2",
+    label: "D2: TRUMPF 75 kVA + 50 kVA, equal per-unit droop, 27.17 kW + 10.87 kvar",
+    cases: [
+      "SS-02 steady state: P shared in proportion to rating",
+      "SM-01, SM-02 small steps (load +3 %, P* +2.14 % of INV1): dominant mode",
+      "DR-01, DR-02 medium steps (load +10 %, P* +2.86 % of INV1): settling, overshoot, RoCoF",
+      "TS-01, TS-02, TS-03 large disturbances (load +300 %, INV2 trip, P* +21.43 % of INV1): transient class",
+      "The SM, DR and TS disturbances are presets on the Transient screen of the guided example",
+    ],
+  },
+  { key: "d2s", label: "D2S: D2 stressed, 2.4 × load, 65.22 kW + 26.09 kvar", cases: ["SS-03 steady state at 56 % of rating"] },
+  { key: "d2h", label: "D2H: D2 near the limit, 4.0 × load, 108.7 kW + 43.48 kvar", cases: ["SS-04 steady state at 94 % of rating"] },
 ];
 
 export default function Home() {
@@ -153,13 +164,18 @@ export default function Home() {
             <p>Every screen is pre-filled. Press Run on each step to see the whole pipeline.</p>
           </div>
         )}
-        <p>Reference designs of the validation plan (prototype values, to be confirmed). Opening one makes a new unsaved copy.</p>
+        <p>Reference designs of the validation plan, built from catalogue products (TRUMPF inverters, First Cable N2XY 4×16 mm² lines). Opening one makes a new unsaved copy.</p>
         <ul>
-          {EXAMPLES.map(([key, label]) => (
+          {EXAMPLES.map(({ key, label, cases }) => (
             <li key={key}>
               <button type="button" onClick={() => void openExample(key)}>
                 Open example {label}
               </button>
+              <ul aria-label={`Validation cases of ${key.toUpperCase()}`}>
+                {cases.map((c) => (
+                  <li key={c}>{c}</li>
+                ))}
+              </ul>
             </li>
           ))}
         </ul>

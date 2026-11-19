@@ -25,7 +25,7 @@ The register (D-62) postponed these features until real D2 battery, DC-window an
 
 | Item | Values |
 |---|---|
-| Design | D2 as in `frontend/public/examples/d2.mgproj.json`: 0.44 kV, 50 Hz; INV1 70 kVA at B1, INV2 45 kVA at B3; load L1 25 kW, 10 kvar at B2. |
+| Design | prototype D2 (Doc 13 §4 before D-116), kept as `tests/fixtures/d2_prototype.mgproj.json`: 0.44 kV, 50 Hz; INV1 70 kVA at B1, INV2 45 kVA at B3; load L1 25 kW, 10 kvar at B2. |
 | Module MOD-T1 | $E_{mod}$ = 5 kWh; $V_{mod}^{min}$ = 44.8 V; $V_{mod}^{max}$ = 57.6 V; continuous discharge power 2.5 kW; recommended DoD 0.8. |
 | Module MOD-T2 | As MOD-T1, but no discharge power; C-rate 0.2 h⁻¹. |
 | DC window W-A | 350–800 V. |

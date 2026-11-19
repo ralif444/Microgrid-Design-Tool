@@ -47,10 +47,10 @@ def test_fr_101_guided_design_is_d2_with_sourced_limits_and_scenarios() -> None:
         s["name"]: {o["parameter_path"]: o["value"] for o in s["overrides"]}
         for s in guided["scenarios"]
     }
-    assert loads == {  # Doc 13 §4 D2S and D2H; the reference is first (Doc 3 §6.6, D-92 K234)
+    assert loads == {  # Doc 13 §4 D2S and D2H on the catalogue design (D-116); the reference is first (Doc 3 §6.6, D-92 K234)
         "D2 base": {},
-        "D2S load × 2.4": {"loads/L1/p_kw": 60.0, "loads/L1/q_kvar": 24.0},
-        "D2H load × 4.0": {"loads/L1/p_kw": 100.0, "loads/L1/q_kvar": 40.0},
+        "D2S load × 2.4": {"loads/L1/p_kw": 65.22, "loads/L1/q_kvar": 26.09},
+        "D2H load × 4.0": {"loads/L1/p_kw": 108.7, "loads/L1/q_kvar": 43.48},
     }
     assert guided["scenarios"][0]["name"] == "D2 base"
 
@@ -107,9 +107,12 @@ def test_fr_104_guided_example_end_to_end_on_the_real_engine() -> None:
 
     status = {"PS": run("PS", fields("sizing"))["result"]["status"]}
     m1 = run("M1", {})
-    p = m1["result"]["payload"]  # the D2 hand check of D-64 / D-63 K124
-    assert p["system_frequency_hz"] == pytest.approx(49.87736, abs=1e-5)
-    assert [i["p_kw"] for i in p["inverter_results"]] == pytest.approx([15.4113, 9.6321], abs=1e-4)
+    p = m1["result"]["payload"]
+    # D-116: equal per-unit droop on the catalogue units shares P in proportion to rating (75 : 50)
+    p1, p2 = (i["p_kw"] for i in p["inverter_results"])
+    assert p1 / p2 == pytest.approx(1.5, rel=1e-9)
+    assert p["system_frequency_hz"] == pytest.approx(50 - (50 / 7500) * p1, abs=1e-9)  # f = f* - kP·P
+    assert p["system_frequency_hz"] == pytest.approx(49.89088, abs=1e-5)
     rec = m1["run_record"]
     dep = {"depends_on": {
         "record_id": rec["record_id"], "analysis_type": "M1", "snapshot_hash": rec["snapshot_hash"],

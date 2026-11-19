@@ -89,6 +89,7 @@ Dokumen ini mendaftar semua perbedaan yang diketahui antara dokumen teknis (Doc 
 | D16 | 07 / ADR-016 | The Project overview (S-02) and Design constraints (S-06) screens are retired: the workspace inspector edits the same fields ("Project and system", "Design limits"), and `/project/` and `/constraints/` redirect there. Loads (S-03) and Network (S-05) stay as table views reached from the workspace. No field, check or data changes. | 4.3.7 (S-02 and S-06 as own screens) | KONFLIK (user-decided 2026-11-14, audit decision 4); thesis text 4.3.7 to follow |
 | D17 | 07 / 12 | UI/UX audit 2026-11-15 (user decisions 1–3): Sizing owns t_aut, η_dc and DoD and a new BatteryBank pre-fills from it (DoD from the module first); codes shown after words; inspector labels above inputs. Study inputs kept across navigation (memory only) and the Catalogue kept in the browser (localStorage). No field, contract, file format, engine or assumption change. | 4.3.7 (not checked against the manuscript text for these details) | USER-DECIDED 2026-11-15; Doc 07 change log 2026-11-15 |
 | D18 | 12 extensions | The app ships a read-only base catalogue (38 entries read from manufacturer documents on 2026-11-16) beside the user's own entries; Doc 12 §3.3 said the app ships no vendor data (D-59 K107). Vendor datasheets are not thesis citations. | — (application data, not model) | USER-DECIDED 2026-11-16 (Doc 9 D-114); base catalogue v2 on 2026-11-19 (D-115) |
+| D19 | 13 validation | The reference designs D1, D2, D2S, D2H are rebuilt from base-catalogue products (TRUMPF 50 / 75 kVA, N2XY 4×16 mm² cable): D2 ratings 75 + 50 kVA instead of 70 + 45 kVA, equal per-unit droop 1 % / 10 %, loads scaled to keep the rating %, cable lines keeping the prototype |Z|. The manuscript's Tabel 4.7 / 4.13 values are the prototype values. | 4.3.8, Tabel 4.7, 4.13 | KONFLIK (user-decided 2026-11-19, Doc 9 D-116); thesis tables to follow |
 
 ## Log
 
@@ -101,3 +102,4 @@ Dokumen ini mendaftar semua perbedaan yang diketahui antara dokumen teknis (Doc 
 | 2026-11-15 | D16 added: S-02 and S-06 retired into the workspace inspector (audit 2026-11-14 decision 4, Phase 7). |
 | 2026-11-15 | D17 added: UI/UX audit 2026-11-15 decisions and the two browser-side keeps (PR #12). |
 | 2026-11-16 | D13 and D14 user-decided (cable and breaker sizing on by default, PUIL 2011 baseline); D18 added: base catalogue shipped (D-114). |
+| 2026-11-19 | D19 added: validation designs tailored to the base catalogue (D-116). |

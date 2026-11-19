@@ -446,6 +446,9 @@ DOC 7 COMPLETE
 - C5.1 F3 outcome edge: Status equal and result_hash equal.
 - C5.4 first phase per key flow stated in §4.
 
+## Change log 2026-11-19 (validation designs on the catalogue; Doc 9 D-116)
+- S-01: each example design lists the Doc 13 §5 validation cases it serves; S-14 in the guided example offers the seven D2 cases as presets.
+
 ## Change log 2026-11-19 (base catalogue v2; Doc 9 D-115)
 - S-18: the base catalogue is replaced by v2 from the 2026-11-17 search (38 entries, 34 usable); no screen change.
 
