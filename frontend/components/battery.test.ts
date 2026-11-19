@@ -4,21 +4,21 @@ import { admissibleSeries, moduleHint, noPowerCapability, socSeries, valueSource
 
 // Fictitious TEST ONLY module MOD-T1 and hand values of docs/BESS_VERIFICATION_FRAMEWORK.md §3.1, §3.2.
 const MOD_T1 = { energy_kwh: 5, voltage_min_v: 44.8, voltage_max_v: 57.6, discharge_power_kw: 2.5 };
-const E_NOM = 100 / 0.95 / 0.8; // PS Eq. 4.13 on PF-T, 4 h, η_dc 0.95, DoD 0.8
+const E_NOM = 108.68 / 0.95 / 0.8; // PS Eq. 4.13 on PF-T (peak = D2 load 27.17 kW, D-116), 4 h, η_dc 0.95, DoD 0.8
 
 describe("FR-74 module hint (Eq. 12.3 – 12.5)", () => {
   it("V1: window W-A fits, smallest series count used", () => {
     const h = moduleHint(E_NOM, MOD_T1, { min: 350, max: 800 });
-    expect(h).toMatchObject({ verdict: "fit", series: [8, 9, 10, 11, 12, 13], moduleCount: 27, ns: 8, np: 4, installedCount: 32, installedKwh: 160 });
-    if (h.verdict === "fit") expect(h.extraKwh).toBeCloseTo(28.4211, 4);
+    expect(h).toMatchObject({ verdict: "fit", series: [8, 9, 10, 11, 12, 13], moduleCount: 29, ns: 8, np: 4, installedCount: 32, installedKwh: 160 });
+    if (h.verdict === "fit") expect(h.extraKwh).toBeCloseTo(17.0, 4);
   });
 
   it("V2: window W-B gives no-fit, module count still shown", () => {
-    expect(moduleHint(E_NOM, MOD_T1, { min: 400, max: 440 })).toMatchObject({ verdict: "no-fit", series: [], moduleCount: 27, np: null });
+    expect(moduleHint(E_NOM, MOD_T1, { min: 400, max: 440 })).toMatchObject({ verdict: "no-fit", series: [], moduleCount: 29, np: null });
   });
 
   it("missing window is unknown; missing nominal energy is not evaluated", () => {
-    expect(moduleHint(E_NOM, MOD_T1, { min: null, max: 800 })).toMatchObject({ verdict: "unknown", moduleCount: 27 });
+    expect(moduleHint(E_NOM, MOD_T1, { min: null, max: 800 })).toMatchObject({ verdict: "unknown", moduleCount: 29 });
     expect(moduleHint(null, MOD_T1, { min: 350, max: 800 })).toEqual({ verdict: "not evaluated", reason: "PS has no nominal energy" });
   });
 

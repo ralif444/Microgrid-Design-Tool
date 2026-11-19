@@ -20,7 +20,7 @@ from test_network_m1_m2 import _run_m1
 FIX = json.loads(
     (Path(__file__).parents[1] / "fixtures/FAKE_battery_TEST_ONLY.json").read_text(encoding="utf-8")
 )
-LAM = [v / 25 for v in FIX["profile_pf_t_kw"]]
+LAM = [v / max(FIX["profile_pf_t_kw"]) for v in FIX["profile_pf_t_kw"]]  # peak = D2 load total
 
 
 def _sweep_with_profile(page: Page, base: str, tmp_path: Path, lam: list[float]) -> None:
