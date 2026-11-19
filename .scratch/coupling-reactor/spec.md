@@ -1,6 +1,6 @@
 # Coupling reactors, reactor sizing advice and realistic stability cases (X11)
 
-Status: ready-for-human (WP-1 – WP-6, WP-8 and WP-7 except D2-LF built 2026-11-19, Doc 9 D-119, ADR-017; D2-LF needs the site lengths (Q7); supervisor approval asked (Q5))
+Status: done (built 2026-11-19, Doc 9 D-119, D-120, ADR-017; supervisor approved (Q5); D2-LF on CIGRE LV benchmark lengths, since no site data exists (Q7))
 Drafted: 2026-11-19 (brainstorm with the user, agent-written).
 
 ## 1. Why
@@ -129,7 +129,7 @@ So D2-LR can be built from catalogue parts today. These are exploratory runs, no
 
 ## 7. Work packages (each becomes an issue file under `issues/` when work starts)
 
-Build status (2026-11-19): WP-1 done (BLOCK LR3 40-4/70, /80, /100; Schneider left out, R not printed); WP-2 done (ADR-017, Doc 03, 06, 07, 09 D-119, 11, 12 X11, 14 D20); WP-3 done without a schema bump (`kind` optional, hashes kept); WP-4 done; WP-5 done except the Fake profile and the e2e (the RS contract test uses a monotone stub engine); WP-6 done; WP-7 done except `d2-lf` (Q7) and the demo script (unchanged: it uses `d2`); WP-8 done (Doc 13 §3 – §6, hand case R-1); the §2 sweep is not a fixture (the RS real-engine test covers the boundary).
+Build status (2026-11-19): all work packages done (Doc 9 D-119, D-120). WP-1: BLOCK LR3 40-4/70, /80, /100 and Schneider VW3A4556 (R derived from losses, upper bound). WP-2: ADR-017 and Docs 03, 06, 07, 09, 11, 12, 13, 14. WP-3 without a schema bump (`kind` optional, hashes kept). WP-5: RS contract test on a monotone stub engine, Real Engine API test and e2e `test_reactor_advice.py` (Real Engine; no separate Fake profile). WP-7: `d2-lr`, `d2-lf` (CIGRE LV benchmark lengths, UNSTABLE), D2S and D2H re-based, demo script step 6a. WP-8: Doc 13 §3 – §6, hand case R-1. The §2 sweep is not a fixture (the RS Real Engine test covers the boundary).
 
 1. **WP-1 Data:** source 2–4 reactor datasheets (about 65–100 A, 0.1–1 mH, 400–480 V); check the TRUMPF manual for output inductance (Q8). Blocks WP-3, WP-6.
 2. **WP-2 Contracts and ADR:** Doc 03, Doc 12 X11, ADR-017, Doc 14 entry, register. After the Q1–Q5 decisions.

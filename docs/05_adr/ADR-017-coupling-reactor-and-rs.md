@@ -1,6 +1,6 @@
 # ADR-017 — Coupling reactors as a line kind, and the app-side reactor sizing advice (RS)
 
-- Status: **Accepted** by the user 2026-11-19 (spec `.scratch/coupling-reactor/spec.md`, decisions Q1–Q8; Doc 9 D-119). The reactor as a design element is a scope point awaiting the supervisor (Doc 14 D20, Q5); work proceeds meanwhile.
+- Status: **Accepted** by the user 2026-11-19 (spec `.scratch/coupling-reactor/spec.md`, decisions Q1–Q8; Doc 9 D-119). The reactor as a design element was approved by the supervisor 2026-11-19 (Doc 14 D20, Q5; Doc 9 D-120).
 - Drivers:
   - Catalogue D2 is small-signal UNSTABLE under plain droop (Doc 9 D-118 K357; Doc 13 §4): short low-voltage cables are mostly resistive.
   - User decision 2026-11-19: realistic cases only; remedies (1) coupling reactors, (4) long feeders, (6) guidance; a sizing suggestion when a design is unstable.
@@ -21,7 +21,7 @@ A reactor in series with an inverter is an RL branch, which the model already ha
 ## Decision
 1. **Line.kind** `"CABLE" | "REACTOR"`, optional; absent means a cable. The canonical snapshot omits null fields, so old files keep their hashes and `schema_version` stays 1. The real adapter maps only R, X and length, so the engine sees an ordinary line.
 2. **Storage:** `length_km = 0.001`; `r_ohm_per_km` = R(mΩ) numerically; `x_ohm_per_km` = 2πf·L(mH). The form edits L and R; per-km values are never shown for a reactor.
-3. **Catalogue kind REACTOR:** `inductance_mh`, `resistance_mohm`, `rated_current_a` required; `rated_voltage_v`, `impedance_percent` optional; per-field sources as for the other kinds. Values from datasheets only (base catalogue: BLOCK LR3 40-4/70, /80, /100).
+3. **Catalogue kind REACTOR:** `inductance_mh`, `resistance_mohm`, `rated_current_a` required; `rated_voltage_v`, `impedance_percent` optional; per-field sources as for the other kinds. Values from datasheets only (base catalogue: BLOCK LR3 40-4/70, /80, /100; Schneider VW3A4556 with R derived from the printed losses as an upper bound, D-120).
 4. **Cable sizing (CB)** skips REACTOR lines. The LINE_CURRENT constraint uses the reactor's confirmed rated current.
 5. **RS, analysis type** on `POST /api/analyses/RS`, app-side branch as CB and BA: depends on an M1 RunRecordRef; parameters {damping_target_ratio, max_percent, reactor_x_over_r, reactors[]}; stage-1 code `REACTOR_SIZING_INVALID`; status FEASIBLE, INPUT_INVALID or UNAVAILABLE (TIMEOUT when the search overruns the time budget).
 6. **RS method (design choice, no new model equation):** one reactor per inverter, the same share p of each inverter's own base impedance Z_b = V_LL²/S (Q3); bisection on p in (0, max_percent], 10 steps; each probe adds the terminal buses and reactor lines, runs M1 then M4a through the execution guard, and accepts p when M4a is STABLE with ζ_min ≥ ζ\* and M1 FEASIBLE within the design voltage limits. Per inverter the pick is the catalogue part with L ≥ needed and rated current ≥ the inverter rated current, smallest rated current first, then smallest L; the picks are confirmed with M1 and M4a.

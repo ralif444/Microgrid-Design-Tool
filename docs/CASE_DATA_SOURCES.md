@@ -188,10 +188,10 @@ the PUIL size; the user decides whether to align them.
 | BLOCK LR3 40-4/70 | 0.42 mH | 5.39 mΩ (typ. winding resistance) | 70 A | 690 V AC; uk 4 % @ 400 V | READ | BLOCK data sheet LR3 40-4/x, Doc-Nr 0001211845, 11.2025, sheet 2/8 (values), 1/8 (tolerance ±10 %) |
 | BLOCK LR3 40-4/80 | 0.37 mH | 2.90 mΩ | 80 A | same | READ | same |
 | BLOCK LR3 40-4/100 | 0.30 mH | 1.43 mΩ | 100 A | same | READ | same |
-| Schneider VW3A4556 | 0.3 mH | not printed (≤ 7.6 mΩ from 260 W loss, upper bound) | 107 A | not read | UNVERIFIED (R) | se.com product page; not in the catalogue until a datasheet prints R |
+| Schneider VW3A4556 | 0.3 mH | not printed; ≤ 7.57 mΩ DERIVED from 260 W thermal losses at 107 A (upper bound, losses include core loss) | 107 A | not printed (50 – 60 Hz; max. voltage drop 5 %) | READ (L, I, losses); DERIVED (R) | Schneider Electric product datasheet VW3A4556, 9 Dec 2025, pp. 1 – 2 (via docs.rs-online.com); in the base catalogue as RCT-SE-VW3A4556 (D-120) |
 | TRUMPF TruConvert AC 3025 output impedance | — | — | — | — | NOT FOUND | Manual A67-0141-00.BKen-001-12 (2025-02-24): integrated virtual impedance named, no value (pp. 106, 114) |
 
-Site feeder lengths for D2-LF: not yet supplied (user, spec Q7).
+Feeder lengths for D2-LF (D-120): none in the manuscript or the project references. CIGRE LV benchmark residential feeder: main feeder R1 – R10 nine segments of 35 m (UG1), service branches 30 – 35 m (UG3); CIGRE TB 575 "Benchmark Systems for Network Integration of Renewable and Distributed Energy Resources", TF C6.04, 2014 (e-cigre.org listing; brochure not read, paywalled); values READ from the pandapower `create_cigre_network_lv` source, which cites that report. Label: READ (secondary). D2-LF uses 175 m and 140 m (5 and 4 segments).
 
 ## 5. Open gaps (summary)
 
@@ -201,4 +201,4 @@ Site feeder lengths for D2-LF: not yet supplied (user, spec Q7).
    9.1.4.400 for a constant-power load; test PsimCmd.exe and its licence.
 4. Breakers: closed (LVPED217032EN p. B-7); breaker ambient derating not modelled.
 5. PUIL: two blurred cells.
-6. Reactors: site feeder lengths for D2-LF; a Schneider choke datasheet printing R (optional).
+6. Reactors: closed (D-120); D2-LF uses benchmark lengths until a real site is chosen.

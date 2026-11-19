@@ -3,7 +3,7 @@
 // small-signal result, and the reactor sizing advice RS. The server searches the reactor size with
 // M1 and M4a; this panel sends the usable catalogue reactors, shows the outcome and, on Apply, adds
 // a terminal bus and a REACTOR line per inverter (explicit topology, Q1). Nothing changes without Apply.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { M4aPayload } from "../api-types";
 import { useProjectDispatch } from "../store";
 import { fromEntry, REACTOR_LENGTH_KM, useCatalog } from "./Catalog";
@@ -40,6 +40,10 @@ export function ReactorAdvice({ threshold }: { threshold: number | null }) {
   const [target, setTarget] = useKept<number | null>("rsTarget", threshold);
   const [ceiling, setCeiling] = useKept<number | null>("rsCeiling", null);
   const [xr, setXr] = useKept<number | null>("rsXr", median);
+  // the Catalogue check can finish after mount: fill X/R once its median is known, never over a value
+  useEffect(() => {
+    if (median !== null) setXr((v) => v ?? median);
+  }, [median, setXr]);
   const [confirm, setConfirm] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const r = resp?.result;

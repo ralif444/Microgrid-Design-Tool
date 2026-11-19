@@ -115,6 +115,8 @@ export const ID_SHELL: Record<string, string> = {
   "D2: TRUMPF 75 kVA + 50 kVA, equal per-unit droop, 27.17 kW + 10.87 kvar": "D2: TRUMPF 75 kVA + 50 kVA, droop per-unit sama, 27,17 kW + 10,87 kvar",
   "D2-LR: D2 with BLOCK coupling reactors (0.30 mH, 0.42 mH), small-signal stable": "D2-LR: D2 dengan reaktor kopling BLOCK (0,30 mH, 0,42 mH), stabil sinyal kecil",
   "The D2 cases repeated on a stable design: SM, DR and TS compared by value, not only by class (Doc 13 §5)": "Kasus D2 diulang pada desain yang stabil: SM, DR dan TS dibandingkan per nilai, bukan hanya per kelas (Doc 13 §5)",
+  "D2-LF: D2 on CIGRE LV benchmark feeder lengths (175 m, 140 m), small-signal unstable": "D2-LF: D2 pada panjang penyulang benchmark CIGRE LV (175 m, 140 m), tidak stabil sinyal kecil",
+  "Steady state on realistic feeder lengths; shows that length alone does not stabilise the design (Doc 13 §4)": "Keadaan tunak pada panjang penyulang realistis; menunjukkan bahwa panjang saja tidak menstabilkan desain (Doc 13 §4)",
   "D2S: D2-LR stressed, 2.4 × load, 65.22 kW + 26.09 kvar": "D2S: D2-LR terbebani, 2,4 × load, 65,22 kW + 26,09 kvar",
   "D2H: D2-LR near the limit, 4.0 × load, 108.7 kW + 43.48 kvar": "D2H: D2-LR mendekati batas, 4,0 × load, 108,7 kW + 43,48 kvar",
   "SS-01 steady state: V, f, P, Q, losses": "SS-01 keadaan tunak: V, f, P, Q, rugi-rugi",

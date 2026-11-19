@@ -18,7 +18,7 @@ from mgapp.adapters.real_engine import RealEngine
 from mgapp.main import create_app
 
 EXAMPLES = Path(__file__).parents[2] / "frontend" / "public" / "examples"
-NAMES = ["d1", "d2", "d2-lr", "d2s", "d2h"]
+NAMES = ["d1", "d2", "d2-lr", "d2-lf", "d2s", "d2h"]
 SOLVER = {"mismatch_tolerance_w": 0.001, "max_iterations": 50, "initial_guess": "DEFAULT"}
 
 
@@ -52,10 +52,7 @@ def test_d2_example_matches_the_engine_hand_check(client: TestClient) -> None:
     assert not any(s["q_droop_not_rating_proportional"] for s in p["sharing"])
 
 
-@pytest.mark.parametrize("name", ["d2-lr", "d2s", "d2h"])
-def test_reactor_examples_are_small_signal_stable(client: TestClient, name: str) -> None:  # FR-122
-    """X11 (ADR-017, D-119): the BLOCK coupling reactors make the catalogue D2 family stable
-    (spec §6a: D2-LR zeta_min 0.218, lowest bus 0.9842 p.u.); the as-built D2 stays UNSTABLE."""
+def m1_m4a(client: TestClient, name: str) -> tuple[dict[str, Any], dict[str, Any]]:
     doc = example(name)
     snap = {k: doc[k] for k in ("buses", "lines", "loads", "inverters")}
     snap |= {k: doc["project"][k] for k in ("nominal_voltage_kv", "nominal_frequency_hz")}
@@ -68,8 +65,26 @@ def test_reactor_examples_are_small_signal_stable(client: TestClient, name: str)
     ref["result_payload"] = rec["result"]["payload"]
     body = {"project_snapshot": snap, "parameters": {}, "solver_config": SOLVER, "depends_on": ref}
     p = client.post("/api/analyses/M4a", json=body).json()["result"]["payload"]
+    return m1, p
+
+
+@pytest.mark.parametrize("name", ["d2-lr", "d2s", "d2h"])
+def test_reactor_examples_are_small_signal_stable(client: TestClient, name: str) -> None:  # FR-122
+    """X11 (ADR-017, D-119): the BLOCK coupling reactors make the catalogue D2 family stable
+    (spec §6a: D2-LR zeta_min 0.218, lowest bus 0.9842 p.u.); the as-built D2 stays UNSTABLE."""
+    m1, p = m1_m4a(client, name)
     assert p["stability_class"] == "STABLE"
     if name == "d2-lr":
         assert p["zeta_min"] == pytest.approx(0.218, abs=1e-3)
         vmin = min(b["voltage_pu"] for b in m1["result"]["payload"]["bus_results"])
         assert vmin == pytest.approx(0.9842, abs=1e-4)
+
+
+def test_d2_lf_benchmark_lengths_stay_unstable(client: TestClient) -> None:
+    """D2-LF (Doc 13 §4, D-120): CIGRE LV benchmark feeder lengths (175 m, 140 m of N2XY 4x16)
+    alone do not stabilise D2 under plain droop (agent run 2026-11-19: zeta_min -0.0435)."""
+    m1, p = m1_m4a(client, "d2-lf")
+    assert p["stability_class"] == "UNSTABLE"
+    assert p["zeta_min"] == pytest.approx(-0.0435, abs=1e-3)
+    vmin = min(b["voltage_pu"] for b in m1["result"]["payload"]["bus_results"])
+    assert vmin == pytest.approx(0.9729, abs=1e-4)

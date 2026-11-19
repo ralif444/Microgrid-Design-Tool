@@ -1014,6 +1014,26 @@
    }
   },
   {
+   "id": "RCT-SE-VW3A4556",
+   "kind": "REACTOR",
+   "provenance": {
+    "manufacturer": "Schneider Electric",
+    "model": "VW3A4556 line choke 0.3 mH 107 A 3 phases 260 W (Altivar)",
+    "document": "Schneider Electric product datasheet VW3A4556 (Specifications)",
+    "revision": "9 Dec 2025 (printed on each page); retrieved via docs.rs-online.com 2026-11-19"
+   },
+   "sources": {
+    "inductance_mh": "p. 1-2, Value of inductance: 0.3 mH",
+    "resistance_mohm": "not printed; DERIVED upper bound from p. 2 thermal losses 260 W and rated current 107 A: R <= 260/(3*107^2) = 7.57 mOhm per phase (the losses include core loss, so the winding resistance is lower)",
+    "rated_current_a": "p. 2, [In] rated current: 107 A"
+   },
+   "reactor": {
+    "inductance_mh": 0.3,
+    "resistance_mohm": 7.57,
+    "rated_current_a": 107
+   }
+  },
+  {
    "id": "BAT-TESVOLT-TS-HV-70-E",
    "kind": "BATTERY_MODULE",
    "provenance": {

@@ -77,7 +77,7 @@ The designs are built from base-catalogue products (user decision 2026-11-19, Do
 | D2-LR | D2 with a terminal bus per inverter: INV1@INV1T — LR1 — B1, INV2@INV2T — LR2 — B3 | as D2 | as D2, plus LR1 BLOCK LR3 40-4/100 (0.30 mH, 1.43 mΩ, 100 A) and LR2 BLOCK LR3 40-4/70 (0.42 mH, 5.39 mΩ, 70 A) | as D2 | Stable reference with coupling reactors (D-119) |
 | D2S | as D2-LR | as D2 | as D2-LR | 2.4 × D2 (65.22 kW, 26.09 kvar; 56.2 %) | Stressed but physical |
 | D2H | as D2-LR | as D2 | as D2-LR | 4.0 × D2 (108.7 kW, 43.48 kvar; 93.7 % of rating) | Near the engineering limit |
-| D2-LF | D2 with the site's feeder lengths | as D2 | N2XY 4×16 at site lengths | as D2 | Waits for the user's site lengths (spec Q7) |
+| D2-LF | INV1@B1 — B2 — INV2@B3 on benchmark feeder lengths | as D2 | N2XY 4×16: B1–B2 175 m, B2–B3 140 m (CIGRE LV benchmark residential main feeder, 9 × 35 m; INV1 at R1, load at R6, INV2 at R10, placement a design choice; D-120) | as D2 | Realistic lengths without reactors (steady state) |
 
 **Small-signal stability of the catalogue designs (2026-11-19, Doc 9 D-118).** M4a on the Real Engine: D1 STABLE; D2, D2S and D2H UNSTABLE, one oscillatory pair at about +25 ± j71 s⁻¹ (ζ_min −0.34, 11.3 Hz on D2; −0.33 on D2S and D2H), participation mainly δ of INV2 and the P filters. The prototype D2 was stable (ζ +0.09). The cause is the strongly resistive, electrically short coupling between the two inverters: at the D2 line |Z|, ζ turns positive only at R/X ≤ 1.0; every catalogue cable (NYY and N2XY, 16 – 95 mm², R/X 2.3 – 19.6) is unstable at the D2 lengths; halving the droop gains does not help. Longer lines decouple the inverters: N2XY 4 × 16 becomes stable between 152 m and 305 m per line (at 305 m: ζ +0.30, lowest bus voltage 0.955 p.u.); 4 × 50 between 305 m and 609 m; 4 × 95 between 609 m and 1219 m. **User decision 2026-11-19: keep the cable and validate the instability** (§5). Whether PSIM shows the same mode is part of what the comparison measures (the engine network is quasi-static, A1).
 
@@ -89,6 +89,9 @@ The designs are built from base-catalogue products (user decision 2026-11-19, Do
 | D2-LR (`d2-lr`) | 49.89085 | 0.9842 (B2) | STABLE | 0.218 (mode 6.15 Hz) |
 | D2S (`d2s`, on D2-LR) | 49.73629 | 0.9609 | STABLE | 0.223 |
 | D2H (`d2h`, on D2-LR) | 49.55684 | 0.9321 | STABLE | 0.229 |
+| D2-LF (`d2-lf`) | 49.88899 | 0.9729 | UNSTABLE | −0.044 (mode 3.76 Hz) |
+
+D2-LF shows that realistic feeder lengths alone do not stabilise D2: every split of the 315 m benchmark main feeder tried stays UNSTABLE (ζ_min −0.044 to −0.010), consistent with the length sweep above (N2XY 4×16 needs between 152 m and 305 m on each line). D2-LF is a steady-state case (SS on D2-LF, numeric per §6); its dynamics follow the D2-AB instability rules of §5.
 
 **Inverter model in PSIM.** The TRUMPF manual names an integrated virtual impedance without a value (spec §6a, Q8). The engine models the inverter without it; the PSIM inverter must also be modelled without it, or the comparison mixes two models. The real unit adds damping of unknown size, so the as-built result is conservative for this product (thesis limitation).
 
@@ -213,13 +216,14 @@ Sources found for these points (2026-11-19, layer-2 filter and loop procedures, 
 | 8 | Settling criteria (band, duration) for M4b classes; the guided example leaves them empty (D-92 K231), so TS classes are None. | DECISION NEEDED |
 | 9 | Output alignment: engine grid $\tau/20$ = 2.5 ms (row at the disturbance duplicated), PSIM export 2 ms; resampling rule. M4b reports no line current, no per-inverter frequency and no angle, so I(t) and angle comparisons need PSIM-only data or an engine change. | DECISION NEEDED |
 | 10 | Angle reference bus for angle errors (engine: B1 = 0°). | Work package 1.6.2 |
-| 11 | D2-LF feeder lengths from the case site. | Needs the user's site data (spec Q7) |
-| 12 | Supervisor approval of the reactor as a design element (Doc 14 D20). | Asked |
+| 11 | D2-LF feeder lengths: no site data in the references; CIGRE LV benchmark lengths used (D-120). Replace with site lengths if a site is chosen. | DONE (benchmark) |
+| 12 | Supervisor approval of the reactor as a design element (Doc 14 D20). | APPROVED 2026-11-19 (D-120) |
 
 ## Log
 
 | Date | Change |
 |---|---|
+| 2026-11-19 | D2-LF on CIGRE LV benchmark lengths, results row, open points 11 and 12 closed (D-120). |
 | 2026-11-19 | Coupling reactors (D-119, ADR-017): §3 reactor row; §4 D2-LR, D2-LF, D2S and D2H re-based on D2-LR, results table, PSIM inverter without virtual impedance, hand case R-1; §5 D2-LR numeric cases; §6 budget on the reactor designs; open points 11, 12. |
 | 2026-11-19 | §4 rebuilt on base-catalogue products (D-116, Doc 14 D19); droop unit conversion in §3; D2 small-signal instability, user decision to validate it, §5 case rules (D-118); §6 model-difference budget recomputed; open points 7 – 10. |
 | 2026-11-01 | Created from the post-seminar design session (decisions Q22–Q25, Q38, Q39) and the manuscript; design and case values cross-checked against the prototype validation package. |
