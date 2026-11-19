@@ -3,17 +3,18 @@
 // `adornment` sits after the unit and `note` under the input (example mode, Doc 12 X9); both absent = as before.
 import { useEffect, useState, type ReactNode } from "react";
 import { NOT_A_NUMBER, parseNumber } from "./format";
+import { displayLang, localize } from "./i18n";
 import { useLanguage } from "./Language";
 import styles from "./NumberField.module.css";
 
 // Keeps the typed text (so "0," or "-" survive while typing) and sends only parsed numbers or null.
 // Follows outside changes of `value` (restore, example fill, project load). `bad`: text is not a number.
 export function useNumberText(value: number | null | undefined, onChange: (v: number | null) => void, integer = false) {
-  const [text, setText] = useState(value == null ? "" : String(value));
+  const [text, setText] = useState(value == null ? "" : localize(String(value), displayLang()));
   useEffect(() => {
     const p = parseNumber(text, integer);
     // invalid text was sent as null: keep the text so the user sees what to fix
-    if (p !== (value ?? null) && !(p === undefined && value == null)) setText(value == null ? "" : String(value));
+    if (p !== (value ?? null) && !(p === undefined && value == null)) setText(value == null ? "" : localize(String(value), displayLang()));
   }, [value]);
   return {
     text,

@@ -10,7 +10,9 @@ const NUMBER = /^[+-]?(\d+([.,]\d*)?|[.,]\d+)([eE][+-]?\d+)?$/;
 export const parseNumber = (s: string, integer = false): number | null | undefined => {
   const t = s.trim();
   if (t === "") return null;
-  if (!NUMBER.test(t) || /^[+-]?[1-9]\d{0,2},\d{3}$/.test(t)) return undefined;
+  // "1,500" / "1.500": a thousands group in the display language's other separator is ambiguous
+  const group = displayLang() === "id" ? /^[+-]?[1-9]\d{0,2}\.\d{3}$/ : /^[+-]?[1-9]\d{0,2},\d{3}$/;
+  if (!NUMBER.test(t) || group.test(t)) return undefined;
   const n = Number(t.replace(",", "."));
   return integer && !Number.isInteger(n) ? undefined : n;
 };

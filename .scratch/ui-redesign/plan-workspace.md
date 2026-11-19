@@ -1,14 +1,14 @@
 # Plan: port the diagram workspace to the app
 
-Status: ready-for-agent
+Status: done (W1-W6; see the dated lines below)
 
-Basis: `spec.md`, `docs/design/redesign-2026-11-13/workspace-mockup.html`, `docs/check-screen-changes.md`. Plan only; nothing here is implemented. Paths are relative to `frontend/` unless they start with `docs/` or `tests/`.
+Basis: `spec.md`, `docs/design/redesign-2026-11-13/workspace-mockup.html`, `docs/check-screen-changes.md`. Originally written as a plan; W1-W6 are implemented (dated lines below). Paths are relative to `frontend/` unless they start with `docs/` or `tests/`.
 
 Fixed for every stage: presentation layer only. No change to the engine, the Engine Port, equations, data models or API contracts. Existing tests pass at the end of each stage. One branch per stage.
 
 ## What the code looks like today (verified 2026-11-14)
 
-- Shell: `components/AppShell.tsx` (Carbon header) plus `components/PipelineStepper.tsx` (9 entries, 6 further routes). 20 routes under `app/`. Static export.
+- Shell: `components/AppShell.tsx` (Carbon header) plus `components/PipelineStepper.tsx` (9 entries, 6 further routes). 20 routes under `app/` when written (24 pages on 2026-11-19). Static export.
 - State: `useReducer` in `store/reducer.ts` (ADR-005). Persistence is file save only.
 - Check: `app/power-flow/page.tsx`, `app/constraint-check/page.tsx`, `components/M1Results.tsx`, `components/M2Results.tsx` (`ConstraintTable`, `nearLimit`, `margin_warn` from `/api/meta`), `components/ResultsDiagram.tsx`, `components/Inspector.tsx`, `components/useValidation.ts` (`m1Freshness`).
 - Numbers: `components/format.ts` is `num` = 6 significant digits. No `Intl` anywhere.
@@ -66,8 +66,8 @@ Apply the seven mockup phases to `/power-flow/` and `/constraint-check/` without
 - Build it at a new route beside the old pages; switch the default and remove `PipelineStepper` only when the e2e suite passes on the new shell.
 - Stepper rules that must survive: stale-M1 blocking (FR-38, FR-40, FR-93), "Next: step" guidance (FR-102), inspector as side panel (FR-90, FR-91).
 - Stepper removed 2026-11-14 (user decision, Doc 14 D15, ADR-016 option B): header area tabs (`components/AreaNav.tsx`) and a row of the area's screens replace `PipelineStepper`; Studies and Report are their own routes again (the W6 hosting inside `/workspace/` is gone). The workspace area comes from `?area=`. E2E reach screens through `flows.step()` / `area()` / `studies()`.
-- Default switched 2026-11-14 (after W6): creating, opening, restoring a Project or opening the example lands on `/workspace/` (`HOME` in `PipelineStepper.tsx`). `PipelineStepper` stays, made compact: ADR-016 decision 1 and manuscript 4.3.7 keep the eight-step stepper on every screen, so "remove" became "compact". The step pages stay reachable from the stepper.
-- Done 2026-11-14 (W4a 8e053ef, W4b): `/workspace/` beside the step pages, opened by the header link "Workspace". Model: element list with add, editable inspector (bus, line, inverter, load, design limits; fields shared with the tables in `components/elementFields.ts`, delete rules in `useRowDelete`). Check: CheckStrip, M2 settings, results diagram, read-only inspector, results drawer (Margins, Power flow). Studies and Report link to their pages until W6. The default route and `PipelineStepper` are unchanged; the compact stepper waits for the default switch. Not in the workspace yet: catalogue pick and battery bank (still on `/network/`).
+- (Superseded by the line above: `PipelineStepper` is removed.) Default switched 2026-11-14 (after W6): creating, opening, restoring a Project or opening the example lands on `/workspace/` (`HOME` in `PipelineStepper.tsx`). `PipelineStepper` stays, made compact: ADR-016 decision 1 and manuscript 4.3.7 keep the eight-step stepper on every screen, so "remove" became "compact". The step pages stay reachable from the stepper.
+- Done 2026-11-14 (W4a 8e053ef, W4b): `/workspace/` beside the step pages, opened by the header link "Workspace". Model: element list with add, editable inspector (bus, line, inverter, load, design limits; fields shared with the tables in `components/elementFields.ts`, delete rules in `useRowDelete`). Check: CheckStrip, M2 settings, results diagram, read-only inspector, results drawer (Margins, Power flow). Studies and Report link to their pages until W6. The default route and `PipelineStepper` are unchanged; the compact stepper waits for the default switch. Not in the workspace yet: catalogue pick and battery bank (still on `/network/`). Later done: the workspace inspector embeds `CatalogPick` and `BankPick` through `components/ElementForm.tsx` (checked 2026-11-19).
 
 ### W5. Language switch (medium; blocked)
 

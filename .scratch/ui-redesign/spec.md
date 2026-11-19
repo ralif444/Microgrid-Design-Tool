@@ -16,9 +16,10 @@ Basis: `docs/ui-ux-audit.md` (2026-11-13). Mockup: `docs/design/redesign-2026-11
 
 ## Open
 
-- `issues/01-indonesian-vocabulary.md`
+None. `issues/01-indonesian-vocabulary.md` done 2026-11-19 (Doc 9 D-117 K353).
 
-## Plans (not implemented)
+## Plans (all done)
 
-- `plan-workspace.md`: port the workspace to the app, stages W1 to W6
+- `plan-workspace.md`: port the workspace to the app, stages W1 to W6 (W5 language switch 2026-11-19)
 - `plan-functional-items.md`: number input, delete confirmation, autosave
+- Still open as a later addition: X10 cable and breaker elements on the diagram and in the element list (not planned).

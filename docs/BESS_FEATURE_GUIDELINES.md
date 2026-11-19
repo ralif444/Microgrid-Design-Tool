@@ -21,7 +21,7 @@ Dokumen ini menetapkan cara membangun fitur baterai pada aplikasi tanpa mengubah
 | Verdict rule | Nothing in this feature changes the M2 verdict, `limiting_constraints`, margins, or any M1–M4 payload or hash. |
 | Where it runs | An app-side Python service, `backend/src/mgapp/services/battery/`. **The engine package `engine/src/mgengine/` is not edited in this round.** B3 obtains per-hour inverter powers by sending ordinary M1 requests through the Engine Port (§4.2). |
 | Feature flag | None (user decision). The screen and panels appear only when the Project has at least one BatteryBank; a Project without one looks and behaves exactly as before. |
-| Data policy | The app ships no vendor data and no example battery entries (D-59 K107). Tests use clearly fictitious modules with round numbers. |
+| Data policy | The app ships no example battery entries of its own; the read-only base catalogue (D-114) includes battery modules read from manufacturer documents. Tests use clearly fictitious modules with round numbers. |
 | Schedule | PSIM stage 1.6 on the core is not blocked by this round and does not wait for it. |
 
 ## 1. Decisions applied (user, 2026-11-12)

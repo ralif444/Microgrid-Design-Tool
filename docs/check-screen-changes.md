@@ -21,7 +21,7 @@ File: `docs/design/redesign-2026-11-13/workspace-mockup.html`
 | Current, A | `amp` | 1 |
 | Losses, kW | `loss` | 3 |
 
-Before and after:
+Before and after (values on the prototype D2):
 
 | Place | Before | After |
 |---|---|---|

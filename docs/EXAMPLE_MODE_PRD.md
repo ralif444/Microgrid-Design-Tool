@@ -83,7 +83,7 @@ Status: **SOURCED** = from a doc or the manuscript; **AUTHOR** = an author's stu
 
 | Screen | Field | Proposed value | Status | Source / note |
 |---|---|---|---|---|
-| S-03/S-05 | Design D2 (buses, lines, loads, inverters, τ) | as `d2.mgproj.json` | SOURCED | Doc 13 §4 (prototype values, confirmed or replaced at WP 1.6.1) |
+| S-03/S-05 | Design D2 (buses, lines, loads, inverters, τ) | as `d2.mgproj.json` | SOURCED | Doc 13 §4 (catalogue values (Doc 13 section 4, D-116)) |
 | S-06 | voltage_min_pu / voltage_max_pu | 0.95 / 1.05 | SOURCED | Doc 3 §3.7 "reference designs use 0.95–1.05 as a study setting" |
 | S-06 | frequency_min_hz / frequency_max_hz | 49.75 / 50.25 | SOURCED | Doc 3 §3.7 |
 | S-06 | inverter_loading_limit_ratio | 1 | SOURCED | Doc 3 §3.7 |

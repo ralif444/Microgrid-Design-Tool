@@ -902,6 +902,46 @@
    }
   },
   {
+   "id": "BRK-SE-NSX100B-3P-TM80D",
+   "kind": "BREAKER",
+   "provenance": {
+    "manufacturer": "Schneider Electric",
+    "model": "ComPact NSX100B 3P 3d TM80D (LV429551)",
+    "document": "ComPact NSX & NSXm Catalog 2019 (LVPED217032EN), Schneider Electric",
+    "revision": "Catalog 2019; file supplied by the user 2026-11-19"
+   },
+   "sources": {
+    "in_a": "p. F-17 (PDF p. 273): NSX100B (25 kA at 380/415 V) 3P 3d TM80D = LV429551; p. B-7 (PDF p. 43): TM-D In 80 A at 40 C, thermal tripping between 1.05 and 1.20 Ir, Ir adjustable 0.7-1 x In, IEC 60947-2"
+   },
+   "breaker": {
+    "standard": "IEC 60947-2",
+    "class": "MCCB",
+    "in_a": 80,
+    "curve": null,
+    "poles": 3
+   }
+  },
+  {
+   "id": "BRK-SE-NSX100B-3P-TM100D",
+   "kind": "BREAKER",
+   "provenance": {
+    "manufacturer": "Schneider Electric",
+    "model": "ComPact NSX100B 3P 3d TM100D (LV429550)",
+    "document": "ComPact NSX & NSXm Catalog 2019 (LVPED217032EN), Schneider Electric",
+    "revision": "Catalog 2019; file supplied by the user 2026-11-19"
+   },
+   "sources": {
+    "in_a": "p. F-17 (PDF p. 273): NSX100B (25 kA at 380/415 V) 3P 3d TM100D = LV429550; p. B-7 (PDF p. 43): TM-D In 100 A at 40 C, thermal tripping between 1.05 and 1.20 Ir, Ir adjustable 0.7-1 x In, IEC 60947-2"
+   },
+   "breaker": {
+    "standard": "IEC 60947-2",
+    "class": "MCCB",
+    "in_a": 100,
+    "curve": null,
+    "poles": 3
+   }
+  },
+  {
    "id": "BAT-TESVOLT-TS-HV-70-E",
    "kind": "BATTERY_MODULE",
    "provenance": {

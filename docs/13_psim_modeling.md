@@ -51,7 +51,7 @@ Using three-phase totals in PSIM avoids the per-phase conversion ($m_p^{phase} =
 |---|---|---|
 | Nominal line voltage $V_{LL}$ (kV) | $V^* = V_{LL}/\sqrt3$ phase RMS (V) in the droop block | D-designs: 440 V LL → 254.03 V phase (manuscript Tabel 4.7). |
 | Nominal frequency $f^*$ (Hz) | $\omega^* = 2\pi f^*$ | 50 Hz. |
-| $m_{p,i}$, $n_{q,i}$ | Droop block constants, unchanged | Three-phase totals (§2). |
+| $k_{P,i}$ (Hz/kW), $k_{Q,i}$ (kV LL/kvar) | Droop block constants $m_p = 2\pi\cdot10^{-3}\,k_P$ rad/(s·W), $n_q = k_Q/\sqrt3$ V(phase)/VAR | Three-phase totals (§2); conversion as in Doc 9 D-54 K74. D1: $m_p$ 5.000×10⁻⁵, $n_q$ 5.000×10⁻⁴. D2 INV1: 4.18879×10⁻⁵, 3.38712×10⁻⁴. D2 INV2: 6.28319×10⁻⁵, 5.08068×10⁻⁴. Entering $k_Q$ unconverted makes the voltage droop √3 too large. |
 | $\tau_{P,i}$, $\tau_{Q,i}$ (s) | Two separate first-order low-pass filters | Not a PLL, not second order. |
 | $P_i^*$, $Q_i^*$ | Droop block inputs | 0 in all cases except reference steps. |
 | Line $r$, $x$ (Ω/km), length (km) | $R = r\,\ell$, $L = x\,\ell/\omega^*$ per phase | Prototype designs give R and X in Ω directly. |
@@ -76,6 +76,10 @@ The designs are built from base-catalogue products (user decision 2026-11-19, Do
 | D2S | as D2 | as D2 | as D2 | 2.4 × D2 (65.22 kW, 26.09 kvar; 56.2 %) | Stressed but physical |
 | D2H | as D2 | as D2 | as D2 | 4.0 × D2 (108.7 kW, 43.48 kvar; 93.7 % of rating) | Near the engineering limit |
 
+**Small-signal stability of the catalogue designs (2026-11-19, Doc 9 D-118).** M4a on the Real Engine: D1 STABLE; D2, D2S and D2H UNSTABLE, one oscillatory pair at about +25 ± j71 s⁻¹ (ζ_min −0.34, 11.3 Hz on D2; −0.33 on D2S and D2H), participation mainly δ of INV2 and the P filters. The prototype D2 was stable (ζ +0.09). The cause is the strongly resistive, electrically short coupling between the two inverters: at the D2 line |Z|, ζ turns positive only at R/X ≤ 1.0; every catalogue cable (NYY and N2XY, 16 – 95 mm², R/X 2.3 – 19.6) is unstable at the D2 lengths; halving the droop gains does not help. Longer lines decouple the inverters: N2XY 4 × 16 becomes stable between 152 m and 305 m per line (at 305 m: ζ +0.30, lowest bus voltage 0.955 p.u.); 4 × 50 between 305 m and 609 m; 4 × 95 between 609 m and 1219 m. **User decision 2026-11-19: keep the cable and validate the instability** (§5). Whether PSIM shows the same mode is part of what the comparison measures (the engine network is quasi-static, A1).
+
+Operating points under the guided-example limits (0.95 – 1.05 p.u., 49.75 – 50.25 Hz): D1 and D2 FEASIBLE; D2S (49.736 Hz) and D2H (49.558 Hz) INFEASIBLE on frequency, D2H also at 94.6 % / 95.9 % loading and B2 0.9505 p.u. SS-03 and SS-04 are numeric comparisons only, not "within limits" cases. The D2S and D2H loads are the file values (65.22 kW + 26.09 kvar; 108.7 kW + 43.48 kvar), not the rounded 2.4 × and 4.0 × products (65.208, 108.68); the steps of §5 use their kW values (SM-02 1.607 kW, DR-02 2.143 kW).
+
 All designs: 440 V LL, 50 Hz, $\tau_P = \tau_Q = 0.05$ s, $P^* = Q^* = 0$. Work package 1.6.1 confirms them; the final values are frozen in the input sheets. The example Projects `frontend/public/examples/d1`, `d2`, `d2s`, `d2h` hold these values with each catalogue reference; the D2 disturbances of §5 are presets on the Transient screen of the guided example.
 
 ## 5. The eleven cases
@@ -93,6 +97,8 @@ All designs: 440 V LL, 50 Hz, $\tau_P = \tau_Q = 0.05$ s, $P^* = Q^* = 0$. Work 
 | TS-01 | Transient | D2 | Load +300 % (+81.51 kW, +32.61 kvar) | 5 s; 0.002 s | Envelope, recovery, final state | Categorical (class must match) |
 | TS-02 | Transient | D2 | INV2 trip (breaker opens, permanent; line stays connected) | 5 s; 0.002 s | as TS-01 | Categorical |
 | TS-03 | Transient | D2 | Large $P^*$ step on INV1, +21.43 % of rating (+16.071 kW) | 5 s; 0.002 s | as TS-01 | Categorical |
+
+**D2 dynamic cases on an unstable design (user decision 2026-11-19, D-118).** Because D2 is small-signal unstable in the engine, SM-01 and SM-02 compare the *unstable* dominant mode: growth rate σ (> 0) and damped frequency, fitted by matrix pencil on the window from the disturbance until the first saturation, network loss or 10 % deviation, against the M4a eigenvalue (+25.3 ± j71.0 s⁻¹). The decay-rate tolerance of §6 applies to σ. DR-01, DR-02 and TS-01 – TS-03 become categorical: the class (diverges or settles) must match; NRMSE and settling are reported only for a case that settles in both tools. If PSIM settles where the engine diverges, that is a finding about assumption A1 (quasi-static network), recorded under §9, not a tolerance miss. Engine note: M4b on D2 currently stops at the disturbance instant with "network solution lost", even for a 0.0001 kW step (open point 7), so the engine side of these cases is the M4a eigenvalue until that is resolved.
 
 Load steps are a % of the D2 load and $P^*$ steps a % of the INV1 rating, the same % as the prototype cases (D-116). The 3 % small-signal step is chosen because at 1 % the voltage deviation falls below the resolution floor (manuscript 4.5.3).
 
@@ -125,7 +131,7 @@ with $K$ samples and $p_{pre}$ the pre-disturbance PSIM value. Dominant modes co
 | RoCoF | Maximum | Descriptive | Descriptive | No verdict |
 | Recovery; transient class | Categorical | Must match | Must match | Convention |
 
-Layer-1 steady thresholds are at least five times the expected model difference (up to $7\times10^{-5}$ relative in voltage, $4.3\times10^{-4}$ relative in Q and $10^{-5}$ Hz in frequency on the reference designs, all from the frequency-dependent reactance) plus the PSIM measurement resolution floor. Dynamic and modal thresholds are the author's engineering conventions, not literature values. Thresholds change only through a new policy version, never after results are seen. The prototype file `tolerance_policy_v1.json` with its `.lock.json` hash is the machine-readable form; work package 1.6.2 confirms it against Tabel 4.14 and locks it.
+Layer-1 steady thresholds are at least five times the expected model difference (from the frequency-dependent line reactance, recomputed 2026-11-19 on the catalogue designs by re-solving M1 with $x$ scaled by $f/f^*$: at most $3.5\times10^{-6}$ relative in voltage, $2.5\times10^{-5}$ relative in Q, $7\times10^{-6}$ relative in losses and $5\times10^{-8}$ Hz, all on D2H; the prototype designs gave $7\times10^{-5}$, $4.3\times10^{-4}$ and $10^{-5}$ Hz) plus the PSIM measurement resolution floor. Dynamic and modal thresholds are the author's engineering conventions, not literature values. Thresholds change only through a new policy version, never after results are seen. The prototype file `tolerance_policy_v1.json` with its `.lock.json` hash is the machine-readable form; work package 1.6.2 confirms it against Tabel 4.14 and locks it.
 
 ## 7. Layer-2 parameters (decided: cited design procedure, frozen before running)
 
@@ -185,9 +191,14 @@ Sources found for these points (2026-11-19, layer-2 filter and loop procedures, 
 | 4 | Native constant-power load element in PSIM 9.1.4.400. | VERIFY in PSIM |
 | 5 | PSIM command-line or scripting interface in the installed licence. | VERIFY in PSIM |
 | 6 | Resolution floor $p_{floor}$ per quantity, measured from PSIM output. | Work package 1.6.2 |
+| 7 | M4b on the unstable D2 stops at the disturbance instant ("network solution lost") even for tiny steps. Likely mechanism: a network-solve failure inside the integrator's trial step escapes before the smaller-step retry (`engine/src/mgengine/m4b.py`, `_solve_network` inside `solve_ivp`). Hypothesis, not debugged; the engine is unchanged until the user decides. | DECISION NEEDED |
+| 8 | Settling criteria (band, duration) for M4b classes; the guided example leaves them empty (D-92 K231), so TS classes are None. | DECISION NEEDED |
+| 9 | Output alignment: engine grid $\tau/20$ = 2.5 ms (row at the disturbance duplicated), PSIM export 2 ms; resampling rule. M4b reports no line current, no per-inverter frequency and no angle, so I(t) and angle comparisons need PSIM-only data or an engine change. | DECISION NEEDED |
+| 10 | Angle reference bus for angle errors (engine: B1 = 0°). | Work package 1.6.2 |
 
 ## Log
 
 | Date | Change |
 |---|---|
+| 2026-11-19 | §4 rebuilt on base-catalogue products (D-116, Doc 14 D19); droop unit conversion in §3; D2 small-signal instability, user decision to validate it, §5 case rules (D-118); §6 model-difference budget recomputed; open points 7 – 10. |
 | 2026-11-01 | Created from the post-seminar design session (decisions Q22–Q25, Q38, Q39) and the manuscript; design and case values cross-checked against the prototype validation package. |

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fixed, fixedOr, num, parseNumber } from "./format";
+import { setDisplayLang } from "./i18n";
 
 describe("F1 locale-safe number input", () => {
   it("accepts a dot or a comma as decimal separator", () => {
@@ -55,5 +56,16 @@ describe("W1 result decimals per unit", () => {
     expect(fixed(-2e-12, "ratio")).toBe("> −0.00001");
     expect(fixed(0.0000123, "ratio")).toBe("0.000012");
     expect(fixedOr(null, "kW")).toBe("—");
+  });
+  it("reads a decimal comma in Indonesian and refuses a dot thousands group there", () => {
+    setDisplayLang("id");
+    try {
+      expect(parseNumber("2,125")).toBe(2.125);
+      expect(parseNumber("2.125")).toBeUndefined();
+      expect(parseNumber("0.44")).toBe(0.44);
+    } finally {
+      setDisplayLang("en");
+    }
+    expect(parseNumber("2,125")).toBeUndefined();
   });
 });

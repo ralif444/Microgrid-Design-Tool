@@ -27,7 +27,7 @@ Dokumen ini menetapkan kontrak API antara antarmuka peramban dan server lokal. A
 ---
 
 ## 2. Endpoint list
-15 endpoints (manuscript 4.3.6).
+15 endpoints (manuscript 4.3.6). 15 manuscript endpoints plus 3 post-proposal additions (catalogs/import, CB, BA; Doc 12).
 
 | # | Method | Path | Purpose | Request body | Response (HTTP 200) | FR IDs |
 |---|---|---|---|---|---|---|

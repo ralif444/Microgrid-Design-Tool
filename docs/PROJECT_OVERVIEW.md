@@ -1,6 +1,6 @@
 # Project overview
 
-> Written 2026-11-11 from the code and documents on branch `feat/cable-sizing` (commit `0476874`). It describes what is in the repository; it decides nothing. On any conflict the manuscript `Seminar.pdf` and Docs 01–14 win.
+> Written 2026-11-11 from the code and documents on branch `feat/cable-sizing` (commit `0476874`). It describes what is in the repository; it decides nothing. Counts and the screen list are the 2026-11-11 snapshot; later changes (battery analysis BA and screen S-20, 11 analysis types and 18 routes, 24 pages, workspace and studies screens, `/project/` and `/constraints/` as redirects, base catalogue, language switch, cable sizing on by default) are in `docs/09_register.md` D-113 to D-118. On any conflict the manuscript `Seminar.pdf` and Docs 01–14 win.
 
 ## 1. What the project is
 
@@ -62,7 +62,7 @@ The engine is chosen once at startup (`MGAPP_ENGINE=FAKE|REAL`), never per reque
 | M3d | Envelope | Two-axis grid of per-point status, feasible fraction. | Current M1 |
 | M4a | Small-signal | Eigenvalues, damping, dominant modes, participation factors, stability class, validity indicators r_τ, κ, r_in, ε_X. | Current M1 |
 | M4b | Transient | Time response to a load step, load scaling, reference step or inverter outage on the reduced-order model. | Current M1 |
-| CB | Cable and breaker sizing | Overload-only sizing by IEC 60364 / PUIL 2011 from user-entered tables. Computed by the app, not the engine. Experimental, off by default. | Current M2 |
+| CB | Cable and breaker sizing | Overload-only sizing by IEC 60364 / PUIL 2011 from user-entered tables. Computed by the app, not the engine. Experimental; on by default since 2026-11-16 (`MGAPP_FEATURE_CABLE_SIZING=0` turns it off). | Current M2 |
 
 Every analysis returns one of six statuses: `FEASIBLE`, `INFEASIBLE`, `SOLVER_FAILED`, `PHYSICALLY_INADMISSIBLE`, `INPUT_INVALID`, `UNAVAILABLE`. All are HTTP 200 with a RunRecord; HTTP 4xx is for transport problems only.
 
@@ -122,7 +122,7 @@ python tools/build_frontend.py
 uv run --project backend mgapp
 ```
 
-Environment options: `MGAPP_ENGINE` (`FAKE` default, `REAL`), `MGAPP_PORT`, `MGAPP_FAKE_PROFILE`, `MGAPP_FEATURE_CABLE_SIZING=1`. The demonstration steps are in `docs/demo_script.md`.
+Environment options: `MGAPP_ENGINE` (`FAKE` default, `REAL`), `MGAPP_PORT`, `MGAPP_FAKE_PROFILE`, `MGAPP_FEATURE_CABLE_SIZING=0` (turns cable sizing off; it is on by default). The demonstration steps are in `docs/demo_script.md`.
 
 ## 9. Documents
 
@@ -142,4 +142,4 @@ Environment options: `MGAPP_ENGINE` (`FAKE` default, `REAL`), `MGAPP_PORT`, `MGA
 Stages 1.1 to 1.5 and the work packages 1.7.1 to 1.7.4 have rows in the gate log. Two items are open:
 
 - **Stage 1.6, PSIM validation.** `validation/` holds no cases or results yet. Until it is done the validity indicators have no calibrated thresholds: `MetaInfo.indicator_threshold_version` is null and every M4a result of the Real Engine carries the warning `VALIDITY_NOT_CALIBRATED`.
-- **Cable and breaker sizing.** Built behind a flag and marked experimental. The register lists K-07 (protection is out of the manuscript's scope, awaiting the supervisor) and K-08 (PUIL 2011 used instead of PUIL 2020) as open.
+- **Cable and breaker sizing.** Built behind a flag (on by default) and marked experimental. K-07 (protection is out of the manuscript's scope) is resolved: the supervisor approved it on 2026-11-19 (D-117). K-08 (PUIL 2011 used instead of PUIL 2020) is still open in the register.

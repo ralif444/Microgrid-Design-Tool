@@ -9,7 +9,7 @@ Dokumen ini menjelaskan susunan layar aplikasi: layar apa saja yang ada, bagaima
 
 | # | Principle | Consequence in the UI | Source |
 |---|---|---|---|
-| P1 | Pipeline first | A persistent stepper of eight steps (Loads → Sizing advice (PS) → Network → Constraints → Power flow (M1) → Constraint check (M2) → Further analyses (M3/M4) → Report; labels as in §3) shows where the user is and what is done, stale or blocked. Side analyses (M3, M4) hang off the stepper after M2. | PROMPT pipeline, US-18..34 |
+| P1 | Pipeline first | Four area tabs (Model, Check, Studies, Report; `AreaNav`) with a row of the area's screens (the eight steps: Loads → Sizing advice (PS) → Network → Constraints → Power flow (M1) → Constraint check (M2) → Further analyses (M3/M4) → Report; labels as in §3) show where the user is and what is done, stale or blocked. Side analyses (M3, M4) sit in the Studies area after M2. | PROMPT pipeline, US-18..34 |
 | P2 | Status is always visible and never a bare code | Every result screen opens with a Status banner: Status name, plain message, next-step hint (§5). `status_code` is shown only as secondary detail. The header shows engine kind (FAKE or REAL) on every screen so Fake results are never mistaken for real ones. | FR-35, FR-36, NFR-06 |
 | P3 | Units next to every field | Every numeric input has a unit label (kW, kvar, kV, Hz, Hz/kW, kV/kvar, km, Ω/km, p.u.); no hidden conversion; derived Line totals are labelled "derived, read-only". | FR-05, NFR-05, Doc 3 §1 |
 | P4 | Design data differs visibly from advice | SizingAdvice (PS) and SizingCheck (M2) use an "advisory" visual treatment (dashed outline, "Advice" tag) and never sit in editable design tables; SizingAdvice becomes design data only on explicit Accept. | FR-08, FR-27 |
@@ -23,11 +23,11 @@ Routes are Next.js static-export paths (file-based routing, ADR-002), no dynamic
 | ID | Screen | Route | Purpose | Main FR IDs | Priority |
 |---|---|---|---|---|---|
 | S-01 | Start | `/` | Create a new Project; open a Project file (import: check + forward migration, or reject with message); recent autosave offer; open the guided example (Doc 12 X9). | FR-01, FR-54, FR-55, FR-56, FR-57, FR-99 | Must (migration notice: Should) |
-| S-02 | Project overview | `/project/` | Name and description; pipeline status per step; design readiness checklist; Save Project (export JSON); counts of Buses, Lines, Loads, Inverters, RunRecords. | FR-02, FR-54, FR-55, FR-57 | Must (name/description: Should) |
+| S-02 | Project overview (retired, redirects to `/workspace/?el=system`, Doc 14 D16) | `/project/` | Name and description; pipeline status per step; design readiness checklist; Save Project (export JSON); counts of Buses, Lines, Loads, Inverters, RunRecords. | FR-02, FR-54, FR-55, FR-57 | Must (name/description: Should) |
 | S-03 | Loads (+ LoadProfile) | `/loads/` | Load table (Bus, P, Q or power factor with direction); optional 24-point LoadProfile editor; inline validation. | FR-03, FR-04, FR-05, FR-17, FR-18 | Must (LoadProfile: Should) |
 | S-04 | Sizing advice (PS) | `/sizing/` | Run PS; show SizingAdvice with basis and assumptions; Accept / Edit / Skip; stale-advice notice. | FR-06, FR-07, FR-08, FR-09, FR-27 | Must (pre-fill: Should) |
 | S-05 | Network editor | `/network/` | Tabs Buses, Lines, Inverters (tables); delete guard for Buses; derived Line totals; diagram panel (Should). | FR-10, FR-11, FR-12, FR-13, FR-14, FR-05, FR-19 | Must (guard, diagram: Should) |
-| S-06 | Design constraints | `/constraints/` | Voltage band (p.u.), frequency band (Hz), Inverter loading limit, Line current limit; **no numeric defaults**: every field starts empty and an empty limit is shown as "not evaluated" (manuscript 4.2.4). | FR-15, FR-16, FR-05 | Must ("not evaluated" display: Should) |
+| S-06 | Design constraints (retired, redirects to the workspace inspector, Doc 14 D16) | `/constraints/` | Voltage band (p.u.), frequency band (Hz), Inverter loading limit, Line current limit; **no numeric defaults**: every field starts empty and an empty limit is shown as "not evaluated" (manuscript 4.2.4). | FR-15, FR-16, FR-05 | Must ("not evaluated" display: Should) |
 | S-07 | Power flow (M1) | `/power-flow/` | Run M1; Status banner (an `INPUT_INVALID` result lists all violations, §5); bus voltages, system frequency, Inverter outputs, Line flows; freshness badge (current or stale). | FR-22, FR-23, FR-17, FR-19, FR-20, FR-21, FR-35, FR-36, FR-37, FR-42, FR-43, FR-45 | Must (all-violations list, progress: Should) |
 | S-08 | Constraint check (M2) | `/constraint-check/` | Run M2 with design margins m_inv, m_line (required, no default) and optional storage settings; verdict; limiting constraints list; margins; separate "Not evaluated" list (empty limits, never counted as satisfied); loadability λ_c, λ_s with resolution (λ_s labelled "solution existence, not a stability limit"); SizingCheck panel (separate from SizingAdvice). | FR-24, FR-25, FR-27, FR-26, FR-35, FR-36, FR-37, FR-38, FR-40 | Must (margins: Should) |
 | S-09 | Sensitivity (M3a) | `/sensitivity/` | Choose parameters and output metrics; run; ranked sensitivities. | FR-28, FR-39, FR-41 | Should |
@@ -39,10 +39,12 @@ Routes are Next.js static-export paths (file-based routing, ADR-002), no dynamic
 | S-15 | Run history | `/runs/` | RunRecord list (INPUT_INVALID hidden by default); detail; export; import; verify; re-run; reproduction outcome; version comparison. | FR-46..FR-53, FR-57 | Must (version warning: Should) |
 | S-16 | Report | `/report/` | HTML report: verdict, limiting constraints, margins, assumptions, tables, charts, RunRecord hashes; print layout. | FR-48, FR-58, FR-59, FR-60 | Must (print: Should) |
 | S-17 | About and limits | `/about/` | App, schema and engine versions (FAKE or REAL); active limits (`TIME_BUDGET`, `SWEEP_CAP`, `SCENARIO_CAP`); glossary; offline note. | FR-51, NFR-02, NFR-03 | Should [ASSUMPTION] |
+| W | Diagram workspace (areas Model and Check; inspector edits project, system and design limits; Doc 14 D15, D16) | `/workspace/` | Area tabs Model and Check; element list, inspector, check strip, results drawer. | FR-90, FR-91 | Must |
+| ST | Studies (area tab Studies; row of M3a–M4b, cable sizing, battery) | `/studies/` | One row per study: the question it answers, its last run and whether it is on the current design. Nothing runs here. | – | Should |
 | S-19 | Cable and breaker sizing (experimental, Doc 12 X10) | `/cable-sizing/` | Installation settings with per-element overrides; Run; fixed islanded caveat; results table per Line and Inverter feeder with expandable factor rows. Hidden when `feature_cable_sizing` is off. | FR-105, FR-106, FR-112 | Could |
 | S-20 | Battery adequacy (Doc 12 B2, B3) | `/battery/` | Start hour; Run; status banner; fixed discharge-only caveat; per-bank table (power and autonomy outcomes with reasons); depletion chart. Listed only when the Project has at least one BatteryBank. | FR-76, FR-117 – FR-120 | Could |
 
-Global elements on every screen (not separate screens): header (Project name, unsaved indicator, Save and Open buttons, engine kind badge), pipeline stepper (§3), a status toast area for transport errors (HTTP 4xx or 5xx, "cannot reach the local service").
+Global elements on every screen (not separate screens): header (Project name, unsaved indicator, Save and Open buttons, engine kind badge), area tabs (§3), a status toast area for transport errors (HTTP 4xx or 5xx, "cannot reach the local service").
 
 ### 2.1 Must-FR placement check
 
@@ -136,7 +138,7 @@ flowchart TB
     ABOUT["S-17 About"]
 ```
 
-Stepper steps: 1 Loads, 2 Sizing advice (optional, can be skipped), 3 Network, 4 Constraints, 5 Power flow, 6 Constraint check, 7 Further analyses, 8 Report. Run history and About are reachable from the header at any time. The stepper is guidance, not a wizard lock: the user can jump to any screen whose route is enabled.
+Steps (shown as the screen row of each area tab): 1 Loads, 2 Sizing advice (optional, can be skipped), 3 Network, 4 Constraints, 5 Power flow, 6 Constraint check, 7 Further analyses, 8 Report. Run history and About are reachable from the header at any time. The area tabs are guidance, not a wizard lock: the user can jump to any screen whose route is enabled.
 
 ### 3.1 Gating rules
 
@@ -153,7 +155,7 @@ Stepper steps: 1 Loads, 2 Sizing advice (optional, can be skipped), 3 Network, 4
 | S-11 Compare / S-15 Re-run | 2 or more Scenarios selected (up to `SCENARIO_CAP` [ASSUMPTION]) / a RunRecord with verified hash. | "Missing: two or more selected Scenarios." beside "Compare scenarios" / Re-run hidden after failed verification (FR-50). |
 | S-16 Report | At least one RunRecord with a result exists. | Empty state "No results yet. Run M1 and M2 first." |
 
-**Stale-M1 rule.** Any edit to design data (Buses, Lines, Loads, LoadProfile, Inverters, DesignConstraints, adopted SizingAdvice) after an M1 run marks that M1 result "stale" in the Project store. A stale banner appears on S-07, S-08 and S-09..S-14: "The design changed after the last power flow. Re-run M1 to continue." and the stepper shows steps 6 and 7 as blocked. The authoritative check is the application service (hash comparison, FR-38, FR-40); the UI flag is a conservative early warning. Editing and reverting a value leaves the flag set until M1 is re-run or the hash is re-checked [ASSUMPTION, see §9 item 3].
+**Stale-M1 rule.** Any edit to design data (Buses, Lines, Loads, LoadProfile, Inverters, DesignConstraints, adopted SizingAdvice) after an M1 run marks that M1 result "stale" in the Project store. A stale banner appears on S-07, S-08 and S-09..S-14: "The design changed after the last power flow. Re-run M1 to continue." and the Constraint check and Studies screens show Blocked. The authoritative check is the application service (hash comparison, FR-38, FR-40); the UI flag is a conservative early warning. Editing and reverting a value leaves the flag set until M1 is re-run or the hash is re-checked [ASSUMPTION, see §9 item 3].
 
 ## 4. Key flows
 First phase per flow (aligned with Doc 8 T5 and Doc 10, C5.4, 2026-10-21): F1 core (load entry → PS → design → M1/M2 → report), F2 core and F3 core are E2E-tested from P1. F4 and the branches that need Should items (F1 further analyses S-09–S-14, F2 migrated file FR-56, F3 version warning FR-51) are E2E-tested from P3.
@@ -253,12 +255,14 @@ Non-Status outcomes (not shown with the table above): file checks show the FileC
 | Near-limit highlight | Rows with margin below `MARGIN_WARN` get a caution badge "Near limit" (FR-26, Should). `MARGIN_WARN` value and its unit handling per kind [ASSUMPTION], defined in Doc 3 / Doc 6. |
 
 ## 6. Low-fidelity wireframes
-Notation: `[ ]` button/field, `( )` option, `<..>` placeholder. Header and stepper omitted from blocks after 6.1 except where relevant.
+Wireframes predate the workspace (2026-11-14); header is now the area tabs.
+
+Notation: `[ ]` button/field, `( )` option, `<..>` placeholder. Header and area tabs omitted from blocks after 6.1 except where relevant.
 
 ### 6.1 Load entry (S-03)
 ```
 +--------------------------------------------------------------+
-| <Project name> *unsaved [Save][Open]  Engine:<FAKE> |stepper|
+| <Project name> *unsaved [Save][Open]  Engine:<FAKE> |area tabs|
 | Loads                                         [+ Add load]   |
 | Bus      | P <kW> | Q <kvar> or PF | PF dir      | [x]       |
 | [<bus> v]| [    ] | (Q)(PF) [    ] | [lag/lead v]| [delete]  |
@@ -267,7 +271,7 @@ Notation: `[ ]` button/field, `( )` option, `<..>` placeholder. Header and stepp
 | h0 <kW> h1 <kW> ... h23 <kW>     sparkline <plot>            |
 | [Run sizing advice ->]   Needs at least one load.            |
 ```
-- Regions: header and stepper; Load table; LoadProfile editor; footer action to S-04.
+- Regions: header and area tabs; Load table; LoadProfile editor; footer action to S-04.
 - Actions: add, edit, delete rows; choose Q or power factor per row (the other field disables, enforcing "exactly one"); continue to S-04.
 - States: Empty: "No loads yet. Add the first load." with the Add button focused; an empty LoadProfile reads "Optional; storage advice needs it." Error: per-row inline message from stage-1 codes (negative power, power factor above 1, direction missing); the row stays editable and nothing is sent. Loading: not applicable (local editing); the Run advice button shows a progress state on S-04.
 
@@ -431,7 +435,7 @@ Notation: `[ ]` button/field, `( )` option, `<..>` placeholder. Header and stepp
 
 ## 10. Self-review
 - **Weakest point:** the gating choice (disable dependent runs) conflicts in spirit with "every request creates a RunRecord", because the UI never produces a recorded `DEPENDENCY_NOT_MET` on its own; the API test suite covers it instead. The staleness flag is conservative and can block a valid reverted design.
-- **Skeptical reviewer would attack:** (a) 17 screens for a solo developer is a large surface, though only S-01..S-08, S-15, S-16 are Must; (b) the diagram is Should while the network is a graph, so users may expect it; (c) the language recommendation is unsettled and Status messages are central to the product; (d) wireframes are untested with a real junior engineer; (e) `INPUT_INVALID` records hidden by default may confuse reproduction audits.
+- **Skeptical reviewer would attack:** (a) 17 screens (two retired since, plus `/workspace/` and `/studies/`) for a solo developer is a large surface, though only S-01..S-08, S-15, S-16 are Must; (b) the diagram is Should while the network is a graph, so users may expect it; (c) the language recommendation is unsettled and Status messages are central to the product; (d) wireframes are untested with a real junior engineer; (e) `INPUT_INVALID` records hidden by default may confuse reproduction audits.
 - **Guardrail check:** no equations, pseudocode or numbers; placeholders only. **Undecided:** §9; item 1 needs the user.
 
 ## Log delegasi (Task "Doc 7 drafting", Model sonnet)
@@ -450,7 +454,7 @@ DOC 7 COMPLETE
 - S-01: each example design lists the Doc 13 §5 validation cases it serves; S-14 in the guided example offers the seven D2 cases as presets.
 
 ## Change log 2026-11-19 (base catalogue v2; Doc 9 D-115)
-- S-18: the base catalogue is replaced by v2 from the 2026-11-17 search (38 entries, 34 usable); no screen change.
+- S-18: the base catalogue is replaced by v2 from the 2026-11-17 search (38 entries, 34 usable); no screen change. Two ComPact NSX100B MCCB entries (TM80D, TM100D) added 2026-11-19 from catalogue LVPED217032EN (40 entries, 36 usable; Doc 9 D-118).
 
 ## Change log 2026-11-16 (base catalogue, cable sizing on; Doc 9 D-114, Doc 14 D13, D14, D18)
 - S-18: a read-only base catalogue ships with the app; a Source column (Base / Yours), Copy instead of Edit and Delete on base rows, the list sorted by kind then id; Save and Open act on the user's entries only.
@@ -472,7 +476,7 @@ DOC 7 COMPLETE
   - S-10 and S-12 name "To above From" and "at least 2 Points" before Run.
 
 ## Change log 2026-11-14 (UI redesign, ADR-016)
-- §8 UI language and §9 #1: EN/ID switch replaces English labels with Indonesian glossary. Screens are laid out as a diagram workspace (four areas grouping the eight steps); the stepper, engine badge and 17 routes stay (manuscript 4.3.7). Dark theme added next to light. **Amended 2026-11-14 (user, Doc 14 D15, ADR-016 option B):** the four area tabs replace the stepper (P1, §2 global elements, §3). Each area lists its screens under the header with the stepper's done / stale / blocked states (Model: Diagram, Project, Loads, Sizing advice, Network, Constraints; Check: Diagram, Power flow, Constraint check; Studies: M3a–M4b, cable sizing, battery; Report: Report, Run history). The stale-M1 rule of §3.1 is unchanged; "the stepper shows steps 6 and 7 as blocked" now reads: Constraint check and the Studies row show Blocked. Opening or creating a Project lands on the Model diagram.
+- §8 UI language and §9 #1: EN/ID switch replaces English labels with Indonesian glossary. Screens are laid out as a diagram workspace (four areas grouping the eight steps); the engine badge and 17 routes stay (manuscript 4.3.7). Dark theme added next to light. **Amended 2026-11-14 (user, Doc 14 D15, ADR-016 option B):** the four area tabs replace the stepper (P1, §2 global elements, §3). Each area lists its screens under the header with the stepper's done / stale / blocked states (Model: Diagram, Project, Loads, Sizing advice, Network, Constraints; Check: Diagram, Power flow, Constraint check; Studies: M3a–M4b, cable sizing, battery; Report: Report, Run history). The stale-M1 rule of §3.1 is unchanged; "the stepper shows steps 6 and 7 as blocked" now reads: Constraint check and the Studies row show Blocked. Opening or creating a Project lands on the Model diagram.
 
 ## Change log 2026-11-13 (battery round BESS-6, D-113)
 - §2 S-10: profile hour axis with fixed range, worst hour per key metric, first hour not FEASIBLE (Doc 12 P11, FR-78, FR-79).

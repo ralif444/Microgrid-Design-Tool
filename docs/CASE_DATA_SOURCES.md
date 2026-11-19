@@ -1,8 +1,8 @@
 # Case data sources (collected 2026-11-19)
 
 Purpose: real data and sources for the cases still running on fictitious or undecided values
-(battery hand cases, PSIM layer 2, cable and breaker sizing). Nothing here is applied to the app
-or the docs yet; the user verifies the battery and PSIM cases (user decision 2026-11-19).
+(battery hand cases, PSIM layer 2, cable and breaker sizing). Nothing in the battery and PSIM
+sections is applied to the app or the docs yet; the user verifies the battery and PSIM cases (user decision 2026-11-19).
 
 Labels: **READ** = value read in the named document at the named page. **VERIFIED** = DOI
 checked at Crossref (title, authors, venue, volume, pages match); the content was not read
@@ -94,7 +94,7 @@ null. The manual publishes no filter values and no switching frequency (whole te
 | Pogaku, Prodanovic, Green, IEEE TPEL 22(2) 613–625, 2007, doi:10.1109/TPEL.2006.890003 | droop inverter parameter table (LC + coupling L, PI gains) | VERIFIED, table not read (closed access) |
 | He, Desai, Huang, Dörfler, IEEE TPEL 40 3980–4007, 2025, doi:10.1109/TPEL.2024.3500885 | open p.u. values: Lf 0.012, Rf 0.025, Cf 0.044 p.u.; fsw 32 kHz, control 8 kHz (1 kVA lab unit) | VERIFIED; READ in arXiv 2404.13376 Table III(b) |
 | Rocabert et al., IEEE TPEL 27(11) 4734–4749, 2012, doi:10.1109/TPEL.2012.2199334 | general citation for cascaded loops and droop | VERIFIED |
-| Holmes et al., IEEE TPEL 24(11) 2417–2426, 2009 (1.5-sample delay model) | delay model | UNVERIFIED DOI |
+| Holmes, Lipo, McGrath, Kong, IEEE TPEL 24(11) 2417–2426, 2009, doi:10.1109/TPEL.2009.2029548 | delay model (1.5 sampling periods) | VERIFIED 2026-11-19 (Crossref); text not read |
 
 Both LCL papers are for grid-following converters; a grid-forming unit controls the capacitor
 voltage. Scaling: convert L, C, R to p.u. on the source base and apply to S_n, V_LL of the case;
@@ -156,10 +156,15 @@ A.52-5 Al A1 16 mm² = 58); check against a clean copy of PUIL.
 - MCB (IEC 60898-1): k2 = 1.45 (Schneider FAQ
   [FA369327](https://www.se.com/au/en/faqs/FA369327/), READ); I_n series 0.5–63 A from the
   Acti 9 catalogue 09/2013, p. 32 (distributor copy, READ).
-- MCCB (IEC 60947-2): k2 = 1.30 (FA369327, IEC 60947-2 column; applied to MCCBs through the
-  standard). I_n series [80, 100, 125, 160, 200, 250] A is **UNVERIFIED** (ComPacT NSX TM-D
-  ladder from product pages and snippets). To confirm in the ComPacT NSX catalogue LVPED221001EN
-  (se.com blocks automated download; open it in a browser).
+- MCCB (IEC 60947-2): k2 = 1.30 (FA369327, IEC 60947-2 column). I_n series [80, 100, 125, 160,
+  200, 250] A READ in *ComPact NSX & NSXm Catalog 2019* (LVPED217032EN, file from the user),
+  p. B-7 (PDF p. 43): TM-D ratings 16–250 A, **I_n defined at 40 °C**, thermal tripping between
+  1.05 and 1.20 Ir. The catalogue band lies inside 1.30 In, so 1.30 stays as the standard bound
+  (guideline D7, conservative). Catalogue numbers p. F-17 (PDF p. 273): NSX100B 3P 3d TM80D
+  LV429551, TM100D LV429550 (base catalogue entries added 2026-11-19).
+- Reference temperatures differ: iC60N I_n at 30 °C, NSX TM-D I_n at 40 °C. The app does not
+  derate breakers for ambient; above 40 °C the NSX derating table (catalogue §temperature
+  derating) applies and must be checked by hand.
 
 ### 3.3 Run on the guided D2 example (Real Engine, 2026-11-19)
 
@@ -182,5 +187,5 @@ the PUIL size; the user decides whether to align them.
 2. Load profile: a numeric 24-h table (see §1.3 options).
 3. PSIM: Pogaku and Liserre tables (closed access); limiter type and value; fsw; check
    9.1.4.400 for a constant-power load; test PsimCmd.exe and its licence.
-4. Breakers: MCCB I_n ladder page in LVPED221001EN.
+4. Breakers: closed (LVPED217032EN p. B-7); breaker ambient derating not modelled.
 5. PUIL: two blurred cells.

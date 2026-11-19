@@ -132,7 +132,7 @@
         {
           "id": "SM-01",
           "label": "SM-01 small load step +3 %: dominant mode",
-          "source": "Doc 13 §5 case SM-01 (small-signal check: ring-down gives the dominant mode); magnitude kept as the same % of load or of INV1 rating on the catalogue design, D-116; duration read as permanent, D-92 K232",
+          "source": "Doc 13 §5 case SM-01 (small-signal check: the dominant mode, unstable on the catalogue D2); magnitude kept as the same % of load or of INV1 rating on the catalogue design, D-116; duration read as permanent, D-92 K232",
           "fields": {
             "disturbance": {
               "kind": "LOAD_STEP",
@@ -241,8 +241,8 @@
         }
       ],
       "guidance": {
-        "text": "Transient stability (M4b) simulates one disturbance in time on the reduced-order model. The example disturbances are the D2 cases of the PSIM validation basis: the small-signal cases (SM) are small steps for the dominant mode, the dynamic-response cases (DR) medium steps, and the transient cases (TS) large disturbances for the transient class. Load steps are a share of the D2 load and P* steps a share of the INV1 rating, as in the validation cases. RoCoF is reported as a description, not a pass or fail. The settling criteria are not set in the example, so the response gets no transient class until you enter them.",
-        "source": "manuscript 4.2.6; Doc 13 §5"
+        "text": "Transient stability (M4b) simulates one disturbance in time on the reduced-order model. The example disturbances are the D2 cases of the PSIM validation basis: the small-signal cases (SM) are small steps for the dominant mode, the dynamic-response cases (DR) medium steps, and the transient cases (TS) large disturbances for the transient class. Load steps are a share of the D2 load and P* steps a share of the INV1 rating, as in the validation cases. RoCoF is reported as a description, not a pass or fail. The settling criteria are not set in the example, so the response gets no transient class until you enter them. Because D2 is small-signal unstable, these steps diverge in the model; the run stops early with \"network solution lost\".",
+        "source": "manuscript 4.2.6; Doc 13 §5, open point 7 (D-118)"
       }
     },
     "loads": {
@@ -283,8 +283,8 @@
     "small-signal": {
       "fields": {},
       "guidance": {
-        "text": "Small-signal stability (M4a) linearises the reduced-order model at the M1 operating point. Look at the eigenvalues, the damping of the dominant mode and the participation factors, which show the states that take part in that mode. The inner-loop time constant τ_in is left empty, so the indicator r_in is not evaluated, and without a damping threshold there is no pass or fail on damping.",
-        "source": "manuscript 4.2.6, 4.2.7"
+        "text": "Small-signal stability (M4a) linearises the reduced-order model at the M1 operating point. Look at the eigenvalues, the damping of the dominant mode and the participation factors, which show the states that take part in that mode. The inner-loop time constant τ_in is left empty, so the indicator r_in is not evaluated, and without a damping threshold there is no pass or fail on damping. On this catalogue D2 the dominant mode is unstable (an oscillation with a positive real part): the real cable's high R/X couples the two inverters too tightly for this droop. The PSIM validation checks that mode, it does not expect a ring-down.",
+        "source": "manuscript 4.2.6, 4.2.7; Doc 13 §4, §5 (D-118)"
       }
     },
     "report": {

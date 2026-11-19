@@ -122,7 +122,7 @@ flowchart TB
 | # | Component | Responsibility | Depends on | Must not depend on |
 |---|---|---|---|---|
 | 1 | Static file serving | Serves the frontend build from the same process. | — | Domain logic |
-| 2 | API routers | 15 endpoints (Doc 6); parse transport; hand off; return bodies. | 3, 4, 10, 11, 12, 16 | 13, adapters, engine package |
+| 2 | API routers | 15 endpoints (Doc 6; 15 manuscript endpoints plus 3 post-proposal additions: catalogs/import, CB, BA; Doc 12); parse transport; hand off; return bodies. | 3, 4, 10, 11, 12, 16 | 13, adapters, engine package |
 | 3 | Error and Status mapper | Every analysis outcome → HTTP 200 with AnalysisResult + RunRecord; request-model failures → `INPUT_INVALID`/`MALFORMED_REQUEST` (no 422); engine exception or disallowed Status → `UNAVAILABLE`/`ENGINE_ERROR`; unknown `analysis_type` → 404; 4xx transport only, 5xx defect. | 16 | 13, adapters |
 | 4 | Analysis pipeline | Fixed order (manuscript 4.3.3): stage-1 validation → size limits → canonicalise + hash → dependency check → guarded engine call → RunRecord. | 5–10, 16 | 13, adapters |
 | 5 | Request validation service | Stage 1 (Doc 3 §4), all issues collected; no physics. | 16 | 13, adapters |

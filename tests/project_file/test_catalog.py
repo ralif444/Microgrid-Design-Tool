@@ -266,7 +266,7 @@ def test_shipped_base_catalogue_passes_the_guard(client: TestClient) -> None:
     body = r.json()
     assert body["file_check"]["accepted"]
     not_usable = {c["entry_id"] for c in body["entry_checks"] if not c["usable"]}
-    assert len(body["entry_checks"]) == 38
+    assert len(body["entry_checks"]) == 40
     assert not_usable == {
         "INV-HUAWEI-LUNA2000-100KTL-M1",  # rating and droop limits not printed
         "BAT-DYNESS-S51314",  # per-module voltage window contradicted, left empty

@@ -8,12 +8,12 @@
 
 | Item | Rule |
 |---|---|
-| Thesis scope | **KONFLIK:** the manuscript lists "protection" as out of scope. This feature needs supervisor approval before it enters the thesis. Until then it is built behind a feature flag, `Settings.feature_cable_sizing` (env `MGAPP_FEATURE_CABLE_SIZING`, already in `backend/src/mgapp/config.py`), **off by default**. With the flag off, the route returns `UNAVAILABLE / NOT_APPLICABLE` and the screen is hidden. |
+| Thesis scope | **KONFLIK:** the manuscript lists "protection" as out of scope. The supervisor approved this feature on 2026-11-19 (Doc 9 D-117). It is built behind a feature flag, `Settings.feature_cable_sizing` (env `MGAPP_FEATURE_CABLE_SIZING`, in `backend/src/mgapp/config.py`), **on by default**; `MGAPP_FEATURE_CABLE_SIZING=0` turns it off. With the flag off, the route returns `UNAVAILABLE / NOT_APPLICABLE` and the screen is hidden. |
 | What it is | One-shot, rule-of-thumb advice: overload rating of the breaker plus conductor size. It is **not** a protection or coordination study. There are no short-circuit, breaking-capacity, selectivity, earthing, neutral or PE checks. |
 | Islanded caveat (fixed text in screen and report) | "Grid-forming inverters limit their fault current. A breaker sized here for overload may not trip on a fault in islanded operation. Fault protection is not assessed by this tool." |
 | Where it runs | An **app-side Python service** (`backend/src/mgapp/services/cable_sizing/`), not the engine. It never calls the Engine Port. It adds no equation, state or assumption to the engine model (Doc 12 level L2: derived output). |
 | Technical baseline | **PUIL 2011 (SNI 0225:2011)**, the edition the user holds. Bagian 4-43 is based on IEC 60364-4-43:2008 and Bagian 5-52 on IEC 60364-5-52:2001 (Annex A numbering, single method D). **Legal note:** Permen ESDM 7/2021 lists PUIL 2020 as the mandatory edition. Record this as KONFLIK in Doc 9 and in the thesis; migrate when PUIL 2020 is obtained (SUMBER-PUIL §8.4). |
-| Data policy | The app ships **no standard tables and no vendor data**. The user transcribes the PUIL tables into a table file (§4) and fills the catalogues. If the GitHub repo is public, keep the filled table file out of it (`.gitignore`, loaded from a user path), because PUIL is copyrighted. |
+| Data policy | The app ships **no standard tables**. Vendor data ships only as the read-only base catalogue (Doc 9 D-114, Doc 14 D18). The user transcribes the PUIL tables into a table file (§4) and fills the catalogues. If the GitHub repo is public, keep the filled table file out of it (`.gitignore`, loaded from a user path), because PUIL is copyrighted. |
 
 ## 1. Decisions applied (user, 2026-11-08)
 
@@ -170,7 +170,7 @@ elements[]: {
 }
 method_id, table_set_id, table_set_hash, caveat_text
 ```
-Warnings: `LINE_R_MISMATCH` (per line), `DIRECT_BURIAL_NOT_SUPPORTED`, `FEATURE_EXPERIMENTAL` (always present while the supervisor's approval is pending).
+Warnings: `LINE_R_MISMATCH` (per line), `DIRECT_BURIAL_NOT_SUPPORTED`, `FEATURE_EXPERIMENTAL` (always present; it marks the result as advice only, the scope extension is approved by the supervisor, D-117).
 
 ## 6. UI
 
@@ -224,7 +224,7 @@ Warnings: `LINE_R_MISMATCH` (per line), `DIRECT_BURIAL_NOT_SUPPORTED`, `FEATURE_
 ## 10. Prompt for Claude Code
 ```
 Read CABLE_BREAKER_FEATURE_GUIDELINES.md fully, then docs 03, 06, 07 and 12 of the repo doc set.
-Implement the cable and breaker sizing feature exactly as specified, behind Settings.feature_cable_sizing (off by default). Tickets: .scratch/cable-sizing/issues/. One round per ticket, each with its gate_log entry:
+Implement the cable and breaker sizing feature exactly as specified, behind Settings.feature_cable_sizing (on by default since 2026-11-16). Tickets: .scratch/cable-sizing/issues/. One round per ticket, each with its gate_log entry:
 0. Round X10-0 (docs only, gate_log entry): Doc 12 X10 with FR-105 onward, Doc 9 entries of §8, Doc 7 S-19, Doc 11 rows; seam-6 exceptions for the new FRs.
 1. backend/src/mgapp/services/cable_sizing/: method registry, method IEC60364_OVERLOAD_PUIL2011 (§3), table-file loader and validator (§4).
 2. POST /api/analyses/CB through the existing pipeline, depends_on = M2, engine fields null (§5).
