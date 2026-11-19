@@ -1,6 +1,6 @@
 "use client";
 // S-01 Start (Doc 7 §2): create a new Project (FR-01) or open a Project file (header, D-47 K17),
-// or open an example Project as a new unsaved copy (Doc 12 FR-85), or the guided example D2, which also
+// or open an example Project as a new unsaved copy (Doc 12 FR-85), or the guided example D2 or D2-LR, which also
 // enters example mode (Doc 12 X9, FR-99); the action is hidden when its settings file is missing or invalid.
 // With no Project open, an autosave draft is offered for restore (plan F3; Doc 7 S-01): it goes through
 // the same file check as Open and stays unsaved.
@@ -19,6 +19,8 @@ import uiStyles from "../components/ui.module.css";
 import { UNSAVED_CONFIRM } from "../components/ProjectFileMenu";
 import { useProject, useProjectDispatch } from "../store";
 import { HOME } from "../components/AreaNav";
+
+const GUIDED = ["guided-d2", "guided-d2-lr"];
 
 // Doc 13 §4 reference designs on the base catalogue (D-116), one example per design; each lists the
 // Doc 13 §5 validation cases it serves and what each case tests.
@@ -59,7 +61,7 @@ export default function Home() {
   const [hz, setHz] = useState<number | null>(50); // default 50, editable (Doc 3 §3.1)
   const [note, setNote] = useState<string | null>(null);
   const [engine, setEngine] = useState<string | null>(null);
-  const [guided, setGuided] = useState<ExampleSettings | null>(null);
+  const [guided, setGuided] = useState<ExampleSettings[]>([]);
   const [draft, setDraft] = useState<Draft | null>(null);
   const { dialog, confirm, ask } = useConfirmDelete();
   useEffect(() => {
@@ -67,7 +69,10 @@ export default function Home() {
       setEngine(m.ok ? m.data.engine.engine_kind : null);
       if (m.ok && !project) setDraft(readDraft(m.data.schema_version));
     });
-    void getExampleSettings("guided-d2").then((s) => setGuided(s.ok ? parseExampleSettings(s.data) : null));
+    // D2 and its stable counterpart D2-LR (D-121); a missing or invalid settings file hides its button
+    void Promise.all(GUIDED.map((g) => getExampleSettings(g))).then((all) =>
+      setGuided(all.flatMap((s) => (s.ok ? (parseExampleSettings(s.data) ?? []) : []))),
+    );
   }, []);
 
   // a new Project is autosaved over the draft, so ask while the draft is still offered
@@ -170,11 +175,15 @@ export default function Home() {
       </form>
       <section aria-label={t("Example projects")}>
         <h2>{t("Example projects")}</h2>
-        {guided && (
+        {guided.length > 0 && (
           <div>
-            <button type="button" className="primary" onClick={() => void openExample(guided.project, guided)}>
-              {t("Open guided example (D2)")}
-            </button>
+            {guided.map((g) => (
+              <span key={g.project}>
+                <button type="button" className="primary" onClick={() => void openExample(g.project, g)}>
+                  {t(g.project === "guided-d2" ? "Open guided example (D2)" : "Open guided example (D2-LR, with coupling reactors)")}
+                </button>{" "}
+              </span>
+            ))}
             <p>{t("Every screen is pre-filled. Press Run on each step to see the whole pipeline.")}</p>
           </div>
         )}

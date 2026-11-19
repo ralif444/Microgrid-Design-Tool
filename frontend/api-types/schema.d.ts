@@ -985,6 +985,13 @@ export interface components {
              */
             voltage_setpoint_kv?: number | null;
         };
+        /** InverterOptionalSeries */
+        InverterOptionalSeries: {
+            /** Inverter Id */
+            inverter_id: string;
+            /** Values */
+            values: (number | null)[];
+        };
         /** InverterPlan */
         InverterPlan: {
             /** Assumptions */
@@ -1280,6 +1287,13 @@ export interface components {
             /** Q To Kvar */
             q_to_kvar: number;
         };
+        /** LineSeries */
+        LineSeries: {
+            /** Line Id */
+            line_id: string;
+            /** Values */
+            values: number[];
+        };
         /** LineSizing */
         LineSizing: {
             /** Current A */
@@ -1431,6 +1445,11 @@ export interface components {
         };
         /** M4bPayload */
         M4bPayload: {
+            /**
+             * Bus Angle Deg
+             * @default []
+             */
+            bus_angle_deg?: components["schemas"]["BusSeries"][];
             /** Bus Voltage Kv */
             bus_voltage_kv: components["schemas"]["BusSeries"][];
             /**
@@ -1438,10 +1457,20 @@ export interface components {
              * @default null
              */
             class_reason?: string | null;
+            /**
+             * Inverter Frequency Hz
+             * @default []
+             */
+            inverter_frequency_hz?: components["schemas"]["InverterOptionalSeries"][];
             /** Inverter P Kw */
             inverter_p_kw: components["schemas"]["InverterSeries"][];
             /** Inverter Q Kvar */
             inverter_q_kvar: components["schemas"]["InverterSeries"][];
+            /**
+             * Line Current A
+             * @default []
+             */
+            line_current_a?: components["schemas"]["LineSeries"][];
             /** Max Rocof Hz Per S */
             max_rocof_hz_per_s: number;
             /** Settled */

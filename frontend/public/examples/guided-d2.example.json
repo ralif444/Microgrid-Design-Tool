@@ -124,10 +124,17 @@
       }
     },
     "transient": {
-      "fields": {},
-      "needs_value": [
-        "settling"
-      ],
+      "fields": {
+        "settling": {
+          "value": {
+            "frequency_band_hz": 0.05,
+            "voltage_band_kv": 0.0088,
+            "window_s": 0.5
+          },
+          "source": "Author's declared settling convention (2 % style: frequency band 0.05 Hz, voltage band 0.02 p.u. of 0.44 kV, final window 0.5 s), D-121; Doc 13 §6"
+        }
+      },
+      "needs_value": [],
       "presets": [
         {
           "id": "SM-01",
@@ -241,7 +248,7 @@
         }
       ],
       "guidance": {
-        "text": "Transient stability (M4b) simulates one disturbance in time on the reduced-order model. The example disturbances are the D2 cases of the PSIM validation basis: the small-signal cases (SM) are small steps for the dominant mode, the dynamic-response cases (DR) medium steps, and the transient cases (TS) large disturbances for the transient class. Load steps are a share of the D2 load and P* steps a share of the INV1 rating, as in the validation cases. RoCoF is reported as a description, not a pass or fail. The settling criteria are not set in the example, so the response gets no transient class until you enter them. Because D2 is small-signal unstable, these steps diverge in the model; the run stops early with \"network solution lost\".",
+        "text": "Transient stability (M4b) simulates one disturbance in time on the reduced-order model. The example disturbances are the D2 cases of the PSIM validation basis: the small-signal cases (SM) are small steps for the dominant mode, the dynamic-response cases (DR) medium steps, and the transient cases (TS) large disturbances for the transient class. Load steps are a share of the D2 load and P* steps a share of the INV1 rating, as in the validation cases. RoCoF is reported as a description, not a pass or fail. The example fills the settling criteria with the author's declared bands, so each response gets a transient class. Because D2 is small-signal unstable, the steps grow into an oscillation until the network solution is lost; only the INV2 trip recovers, since INV1 alone has no inverter-to-inverter mode.",
         "source": "manuscript 4.2.6; Doc 13 §5, open point 7 (D-118)"
       }
     },

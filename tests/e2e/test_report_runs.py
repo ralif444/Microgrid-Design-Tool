@@ -81,11 +81,13 @@ def test_fr_49_fr_50_fr_53_runs_export_import_rerun_and_project_file(
 
     page.get_by_role("link", name="Microgrid design tool").click()
     page.get_by_label("Project name").fill("Other")
-    page.get_by_role("button", name="Create project").click()  # just saved: nothing to discard, no question
+    # just saved: nothing to discard, no question
+    page.get_by_role("button", name="Create project").click()
     expect(page.get_by_test_id("project-name")).to_contain_text("Other")
 
     page.get_by_label("Open project file").set_input_files(saved)
-    page.get_by_role("dialog").get_by_role("button", name="Discard", exact=True).click()  # unsaved changes (K17, audit O9)
+    # unsaved changes (K17, audit O9)
+    page.get_by_role("dialog").get_by_role("button", name="Discard", exact=True).click()
     expect(page.get_by_test_id("project-name")).to_have_text("E2E project")
     step(page, "Run history")
     expect(rows).to_have_count(2)

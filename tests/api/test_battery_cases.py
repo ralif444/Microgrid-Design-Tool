@@ -125,7 +125,9 @@ def test_v5_depletes_within_24_h(ba: dict[str, Any]) -> None:
     assert a["usable_energy_kwh"] == pytest.approx(c["usable_energy_kwh"], abs=1e-9)
     j = c["depletion_clock_hour"]  # the last full hour is j - 1
     before = a["curve"][j - 1]
-    assert before["cumulative_energy_kwh"] == pytest.approx(c["cum_kwh_before_depletion"], abs=PRINTED)
+    assert before["cumulative_energy_kwh"] == pytest.approx(
+        c["cum_kwh_before_depletion"], abs=PRINTED
+    )
     assert before["soc_ratio"] == pytest.approx(c["soc_before_depletion"], abs=PRINTED)
     assert a["autonomy_h"] == pytest.approx(c["autonomy_h"], abs=PRINTED)
     prev, pj = before["cumulative_energy_kwh"], a["curve"][j]["inverter_p_kw"]

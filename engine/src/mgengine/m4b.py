@@ -2,8 +2,9 @@
 
 The M4 model with absolute angles in the ω_nom frame, integrated by LSODA (rtol 10⁻⁸); the
 algebraic network is solved by Newton with a warm start at every right-hand-side call. The
-horizon is split at the disturbance (and at its end when it reverts); a failed step is retried
-from the last state with the step limit divided by 4, at most eight times. Classes per
+horizon is split at the disturbance (and at its end when it reverts) and advanced one output sample
+at a time; a failed step is retried from the last sample with the step limit divided by 4, at most
+eight times (three after a lost network solve, D-121). Classes per
 Gambar C.4b with the settling and envelope criteria of K67.
 """
 
@@ -22,6 +23,7 @@ from mgengine.types import Code, Network, SolverConfig, Status
 
 RTOL = 1e-8  # 4.2.6
 MAX_RETRIES = 8
+NETWORK_RETRIES = 3  # after a lost network solve: enough for a too-long trial step
 NEWTON_ITERATIONS = 20  # algebraic network solve per right-hand-side call
 ALL = "ALL"
 
@@ -76,6 +78,8 @@ class M4bResult:
     bus_v_v: tuple[tuple[float, ...], ...] = ()  # [bus][sample], phase V
     inverter_p_w: tuple[tuple[float, ...], ...] = ()  # [inverter][sample]; 0 after outage
     inverter_q_var: tuple[tuple[float, ...], ...] = ()
+    bus_angle_rad: tuple[tuple[float, ...], ...] = ()  # [bus][sample], referred to the first bus
+    line_current_a: tuple[tuple[float, ...], ...] = ()  # [line][sample], phase RMS (D-121)
     max_rocof_rad_s2: float = 0.0  # max m_p,i |dP_f,i/dt|
     transient_class: TransientClass | None = None
     class_reason: str | None = None
@@ -218,31 +222,39 @@ def solve_m4b(
                 V, theta = rows[-1][1].buses(rows[-1][2], rows[-1][3])
                 y = np.concatenate((V[dae.load_bus], theta[dae.load_bus]))
             record(s0, dae, x, y)
-            t, max_step, retries = s0, s1 - s0, 0
-            samples = [s0 + k * dt for k in range(1, int((s1 - s0) / dt) + 1)] + [s1]
-            while t < s1:
+            samples = sorted({s0 + k * dt for k in range(1, int((s1 - s0) / dt) + 1)} | {s1})
+            samples = [s for s in samples if s0 < s <= s1]
 
-                def rhs(_t: float, xs: Vector, dae: Dae = dae) -> Vector:
-                    return dae.f(xs, _solve_network(dae, xs, guess(dae, xs), tol))
+            def rhs(_t: float, xs: Vector, dae: Dae = dae) -> Vector:
+                return dae.f(xs, _solve_network(dae, xs, guess(dae, xs), tol))
 
-                todo = sorted({s for s in samples if s > t})
-                sol = solve_ivp(
-                    rhs, (t, s1), x, method="LSODA", rtol=RTOL, t_eval=todo, max_step=max_step
-                )
-                for k, ts in enumerate(sol.t):
-                    xk = sol.y[:, k]
-                    if not np.all(np.isfinite(xk)):
+            # Advance one output sample at a time so every accepted sample is kept when the
+            # network is lost later (the loss time is then the last sample reached). A failed
+            # step, or a trial step too long for the warm-started network solve, is retried
+            # from the last accepted sample with the step limit divided by 4.
+            t = s0
+            for ts in samples:
+                max_step, retries = ts - t, 0
+                while True:
+                    try:
+                        sol = solve_ivp(
+                            rhs, (t, ts), x, method="LSODA", rtol=RTOL, max_step=max_step
+                        )
+                    except _NetworkLostError:
+                        sol = None
+                    if sol is not None and sol.status == 0:
+                        break
+                    retries += 1
+                    if sol is None and retries > NETWORK_RETRIES:
+                        raise _NetworkLostError
+                    if retries > MAX_RETRIES:
                         return M4bResult(Status.SOLVER_FAILED, Code.SIMULATION_FAILED)
-                    record(float(ts), dae, xk)
-                if sol.status == 0:
-                    x, t = sol.y[:, -1], s1
-                    break
-                retries += 1
-                if retries > MAX_RETRIES:
+                    max_step /= 4
+                x = sol.y[:, -1]
+                if not np.all(np.isfinite(x)):
                     return M4bResult(Status.SOLVER_FAILED, Code.SIMULATION_FAILED)
-                if sol.t.size:
-                    x, t = sol.y[:, -1], float(sol.t[-1])
-                max_step /= 4
+                record(ts, dae, x)
+                t = ts
             m = len(act)
             for k, iid in enumerate(act):
                 state[iid] = (x[k], x[m + k], x[2 * m + k])
@@ -266,13 +278,18 @@ def _report(
     v_bus: list[list[float]] = [[] for _ in range(nb)]
     p_inv: list[list[float]] = [[] for _ in ids]
     q_inv: list[list[float]] = [[] for _ in ids]
+    a_bus: list[list[float]] = [[] for _ in range(nb)]
+    i_line: list[list[float]] = [[] for _ in net.lines]
+    bus_k = {b: k for k, b in enumerate(net.buses)}
+    z_line = [complex(ln.r_ohm, ln.x_ohm) for ln in net.lines]  # X at nominal frequency (A4)
     rocof = 0.0
     for t, dae, x, y in rows:
         act = [i.id for i in dae.net.inverters]
         w = dae.omega(x)
         _, p, q = dae.injections(x, y)
         _, pf, _ = dae.split(x)
-        V, _ = dae.buses(x, y)
+        V, theta = dae.buses(x, y)
+        Vc = V * np.exp(1j * theta)
         time.append(t)
         w_sys.append(float(np.mean(w)))
         rocof = max(rocof, float(np.max(dae.m * np.abs(p - pf) / dae.tau_p)))
@@ -283,6 +300,10 @@ def _report(
             q_inv[k].append(0.0 if j is None else float(q[j]))
         for b in range(nb):
             v_bus[b].append(float(V[b]))
+            a_bus[b].append(float(theta[b] - theta[0]))
+        for k, ln in enumerate(net.lines):
+            dv = Vc[bus_k[ln.from_bus]] - Vc[bus_k[ln.to_bus]]
+            i_line[k].append(float(abs(dv / z_line[k])))
     out = M4bResult(
         Status.FEASIBLE,
         Code.OK,
@@ -292,6 +313,8 @@ def _report(
         tuple(tuple(r) for r in v_bus),
         tuple(tuple(r) for r in p_inv),
         tuple(tuple(r) for r in q_inv),
+        tuple(tuple(r) for r in a_bus),
+        tuple(tuple(r) for r in i_line),
         rocof,
     )
     if lost_at is not None:

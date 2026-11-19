@@ -29,8 +29,9 @@ class Settings:
     fake_profile: str | None = None
     # Override of TIME_BUDGET in seconds, for tests only (Doc 8 §5). None = MetaInfo value.
     time_budget_s_override: float | None = None
-    # X10 cable and breaker sizing (docs/CABLE_BREAKER_FEATURE_GUIDELINES.md §0): on by default since
-    # the user's go-ahead of 2026-11-16 (Doc 14 D13, D14); MGAPP_FEATURE_CABLE_SIZING=0 turns it off.
+    # X10 cable and breaker sizing (docs/CABLE_BREAKER_FEATURE_GUIDELINES.md §0): on by default
+    # since the user's go-ahead of 2026-11-16 (Doc 14 D13, D14); MGAPP_FEATURE_CABLE_SIZING=0
+    # turns it off.
     feature_cable_sizing: bool = True
 
     @staticmethod

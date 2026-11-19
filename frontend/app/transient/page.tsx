@@ -56,7 +56,15 @@ function Transient() {
   const { example } = useProject();
   const presets = example?.settings.screens.transient?.presets ?? [];
   const d0 = presets[0]?.fields.disturbance as Record<string, unknown> | undefined;
-  const ex = useExampleForm("transient", {}, { onReset: () => presets[0] && apply(presets[0]) });
+  const ex = useExampleForm("transient", {}, {
+    onReset: () => {
+      if (presets[0]) apply(presets[0]);
+      if (!s0) return;
+      setFBand(s0.frequency_band_hz ?? null);
+      setVBand(s0.voltage_band_kv ?? null);
+      setWin(s0.window_s ?? null);
+    },
+  });
   const [preset, setPreset] = useKept("preset", presets[0]?.id ?? "");
   const [kind, setKindRaw] = useKept<Kind>("kind", (d0?.kind as Kind) ?? "LOAD_STEP");
   const [element, setElementRaw] = useKept("element", (d0?.element_id as string) ?? "");
@@ -91,9 +99,12 @@ function Transient() {
     setPreset(pr.id);
   }
   const chosen = presets.find((x) => x.id === preset);
-  const [fBand, setFBand] = useKept<number | null>("fBand", null);
-  const [vBand, setVBand] = useKept<number | null>("vBand", null);
-  const [win, setWin] = useKept<number | null>("win", null);
+  // D-121: the example's settling bands are the author's declared convention (Doc 13 §6)
+  const st0 = example?.settings.screens.transient?.fields.settling;
+  const s0 = st0?.value as Settling | undefined;
+  const [fBand, setFBand] = useKept<number | null>("fBand", s0?.frequency_band_hz ?? null);
+  const [vBand, setVBand] = useKept<number | null>("vBand", s0?.voltage_band_kv ?? null);
+  const [win, setWin] = useKept<number | null>("win", s0?.window_s ?? null);
 
   const onLoads = kind === "LOAD_STEP" || kind === "LOAD_SCALING";
   const elements = [
@@ -236,6 +247,9 @@ function Transient() {
         <fieldset className={styles.settling}>
           <legend>{t("Settling criteria, optional (no defaults; without them no class is set)")}</legend>
           {ex.needs("settling") && fBand === null && vBand === null && win === null && <NotSet />}
+          {s0 && fBand === s0.frequency_band_hz && vBand === s0.voltage_band_kv && win === s0.window_s && (
+            <ExampleTag label={t("Example settling criteria")} source={st0!.source} />
+          )}
           <NumberField id="st-f" label={t("Frequency band")} unit="Hz" value={fBand} onChange={setFBand} />
           <NumberField id="st-v" label={t("Voltage band, line-to-line")} unit="kV" value={vBand} onChange={setVBand} />
           <NumberField id="st-w" label={t("Final window")} unit="s" value={win} onChange={setWin} />

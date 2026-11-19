@@ -1682,6 +1682,35 @@
         "title": "Inverter",
         "type": "object"
       },
+      "InverterOptionalSeries": {
+        "additionalProperties": false,
+        "properties": {
+          "inverter_id": {
+            "title": "Inverter Id",
+            "type": "string"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Values",
+            "type": "array"
+          }
+        },
+        "required": [
+          "inverter_id",
+          "values"
+        ],
+        "title": "InverterOptionalSeries",
+        "type": "object"
+      },
       "InverterPlan": {
         "additionalProperties": false,
         "properties": {
@@ -2516,6 +2545,28 @@
         "title": "LineResult",
         "type": "object"
       },
+      "LineSeries": {
+        "additionalProperties": false,
+        "properties": {
+          "line_id": {
+            "title": "Line Id",
+            "type": "string"
+          },
+          "values": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Values",
+            "type": "array"
+          }
+        },
+        "required": [
+          "values",
+          "line_id"
+        ],
+        "title": "LineSeries",
+        "type": "object"
+      },
       "LineSizing": {
         "additionalProperties": false,
         "properties": {
@@ -3005,6 +3056,14 @@
       "M4bPayload": {
         "additionalProperties": false,
         "properties": {
+          "bus_angle_deg": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/BusSeries"
+            },
+            "title": "Bus Angle Deg",
+            "type": "array"
+          },
           "bus_voltage_kv": {
             "items": {
               "$ref": "#/components/schemas/BusSeries"
@@ -3024,6 +3083,14 @@
             "default": null,
             "title": "Class Reason"
           },
+          "inverter_frequency_hz": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/InverterOptionalSeries"
+            },
+            "title": "Inverter Frequency Hz",
+            "type": "array"
+          },
           "inverter_p_kw": {
             "items": {
               "$ref": "#/components/schemas/InverterSeries"
@@ -3036,6 +3103,14 @@
               "$ref": "#/components/schemas/InverterSeries"
             },
             "title": "Inverter Q Kvar",
+            "type": "array"
+          },
+          "line_current_a": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/LineSeries"
+            },
+            "title": "Line Current A",
             "type": "array"
           },
           "max_rocof_hz_per_s": {

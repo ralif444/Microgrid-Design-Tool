@@ -26,14 +26,18 @@ def load(name: str) -> dict[str, Any]:
     return json.loads((EXAMPLES / name).read_text(encoding="utf-8"))
 
 
-def test_fr_99_guided_project_opens_and_validates() -> None:
+@pytest.mark.parametrize("name", ["guided-d2", "guided-d2-lr"])
+def test_fr_99_guided_project_opens_and_validates(name: str) -> None:
     client = TestClient(create_app(engine=FakeEngine(), serve_static=False))
-    out = client.post("/api/projects/import", json=load("guided-d2.mgproj.json")).json()
+    out = client.post("/api/projects/import", json=load(f"{name}.mgproj.json")).json()
     assert out["file_check"]["accepted"] and out["validation"]["valid"], out
 
 
-def test_fr_101_guided_design_is_d2_with_sourced_limits_and_scenarios() -> None:
-    guided, d2 = load("guided-d2.mgproj.json"), load("d2.mgproj.json")
+@pytest.mark.parametrize("name", ["d2", "d2-lr"])
+def test_fr_101_guided_design_is_d2_with_sourced_limits_and_scenarios(
+    name: str,
+) -> None:
+    guided, d2 = load(f"guided-{name}.mgproj.json"), load(f"{name}.mgproj.json")
     for key in ("buses", "lines", "loads", "inverters", "load_profile"):
         assert guided[key] == d2[key], key
     assert guided["design_constraints"] == {  # Doc 3 §3.7 reference-design study settings
@@ -47,17 +51,20 @@ def test_fr_101_guided_design_is_d2_with_sourced_limits_and_scenarios() -> None:
         s["name"]: {o["parameter_path"]: o["value"] for o in s["overrides"]}
         for s in guided["scenarios"]
     }
-    assert loads == {  # Doc 13 §4 D2S and D2H on the catalogue design (D-116); the reference is first (Doc 3 §6.6, D-92 K234)
-        "D2 base": {},
+    # Doc 13 §4 D2S and D2H on the catalogue design (D-116); the reference is first (Doc 3
+    # §6.6, D-92 K234)
+    assert loads == {
+        f"{name.upper()} base": {},
         "D2S load × 2.4": {"loads/L1/p_kw": 65.22, "loads/L1/q_kvar": 26.09},
         "D2H load × 4.0": {"loads/L1/p_kw": 108.7, "loads/L1/q_kvar": 43.48},
     }
-    assert guided["scenarios"][0]["name"] == "D2 base"
+    assert guided["scenarios"][0]["name"] == f"{name.upper()} base"
 
 
-def test_fr_100_every_example_path_resolves_on_the_guided_project() -> None:
-    guided, settings = load("guided-d2.mgproj.json"), load("guided-d2.example.json")
-    assert settings["project"] == "guided-d2" and settings["example_settings_version"] == 1
+@pytest.mark.parametrize("name", ["guided-d2", "guided-d2-lr"])
+def test_fr_100_every_example_path_resolves_on_the_guided_project(name: str) -> None:
+    guided, settings = load(f"{name}.mgproj.json"), load(f"{name}.example.json")
+    assert settings["project"] == name and settings["example_settings_version"] == 1
 
     def resolves(path: str) -> bool:
         coll, ident, field = path.split("/")
@@ -76,8 +83,16 @@ def test_fr_100_every_example_path_resolves_on_the_guided_project() -> None:
 
 
 # ------------------------------------------------------------------ EX-7: REAL end to end
-SOLVER = {"mismatch_tolerance_w": 0.001, "max_iterations": 50, "initial_guess": "DEFAULT"}
-NEEDS_VALUE = {"M3a", "M3b", "M3d"}  # the example leaves a required field empty (D-92 K231)
+SOLVER = {
+    "mismatch_tolerance_w": 0.001,
+    "max_iterations": 50,
+    "initial_guess": "DEFAULT",
+}
+NEEDS_VALUE = {
+    "M3a",
+    "M3b",
+    "M3d",
+}  # the example leaves a required field empty (D-92 K231)
 
 
 def with_overrides(snap: dict[str, Any], overrides: list[dict[str, Any]]) -> dict[str, Any]:
@@ -88,9 +103,18 @@ def with_overrides(snap: dict[str, Any], overrides: list[dict[str, Any]]) -> dic
     return out
 
 
-def test_fr_104_guided_example_end_to_end_on_the_real_engine() -> None:
+# D2 is small-signal unstable: only the INV2 trip recovers, as one inverter alone has no
+# inter-inverter mode. D2-LR (D-121) is stable: only the +300 % load step settles outside the bands.
+CLASSES = {
+    "guided-d2": ("UNSTABLE", {"TS-02": "RECOVERED_STABLE"}, "UNSTABLE"),
+    "guided-d2-lr": ("STABLE", {"TS-01": "CRITERIA_VIOLATED"}, "RECOVERED_STABLE"),
+}
+
+
+@pytest.mark.parametrize("name", CLASSES)
+def test_fr_104_guided_example_end_to_end_on_the_real_engine(name: str) -> None:
     """EX-7: every step with the example values, in the S-02 order (D-98 K254)."""
-    doc, screens = load("guided-d2.mgproj.json"), load("guided-d2.example.json")["screens"]
+    doc, screens = load(f"{name}.mgproj.json"), load(f"{name}.example.json")["screens"]
     snap = {k: doc[k] for k in ("buses", "lines", "loads", "inverters", "load_profile")}
     snap |= {k: doc["project"][k] for k in ("nominal_voltage_kv", "nominal_frequency_hz")}
     snap["design_constraints"] = doc["design_constraints"]
@@ -111,8 +135,10 @@ def test_fr_104_guided_example_end_to_end_on_the_real_engine() -> None:
     # D-116: equal per-unit droop on the catalogue units shares P in proportion to rating (75 : 50)
     p1, p2 = (i["p_kw"] for i in p["inverter_results"])
     assert p1 / p2 == pytest.approx(1.5, rel=1e-9)
-    assert p["system_frequency_hz"] == pytest.approx(50 - (50 / 7500) * p1, abs=1e-9)  # f = f* - kP·P
-    assert p["system_frequency_hz"] == pytest.approx(49.89088, abs=1e-5)
+    assert p["system_frequency_hz"] == pytest.approx(
+        50 - (50 / 7500) * p1, abs=1e-9
+    )  # f = f* - kP·P
+    assert p["system_frequency_hz"] == pytest.approx(49.89088, abs=1e-4)  # D2-LR: 49.89085
     rec = m1["run_record"]
     dep = {"depends_on": {
         "record_id": rec["record_id"], "analysis_type": "M1", "snapshot_hash": rec["snapshot_hash"],
@@ -129,9 +155,17 @@ def test_fr_104_guided_example_end_to_end_on_the_real_engine() -> None:
         for s in doc["scenarios"]
     ]  # fmt: skip
     status["M3c"] = run("M3c", {}, scenarios=scenarios, **dep)["result"]["status"]
-    status["M4a"] = run("M4a", {}, **dep)["result"]["status"]
+    m4a, odd, usual = CLASSES[name]
+    m4a_res = run("M4a", {}, **dep)["result"]
+    status["M4a"] = m4a_res["status"]
+    assert m4a_res["payload"]["stability_class"] == m4a
+    classes = {}
     for preset in screens["transient"]["presets"]:
-        status[f"M4b {preset['id']}"] = run("M4b", preset["fields"], **dep)["result"]["status"]
+        res = run("M4b", fields("transient") | preset["fields"], **dep)["result"]
+        status[f"M4b {preset['id']}"] = res["status"]
+        classes[preset["id"]] = res["payload"]["transient_class"]
+    # D-121: with the example settling bands every case is classed
+    assert classes == {k: odd.get(k, usual) for k in classes}, classes
 
     invalid = {t for t, s in status.items() if s == "INPUT_INVALID"}
     assert invalid == NEEDS_VALUE, status

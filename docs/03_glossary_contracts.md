@@ -456,12 +456,15 @@ Initialised from the M1 payload; requires cond($g_y$) ≤ 10¹² (else SOLVER_FA
 | Output: system_frequency_hz | array | Hz | |
 | Output: bus_voltage_kv | array of {bus_id, values[]} | kV | |
 | Output: inverter_p_kw, inverter_q_kvar | array of {inverter_id, values[]} | kW; kvar | |
+| Output: inverter_frequency_hz | array of {inverter_id, values[]} | Hz | ω_i/2π per inverter; null after its outage (D-121). |
+| Output: bus_angle_deg | array of {bus_id, values[]} | deg | Referred to the first bus, as in M1 (D-121). |
+| Output: line_current_a | array of {line_id, values[]} | A | Phase RMS from the bus phasors and the nominal-frequency line impedance (A4) (D-121). |
 | Output: max_rocof_hz_per_s | number | Hz/s | Descriptive; from $d\omega_i/dt = -m_{p,i}\,dP_{f,i}/dt$. |
 | Output: transient_class | enum or null | — | Null without `settling` (reason in `class_reason`, D-55 K90); RECOVERED_STABLE, CRITERIA_VIOLATED, UNSTABLE (all with status FEASIBLE). Simulation failure → SOLVER_FAILED (SIMULATION_FAILED); invalid configuration → INPUT_INVALID. "Simulation did not fail" is never a stability criterion. |
 | Output: settled | boolean or null | — | Settling-window result used for the class; null without `settling`. |
 | Output: class_reason | string or null | — | Why the class is set or not (e.g. "settling criteria not given", "not settled", network lost). |
 
-Integrator: LSODA, relative tolerance 10⁻⁸, horizon split at the disturbance, up to eight retries (4.2.6). Time step and output sampling are engine-defined.
+Integrator: LSODA, relative tolerance 10⁻⁸, horizon split at the disturbance, up to eight retries (4.2.6). Engine 0.5.0 advances the horizon one output sample (τ/20) at a time, so a failed step is retried from the last sample instead of the start, with at most three retries after a lost network solve (D-121). Time step and output sampling are engine-defined.
 
 ---
 
@@ -540,3 +543,4 @@ Versioning: equal → load; older with a chain → migrate forward step by step 
 | 2026-11-12 | §4 SCENARIO_PATH_INVALID also covers an M3c scenario whose line ids differ from the base (Doc 9 D-112). |
 | 2026-11-13 | §6.5 Axis kind LOAD_PROFILE_HOUR for M3b (Doc 9 D-113, BESS-6); §9 #6 applied. |
 | 2026-11-19 | X11 (Doc 9 D-119, ADR-017, Doc 12 §4): `Line.kind` `CABLE`/`REACTOR` optional (omitted when null, hashes unchanged); Catalogue kind REACTOR; analysis type RS with IssueCode `REACTOR_SIZING_INVALID`; unit suffixes `_mh` (mH), `_mohm` (mΩ), `_percent` (%). |
+| 2026-11-19 | §6.9 M4b outputs `inverter_frequency_hz`, `bus_angle_deg`, `line_current_a` and the per-sample integration (Doc 9 D-121, Doc 13 open points 7 and 9). |

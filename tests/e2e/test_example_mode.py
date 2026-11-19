@@ -47,7 +47,9 @@ def test_fr_101_other_projects_leave_example_mode(server: Callable[[str], str], 
     expect(page.get_by_test_id("example-mode")).to_be_visible()
     page.get_by_role("link", name="Microgrid Design Tool").click()  # client-side: the store stays
     page.get_by_role("button", name="Open example D2:").click()
-    page.get_by_role("dialog").get_by_role("button", name="Discard", exact=True).click()  # unsaved changes (K17, audit O9)
+    page.get_by_role("dialog").get_by_role(
+        "button", name="Discard", exact=True
+    ).click()  # unsaved changes (K17, audit O9)
     page.wait_for_url("**/workspace/")
     expect(page.get_by_test_id("project-name")).to_have_text(re.compile(r"^Example D2"))
     expect(page.get_by_test_id("example-mode")).to_have_count(0)
@@ -162,7 +164,7 @@ def test_fr_100_s09_to_s12_prefill_and_run(server: Callable[[str], str], page: P
     expect(page.get_by_role("status", name="Status")).to_be_visible()
 
     step(page, "Scenarios (M3c)")
-    expect(page.get_by_test_id("example-scenarios")).to_contain_text("D2 base")
+    expect(page.get_by_test_id("example-scenarios")).to_contain_text("the base scenario")
 
     step(page, "Envelope (M3d)")
     expect(page.get_by_label("X axis: Axis", exact=True)).to_have_value("LOAD_SCALE")
@@ -219,7 +221,9 @@ def test_fr_103_s13_runs_and_s14_offers_the_doc13_disturbances(
     preset = page.get_by_label("Example disturbance", exact=True)
     kind = page.get_by_label("Disturbance", exact=True)
     expect(preset).to_have_value("SM-01")  # first preset fills the form on arrival
-    expect(preset.locator("option")).to_have_count(8)  # the seven D2 cases of Doc 13 §5 and the empty choice
+    expect(preset.locator("option")).to_have_count(
+        8
+    )  # the seven D2 cases of Doc 13 §5 and the empty choice
     expect(kind).to_have_value("LOAD_STEP")
     expect(page.get_by_label("Element", exact=True)).to_have_value("L1")
     expect(page.get_by_label("Step size (kW)")).to_have_value("0.815")
@@ -227,8 +231,8 @@ def test_fr_103_s13_runs_and_s14_offers_the_doc13_disturbances(
     expect(page.get_by_label("Start time (s)")).to_have_value("1")
     expect(page.get_by_label("Simulation end (s)")).to_have_value("3")
     expect(page.get_by_label("Permanent")).to_be_checked()
-    expect(_tags(page)).to_have_count(1)
-    expect(page.get_by_text("Not set in the example: enter a value.")).to_have_count(1)
+    expect(_tags(page)).to_have_count(2)  # the disturbance and the settling bands (D-121)
+    expect(page.get_by_text("Not set in the example: enter a value.")).to_have_count(0)
 
     preset.select_option("DR-02")
     expect(kind).to_have_value("REFERENCE_STEP")
@@ -249,12 +253,17 @@ def test_fr_103_s13_runs_and_s14_offers_the_doc13_disturbances(
         "start_time_s": 1,
         "duration_s": None,
     }
-    assert sent["simulation_end_s"] == 5 and "settling" not in sent
+    assert sent["simulation_end_s"] == 5  # D-121: the example settling convention is sent
+    assert sent["settling"] == {
+        "frequency_band_hz": 0.05,
+        "voltage_band_kv": 0.0088,
+        "window_s": 0.5,
+    }
     expect(page.get_by_role("status", name="Status")).to_be_visible()
 
     page.get_by_label("Start time (s)").fill("2")  # an edit makes the values the user's
     expect(preset).to_have_value("")
-    expect(_tags(page)).to_have_count(0)
+    expect(_tags(page)).to_have_count(1)  # the settling bands stay the example's
     page.get_by_role("button", name="Reset to example values").click()
     expect(preset).to_have_value("SM-01")
     expect(page.get_by_label("Start time (s)")).to_have_value("1")
@@ -392,3 +401,25 @@ def test_fr_104_no_whole_example_run_outside_example_mode(
     page.get_by_role("button", name="Open example D2:").click()
     page.wait_for_url("**/workspace/")
     expect(page.get_by_role("button", name="Run the whole example")).to_have_count(0)
+
+
+def test_guided_d2_lr_opens_with_the_settling_convention(
+    server: Callable[[str], str], page: Page
+) -> None:
+    """D-121: the stable counterpart D2-LR as a second guided example; both carry the declared
+    settling bands, so the transient presets are classed without typing."""
+    base = server("default")
+    page.goto(base + "/")
+    page.get_by_role("button", name="Open guided example (D2-LR, with coupling reactors)").click()
+    page.wait_for_url("**/workspace/")
+    expect(page.get_by_test_id("project-name")).to_have_text(
+        re.compile(r"^Guided example D2-LR\s*\*unsaved")
+    )
+    expect(page.get_by_test_id("example-mode")).to_be_visible()
+    step(page, "Transient (M4b)")
+    expect(page.get_by_label("Frequency band (Hz)")).to_have_value("0.05")
+    expect(page.get_by_label("Voltage band, line-to-line (kV)")).to_have_value("0.0088")
+    expect(page.get_by_label("Final window (s)")).to_have_value("0.5")
+    expect(
+        page.get_by_role("button", name="Example source: Example settling criteria")
+    ).to_be_visible()

@@ -65,7 +65,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               {t("Example mode")}
             </Tag>
             <Toggletip label={t("About example mode")} className={styles.tip}>
-              {t("Analysis forms are pre-filled from the guided example D2, each value with its source. Save writes a normal Project file: the example settings are not saved, so reopening the file opens a normal Project.")}
+              {t("Analysis forms are pre-filled from the guided example, each value with its source. Save writes a normal Project file: the example settings are not saved, so reopening the file opens a normal Project.")}
             </Toggletip>
             <button type="button" onClick={() => dispatch({ type: "exampleLeft" })}>
               {t("Leave example mode")}

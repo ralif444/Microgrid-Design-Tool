@@ -8,8 +8,8 @@ export const ID_SHELL: Record<string, string> = {
   "About": "Tentang",
   "Example mode": "Mode contoh",
   "About example mode": "Tentang mode contoh",
-  "Analysis forms are pre-filled from the guided example D2, each value with its source. Save writes a normal Project file: the example settings are not saved, so reopening the file opens a normal Project.":
-    "Formulir analisis terisi dari contoh terpandu D2, setiap nilai dengan sumbernya. Simpan menulis file proyek biasa: pengaturan contoh tidak disimpan, sehingga membuka kembali file itu membuka proyek biasa.",
+  "Analysis forms are pre-filled from the guided example, each value with its source. Save writes a normal Project file: the example settings are not saved, so reopening the file opens a normal Project.":
+    "Formulir analisis terisi dari contoh terpandu, setiap nilai dengan sumbernya. Simpan menulis file proyek biasa: pengaturan contoh tidak disimpan, sehingga membuka kembali file itu membuka proyek biasa.",
   "Leave example mode": "Keluar dari mode contoh",
   // EngineBadge, Toast, ThemeSwitch
   "Calculation engine": "Engine perhitungan",
@@ -106,6 +106,7 @@ export const ID_SHELL: Record<string, string> = {
   "(replaces the open Project)": "(menggantikan proyek yang terbuka)",
   "Example projects": "Proyek contoh",
   "Open guided example (D2)": "Buka contoh terpandu (D2)",
+  "Open guided example (D2-LR, with coupling reactors)": "Buka contoh terpandu (D2-LR, dengan reaktor kopling)",
   "Every screen is pre-filled. Press Run on each step to see the whole pipeline.": "Setiap layar sudah terisi. Tekan Jalankan pada tiap langkah untuk melihat seluruh alurnya.",
   "Reference designs of the validation plan, built from catalogue products (TRUMPF inverters, First Cable N2XY 4×16 mm² lines). Opening one makes a new unsaved copy.":
     "Desain acuan rencana validasi, dibangun dari produk katalog (inverter TRUMPF, line First Cable N2XY 4×16 mm²). Membuka satu contoh membuat salinan baru yang belum disimpan.",

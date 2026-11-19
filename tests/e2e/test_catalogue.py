@@ -46,17 +46,20 @@ def test_fr_64_to_fr_70_catalogue_into_network(server: Callable[[str], str], pag
     _provenance(page)
     page.get_by_label("Rating (kVA)").fill("10")
     expect(page.get_by_text("not used by the model (A2)").first).to_be_visible()
-    expect(entries.locator("tbody tr").filter(has_text="E2")).to_contain_text("Information only")  # sorted: inverters first
+    # sorted: inverters first
+    expect(entries.locator("tbody tr").filter(has_text="E2")).to_contain_text("Information only")
 
     with page.expect_download() as dl:
         page.get_by_role("button", name="Save catalogue").click()
     saved = Path(dl.value.path())
     doc = json.loads(saved.read_text(encoding="utf-8"))
-    assert [e["id"] for e in doc["entries"]] == ["E2", "E1"]  # saved sorted: inverter first and doc["schema_version"] == 1
+    assert [e["id"] for e in doc["entries"]] == ["E2", "E1"]  # saved sorted: inverter first
+    assert doc["schema_version"] == 1
     delete(page, "E2")
     page.get_by_label("Open catalogue file").set_input_files(saved)
     expect(page.get_by_test_id("file-check")).to_contain_text("The Catalogue was opened.")
-    expect(entries.locator("tbody tr")).to_have_count(1)  # O7: nothing replaced before the user agrees
+    # O7: nothing replaced before the user agrees
+    expect(entries.locator("tbody tr")).to_have_count(1)
     page.get_by_role("button", name="Replace").click()
     expect(entries.locator("tbody tr")).to_have_count(2)
 

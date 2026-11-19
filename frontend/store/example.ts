@@ -65,7 +65,13 @@ const FIELD_RULES: Record<string, Record<string, Check>> = {
   },
   envelope: { axis_x: axis, axis_y: axis },
   "small-signal": { tau_in_s: (v) => num(v) && v > 0, damping_threshold_ratio: ratio },
-  transient: {},
+  transient: {
+    // Doc 3 §6.9: each > 0, no defaults (window vs horizon is checked by stage 1 on Run)
+    settling: (v) => {
+      const st = v as Record<string, unknown> | null;
+      return !!st && typeof st === "object" && ["frequency_band_hz", "voltage_band_kv", "window_s"].every((k) => num(st[k]) && (st[k] as number) > 0);
+    },
+  },
   // screens with guidance only (FR-102)
   loads: {},
   network: {},

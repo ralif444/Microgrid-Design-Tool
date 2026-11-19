@@ -36,8 +36,10 @@ describe("guided example settings guard", () => {
 
   // FR-102 (D-97 K250): guidance on every screen S-03 – S-16, with a source, and no result numbers.
   // Identifiers that carry digits (D2, INV1, M1, N−1, λ_c) are allowed; a standalone number is not.
-  it("gives every example screen guidance with a source and no standalone number", () => {
-    const s = parseExampleSettings(settingsRaw)!;
+  it.each(["guided-d2", "guided-d2-lr"])("%s: every example screen has guidance with a source and no standalone number", (id) => {
+    const s = parseExampleSettings(file(`${id}.example.json`))!;
+    expect(s.project).toBe(id);
+    expect(s.screens.transient.fields.settling.value).toEqual({ frequency_band_hz: 0.05, voltage_band_kv: 0.0088, window_s: 0.5 }); // D-121
     for (const [name, screen] of Object.entries(s.screens)) {
       expect(screen.guidance, name).not.toBeNull();
       expect(screen.guidance!.source.trim(), name).not.toBe("");

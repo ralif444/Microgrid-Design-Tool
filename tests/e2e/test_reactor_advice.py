@@ -17,7 +17,8 @@ from test_network_m1_m2 import _run_m1
 def _run_m4a(page: Page) -> None:
     step(page, "Small-signal (M4a)")
     page.get_by_role("button", name="Run small-signal analysis").click()
-    expect(page.get_by_role("status", name="Status").first).to_have_attribute("data-status", "FEASIBLE")
+    status = page.get_by_role("status", name="Status").first
+    expect(status).to_have_attribute("data-status", "FEASIBLE")
 
 
 @pytest.mark.base_catalogue

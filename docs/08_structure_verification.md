@@ -238,7 +238,7 @@ Stage = first stage in which the test must pass. From stage 1.4 the contract sui
 | DR-01..DR-09 | Ringkasan present; IDs and Given/When/Then; register complete; DR-08 cancelled (Doc 14 A20) | review | 1.7 |
 
 ## 7. Engine validation against PSIM (M5)
-The procedure (reference designs D1, D2, D2S, D2H; 11 cases in four families; two PSIM layers; tolerance policy v1 frozen before simulation; nine steps of Gambar C.7a–C.7b) is in **Doc 13**. The app's only obligations: RunRecords carry snapshot, hashes, solver config and engine identity; FAKE records are refused by the M5 script; `validation/` does not import `mgapp`.
+The procedure (reference designs D1, D2-AB, D2-LR, D2S, D2H and D2-LF; 11 cases in four families, the dynamic ones on D2-AB and D2-LR; two PSIM layers; tolerance policy v1 and the settling convention frozen before simulation; nine steps of Gambar C.7a–C.7b) is in **Doc 13**. The app's only obligations: RunRecords carry snapshot, hashes, solver config and engine identity; FAKE records are refused by the M5 script; `validation/` does not import `mgapp`.
 
 ## 8. Definition of Done (ten conditions, manuscript 4.5.1)
 Used by the stage gates in Doc 10.
@@ -273,3 +273,4 @@ Used by the stage gates in Doc 10.
 |---|---|
 | 2026-10-17 – 10-21 | Drafted; C5.2–C5.4, C5.8, C5.12, C5.13, UP-06, UP-13. |
 | 2026-11-01 | Aligned with the manuscript (Doc 14 D5, B7): seven seams with manuscript names; nine contract behaviours listed; defective Fake profile as negative test; canonicalisation tests in WP 1.1.4; four-level engine V&V (Tabel 3.4); M5 procedure moved to Doc 13; DoD ten conditions; stages 1.1–1.7 replace P0–P4; tools decided (uv, npm, ruff, mypy, pytest, import-linter, Vitest, Playwright, dependency-cruiser); `tools/` task scripts; no-equations guardrail removed. |
+| 2026-11-19 | §7 design list and settling convention brought in line with Doc 13 (Doc 9 D-121). |

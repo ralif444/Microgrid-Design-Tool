@@ -21,7 +21,9 @@ BASE_CATALOG_PATH = "/catalogs/base-v2.json"
 
 
 def pytest_configure(config: pytest.Config) -> None:
-    config.addinivalue_line("markers", "base_catalogue: serve the shipped base catalogue to this test")
+    config.addinivalue_line(
+        "markers", "base_catalogue: serve the shipped base catalogue to this test"
+    )
 
 
 def _free_port() -> int:
@@ -80,7 +82,8 @@ def browser() -> Iterator[Browser]:
 def page(browser: Browser, request: pytest.FixtureRequest) -> Iterator[Page]:
     ctx = browser.new_context()
     external: list[str] = []
-    # the shipped base catalogue is served empty unless a test is marked base_catalogue, so the other
+    # the shipped base catalogue is served empty unless a test is marked base_catalogue, so
+    # the other
     # tests keep counting only their own entries (tests never depend on vendor values)
     base = request.node.get_closest_marker("base_catalogue") is not None
 

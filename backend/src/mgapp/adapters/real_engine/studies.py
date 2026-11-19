@@ -7,6 +7,7 @@ constraint helpers shared with `engine.py`.
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from mgengine import m3 as e_m3
@@ -41,8 +42,10 @@ from mgapp.domain.payloads import (
     Eigenvalue,
     Indicator,
     Indicators,
+    InverterOptionalSeries,
     InverterSeries,
     KeyMetrics,
+    LineSeries,
     M3aPayload,
     M3bPayload,
     M3cPayload,
@@ -440,6 +443,20 @@ def m4b(req: AnalysisRequest) -> AnalysisResult:
             InverterSeries(inverter_id=i, values=[x / 1e3 for x in xs])
             for i, xs in zip(inv_ids, r.inverter_q_var, strict=True)
         ],
+        inverter_frequency_hz=[
+            InverterOptionalSeries(
+                inverter_id=i, values=[None if w is None else w / cv.TWO_PI for w in ws]
+            )
+            for i, ws in zip(inv_ids, r.inverter_omega_rad_s, strict=True)
+        ],
+        bus_angle_deg=[
+            BusSeries(bus_id=b.id, values=[math.degrees(a) for a in xs])
+            for b, xs in zip(s.buses, r.bus_angle_rad, strict=True)
+        ],
+        line_current_a=[
+            LineSeries(line_id=ln.id, values=list(xs))
+            for ln, xs in zip(s.lines, r.line_current_a, strict=True)
+        ],
         max_rocof_hz_per_s=r.max_rocof_rad_s2 / cv.TWO_PI,
         transient_class=None
         if r.transient_class is None
@@ -448,13 +465,7 @@ def m4b(req: AnalysisRequest) -> AnalysisResult:
         class_reason=r.class_reason,
     ).model_dump(mode="json")
     cls = r.transient_class.value if r.transient_class else "class not set"
-    diag = {
-        "inverter_frequency_hz": {  # per-inverter ω (D-53 K68); null after an outage
-            i: [None if w is None else w / cv.TWO_PI for w in ws]
-            for i, ws in zip(inv_ids, r.inverter_omega_rad_s, strict=True)
-        },
-        "not_evaluated": list(r.not_evaluated),
-    }
+    diag = {"not_evaluated": list(r.not_evaluated)}
     return result(
         Status.FEASIBLE,
         StatusCode.OK,

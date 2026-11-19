@@ -54,7 +54,7 @@ Optional on the way: **Scenarios (M3c)** compares D2 base, D2S and D2H; **Sensit
 
 ## 6. Small-signal M4a (S-13)
 
-In **Studies**, open **Small-signal (M4a)** and click **Run M4a**. Show: class **UNSTABLE**, ζ_min −0.336, dominant mode 11.30 Hz (eigenvalue +25.3 ± j71.0 s⁻¹) with δ of INV2 and the P filters participating, and the indicator panel filled from M4a (r_in "tau_in not given"). Explain it: the real N2XY cable has R/X ≈ 19.6 and the lines are short, so the two droop inverters are coupled too tightly; this is the finding the PSIM validation checks (Doc 13 §4, §5; user decision 2026-11-19). On **Transient (M4b)** only TS-02 (INV2 trip) runs to the end; the other presets stop at the step with "network solution lost" (Doc 13 open point 7).
+In **Studies**, open **Small-signal (M4a)** and click **Run M4a**. Show: class **UNSTABLE**, ζ_min −0.336, dominant mode 11.30 Hz (eigenvalue +25.3 ± j71.0 s⁻¹) with δ of INV2 and the P filters participating, and the indicator panel filled from M4a (r_in "tau_in not given"). Explain it: the real N2XY cable has R/X ≈ 19.6 and the lines are short, so the two droop inverters are coupled too tightly; this is the finding the PSIM validation checks (Doc 13 §4, §5; user decision 2026-11-19). On **Transient (M4b)** the settling bands are pre-filled (Doc 13 §6): the SM, DR, TS-01 and TS-03 presets grow into an oscillation and are classed UNSTABLE once the network solution is lost (SM-01 at about 1.6 s); TS-02 (INV2 trip) recovers, since INV1 alone has no inverter-to-inverter mode (D-121). The guided example **D2-LR** on S-01 repeats the same presets on the stable design.
 
 ## 6a. Coupling reactors (S-13, X11; Real Engine only, ADR-017)
 

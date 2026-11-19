@@ -111,3 +111,40 @@ def test_deterministic_and_finite() -> None:
     a = solve_m4b(NET, STEP, 0.2, NONE, OMEGA_SET)
     assert a == solve_m4b(NET, STEP, 0.2, NONE, OMEGA_SET)
     assert all(math.isfinite(v) for v in a.omega_rad_s)
+
+
+def test_unstable_design_integrates_past_the_step() -> None:
+    """D-121: a resistive coupling (R/X 10, same |Z|) is M4a-UNSTABLE; M4b keeps every sample
+    after the step and shows the growing differential mode instead of stopping at the step."""
+    from mgengine.m4 import StabilityClass, solve_m4a
+
+    k = 10.0
+    lines = tuple(
+        dc.replace(ln, r_ohm=math.hypot(ln.r_ohm, ln.x_ohm) * k / math.hypot(k, 1),
+                   x_ohm=math.hypot(ln.r_ohm, ln.x_ohm) / math.hypot(k, 1))
+        for ln in NET.lines
+    )  # fmt: skip
+    net = dc.replace(NET, lines=lines)
+    assert solve_m4a(net, NONE, OMEGA_SET).stability_class is StabilityClass.UNSTABLE
+    r = solve_m4b(net, STEP, 0.6, NONE, OMEGA_SET, SETTLE)
+    assert r.status is Status.FEASIBLE and r.time_s[-1] == pytest.approx(0.6)
+    assert r.transient_class is TransientClass.UNSTABLE
+    d = [abs(p1 - p2) for p1, p2 in zip(*r.inverter_p_w, strict=True)]
+    assert max(d) > 100 * STEP.magnitude  # the differential mode grows far beyond the 1 kW step
+
+
+def test_line_currents_and_angles_start_at_the_m1_point() -> None:
+    """D-121: the new outputs at t = 0 equal M1 (same phasor formula, angles referred to the
+    first bus as in M1)."""
+    from mgengine.m1 import solve_m1
+    from mgengine.results import m1_details
+
+    m1 = solve_m1(NET)
+    det = m1_details(NET, m1, OMEGA_SET)
+    r = solve_m4b(NET, STEP, 0.1, NONE, OMEGA_SET)
+    assert m1.theta_rad is not None
+    for k, ln in enumerate(det.lines):
+        assert r.line_current_a[k][0] == pytest.approx(ln.current_a, rel=1e-6)
+    for b, th in enumerate(m1.theta_rad):
+        assert r.bus_angle_rad[b][0] == pytest.approx(th - m1.theta_rad[0], abs=1e-7)
+    assert all(a == 0.0 for a in r.bus_angle_rad[0])

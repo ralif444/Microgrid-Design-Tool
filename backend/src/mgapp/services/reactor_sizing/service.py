@@ -16,7 +16,7 @@ import math
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, TypeGuard
 
 from mgapp.domain.contract import (
     AnalysisResult,
@@ -57,7 +57,7 @@ def _issue(field: str, message: str) -> ValidationIssue:
     )
 
 
-def _num(v: Any) -> bool:
+def _num(v: Any) -> TypeGuard[float]:
     return isinstance(v, int | float) and not isinstance(v, bool) and math.isfinite(v)
 
 
@@ -301,7 +301,7 @@ def compute(
             return result("", "")
         lo, hi = (lo, mid) if pr.damped else (mid, hi)
     need = search.probe(with_reactors(s, place, _reactance(s, hi, xr)), hi)
-    inverters = []
+    inverters: list[dict[str, Any]] = []
     for inv, pl in zip(s.inverters, place, strict=True):
         zb = base_ohm(s, inv.rated_kva or 0.0)
         need_mh = hi / 100.0 * zb / w * 1000.0

@@ -19,7 +19,11 @@ from mgapp.main import create_app
 
 EXAMPLES = Path(__file__).parents[2] / "frontend" / "public" / "examples"
 NAMES = ["d1", "d2", "d2-lr", "d2-lf", "d2s", "d2h"]
-SOLVER = {"mismatch_tolerance_w": 0.001, "max_iterations": 50, "initial_guess": "DEFAULT"}
+SOLVER = {
+    "mismatch_tolerance_w": 0.001,
+    "max_iterations": 50,
+    "initial_guess": "DEFAULT",
+}
 
 
 def example(name: str) -> dict[str, Any]:
@@ -47,7 +51,9 @@ def test_d2_example_matches_the_engine_hand_check(client: TestClient) -> None:
     # D-116: equal per-unit droop on the catalogue units shares P in proportion to rating (75 : 50)
     p1, p2 = (i["p_kw"] for i in p["inverter_results"])
     assert p1 / p2 == pytest.approx(1.5, rel=1e-9)
-    assert p["system_frequency_hz"] == pytest.approx(50 - (50 / 7500) * p1, abs=1e-9)  # f = f* - kP·P
+    assert p["system_frequency_hz"] == pytest.approx(
+        50 - (50 / 7500) * p1, abs=1e-9
+    )  # f = f* - kP·P
     assert p["system_frequency_hz"] == pytest.approx(49.89088, abs=1e-5)
     assert not any(s["q_droop_not_rating_proportional"] for s in p["sharing"])
 
@@ -57,13 +63,19 @@ def m1_m4a(client: TestClient, name: str) -> tuple[dict[str, Any], dict[str, Any
     snap = {k: doc[k] for k in ("buses", "lines", "loads", "inverters")}
     snap |= {k: doc["project"][k] for k in ("nominal_voltage_kv", "nominal_frequency_hz")}
     m1 = client.post(
-        "/api/analyses/M1", json={"project_snapshot": snap, "parameters": {}, "solver_config": SOLVER}
+        "/api/analyses/M1",
+        json={"project_snapshot": snap, "parameters": {}, "solver_config": SOLVER},
     ).json()
     rec = m1["run_record"]
     ref = {k: rec[k] for k in ("record_id", "snapshot_hash", "result_hash")}
     ref |= {"analysis_type": "M1", "status": rec["result"]["status"]}
     ref["result_payload"] = rec["result"]["payload"]
-    body = {"project_snapshot": snap, "parameters": {}, "solver_config": SOLVER, "depends_on": ref}
+    body = {
+        "project_snapshot": snap,
+        "parameters": {},
+        "solver_config": SOLVER,
+        "depends_on": ref,
+    }
     p = client.post("/api/analyses/M4a", json=body).json()["result"]["payload"]
     return m1, p
 
@@ -88,3 +100,34 @@ def test_d2_lf_benchmark_lengths_stay_unstable(client: TestClient) -> None:
     assert p["zeta_min"] == pytest.approx(-0.0435, abs=1e-3)
     vmin = min(b["voltage_pu"] for b in m1["result"]["payload"]["bus_results"])
     assert vmin == pytest.approx(0.9729, abs=1e-4)
+
+
+def m4b(client: TestClient, name: str, step_kw: float) -> dict[str, Any]:
+    doc = example(name)
+    snap = {k: doc[k] for k in ("buses", "lines", "loads", "inverters")}
+    snap |= {k: doc["project"][k] for k in ("nominal_voltage_kv", "nominal_frequency_hz")}
+    rec = client.post(
+        "/api/analyses/M1",
+        json={"project_snapshot": snap, "parameters": {}, "solver_config": SOLVER},
+    ).json()["run_record"]
+    ref = {k: rec[k] for k in ("record_id", "snapshot_hash", "result_hash")}
+    ref |= {"analysis_type": "M1", "status": rec["result"]["status"]}
+    ref["result_payload"] = rec["result"]["payload"]
+    dist = {"kind": "LOAD_STEP", "element_id": "L1", "magnitude": step_kw, "start_time_s": 1.0,
+            "duration_s": None}  # fmt: skip
+    body = {"project_snapshot": snap, "solver_config": SOLVER, "depends_on": ref,
+            "parameters": {"disturbance": dist, "simulation_end_s": 3.0}}  # fmt: skip
+    return client.post("/api/analyses/M4b", json=body).json()["result"]["payload"]
+
+
+def test_m4b_on_d2_and_d2_lr_after_the_engine_fix(client: TestClient) -> None:
+    """D-121 (Doc 13 open point 7): SM-01 step (+3 %, 0.815 kW). The unstable as-built D2 now
+    integrates past the step and loses the network only once the oscillation has grown
+    (agent run 2026-11-19: t = 1.5975 s); D2-LR runs to the end."""
+    ab = m4b(client, "d2", 0.815)
+    assert ab["transient_class"] == "UNSTABLE" and "lost" in ab["class_reason"]
+    assert ab["time_s"][-1] == pytest.approx(1.5975, abs=0.01)
+    assert min(ab["system_frequency_hz"]) < 45  # grown far beyond the step
+    lr = m4b(client, "d2-lr", 0.815)
+    assert lr["time_s"][-1] == pytest.approx(3.0)
+    assert {s["line_id"] for s in lr["line_current_a"]} == {"LN1", "LN2", "LR1", "LR2"}

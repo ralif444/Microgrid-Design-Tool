@@ -86,7 +86,11 @@ def test_m3a_empty_parameter_not_reported(real: Api) -> None:
     r = _dep(real, "M3a", parameter_paths=["inverters/INV1/p_setpoint_kw"],
              output_metrics=["SYSTEM_FREQUENCY"], step_relative=0.1)  # fmt: skip
     (s,) = r["payload"]["sensitivities"]
-    assert (s["value"], s["scheme"], s["reason"]) == (None, None, "parameter has no value")
+    assert (s["value"], s["scheme"], s["reason"]) == (
+        None,
+        None,
+        "parameter has no value",
+    )
 
 
 def test_m3b_load_scale_frequency(real: Api) -> None:
@@ -103,7 +107,11 @@ def test_m3b_first_infeasible_value(real: Api) -> None:
     snap["design_constraints"] = {"frequency_min_hz": 49.7}  # FIXTURE ONLY
     axis = {"kind": "LOAD_SCALE", "range_min": 1.0, "range_max": 1.4, "step_count": 3}
     p = _dep(real, "M3b", snap, axis=axis)["payload"]  # f = 49.75, 49.70, 49.65
-    assert [pt["status"] for pt in p["points"]] == ["FEASIBLE", "FEASIBLE", "INFEASIBLE"]
+    assert [pt["status"] for pt in p["points"]] == [
+        "FEASIBLE",
+        "FEASIBLE",
+        "INFEASIBLE",
+    ]
     assert p["first_infeasible_value"] == pytest.approx(1.4)
     lc = p["points"][2]["limiting_constraint"]
     assert (lc["kind"], lc["unit"]) == ("FREQUENCY_MIN", "Hz")
@@ -121,7 +129,11 @@ def test_m3c_delta_in_hz(real: Api) -> None:
     r = real.run("M3c", project_snapshot=snap, scenarios=scen,
                  depends_on=real.m1_ref(project_snapshot=snap))["result"]  # fmt: skip
     d = next(x for x in r["payload"]["deltas"] if x["metric"] == "SYSTEM_FREQUENCY")
-    assert (d["scenario_id"], d["reference_scenario_id"], d["unit"]) == ("S2", "S1", "Hz")
+    assert (d["scenario_id"], d["reference_scenario_id"], d["unit"]) == (
+        "S2",
+        "S1",
+        "Hz",
+    )
     assert d["delta"] == pytest.approx(-0.05, abs=1e-9)
     assert d["relative_delta_ratio"] == pytest.approx(-0.05 / 49.75, abs=1e-12)
 
@@ -138,7 +150,10 @@ def test_m4a_two_inverters_on_one_bus_input_invalid(real: Api) -> None:
     snap = two_bus_snapshot()
     snap["inverters"][1]["bus_id"] = "B1"
     r = _dep(real, "M4a", snap)
-    assert (r["status"], r["status_code"]) == ("INPUT_INVALID", "MULTIPLE_INVERTERS_ON_BUS")
+    assert (r["status"], r["status_code"]) == (
+        "INPUT_INVALID",
+        "MULTIPLE_INVERTERS_ON_BUS",
+    )
     assert r["diagnostics"]["issues"][0]["code"] == "MULTIPLE_INVERTERS_ON_BUS"
 
 
@@ -165,6 +180,23 @@ def test_m4b_final_frequency_matches_m1_after_step(real: Api) -> None:
     assert p["system_frequency_hz"][-1] == pytest.approx(f_after, abs=1e-6)  # 18 τ after the step
     assert (p["transient_class"], p["settled"]) == (None, None)
     assert p["class_reason"] == "settling criteria not given"
+
+
+def test_m4b_series_for_psim_start_at_m1(real: Api) -> None:
+    """D-121 (Doc 13 open point 9): per-inverter frequency, bus angles (first bus = 0, as in M1)
+    and line currents are in the payload and start at the M1 point."""
+    m1 = real.run("M1", project_snapshot=_one_inverter())["result"]["payload"]
+    p = _dep(real, "M4b", _one_inverter(), **M4B)["payload"]
+    n = len(p["time_s"])
+    assert [s["values"][0] for s in p["line_current_a"]] == pytest.approx(
+        [ln["current_a"] for ln in m1["line_results"]], rel=1e-6
+    )
+    assert [s["values"][0] for s in p["bus_angle_deg"]] == pytest.approx(
+        [b["angle_deg"] for b in m1["bus_results"]], abs=1e-6
+    )
+    assert p["bus_angle_deg"][0]["values"] == [0.0] * n
+    (inv,) = p["inverter_frequency_hz"]
+    assert inv["values"] == pytest.approx(p["system_frequency_hz"])  # one inverter
 
 
 def test_m4b_settled_class(real: Api) -> None:

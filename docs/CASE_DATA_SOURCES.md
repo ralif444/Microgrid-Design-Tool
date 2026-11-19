@@ -125,6 +125,15 @@ recompute PI gains from bandwidth targets, do not copy them.
 - Sarkar & Pereira, IEEE APM 37(1) 48–55, 1995, doi:10.1109/74.370583 (VERIFIED).
 - Resolution floor: NOT FOUND in power-systems literature; stays the author's declared
   convention (Doc 13 WP 1.6.2). ASME V&V 20 is CFD and simulator-vs-experiment only.
+- Settling bands (searched 2026-11-19): no standard value for inverter-based islanded
+  microgrids found. ISO 8528-5 gives frequency and voltage recovery classes for generating
+  sets (paywalled; a vendor summary gives G3 recovery 3 s frequency, 4 s voltage). The bands
+  are the author's declared "2 % style" convention: ±0.05 Hz, ±0.0088 kV, 0.5 s window
+  (user decision, Doc 13 §6, Doc 9 D-121).
+- Layer-2 tables, searched again 2026-11-19: Pogaku 2007 has no reachable open copy (core.ac.uk,
+  publisher pages refused automated access); She et al. arXiv 2206.11407 is MW-scale and
+  Schiffer et al. 2016 (survey) has no parameter table, so neither replaces it. Read Pogaku
+  Table I through the university's IEEE Xplore access.
 
 ### 2.5 Droop gains 1 % P-f and 10 % Q-V
 
@@ -197,8 +206,9 @@ Feeder lengths for D2-LF (D-120): none in the manuscript or the project referenc
 
 1. Battery: a second fitting product and an Indonesian distributor; vendor continuous kW.
 2. Load profile: a numeric 24-h table (see §1.3 options).
-3. PSIM: Pogaku and Liserre tables (closed access); limiter type and value; fsw; check
-   9.1.4.400 for a constant-power load; test PsimCmd.exe and its licence.
+3. PSIM: Pogaku and Liserre tables (closed access, user's IEEE access); limiter type; fsw;
+   check 9.1.4.400 for a constant-power load; test PsimCmd.exe and its licence. Settling
+   bands: closed as a declared convention (D-121).
 4. Breakers: closed (LVPED217032EN p. B-7); breaker ambient derating not modelled.
 5. PUIL: two blurred cells.
 6. Reactors: closed (D-120); D2-LF uses benchmark lengths until a real site is chosen.

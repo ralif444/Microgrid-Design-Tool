@@ -129,7 +129,7 @@ function Scenarios() {
       <InfeasibleNote show={m2Infeasible} />
       {example && (
         <p data-testid="example-scenarios">
-          {t("Example mode: the scenarios come from the guided example's Project file (the stressed design D2S and the near-limit design D2H of the validation plan). The first, D2 base, is the reference of the comparison.")}
+          {t("Example mode: the scenarios come from the guided example's Project file (the stressed design D2S and the near-limit design D2H of the validation plan). The first, the base scenario, is the reference of the comparison.")}
         </p>
       )}
       <div className={styles.study}>

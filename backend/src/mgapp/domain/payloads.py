@@ -320,6 +320,15 @@ class InverterSeries(ElementSeries):
     inverter_id: str
 
 
+class LineSeries(ElementSeries):
+    line_id: str
+
+
+class InverterOptionalSeries(Model):
+    inverter_id: str
+    values: list[float | None]  # null after the inverter's outage
+
+
 class TransientClass(StrEnum):
     RECOVERED_STABLE = "RECOVERED_STABLE"
     CRITERIA_VIOLATED = "CRITERIA_VIOLATED"
@@ -332,6 +341,10 @@ class M4bPayload(Model):
     bus_voltage_kv: list[BusSeries]
     inverter_p_kw: list[InverterSeries]
     inverter_q_kvar: list[InverterSeries]
+    # D-121 (Doc 13 open point 9): outputs compared with PSIM; defaults keep older records valid
+    inverter_frequency_hz: list[InverterOptionalSeries] = []
+    bus_angle_deg: list[BusSeries] = []  # referred to the first bus, as in M1
+    line_current_a: list[LineSeries] = []  # phase RMS
     max_rocof_hz_per_s: float
     transient_class: TransientClass | None  # None without settling criteria (D-53 K67)
     settled: bool | None
