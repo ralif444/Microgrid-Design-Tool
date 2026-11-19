@@ -44,6 +44,7 @@ class Cb:
             Settings(feature_cable_sizing=enabled), engine=self.engine, serve_static=False
         )
         self.client = TestClient(app)
+        self.snap = two_bus_snapshot()
 
     def run(self, t: str, body: dict[str, Any]) -> dict[str, Any]:
         r = self.client.post(f"/api/analyses/{t}", json=body)
@@ -52,7 +53,7 @@ class Cb:
 
     def ref(self, t: str, depends_on: dict[str, Any] | None = None) -> dict[str, Any]:
         body = {
-            "project_snapshot": two_bus_snapshot(),
+            "project_snapshot": copy.deepcopy(self.snap),
             "parameters": dict(PARAMETERS[t]),
             "solver_config": dict(SOLVER),
         }
@@ -73,7 +74,7 @@ class Cb:
 
     def cb(self, depends_on: Any = "m2", **params: Any) -> dict[str, Any]:
         body: dict[str, Any] = {
-            "project_snapshot": two_bus_snapshot(),
+            "project_snapshot": copy.deepcopy(self.snap),
             "parameters": {
                 "method_id": "IEC60364_OVERLOAD_PUIL2011",
                 "settings": dict(SETTINGS),
@@ -137,6 +138,12 @@ def test_fr_111_payload_and_warnings(cb: Cb) -> None:
     assert inv["ib_a"] == pytest.approx(10 / (3**0.5 * 0.4))  # D2: 10 kVA at 0.4 kV
     assert inv["device"]["class"] == "MCB"
     assert "FEATURE_EXPERIMENTAL" in {w["code"] for w in r["warnings"]}
+
+
+def test_fr_124_cable_sizing_skips_reactor_lines(cb: Cb) -> None:  # X11, ADR-017
+    cb.snap["lines"][0]["kind"] = "REACTOR"
+    ids = {e["element_id"] for e in cb.cb()["result"]["payload"]["elements"]}
+    assert ids == {"INV1", "INV2"}
 
 
 def test_fr_111_per_element_outcome_does_not_change_status(cb: Cb) -> None:

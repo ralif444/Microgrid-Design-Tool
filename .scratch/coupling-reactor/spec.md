@@ -1,7 +1,7 @@
 # Coupling reactors, reactor sizing advice and realistic stability cases (X11)
 
-Status: ready-for-agent (decisions Q1–Q8 made 2026-11-19; WP-1 data and Q7 site lengths still needed)
-Drafted: 2026-11-19 (brainstorm with the user, agent-written). Implementation later; nothing here is applied yet.
+Status: ready-for-human (WP-1 – WP-6, WP-8 and WP-7 except D2-LF built 2026-11-19, Doc 9 D-119, ADR-017; D2-LF needs the site lengths (Q7); supervisor approval asked (Q5))
+Drafted: 2026-11-19 (brainstorm with the user, agent-written).
 
 ## 1. Why
 
@@ -47,9 +47,9 @@ At reactor X/R 10 the results differ by less than 0.01 in ζ. The stability boun
 - Placement like BA and cable sizing (ADR-014, ADR-015): the app composes existing M1 and M4a runs on modified snapshots; no engine change, no new equations (Doc 12 §1). A new ADR-017 records it.
 - Trigger: offered on the M4a result when the class is UNSTABLE or MARGINAL, or when `damping_pass` is false. Also reachable from Further analyses.
 - Inputs: damping target ζ\* (prefilled from the M4a `damping_threshold_ratio` if one was used; otherwise the user enters it; **no built-in default**), search ceiling in % of Z_b (user field), reactor X/R used for the search (prefilled from the catalogue ladder, editable).
-- Method: one reactor per inverter, the same percentage of each inverter's own base impedance (keeps the droop sharing proportional; design choice). Bisection on that percentage: each step adds the temporary terminal buses and reactor lines, runs M1 then M4a, and stops at the smallest percentage with ζ_min ≥ ζ\* and M1 FEASIBLE. Then it picks, per inverter, the smallest catalogue reactor with L ≥ needed and rated current ≥ inverter rated current, and re-runs M1 and M4a with the picked parts to confirm.
+- Method: one reactor per inverter, the same percentage of each inverter's own base impedance (keeps the droop sharing proportional; design choice). Bisection on that percentage: each step adds the temporary terminal buses and reactor lines, runs M1 then M4a, and stops at the smallest percentage with ζ_min ≥ ζ\* and M1 FEASIBLE. Then it picks, per inverter, the catalogue reactor with L ≥ needed and rated current ≥ inverter rated current, smallest rated current first, then smallest L (built: smallest L alone put the 100 A part on INV2), and re-runs M1 and M4a with the picked parts to confirm.
 - Output per inverter: needed L (mH), suggested catalogue entry, confirmed ζ_min, mode frequency, lowest bus voltage and the RunRecord ids. Outcomes: FOUND, NOT_FOUND_BELOW_CEILING (says no reactor up to the ceiling reaches ζ\*; the cause may be something else), VOLTAGE_LIMITED (stable size breaks a voltage limit), NO_CATALOGUE_PART (size found, no catalogue entry fits).
-- **Apply** inserts the terminal buses and REACTOR lines into the design (explicit topology, one undo step). Nothing is changed without Apply.
+- **Apply** inserts the terminal buses and REACTOR lines into the design (explicit topology; built with a confirmation step, since the app has no undo stack). Nothing is changed without Apply.
 - Advice only: it does not change any verdict, and the user re-runs M4a on the applied design.
 
 ### F4 Guidance on an unstable result (option 6)
@@ -128,6 +128,8 @@ So D2-LR can be built from catalogue parts today. These are exploratory runs, no
 - **Result under the Q8 decision:** nothing is counted toward the reactor (no printed value). The engine keeps modelling the unit as a droop voltage source without that virtual impedance, so for this product the as-built D2 result is **conservative**: the real unit adds damping of unknown size. This goes into Doc 13 (the PSIM inverter must also be modelled without virtual impedance, or the comparison mixes two models) and into the thesis limitations. Asking TRUMPF for the value is possible, but any answer that is not in a published document cannot enter the catalogue.
 
 ## 7. Work packages (each becomes an issue file under `issues/` when work starts)
+
+Build status (2026-11-19): WP-1 done (BLOCK LR3 40-4/70, /80, /100; Schneider left out, R not printed); WP-2 done (ADR-017, Doc 03, 06, 07, 09 D-119, 11, 12 X11, 14 D20); WP-3 done without a schema bump (`kind` optional, hashes kept); WP-4 done; WP-5 done except the Fake profile and the e2e (the RS contract test uses a monotone stub engine); WP-6 done; WP-7 done except `d2-lf` (Q7) and the demo script (unchanged: it uses `d2`); WP-8 done (Doc 13 §3 – §6, hand case R-1); the §2 sweep is not a fixture (the RS real-engine test covers the boundary).
 
 1. **WP-1 Data:** source 2–4 reactor datasheets (about 65–100 A, 0.1–1 mH, 400–480 V); check the TRUMPF manual for output inductance (Q8). Blocks WP-3, WP-6.
 2. **WP-2 Contracts and ADR:** Doc 03, Doc 12 X11, ADR-017, Doc 14 entry, register. After the Q1–Q5 decisions.

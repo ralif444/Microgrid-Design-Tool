@@ -11,7 +11,7 @@ import type { BatteryBank, CatalogEntry } from "../api-types";
 import { useProject, useProjectDispatch, type PsParameters } from "../store";
 import { valueSource } from "./battery";
 import { numText } from "./format";
-import { block, entryWarnings, fromEntry, refText, useCatalog } from "./Catalog";
+import { entryWarnings, fromEntry, limitValue, refText, useCatalog } from "./Catalog";
 import { CANNOT_UNDO, useConfirmDelete } from "./ConfirmDelete";
 import styles from "./ElementSource.module.css";
 import { INVERTER_COLUMNS, LINE_COLUMNS } from "./elementFields";
@@ -32,7 +32,7 @@ const tt = (s: string) => translate(displayLang(), s);
 export function entryPreview(collection: "lines" | "inverters", patch: Row, row: Row): [string, string, string, boolean][] {
   const labels = LABELS(collection === "lines" ? LINE_COLUMNS : INVERTER_COLUMNS);
   const rows: [string, string, string, boolean][] = Object.keys(patch)
-    .filter((k) => k !== "catalog_ref")
+    .filter((k) => k !== "catalog_ref" && k !== "kind")
     .map((k) => {
       const [label, unit] = labels[k] ?? [k, ""];
       return [label, shown(row[k], unit), shown(patch[k], unit), row[k] !== patch[k]];
@@ -50,17 +50,18 @@ export function CatalogPick({ collection, element: fixed, heading = "h2" }: { co
   const { design } = useProject();
   const dispatch = useProjectDispatch();
   const { catalog, checks } = useCatalog();
-  const kind = collection === "lines" ? "CONDUCTOR" : "INVERTER";
-  const entries = catalog.entries.filter((e) => e.kind === kind);
   const [chosen, setElement] = useState("");
+  const element = fixed ?? chosen;
+  const row: Row = (design[collection] ?? []).find((r) => r.id === element) ?? {};
+  // a reactor line takes REACTOR entries, any other line CONDUCTOR entries (ADR-017)
+  const kind = collection === "inverters" ? "INVERTER" : row.kind === "REACTOR" ? "REACTOR" : "CONDUCTOR";
+  const entries = catalog.entries.filter((e) => e.kind === kind);
   const [entryId, setEntryId] = useState("");
   const [confirm, setConfirm] = useState(false);
   const [note, setNote] = useState<string | null>(null);
-  const element = fixed ?? chosen;
   const entry = entries.find((e) => e.id === entryId);
   const check = checks.find((c) => c.entry_id === entryId);
-  const ampacity = entry ? block(entry).ampacity_a : null;
-  const row: Row = (design[collection] ?? []).find((r) => r.id === element) ?? {};
+  const ampacity = entry ? limitValue(entry) : null;
   const H = heading;
   const empty = (
     <p className={styles.hint}>
@@ -76,7 +77,7 @@ export function CatalogPick({ collection, element: fixed, heading = "h2" }: { co
     ) : (
       empty
     );
-  const patch = entry ? fromEntry(entry, catalog.schema_version, confirm) : null;
+  const patch = entry ? fromEntry(entry, catalog.schema_version, confirm, design.nominal_frequency_hz) : null;
   const warnings = entry && element ? entryWarnings(entry, design, row) : [];
   return (
     <form
@@ -85,6 +86,7 @@ export function CatalogPick({ collection, element: fixed, heading = "h2" }: { co
       onSubmit={(e) => {
         e.preventDefault();
         if (!entry || !element) return setNote(t("Choose an element and an entry."));
+        if (kind === "REACTOR" && !design.nominal_frequency_hz) return setNote(t("Enter the nominal frequency first."));
         if (!check?.usable) return setNote(t("{entry} cannot be used: {reasons}.", { entry: entryId, reasons: check?.reasons.map(tt).join("; ") ?? t("not checked yet") }));
         dispatch({ type: "rowUpdated", collection, id: element, patch: patch! });
         setNote(`${t("{element} filled from {entry}.", { element, entry: entryId })}${warnings.length ? ` ${t("Warning: {warnings}.", { warnings: warnings.map(tt).join("; ") })}` : ""}`);

@@ -8,11 +8,13 @@ import type { Column } from "./EntityTable";
 // An element the inspector can show (Inspector, workspace selection, element links).
 export type ElementRef = { kind: "bus" | "line" | "inverter" | "load"; id: string };
 
-const times = (a: unknown, b: unknown) => (typeof a === "number" && typeof b === "number" ? a * b : null);
+// 12 significant digits hide float noise of the product (1.43 × 0.001 is not 0.00143 in binary)
+const times = (a: unknown, b: unknown) => (typeof a === "number" && typeof b === "number" ? Number((a * b).toPrecision(12)) : null);
 
 export const BUS_COLUMNS: Column[] = [{ field: "id", label: "Bus id", kind: "text" }];
 
 export const LINE_COLUMNS: Column[] = [
+  { label: "Type", kind: "derived", unit: "entry", value: (r) => translate(displayLang(), r.kind === "REACTOR" ? "Reactor" : "Cable") },
   { field: "from_bus_id", label: "From bus", kind: "bus" },
   { field: "to_bus_id", label: "To bus", kind: "bus" },
   { field: "r_ohm_per_km", label: "R", kind: "number", unit: "Ω/km" },

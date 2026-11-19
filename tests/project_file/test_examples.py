@@ -18,7 +18,7 @@ from mgapp.adapters.real_engine import RealEngine
 from mgapp.main import create_app
 
 EXAMPLES = Path(__file__).parents[2] / "frontend" / "public" / "examples"
-NAMES = ["d1", "d2", "d2s", "d2h"]
+NAMES = ["d1", "d2", "d2-lr", "d2s", "d2h"]
 SOLVER = {"mismatch_tolerance_w": 0.001, "max_iterations": 50, "initial_guess": "DEFAULT"}
 
 
@@ -50,3 +50,26 @@ def test_d2_example_matches_the_engine_hand_check(client: TestClient) -> None:
     assert p["system_frequency_hz"] == pytest.approx(50 - (50 / 7500) * p1, abs=1e-9)  # f = f* - kP·P
     assert p["system_frequency_hz"] == pytest.approx(49.89088, abs=1e-5)
     assert not any(s["q_droop_not_rating_proportional"] for s in p["sharing"])
+
+
+@pytest.mark.parametrize("name", ["d2-lr", "d2s", "d2h"])
+def test_reactor_examples_are_small_signal_stable(client: TestClient, name: str) -> None:  # FR-122
+    """X11 (ADR-017, D-119): the BLOCK coupling reactors make the catalogue D2 family stable
+    (spec §6a: D2-LR zeta_min 0.218, lowest bus 0.9842 p.u.); the as-built D2 stays UNSTABLE."""
+    doc = example(name)
+    snap = {k: doc[k] for k in ("buses", "lines", "loads", "inverters")}
+    snap |= {k: doc["project"][k] for k in ("nominal_voltage_kv", "nominal_frequency_hz")}
+    m1 = client.post(
+        "/api/analyses/M1", json={"project_snapshot": snap, "parameters": {}, "solver_config": SOLVER}
+    ).json()
+    rec = m1["run_record"]
+    ref = {k: rec[k] for k in ("record_id", "snapshot_hash", "result_hash")}
+    ref |= {"analysis_type": "M1", "status": rec["result"]["status"]}
+    ref["result_payload"] = rec["result"]["payload"]
+    body = {"project_snapshot": snap, "parameters": {}, "solver_config": SOLVER, "depends_on": ref}
+    p = client.post("/api/analyses/M4a", json=body).json()["result"]["payload"]
+    assert p["stability_class"] == "STABLE"
+    if name == "d2-lr":
+        assert p["zeta_min"] == pytest.approx(0.218, abs=1e-3)
+        vmin = min(b["voltage_pu"] for b in m1["result"]["payload"]["bus_results"])
+        assert vmin == pytest.approx(0.9842, abs=1e-4)

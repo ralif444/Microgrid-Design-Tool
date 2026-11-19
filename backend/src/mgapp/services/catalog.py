@@ -38,6 +38,7 @@ REQUIRED = {
     "CONDUCTOR": ("r_ohm_per_km", "x_ohm_per_km"),
     "BREAKER": ("in_a",),
     "BATTERY_MODULE": ("energy_kwh", "voltage_min_v", "voltage_max_v"),  # Eq. 12.3, 12.4
+    "REACTOR": ("inductance_mh", "resistance_mohm", "rated_current_a"),  # ADR-017
 }
 OPTIONAL = {
     "INVERTER": ("tau_in_s",),
@@ -49,6 +50,7 @@ OPTIONAL = {
         "c_rate_per_h",
         "recommended_dod_ratio",
     ),
+    "REACTOR": ("rated_voltage_v", "impedance_percent"),
 }
 
 
@@ -74,6 +76,7 @@ def entry_reasons(e: CatalogEntry) -> list[str]:
         "CONDUCTOR": e.conductor,
         "BREAKER": e.breaker,
         "BATTERY_MODULE": e.battery_module,
+        "REACTOR": e.reactor,
     }[e.kind]
     if block is None:
         return [*reasons, f"{e.kind.lower()} values are missing"]

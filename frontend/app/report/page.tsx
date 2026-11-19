@@ -28,6 +28,7 @@ import { useValidation } from "../../components/useValidation";
 import { BarChart } from "../../components/charts/BarChart";
 import { ReportCharts } from "../../components/charts/ChartFrame";
 import { M4aCharts } from "../../components/M4aCharts";
+import { GUIDANCE, needsReactorAdvice } from "../../components/ReactorAdvice";
 import { useProject } from "../../store";
 import styles from "./report.module.css";
 
@@ -225,6 +226,7 @@ function Report() {
           <ResultSheet record={m4a}>
             <M4aCharts p={m4ap} record={m4a} reason={m4a.result.diagnostics?.participation_reason} />
           </ResultSheet>
+          {needsReactorAdvice(m4ap) && <p data-testid="report-reactor-guidance">{t(GUIDANCE)}</p>}
         </>
       )}
 

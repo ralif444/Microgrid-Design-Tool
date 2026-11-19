@@ -83,15 +83,27 @@ class BatteryModuleValues(Model):
     recommended_dod_ratio: float | None = Field(default=None, gt=0, le=1)
 
 
+class ReactorValues(Model):
+    """X11 Catalogue kind REACTOR (ADR-017): a three-phase series (coupling) reactor. The line
+    values are derived from these: X = 2*pi*f*L at the Project's nominal frequency, R as given."""
+
+    inductance_mh: float | None = Field(default=None, gt=0)  # per phase
+    resistance_mohm: float | None = Field(default=None, gt=0)  # per phase (winding resistance)
+    rated_current_a: float | None = Field(default=None, gt=0)
+    rated_voltage_v: float | None = Field(default=None, gt=0)  # shown, not used by the model
+    impedance_percent: float | None = Field(default=None, gt=0)  # uk as printed; shown only
+
+
 class CatalogEntry(Model):
     id: str
-    kind: Literal["INVERTER", "CONDUCTOR", "BREAKER", "BATTERY_MODULE"]
+    kind: Literal["INVERTER", "CONDUCTOR", "BREAKER", "BATTERY_MODULE", "REACTOR"]
     provenance: Provenance = Provenance()
     sources: dict[str, str] = {}  # value field -> page or section in the document (FR-65)
     inverter: InverterValues | None = None
     conductor: ConductorValues | None = None
     breaker: BreakerValues | None = None
     battery_module: BatteryModuleValues | None = None
+    reactor: ReactorValues | None = None
 
 
 class Catalog(Model):

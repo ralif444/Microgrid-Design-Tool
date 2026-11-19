@@ -450,6 +450,12 @@ DOC 7 COMPLETE
 - C5.1 F3 outcome edge: Status equal and result_hash equal.
 - C5.4 first phase per key flow stated in §4.
 
+## Change log 2026-11-19 (coupling reactors X11; Doc 9 D-119, ADR-017)
+- Line form: "Line type" Cable / Coupling reactor; a reactor is edited as inductance (mH) and resistance (mΩ) per phase and stored as a 1 m line (FR-122). Line table gains a derived Type column.
+- S-13: fixed guidance and the "Coupling reactors" panel (damping target, search ceiling, reactor X/R; result table; Apply with confirmation) when M4a is not STABLE or misses its threshold (FR-126). S-16: guidance paragraph in the same case.
+- S-18: "+ Add reactor entry"; kind Reactor (FR-123). SLD: coil symbol, label "Reactor", inspector rows Type and Inductance (FR-127).
+- Home: example "D2-LR"; D2S and D2H labelled as D2-LR load levels.
+
 ## Change log 2026-11-19 (validation designs on the catalogue; Doc 9 D-116)
 - S-01: each example design lists the Doc 13 §5 validation cases it serves; S-14 in the guided example offers the seven D2 cases as presets.
 

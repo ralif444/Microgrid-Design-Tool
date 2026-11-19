@@ -58,6 +58,14 @@ export const ENTRY_FIELDS: Record<CatalogEntry["kind"], EntryField[]> = {
     ["c_rate_per_h", "C-rate", "1/h", "bess"],
     ["recommended_dod_ratio", "Recommended depth of discharge, optional", "ratio", "bess"],
   ],
+  // X11 coupling reactor (ADR-017): X = 2πfL at the Project frequency, R as printed.
+  REACTOR: [
+    ["inductance_mh", "Inductance per phase", "mH", "model"],
+    ["resistance_mohm", "Resistance per phase", "mΩ", "model"],
+    ["rated_current_a", "Rated current", "A", "model"],
+    ["rated_voltage_v", "Rated voltage, optional", "V", "model"],
+    ["impedance_percent", "Short-circuit voltage u_k, optional", "%", "model"],
+  ],
 };
 
 export const PROVENANCE: [keyof NonNullable<CatalogEntry["provenance"]>, string][] = [
@@ -84,6 +92,7 @@ const KEY_FIELDS: Record<CatalogEntry["kind"], [string, string][]> = {
   CONDUCTOR: [["r_ohm_per_km", "R "], ["x_ohm_per_km", "X "], ["ampacity_a", ""]],
   BREAKER: [["in_a", "I_n "]],
   BATTERY_MODULE: [["energy_kwh", ""], ["voltage_min_v", "min "], ["voltage_max_v", "max "]],
+  REACTOR: [["inductance_mh", ""], ["resistance_mohm", "R "], ["rated_current_a", ""]],
 };
 export function keyValues(e: CatalogEntry): string {
   const b = block(e);
@@ -94,19 +103,26 @@ export function keyValues(e: CatalogEntry): string {
 
 // Fields chosen from a list (contract enums, D-104).
 export const ENTRY_OPTIONS: Record<string, string[]> = { material: ["CU", "AL"], insulation: ["PVC", "XLPE"], class: ["MCB", "MCCB"] };
-export const BLOCK_KEY = { INVERTER: "inverter", CONDUCTOR: "conductor", BREAKER: "breaker", BATTERY_MODULE: "battery_module" } as const;
+export const BLOCK_KEY = { INVERTER: "inverter", CONDUCTOR: "conductor", BREAKER: "breaker", BATTERY_MODULE: "battery_module", REACTOR: "reactor" } as const;
 
 export const block = (e: CatalogEntry): Record<string, unknown> => (e[BLOCK_KEY[e.kind]] ?? {}) as Record<string, unknown>;
 
 export const emptyCatalog = (): Catalog => ({ schema_version: 1, app_version: "", entries: [] });
 
+/** The datasheet current a line may take as its limit: cable ampacity or reactor rated current (FR-70). */
+export const limitValue = (e: CatalogEntry): unknown => (e.kind === "REACTOR" ? block(e).rated_current_a : e.kind === "CONDUCTOR" ? block(e).ampacity_a : null);
+/** A reactor is stored as a 1 m line (ADR-017 Q2), so its Ω/km values are 1000 × its ohms. */
+export const REACTOR_LENGTH_KM = 0.001;
+
 // FR-69: copy the model values and a catalog_ref into the element; FR-70: the ampacity becomes
-// the current limit only when confirmed.
-export function fromEntry(e: CatalogEntry, schemaVersion: number, confirmLimit = false): Record<string, unknown> {
+// the current limit only when confirmed. A reactor needs the Project frequency for X = 2πfL.
+export function fromEntry(e: CatalogEntry, schemaVersion: number, confirmLimit = false, frequencyHz?: number | null): Record<string, unknown> {
   const b = block(e);
-  const copied = e.kind === "INVERTER" ? ["rated_kva"] : ["r_ohm_per_km", "x_ohm_per_km"];
-  const limit = e.kind === "CONDUCTOR" && confirmLimit && typeof b.ampacity_a === "number";
-  const used = [...copied, ...(limit ? ["ampacity_a"] : []), ...(e.kind === "INVERTER" && b.tau_in_s != null ? ["tau_in_s"] : [])];
+  const reactor = e.kind === "REACTOR";
+  const copied = e.kind === "INVERTER" ? ["rated_kva"] : reactor ? ["inductance_mh", "resistance_mohm"] : ["r_ohm_per_km", "x_ohm_per_km"];
+  const limitKey = reactor ? "rated_current_a" : "ampacity_a";
+  const limit = (e.kind === "CONDUCTOR" || reactor) && confirmLimit && typeof b[limitKey] === "number";
+  const used = [...copied, ...(limit ? [limitKey] : []), ...(e.kind === "INVERTER" && b.tau_in_s != null ? ["tau_in_s"] : [])];
   const ref: CatalogRef = {
     entry_id: e.id,
     provenance: e.provenance ?? {},
@@ -116,9 +132,17 @@ export function fromEntry(e: CatalogEntry, schemaVersion: number, confirmLimit =
     current_limit_confirmed: limit,
     tau_in_s: e.kind === "INVERTER" ? ((b.tau_in_s as number | null | undefined) ?? null) : null,
   };
+  const values = reactor
+    ? {
+        kind: "REACTOR",
+        r_ohm_per_km: typeof b.resistance_mohm === "number" ? b.resistance_mohm / 1000 / REACTOR_LENGTH_KM : null,
+        x_ohm_per_km: typeof b.inductance_mh === "number" && frequencyHz ? (2 * Math.PI * frequencyHz * b.inductance_mh) / 1000 / REACTOR_LENGTH_KM : null,
+        length_km: REACTOR_LENGTH_KM,
+      }
+    : Object.fromEntries(copied.map((f) => [f, b[f] ?? null]));
   return {
-    ...Object.fromEntries(copied.map((f) => [f, b[f] ?? null])),
-    ...(limit ? { current_limit_a: b.ampacity_a } : {}),
+    ...values,
+    ...(limit ? { current_limit_a: b[limitKey] } : {}),
     catalog_ref: ref,
   };
 }
@@ -190,7 +214,7 @@ const Ctx = createContext<CatalogState>({ catalog: emptyCatalog(), checks: [], c
 
 // Base catalogue (user decision 2026-11-16): real datasheet entries shipped with the app, read-only;
 // the user adds their own beside them. A missing or unreadable file leaves only the user's entries.
-export const KIND_ORDER: CatalogEntry["kind"][] = ["INVERTER", "BATTERY_MODULE", "CONDUCTOR", "BREAKER"];
+export const KIND_ORDER: CatalogEntry["kind"][] = ["INVERTER", "BATTERY_MODULE", "CONDUCTOR", "BREAKER", "REACTOR"];
 /** Sorted by kind, then by id with numbers in order (E2 before E10). */
 export const sortEntries = (es: CatalogEntry[]) =>
   [...es].sort((a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) || a.id.localeCompare(b.id, undefined, { numeric: true }));

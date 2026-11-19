@@ -7,6 +7,8 @@ or unknown fields still fail parsing and become INPUT_INVALID / MALFORMED_REQUES
 
 from __future__ import annotations
 
+from typing import Literal
+
 from mgapp.domain.base import Model
 from mgapp.domain.catalog import CatalogRef
 from mgapp.domain.enums import PfDirection
@@ -21,6 +23,9 @@ class Bus(Model):
 
 class Line(Model):
     id: str | None = None
+    # X11 (Doc 12, ADR-017): absent = CABLE; a REACTOR is a coupling reactor stored as a 1 m line.
+    # Never sent to the engine: the adapter maps R, X and length only.
+    kind: Literal["CABLE", "REACTOR"] | None = None
     from_bus_id: str | None = None
     to_bus_id: str | None = None
     r_ohm_per_km: float | None = None  # Ω/km

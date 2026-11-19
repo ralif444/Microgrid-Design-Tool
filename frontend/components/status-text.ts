@@ -45,6 +45,8 @@ export function bannerText(type: AnalysisType, r: AnalysisResult): BannerText {
         return { role: "success", headline: T("Sizing completed: advice for the overload rating and the conductor size only."), hint: T("Check each element's outcome; open a row for its factors.") };
       if (type === "BA")
         return { role: "success", headline: T("Battery check completed: advice on the discharge power of each bank."), hint: T("Check each bank's outcome and reason.") };
+      if (type === "RS")
+        return { role: "success", headline: T("Reactor sizing completed (advice only)."), hint: T("Check the outcome; apply the reactors only when it says they were found and confirmed.") };
       if (type === "PS") return { role: "success", headline: T("Advice produced."), hint: T("Accept or skip.") }; // Edit deferred (Doc 9 D-45 K5)
       return { role: "success", headline: T("Analysis completed."), hint: T("Explore further analyses or open the report.") };
     case "INFEASIBLE":
@@ -112,7 +114,7 @@ export function statusWord(type: AnalysisType, r: AnalysisResult): string {
       if (type === "M4b") return T("Simulated");
       if (type === "M2") return T(m2NothingChecked(r.payload) ? "Not evaluated" : "Meets the limits");
       if (type === "BA" && baNothingEvaluated(r)) return T("Not evaluated");
-      if (type === "PS" || type === "CB" || type === "BA") return T("Advice ready");
+      if (type === "PS" || type === "CB" || type === "BA" || type === "RS") return T("Advice ready");
       return T("Completed");
     case "INFEASIBLE":
       return T("Limits violated");

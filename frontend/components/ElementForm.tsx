@@ -9,6 +9,7 @@ import { BUS_COLUMNS, CONSTRAINT_FIELDS, INVERTER_COLUMNS, LINE_COLUMNS, loadMod
 import styles from "./ElementForm.module.css";
 import type { Column } from "./EntityTable";
 import { useRowDelete } from "./EntityTable";
+import { REACTOR_LENGTH_KM } from "./Catalog";
 import { BankPick, CatalogPick } from "./ElementSource";
 import type { ElementRef } from "./Inspector";
 import { useLanguage } from "./Language";
@@ -169,7 +170,63 @@ export function ElementForm({ target, onRename, onDeleted }: { target: ElementRe
     );
   };
 
-  let body = columns.map(field);
+  let body = columns.filter((c) => c.label !== "Type").map(field);
+  if (target.kind === "line") {
+    // X11 (ADR-017): a coupling reactor is a 1 m line edited in mH and mΩ; the Ω/km values follow
+    const reactor = row.kind === "REACTOR";
+    const w = 2 * Math.PI * (design.nominal_frequency_hz ?? 0);
+    const len = (row.length_km as number | null) ?? REACTOR_LENGTH_KM;
+    const perKm = new Set(["r_ohm_per_km", "x_ohm_per_km", "length_km"]);
+    const tidy = (v: number) => Number(v.toPrecision(12)); // hide float noise of the unit conversion
+    const lmh = typeof row.x_ohm_per_km === "number" && w > 0 ? tidy((row.x_ohm_per_km * len * 1000) / w) : null;
+    const rmohm = typeof row.r_ohm_per_km === "number" ? tidy(row.r_ohm_per_km * len * 1000) : null;
+    const type = (
+      <Choice
+        key="kind"
+        id="insp-kind"
+        label="Line type"
+        options={[["CABLE", "Cable"], ["REACTOR", "Coupling reactor"]]}
+        value={row.kind ?? "CABLE"}
+        error={messages(issues, "kind")}
+        onChange={(v) =>
+          set(
+            v === "REACTOR"
+              ? { kind: "REACTOR", length_km: REACTOR_LENGTH_KM, r_ohm_per_km: null, x_ohm_per_km: null, catalog_ref: null }
+              : { kind: null, length_km: null, r_ohm_per_km: null, x_ohm_per_km: null, catalog_ref: null },
+          )
+        }
+      />
+    );
+    body = reactor
+      ? [
+          type,
+          ...columns.filter((c) => c.label !== "Type" && !(c.kind === "number" && perKm.has(c.field))).slice(0, 2).map(field),
+          <NumberField
+            key="l"
+            id="insp-inductance_mh"
+            label="Inductance per phase"
+            unit="mH"
+            value={lmh}
+            error={messages(issues, "x_ohm_per_km")}
+            note={w > 0 ? undefined : <span>{t("Enter the nominal frequency first.")}</span>}
+            onChange={(v) => w > 0 && set({ x_ohm_per_km: v === null ? null : (w * v) / 1000 / REACTOR_LENGTH_KM, length_km: REACTOR_LENGTH_KM })}
+          />,
+          <NumberField
+            key="r"
+            id="insp-resistance_mohm"
+            label="Resistance per phase"
+            unit="mΩ"
+            value={rmohm}
+            error={messages(issues, "r_ohm_per_km")}
+            onChange={(v) => set({ r_ohm_per_km: v === null ? null : v / 1000 / REACTOR_LENGTH_KM, length_km: REACTOR_LENGTH_KM })}
+          />,
+          ...columns.filter((c) => c.label !== "Type" && !(c.kind === "number" && perKm.has(c.field))).slice(2).map(field),
+          <p key="hint" className={styles.hint}>
+            {t("A coupling reactor is stored as a 1 m line; its Ω/km values are derived from the inductance and resistance.")}
+          </p>,
+        ]
+      : [type, ...body];
+  }
   if (target.kind === "load") {
     const l = row as Load;
     const mode = loadMode(l, modes[target.id]);

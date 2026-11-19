@@ -192,6 +192,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analyses/RS": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run analysis RS */
+        post: operations["analyse_RS"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/catalogs/import": {
         parameters: {
             query?: never;
@@ -378,7 +395,7 @@ export interface components {
          * AnalysisType
          * @enum {string}
          */
-        AnalysisType: "PS" | "M1" | "M2" | "M3a" | "M3b" | "M3c" | "M3d" | "M4a" | "M4b" | "CB" | "BA";
+        AnalysisType: "PS" | "M1" | "M2" | "M3a" | "M3b" | "M3c" | "M3d" | "M4a" | "M4b" | "CB" | "BA" | "RS";
         /**
          * BankModule
          * @description Values copied from a BATTERY_MODULE entry with its catalog_ref (FR-69 pattern).
@@ -575,7 +592,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "INVERTER" | "CONDUCTOR" | "BREAKER" | "BATTERY_MODULE";
+            kind: "INVERTER" | "CONDUCTOR" | "BREAKER" | "BATTERY_MODULE" | "REACTOR";
             /**
              * @default {
              *       "document": null,
@@ -585,6 +602,8 @@ export interface components {
              *     }
              */
             provenance?: components["schemas"]["Provenance"];
+            /** @default null */
+            reactor?: components["schemas"]["ReactorValues"] | null;
             /**
              * Sources
              * @default {}
@@ -1102,7 +1121,7 @@ export interface components {
          * @description Stage-1 validation codes (Doc 3 §4).
          * @enum {string}
          */
-        IssueCode: "NEGATIVE_POWER" | "EMPTY_REQUIRED" | "NOT_POSITIVE" | "PF_OUT_OF_RANGE" | "PF_DIRECTION_MISSING" | "LOAD_Q_AMBIGUOUS" | "BAND_INVERTED" | "LOADING_LIMIT_RANGE" | "DUPLICATE_ID" | "ID_FORMAT" | "DANGLING_BUS_REF" | "SELF_LOOP_LINE" | "DUPLICATE_LINE" | "ISOLATED_BUS" | "DISCONNECTED_NETWORK" | "NO_INVERTER" | "NO_LOAD" | "PROFILE_LENGTH" | "PROFILE_HOUR" | "PS_PARAMETER_INVALID" | "SIZING_MARGIN_INVALID" | "TAU_MISSING_FOR_M4" | "SENSITIVITY_STEP_INVALID" | "DISTURBANCE_INVALID" | "SWEEP_RANGE_INVALID" | "SCENARIO_PATH_INVALID" | "SWEEP_CAP_EXCEEDED" | "PARAMETER_CAP_EXCEEDED" | "DURATION_CAP_EXCEEDED" | "SCENARIO_COUNT_INVALID" | "DEPENDS_ON_NOT_ALLOWED" | "MULTIPLE_INVERTERS_ON_BUS" | "MALFORMED_REQUEST" | "CABLE_TABLES_INCOMPLETE" | "CABLE_TABLES_UNCHECKED" | "CABLE_SETTINGS_INVALID" | "BATTERY_BANK_INVALID";
+        IssueCode: "NEGATIVE_POWER" | "EMPTY_REQUIRED" | "NOT_POSITIVE" | "PF_OUT_OF_RANGE" | "PF_DIRECTION_MISSING" | "LOAD_Q_AMBIGUOUS" | "BAND_INVERTED" | "LOADING_LIMIT_RANGE" | "DUPLICATE_ID" | "ID_FORMAT" | "DANGLING_BUS_REF" | "SELF_LOOP_LINE" | "DUPLICATE_LINE" | "ISOLATED_BUS" | "DISCONNECTED_NETWORK" | "NO_INVERTER" | "NO_LOAD" | "PROFILE_LENGTH" | "PROFILE_HOUR" | "PS_PARAMETER_INVALID" | "SIZING_MARGIN_INVALID" | "TAU_MISSING_FOR_M4" | "SENSITIVITY_STEP_INVALID" | "DISTURBANCE_INVALID" | "SWEEP_RANGE_INVALID" | "SCENARIO_PATH_INVALID" | "SWEEP_CAP_EXCEEDED" | "PARAMETER_CAP_EXCEEDED" | "DURATION_CAP_EXCEEDED" | "SCENARIO_COUNT_INVALID" | "DEPENDS_ON_NOT_ALLOWED" | "MULTIPLE_INVERTERS_ON_BUS" | "MALFORMED_REQUEST" | "CABLE_TABLES_INCOMPLETE" | "CABLE_TABLES_UNCHECKED" | "CABLE_SETTINGS_INVALID" | "BATTERY_BANK_INVALID" | "REACTOR_SIZING_INVALID";
         /**
          * IssueLevel
          * @enum {string}
@@ -1208,6 +1227,11 @@ export interface components {
              * @default null
              */
             id?: string | null;
+            /**
+             * Kind
+             * @default null
+             */
+            kind?: ("CABLE" | "REACTOR") | null;
             /**
              * Length Km
              * @default null
@@ -1635,6 +1659,38 @@ export interface components {
             parameter_path: string;
             /** Rank */
             rank: number;
+        };
+        /**
+         * ReactorValues
+         * @description X11 Catalogue kind REACTOR (ADR-017): a three-phase series (coupling) reactor. The line
+         *     values are derived from these: X = 2*pi*f*L at the Project's nominal frequency, R as given.
+         */
+        ReactorValues: {
+            /**
+             * Impedance Percent
+             * @default null
+             */
+            impedance_percent?: number | null;
+            /**
+             * Inductance Mh
+             * @default null
+             */
+            inductance_mh?: number | null;
+            /**
+             * Rated Current A
+             * @default null
+             */
+            rated_current_a?: number | null;
+            /**
+             * Rated Voltage V
+             * @default null
+             */
+            rated_voltage_v?: number | null;
+            /**
+             * Resistance Mohm
+             * @default null
+             */
+            resistance_mohm?: number | null;
         };
         /** ReproductionReport */
         ReproductionReport: {
@@ -2241,6 +2297,30 @@ export interface operations {
         };
     };
     analyse_PS: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnalysisRequestBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalysisResponse"];
+                };
+            };
+        };
+    };
+    analyse_RS: {
         parameters: {
             query?: never;
             header?: never;

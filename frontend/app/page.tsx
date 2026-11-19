@@ -35,8 +35,13 @@ const EXAMPLES: { key: string; label: string; cases: string[] }[] = [
       "The SM, DR and TS disturbances are presets on the Transient screen of the guided example",
     ],
   },
-  { key: "d2s", label: "D2S: D2 stressed, 2.4 × load, 65.22 kW + 26.09 kvar", cases: ["SS-03 steady state at 56 % of rating"] },
-  { key: "d2h", label: "D2H: D2 near the limit, 4.0 × load, 108.7 kW + 43.48 kvar", cases: ["SS-04 steady state at 94 % of rating"] },
+  {
+    key: "d2-lr",
+    label: "D2-LR: D2 with BLOCK coupling reactors (0.30 mH, 0.42 mH), small-signal stable",
+    cases: ["The D2 cases repeated on a stable design: SM, DR and TS compared by value, not only by class (Doc 13 §5)"],
+  },
+  { key: "d2s", label: "D2S: D2-LR stressed, 2.4 × load, 65.22 kW + 26.09 kvar", cases: ["SS-03 steady state at 56 % of rating"] },
+  { key: "d2h", label: "D2H: D2-LR near the limit, 4.0 × load, 108.7 kW + 43.48 kvar", cases: ["SS-04 steady state at 94 % of rating"] },
 ];
 
 export default function Home() {

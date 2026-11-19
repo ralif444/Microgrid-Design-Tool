@@ -4,7 +4,7 @@
   "project": {
     "id": "example-d2h",
     "name": "Example D2H",
-    "description": "Near the engineering limit: 4.0 × D2 load (validation case SS-04). Load 108.7 kW + 43.48 kvar = 93.7 % of the 125 kVA total rating. Tailored to the base catalogue (D-116): inverters TRUMPF TruConvert AC 3025 sets, lines First Cable N2XY 4×16 mm² with the length that keeps the Doc 13 line |Z|.",
+    "description": "Near the engineering limit: 4.0 × D2-LR load (validation case SS-04). Load 108.7 kW + 43.48 kvar = 93.7 % of the 125 kVA total rating. Tailored to the base catalogue (D-116): inverters TRUMPF TruConvert AC 3025 sets, lines First Cable N2XY 4×16 mm² with the length that keeps the Doc 13 line |Z|. Coupling reactors (X11, ADR-017, Doc 9 D-119): one BLOCK LR3 40-4 line reactor per inverter between a terminal bus and the inverter's bus, as the reactor sizing advice picks them on D2 (INV1 LR3 40-4/100, 0.30 mH; INV2 LR3 40-4/70, 0.42 mH).",
     "created_at": "2026-11-02T00:00:00Z",
     "modified_at": "2026-11-19T00:00:00Z",
     "nominal_voltage_kv": 0.44,
@@ -19,6 +19,12 @@
     },
     {
       "id": "B3"
+    },
+    {
+      "id": "INV1T"
+    },
+    {
+      "id": "INV2T"
     }
   ],
   "lines": [
@@ -71,6 +77,62 @@
         "current_limit_confirmed": false,
         "tau_in_s": null
       }
+    },
+    {
+      "id": "LR1",
+      "kind": "REACTOR",
+      "from_bus_id": "INV1T",
+      "to_bus_id": "B1",
+      "r_ohm_per_km": 1.43,
+      "x_ohm_per_km": 94.247779607694,
+      "length_km": 0.001,
+      "current_limit_a": 100,
+      "catalog_ref": {
+        "entry_id": "RCT-BLOCK-LR3-40-4-100",
+        "provenance": {
+          "manufacturer": "BLOCK Transformatoren-Elektronik",
+          "model": "LR3 40-4/100 three-phase line reactor",
+          "document": "BLOCK data sheet LR3 40-4/x, 3~ Line Reactor (Doc-Nr 0001211845), BLOCK Transformatoren-Elektronik GmbH",
+          "revision": "11.2025 (printed on sheet 1/8); retrieved from block.eu 2026-11-19"
+        },
+        "sources": {
+          "inductance_mh": "sheet 2/8, table row LR3 40-4/100: inductance L 0.3 mH (typical; L tolerance +/-10 %, sheet 1/8)",
+          "resistance_mohm": "sheet 2/8, table row LR3 40-4/100: typ. winding resistance 1.43 mOhm",
+          "rated_current_a": "sheet 2/8, table row LR3 40-4/100: rated current 100 A"
+        },
+        "catalog_schema_version": 1,
+        "modified": false,
+        "current_limit_confirmed": true,
+        "tau_in_s": null
+      }
+    },
+    {
+      "id": "LR2",
+      "kind": "REACTOR",
+      "from_bus_id": "INV2T",
+      "to_bus_id": "B3",
+      "r_ohm_per_km": 5.39,
+      "x_ohm_per_km": 131.946891450771,
+      "length_km": 0.001,
+      "current_limit_a": 70,
+      "catalog_ref": {
+        "entry_id": "RCT-BLOCK-LR3-40-4-70",
+        "provenance": {
+          "manufacturer": "BLOCK Transformatoren-Elektronik",
+          "model": "LR3 40-4/70 three-phase line reactor",
+          "document": "BLOCK data sheet LR3 40-4/x, 3~ Line Reactor (Doc-Nr 0001211845), BLOCK Transformatoren-Elektronik GmbH",
+          "revision": "11.2025 (printed on sheet 1/8); retrieved from block.eu 2026-11-19"
+        },
+        "sources": {
+          "inductance_mh": "sheet 2/8, table row LR3 40-4/70: inductance L 0.42 mH (typical; L tolerance +/-10 %, sheet 1/8)",
+          "resistance_mohm": "sheet 2/8, table row LR3 40-4/70: typ. winding resistance 5.39 mOhm",
+          "rated_current_a": "sheet 2/8, table row LR3 40-4/70: rated current 70 A"
+        },
+        "catalog_schema_version": 1,
+        "modified": false,
+        "current_limit_confirmed": true,
+        "tau_in_s": null
+      }
     }
   ],
   "loads": [
@@ -84,7 +146,7 @@
   "inverters": [
     {
       "id": "INV1",
-      "bus_id": "B1",
+      "bus_id": "INV1T",
       "rated_kva": 75,
       "frequency_droop_hz_per_kw": 0.006666666666666667,
       "voltage_droop_kv_per_kvar": 0.0005866666666666668,
@@ -113,7 +175,7 @@
     },
     {
       "id": "INV2",
-      "bus_id": "B3",
+      "bus_id": "INV2T",
       "rated_kva": 50,
       "frequency_droop_hz_per_kw": 0.01,
       "voltage_droop_kv_per_kvar": 0.00088,

@@ -266,10 +266,36 @@ def test_shipped_base_catalogue_passes_the_guard(client: TestClient) -> None:
     body = r.json()
     assert body["file_check"]["accepted"]
     not_usable = {c["entry_id"] for c in body["entry_checks"] if not c["usable"]}
-    assert len(body["entry_checks"]) == 40
+    assert len(body["entry_checks"]) == 43
     assert not_usable == {
         "INV-HUAWEI-LUNA2000-100KTL-M1",  # rating and droop limits not printed
         "BAT-DYNESS-S51314",  # per-module voltage window contradicted, left empty
         "BAT-FREEDOMWON-LITE-300-240-HVPLUS",  # nominal energy not printed
         "CBL-SUCACO-N2XY-1X16",  # no reactance printed
     }
+
+
+def test_x11_reactor_entry_needs_l_r_and_current_with_sources() -> None:  # FR-123
+    """ADR-017: a REACTOR entry is usable only with inductance, resistance and rated current, each
+    with its datasheet place; an optional value shown needs a source too."""
+    from mgapp.domain.catalog import CatalogEntry
+    from mgapp.services.catalog import entry_reasons
+
+    prov = {"manufacturer": "M", "model": "R", "document": "D", "revision": "1"}
+    vals = {"inductance_mh": 0.3, "resistance_mohm": 1.43, "rated_current_a": 100}
+    src = {k: "sheet 2" for k in vals}
+    ok = CatalogEntry.model_validate(
+        {"id": "R1", "kind": "REACTOR", "provenance": prov, "sources": src, "reactor": vals}
+    )
+    assert entry_reasons(ok) == []
+    bad = ok.model_copy(
+        update={
+            "reactor": ok.reactor.model_copy(  # type: ignore[union-attr]
+                update={"resistance_mohm": None, "rated_voltage_v": 690.0}
+            )
+        }
+    )
+    assert entry_reasons(bad) == [
+        "resistance_mohm is missing",
+        "sources.rated_voltage_v (page or section) is missing",
+    ]

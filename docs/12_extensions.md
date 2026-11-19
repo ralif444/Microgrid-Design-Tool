@@ -257,6 +257,19 @@ $$j^* = \min\{\, j : E_{cum,i}(j) > E_{use,i} \,\}, \qquad t_{aut,i} = j^* + \fr
 
 Each profile value is the average power over its hour (manuscript Eq. 4.4 reading); the profile wraps past midnight; the horizon is 24 hours. $SoC_i(j)$ is a post-processed sum and is never fed back into any M1 run, so the hours stay uncoupled inside the model and no state is added. Diturunkan dalam penelitian ini.
 
+### 3.15 X11 — Coupling reactors and reactor sizing advice RS
+
+Source: spec `.scratch/coupling-reactor/spec.md` (decisions Q1–Q8, user 2026-11-19); placement ADR-017; Doc 9 D-119. Level L2: a reactor is an RL line the model already has; RS composes M1 and M4a runs on modified snapshots. No new equation, state or assumption. The reactor as a design element awaits the supervisor (Doc 14 D20).
+
+| ID | Requirement | Priority | Acceptance criteria | Source |
+|---|---|---|---|---|
+| FR-122 | A Line shall carry an optional `kind` (`CABLE` default, `REACTOR`). A reactor is stored as a 1 m line with per-km values derived from L (mH) and R (mΩ) at the nominal frequency; the line form edits L and R. Old files keep their hashes. | Could | **Project file:** reactor_examples_are_small_signal_stable. **Client:** reactor_from_entry_converts. | Spec F1; ADR-017 |
+| FR-123 | The Catalogue shall accept kind REACTOR {inductance_mh, resistance_mohm, rated_current_a required; rated_voltage_v, impedance_percent optional} with per-field sources; the base catalogue holds BLOCK LR3 40-4/70, /80, /100. | Could | **Catalogue file:** x11_reactor_entry_needs_l_r_and_current_with_sources. | Spec F2, §6a |
+| FR-124 | Cable sizing (CB) shall skip REACTOR lines. | Could | (no dedicated test yet; the CB line filter skips `kind == "REACTOR"`) | Spec F1 |
+| FR-125 | `POST /api/analyses/RS` shall run through the pipeline with `depends_on` an M1 RunRecordRef and parameters {damping_target_ratio, max_percent, reactor_x_over_r, reactors[]}; bisection on the share of each inverter's base impedance, catalogue pick (rated current ≥ inverter rated current, smallest rated current then smallest L) and a confirming M1 + M4a run; outcomes FOUND, NOT_NEEDED, NOT_FOUND_BELOW_CEILING, VOLTAGE_LIMITED, NO_CATALOGUE_PART, NOT_CONFIRMED, BASE_NOT_EVALUATED. No ζ\* default. | Could | **Contract:** rs_stub_found_at_the_boundary_and_picks_the_smallest_fitting_part; rs_stub_other_outcomes; rs_parameters_invalid_and_needs_m1. **API (REAL):** rs_real_engine_d2_found_with_block_reactors. | Spec F3; ADR-017 |
+| FR-126 | S-13 (small-signal) shall show the fixed qualitative guidance and the RS panel when M4a is not STABLE or misses its damping threshold; Apply adds a terminal bus and a reactor line per inverter after a confirmation. The report shows the guidance in the same case. No numbers in the guidance. | Could | **E2E:** (pending) reactor_panel_find_apply_rerun. | Spec F3, F4 |
+| FR-127 | The diagram shall draw a reactor line with a coil symbol and label it "Reactor"; the inspector and the line table show the type and the inductance. | Could | **Client:** sld_layout covers D2-LR. | Spec F1 |
+
 ## 4. Contract changes (merge into Doc 3 at stage 1.5)
 
 | Item | Change |
@@ -270,6 +283,7 @@ Each profile value is the average power over its hour (manuscript Eq. 4.4 readin
 | M3 metrics | Add `MAX_Q_SHARING_ERROR` (FR-82). |
 | M3b axis kind | Add axis kind `LOAD_PROFILE_HOUR`, fixed grid 0–23 (FR-78 reworded 2026-11-12). |
 | X10 cable sizing (FR-105 – FR-115) | analysis_type `CB` with `depends_on` an M2 RunRecordRef; Project field `CableSizingSettings` outside the canonical snapshot (FR-106); the `cable_tables.json` schema with `table_set_hash` in the RunRecord parameters (FR-107); stage-1 codes `CABLE_TABLES_INCOMPLETE`, `CABLE_TABLES_UNCHECKED`, `CABLE_SETTINGS_INVALID` (D-102 K281); dependency on M2 FEASIBLE or INFEASIBLE, engine fields null, `diagnostics.computed_by = "app"` (ADR-014); warning codes `LINE_R_MISMATCH`, `FEATURE_EXPERIMENTAL`, `DIRECT_BURIAL_NOT_SUPPORTED`; Catalogue kind `BREAKER` (FR-115). |
+| X11 reactors (FR-122 – FR-127) | `Line.kind` `CABLE`/`REACTOR` (optional, omitted when null); Catalogue kind `REACTOR` {inductance_mh, resistance_mohm, rated_current_a, rated_voltage_v, impedance_percent}; analysis type `RS` (depends on M1; parameters and payload per ADR-017); IssueCode `REACTOR_SIZING_INVALID`; unit suffixes `_mh`, `_mohm`, `_percent`. |
 | Indicators | Payload groups for r_τ, κ, r_in, ε_X with `evaluated` flag and reason (FR-61); threshold version in MetaInfo (FR-62). Align with the core indicator contract (§8). |
 
 ## 5. UI changes (merge into Doc 7)
@@ -297,6 +311,7 @@ Each profile value is the average power over its hour (manuscript Eq. 4.4 readin
 | S-02 | "Run the whole example" (FR-104, Could, built last). |
 | S-19 Cable and breaker sizing (new, `/cable-sizing/`, flag only) | Settings, Run, caveat, results table with expandable factor rows (FR-112). |
 | S-05, S-07, S-08 (SLD), S-16, S-18 | Breaker symbols after a current CB run (FR-113); report section (FR-114); Catalogue kind `BREAKER` (FR-115). |
+| S-13, S-16, S-05, S-18, SLD | X11: guidance and RS panel on S-13, guidance in the report (FR-126); line form type Cable / Coupling reactor with L and R (FR-122); Catalogue kind "Reactor" (FR-123); coil symbol and Type column (FR-127). |
 | S-20 Battery adequacy (new, `/battery/`, only with a bank) | Start hour, Run (valid M1), status banner, fixed caveat, per-bank table (power and autonomy), depletion chart (FR-119, FR-120). |
 | S-05, S-18, S-04, SLD | BatteryBank sub-form per Inverter (FR-75, FR-119); Catalogue kind "Battery module" (FR-73); module hint (FR-74); inverter hover card and Inspector row "Battery bank: n_s × n_p of <module>", no battery symbol (§9 #15). |
 
@@ -306,7 +321,7 @@ Each profile value is the average power over its hour (manuscript Eq. 4.4 readin
 |---|---|---|---|
 | 16 | POST | `/api/catalogs/import` | Check a Catalogue file's content: `schema_version`, forward migration, rejection, entry validation (provenance, grid-forming guard). HTTP 200 with a FileCheckResult wrapper; no RunRecord. |
 
-Catalogue export is a client-side download, like Project export. No other endpoint is added: P12 reuses M3c, P11 reuses M3b, P3 and P7 are client-side. X10 adds no path: it is the analysis type `CB` on the existing `POST /api/analyses/{type}` route, with engine fields null (FR-111). The battery round adds no path: analysis type `BA` on the same route (FR-116, ADR-015).
+Catalogue export is a client-side download, like Project export. No other endpoint is added: P12 reuses M3c, P11 reuses M3b, P3 and P7 are client-side. X10 adds no path: it is the analysis type `CB` on the existing `POST /api/analyses/{type}` route, with engine fields null (FR-111). The battery round adds no path: analysis type `BA` on the same route (FR-116, ADR-015). X11 adds no path: analysis type `RS` on the same route (FR-125, ADR-017).
 
 ## 7. Test additions (merge into Doc 8)
 
@@ -323,6 +338,7 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | FR-86 – FR-93 | Client + E2E | scale_ticks_domain_nearest_nulls; kpi_selectors_empty_and_null; latest_matching_run; figure_show_data_row_count; crosshair_arrow_keys; inspector_focus_and_stale; fake_caption_every_chart; glossary_entries_have_source; toggletip_enter_escape; svg_download_caption; report_charts_within_718px |
 | FR-99 – FR-104 | Client + E2E; API (REAL) at EX-7 | example_settings_guard; initial_value_precedence; every_example_entry_has_source; guidance_no_result_numbers; guided_snapshot_hash_equals_hand_entry; example_click_through; leave_example_mode; normal_project_forms_empty; m4b_example_presets; run_whole_example |
 | FR-105 – FR-115 | Unit + Contract (API, Fake M2) + E2E | lookup_next_more_severe_value; blank_cell_is_gap_not_zero; cb1_cb2_both_reported; mcb_to_mccb_switch_above_63a; no_device_fits; no_size_fits; r_correction_cu_al; table_hash_changes_on_edit; flag_off_returns_not_applicable; depends_on_m2_missing_or_stale; unchecked_tables_input_invalid; engine_fields_null; per_element_outcome_does_not_change_status; screen_hidden_when_flag_off; run_shows_caveat; sld_shows_breaker_symbols_after_run; hand cases H1–H6 (guideline §7) |
+| FR-122 – FR-127 | Unit + Contract (stub engine) + API (REAL) + Catalogue file + Project file + Client | see the FR rows; e2e for the RS panel pending |
 
 ## 8. Core alignment items moved out of this document
 
@@ -390,3 +406,4 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | 2026-11-12 | Battery round BESS-0 (Doc 9 D-106, ADR-015 accepted; `docs/BESS_FEATURE_GUIDELINES.md`): FR-75 – FR-78 reworded, B3 added (§2, §3.14, Eq. 12.14–12.18), FR-116 – FR-121; §4, §5, §6, §7 rows; §9 #4 reworded, points 33–39; Ringkasan sentence. |
 | 2026-11-13 | P11 built in round BESS-6 (Doc 9 D-113): axis kind `LOAD_PROFILE_HOUR` with fixed fields, M3b only, warning from both adapters, S-10 hour mode. |
 | 2026-11-19 | K-07 approved by the supervisor (Doc 9 D-117); `feature_cable_sizing` on by default (D-114); base catalogue now 40 entries (D-118); language switch EN/ID done (D-117 K353). §3.13, FR-105 and §9 #5, #32 reworded. |
+| 2026-11-19 | X11 coupling reactors and RS (Doc 9 D-119, ADR-017): §3.15 with FR-122 – FR-127; §4, §5, §6, §7 rows. |

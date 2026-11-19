@@ -176,13 +176,32 @@ export function LoadSymbol({ el, at, emph, bind }: Common & { at: Attach }) {
 /** Orthogonal conductor between busbars; id (and M1 current) on a pill at the longest segment. */
 export function LineSymbol({ el, route, emph, bind }: Common & { route: LineRoute }) {
   const pts = route.points.map((p) => `${p.x},${p.y}`).join(" ");
+  const y0 = route.mid.y + 4 + (el.reactor ? 18 : 0); // a reactor's coil sits at the mid point, its tags below
   return (
     <g className={cls(el, emph)} {...bind?.(el)} data-testid={`diagram-line-${el.id}`}>
       <polyline points={pts} className={styles.lineHalo} />
       <polyline points={pts} className={styles.conductor} />
-      <Stack x={route.mid.x} y={route.mid.y + 4} lines={el.tags} anchor="middle" />
-      <DecoLine x={route.mid.x} y={route.mid.y + 4 + el.tags.length * LH} decos={decorations(el)} anchor="middle" />
-      {el.tightest && <Tightest x={route.mid.x - 20} y={route.mid.y + 4 + (el.tags.length + (decorations(el).length ? 1 : 0)) * LH - 8} w={40} />}
+      {el.reactor && <Coil at={route.mid} vertical={isVertical(route)} id={el.id} />}
+      <Stack x={route.mid.x} y={y0} lines={el.tags} anchor="middle" />
+      <DecoLine x={route.mid.x} y={y0 + el.tags.length * LH} decos={decorations(el)} anchor="middle" />
+      {el.tightest && <Tightest x={route.mid.x - 20} y={y0 + (el.tags.length + (decorations(el).length ? 1 : 0)) * LH - 8} w={40} />}
+    </g>
+  );
+}
+
+// The segment that holds the mid point decides the coil orientation.
+const isVertical = (r: LineRoute) =>
+  r.points.slice(1).some((p, k) => {
+    const q = r.points[k];
+    return p.x === q.x && p.x === r.mid.x && Math.min(p.y, q.y) <= r.mid.y && r.mid.y <= Math.max(p.y, q.y) && p.y !== q.y;
+  });
+
+/** X11 coupling reactor (ADR-017): three half-turns over a 28-wide gap in the conductor. */
+function Coil({ at, vertical, id }: { at: Pt; vertical: boolean; id: string }) {
+  return (
+    <g transform={`translate(${at.x} ${at.y})${vertical ? " rotate(90)" : ""}`} data-testid={`diagram-reactor-${id}`}>
+      <rect x={-15} y={-9} width={30} height={12} className={styles.pill} />
+      <path d="M -15 0 H -12 a 4 4 0 0 1 8 0 a 4 4 0 0 1 8 0 a 4 4 0 0 1 8 0 H 15" className={styles.conductor} />
     </g>
   );
 }

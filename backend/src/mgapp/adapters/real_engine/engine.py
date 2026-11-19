@@ -180,7 +180,9 @@ class RealEngine:
                 *(["a LoadProfile"] if profile_w is None else []),
                 *(["the autonomy time t_aut"] if p.get("autonomy_h") is None else []),
             ]
-            no_storage = [f"No storage energy: {' and '.join(lacks) or 'the storage inputs'} not given."]
+            no_storage = [
+                f"No storage energy: {' and '.join(lacks) or 'the storage inputs'} not given."
+            ]
         payload = PsPayload(
             load_apparent_kva=r.load_apparent_va / 1e3,
             required_inverter_kva=RequiredInverter(

@@ -942,6 +942,78 @@
    }
   },
   {
+   "id": "RCT-BLOCK-LR3-40-4-70",
+   "kind": "REACTOR",
+   "provenance": {
+    "manufacturer": "BLOCK Transformatoren-Elektronik",
+    "model": "LR3 40-4/70 three-phase line reactor",
+    "document": "BLOCK data sheet LR3 40-4/x, 3~ Line Reactor (Doc-Nr 0001211845), BLOCK Transformatoren-Elektronik GmbH",
+    "revision": "11.2025 (printed on sheet 1/8); retrieved from block.eu 2026-11-19"
+   },
+   "sources": {
+    "inductance_mh": "sheet 2/8, table row LR3 40-4/70: inductance L 0.42 mH (typical; L tolerance +/-10 %, sheet 1/8)",
+    "resistance_mohm": "sheet 2/8, table row LR3 40-4/70: typ. winding resistance 5.39 mOhm",
+    "rated_current_a": "sheet 2/8, table row LR3 40-4/70: rated current 70 A",
+    "rated_voltage_v": "sheet 1/8: rated voltage 690 V AC (UL max. 600 V)",
+    "impedance_percent": "sheet 1/8: short circuit voltage 4 % @ 400 V"
+   },
+   "reactor": {
+    "inductance_mh": 0.42,
+    "resistance_mohm": 5.39,
+    "rated_current_a": 70,
+    "rated_voltage_v": 690,
+    "impedance_percent": 4
+   }
+  },
+  {
+   "id": "RCT-BLOCK-LR3-40-4-80",
+   "kind": "REACTOR",
+   "provenance": {
+    "manufacturer": "BLOCK Transformatoren-Elektronik",
+    "model": "LR3 40-4/80 three-phase line reactor",
+    "document": "BLOCK data sheet LR3 40-4/x, 3~ Line Reactor (Doc-Nr 0001211845), BLOCK Transformatoren-Elektronik GmbH",
+    "revision": "11.2025 (printed on sheet 1/8); retrieved from block.eu 2026-11-19"
+   },
+   "sources": {
+    "inductance_mh": "sheet 2/8, table row LR3 40-4/80: inductance L 0.37 mH (typical; L tolerance +/-10 %, sheet 1/8)",
+    "resistance_mohm": "sheet 2/8, table row LR3 40-4/80: typ. winding resistance 2.9 mOhm",
+    "rated_current_a": "sheet 2/8, table row LR3 40-4/80: rated current 80 A",
+    "rated_voltage_v": "sheet 1/8: rated voltage 690 V AC (UL max. 600 V)",
+    "impedance_percent": "sheet 1/8: short circuit voltage 4 % @ 400 V"
+   },
+   "reactor": {
+    "inductance_mh": 0.37,
+    "resistance_mohm": 2.9,
+    "rated_current_a": 80,
+    "rated_voltage_v": 690,
+    "impedance_percent": 4
+   }
+  },
+  {
+   "id": "RCT-BLOCK-LR3-40-4-100",
+   "kind": "REACTOR",
+   "provenance": {
+    "manufacturer": "BLOCK Transformatoren-Elektronik",
+    "model": "LR3 40-4/100 three-phase line reactor",
+    "document": "BLOCK data sheet LR3 40-4/x, 3~ Line Reactor (Doc-Nr 0001211845), BLOCK Transformatoren-Elektronik GmbH",
+    "revision": "11.2025 (printed on sheet 1/8); retrieved from block.eu 2026-11-19"
+   },
+   "sources": {
+    "inductance_mh": "sheet 2/8, table row LR3 40-4/100: inductance L 0.3 mH (typical; L tolerance +/-10 %, sheet 1/8)",
+    "resistance_mohm": "sheet 2/8, table row LR3 40-4/100: typ. winding resistance 1.43 mOhm",
+    "rated_current_a": "sheet 2/8, table row LR3 40-4/100: rated current 100 A",
+    "rated_voltage_v": "sheet 1/8: rated voltage 690 V AC (UL max. 600 V)",
+    "impedance_percent": "sheet 1/8: short circuit voltage 4 % @ 400 V"
+   },
+   "reactor": {
+    "inductance_mh": 0.3,
+    "resistance_mohm": 1.43,
+    "rated_current_a": 100,
+    "rated_voltage_v": 690,
+    "impedance_percent": 4
+   }
+  },
+  {
    "id": "BAT-TESVOLT-TS-HV-70-E",
    "kind": "BATTERY_MODULE",
    "provenance": {

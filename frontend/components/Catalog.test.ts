@@ -123,3 +123,23 @@ describe("base catalogue order (user decision 2026-11-16)", () => {
     expect(ids).toEqual(["I1", "E2", "E10", "B1"]);
   });
 });
+
+describe("X11 reactor entry (ADR-017)", () => {
+  const e = {
+    id: "RCT-BLOCK-LR3-40-4-100",
+    kind: "REACTOR",
+    provenance: { manufacturer: "BLOCK", model: "LR3 40-4/100", document: "D", revision: "11.2025" },
+    sources: { inductance_mh: "sheet 2/8", resistance_mohm: "sheet 2/8", rated_current_a: "sheet 2/8" },
+    reactor: { inductance_mh: 0.3, resistance_mohm: 1.43, rated_current_a: 100 },
+  } as unknown as CatalogEntry;
+  it("copies a 1 m line with X = 2πfL and R as printed, the rated current only when confirmed", () => {
+    const p = fromEntry(e, 1, true, 50);
+    expect(p.kind).toBe("REACTOR");
+    expect(p.length_km).toBe(0.001);
+    expect((p.x_ohm_per_km as number) * 0.001).toBeCloseTo(2 * Math.PI * 50 * 0.3e-3, 12);
+    expect((p.r_ohm_per_km as number) * 0.001).toBeCloseTo(1.43e-3, 12);
+    expect(p.current_limit_a).toBe(100);
+    expect(fromEntry(e, 1, false, 50).current_limit_a).toBeUndefined();
+    expect(fromEntry(e, 1, false, null).x_ohm_per_km).toBeNull();
+  });
+});

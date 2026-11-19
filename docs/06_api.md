@@ -27,7 +27,7 @@ Dokumen ini menetapkan kontrak API antara antarmuka peramban dan server lokal. A
 ---
 
 ## 2. Endpoint list
-15 endpoints (manuscript 4.3.6). 15 manuscript endpoints plus 3 post-proposal additions (catalogs/import, CB, BA; Doc 12).
+15 endpoints (manuscript 4.3.6). 15 manuscript endpoints plus 4 post-proposal additions (catalogs/import, CB, BA, RS; Doc 12). RS is analysis type `RS` on `POST /api/analyses/{type}`: `depends_on` an M1 RunRecordRef, parameters and payload per ADR-017 (FR-125).
 
 | # | Method | Path | Purpose | Request body | Response (HTTP 200) | FR IDs |
 |---|---|---|---|---|---|---|

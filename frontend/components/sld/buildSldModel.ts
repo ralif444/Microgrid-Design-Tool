@@ -33,6 +33,8 @@ export type SldElement = {
   issues: string[];
   /** Inverter: M1 loading ratio, for the loading bar (W3). */
   loading?: number;
+  /** Line: a coupling reactor (X11, ADR-017), drawn as an inductor on the conductor. */
+  reactor?: boolean;
   /** S-08: the element with the smallest normalised margin among element-level constraints (W3). */
   tightest?: boolean;
 };
@@ -267,13 +269,17 @@ export function buildSldModel({ design, m1 = null, m2 = null, issues = [], margi
         : fmt(projLimit) !== null
           ? { label: "Current limit", value: fmt(projLimit)!, unit: "A", note: "project limit" }
           : { label: "Current limit", value: "—", unit: "A", note: "no limit set" };
+    const reactor = l.kind === "REACTOR";
+    const w = 2 * Math.PI * (design.nominal_frequency_hz ?? 0);
+    const lmh = reactor && w > 0 && typeof l.x_ohm_per_km === "number" && typeof l.length_km === "number" ? (l.x_ohm_per_km * l.length_km * 1000) / w : null;
     return finish(
       {
         kind: "line",
         id: l.id,
         from: l.from_bus_id ?? undefined,
         to: l.to_bus_id ?? undefined,
-        label: `Line ${l.id} from ${l.from_bus_id ?? "—"} to ${l.to_bus_id ?? "—"}`,
+        reactor,
+        label: `${reactor ? "Reactor" : "Line"} ${l.id} from ${l.from_bus_id ?? "—"} to ${l.to_bus_id ?? "—"}`,
         tags: [l.id, ...(r ? [`${res(r.current_a, "A")} A`] : [])],
         mark: c.mark,
       },
@@ -283,6 +289,7 @@ export function buildSldModel({ design, m1 = null, m2 = null, issues = [], margi
           title: "Design data",
           rows: [
             { label: "From → to", value: `${l.from_bus_id ?? "—"} → ${l.to_bus_id ?? "—"}` },
+            ...(reactor ? [{ label: "Type", value: "Coupling reactor" }, row("Inductance", lmh === null ? null : Number(lmh.toPrecision(6)), "mH")] : []),
             row("r", l.r_ohm_per_km, "Ω/km"),
             row("x", l.x_ohm_per_km, "Ω/km"),
             row("Length", l.length_km, "km"),

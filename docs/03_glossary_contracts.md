@@ -539,3 +539,4 @@ Versioning: equal → load; older with a chain → migrate forward step by step 
 | 2026-11-12 | §9 #6: BatteryBank and the profile hour axis taken up by the battery round (Doc 9 D-106, Doc 12 §3.14, ADR-015 accepted). |
 | 2026-11-12 | §4 SCENARIO_PATH_INVALID also covers an M3c scenario whose line ids differ from the base (Doc 9 D-112). |
 | 2026-11-13 | §6.5 Axis kind LOAD_PROFILE_HOUR for M3b (Doc 9 D-113, BESS-6); §9 #6 applied. |
+| 2026-11-19 | X11 (Doc 9 D-119, ADR-017, Doc 12 §4): `Line.kind` `CABLE`/`REACTOR` optional (omitted when null, hashes unchanged); Catalogue kind REACTOR; analysis type RS with IssueCode `REACTOR_SIZING_INVALID`; unit suffixes `_mh` (mH), `_mohm` (mΩ), `_percent` (%). |

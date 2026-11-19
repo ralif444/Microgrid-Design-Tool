@@ -10,7 +10,7 @@ const example = (name: string): ProjectSnapshot => {
   const f = JSON.parse(readFileSync(new URL(`../../public/examples/${name}.mgproj.json`, import.meta.url), "utf-8"));
   return { buses: f.buses, lines: f.lines, loads: f.loads, inverters: f.inverters };
 };
-const ALL: Record<string, ProjectSnapshot> = { ...SLD_FIXTURES, D1: example("d1"), D2: example("d2"), D2S: example("d2s"), D2H: example("d2h") };
+const ALL: Record<string, ProjectSnapshot> = { ...SLD_FIXTURES, D1: example("d1"), D2: example("d2"), D2LR: example("d2-lr"), D2S: example("d2s"), D2H: example("d2h") };
 const lay = (d: ProjectSnapshot) => layoutSld(buildSldModel({ design: d }));
 const overlap = (a: SldLayout["buses"][number], b: SldLayout["buses"][number]) =>
   a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;

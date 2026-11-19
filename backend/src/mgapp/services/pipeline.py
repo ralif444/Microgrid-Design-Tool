@@ -45,6 +45,7 @@ from mgapp.services.canonical import (
 from mgapp.services.dependency import check_dependency
 from mgapp.services.guard import ExecutionGuard, GuardedOutcome
 from mgapp.services.limits import Limits, check_size_limits
+from mgapp.services.reactor_sizing.service import compute as compute_reactor_sizing
 from mgapp.services.run_record import RunRecordService
 from mgapp.services.validation import MESSAGES, validate_request
 
@@ -86,8 +87,9 @@ MSG_CB_OFF = (
 )
 MSG_CB_FAILED = "The cable sizing service failed ({exc}). Check the table file and settings."
 MSG_BA_FAILED = "The battery adequacy service failed ({exc}). Check the battery banks."
+MSG_RS_FAILED = "The reactor sizing service failed ({exc}). Check the design and settings."
 # App-side analyses (ADR-014, ADR-015 Q5): service and failure message; both run after step 4.
-# Each service gets (snapshot, parameters, depends_on, run_m1, budget_s) and returns the result
+# Each service gets (snapshot, parameters, depends_on, run, budget_s) and returns the result
 # with the engine identity (None when it made no engine call, ADR-015 Q1).
 APP_SERVICES: dict[AnalysisType, tuple[Callable[..., tuple[AnalysisResult, Any]], str]] = {
     AnalysisType.CB: (
@@ -95,6 +97,7 @@ APP_SERVICES: dict[AnalysisType, tuple[Callable[..., tuple[AnalysisResult, Any]]
         MSG_CB_FAILED,
     ),
     AnalysisType.BA: (compute_battery, MSG_BA_FAILED),
+    AnalysisType.RS: (compute_reactor_sizing, MSG_RS_FAILED),
 }
 
 
@@ -228,13 +231,20 @@ class Pipeline:
             compute, failed = APP_SERVICES[t]
             assert body.depends_on is not None  # checked in step 4
 
-            def run_m1(s: ProjectSnapshot) -> GuardedOutcome:
+            # run(s) is an M1; RS also asks for M4a with its probe M1 as depends_on (ADR-017)
+            def run_m1(
+                s: ProjectSnapshot,
+                t: AnalysisType = AnalysisType.M1,
+                parameters: dict[str, Any] | None = None,
+                depends_on: RunRecordRef | None = None,
+            ) -> GuardedOutcome:
                 return self._guard.run(
                     AnalysisRequest(
-                        analysis_type=AnalysisType.M1,
+                        analysis_type=t,
                         project_snapshot=s,
-                        parameters={},
+                        parameters=parameters or {},
                         solver_config=body.solver_config,
+                        depends_on=depends_on,
                     )
                 )
 

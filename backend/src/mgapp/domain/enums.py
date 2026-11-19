@@ -17,11 +17,12 @@ class AnalysisType(StrEnum):
     M4B = "M4b"
     CB = "CB"  # app-side cable sizing (ADR-014, D-102); never sent to the engine
     BA = "BA"  # app-side battery adequacy (ADR-015, D-109); calls M1 through the guard only
+    RS = "RS"  # app-side reactor sizing advice (ADR-017); calls M1 and M4a through the guard
 
 
-APP_TYPES = frozenset({AnalysisType.CB, AnalysisType.BA})
+APP_TYPES = frozenset({AnalysisType.CB, AnalysisType.BA, AnalysisType.RS})
 ENGINE_TYPES = tuple(t for t in AnalysisType if t not in APP_TYPES)
-"""Types the Engine Port serves; CB and BA are computed by the app (ADR-014, ADR-015)."""
+"""Types the Engine Port serves; CB, BA and RS are computed by the app (ADR-014, -015, -017)."""
 
 DEPENDENT_TYPES = frozenset(
     {
@@ -34,6 +35,7 @@ DEPENDENT_TYPES = frozenset(
         AnalysisType.M4B,
         AnalysisType.CB,
         AnalysisType.BA,
+        AnalysisType.RS,
     }
 )
 """Types that need a valid RunRecordRef in `depends_on`: M1, or M2 for CB (Doc 3 §5.4, D-102)."""
@@ -65,6 +67,7 @@ ALLOWED_STATUS: dict[AnalysisType, frozenset[Status]] = {
     AnalysisType.M4B: _ALWAYS | _M4,
     AnalysisType.CB: _ALWAYS | {Status.FEASIBLE},
     AnalysisType.BA: _ALWAYS | {Status.FEASIBLE},
+    AnalysisType.RS: _ALWAYS | {Status.FEASIBLE},
 }
 """Allowed Status per analysis type (manuscript 4.3.2, Doc 3 §5.4)."""
 
@@ -164,6 +167,7 @@ class IssueCode(StrEnum):
     CABLE_TABLES_UNCHECKED = "CABLE_TABLES_UNCHECKED"  # CB (D-100 K264)
     CABLE_SETTINGS_INVALID = "CABLE_SETTINGS_INVALID"  # CB (D-102 K281)
     BATTERY_BANK_INVALID = "BATTERY_BANK_INVALID"  # battery round (D-106 K308, D-108)
+    REACTOR_SIZING_INVALID = "REACTOR_SIZING_INVALID"  # RS parameters (ADR-017)
 
 
 class IssueLevel(StrEnum):

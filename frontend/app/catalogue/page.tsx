@@ -194,6 +194,9 @@ export default function CataloguePage() {
         </button>{" "}
         <button type="button" onClick={() => add("BATTERY_MODULE")}>
           {t("+ Add battery module entry")}
+        </button>{" "}
+        <button type="button" onClick={() => add("REACTOR")}>
+          {t("+ Add reactor entry")}
         </button>
         {x10 && (
           <>

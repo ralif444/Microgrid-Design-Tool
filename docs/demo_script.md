@@ -24,7 +24,7 @@ Open http://127.0.0.1:8000 in Chrome. Point at the header badge **Engine: REAL**
 
 ## 2. Open the guided example (S-01)
 
-Click **Open guided example (D2)**. The header shows **Example mode** with **Leave example mode**: design D2 of Doc 13 §4 with the Doc 3 §3.7 limits and the scenarios D2S and D2H already in the Project (Doc 12 X9, D-92). Every screen now carries a banner "Example mode: …" and a disclosure **What this step shows** with its source; the analysis forms are pre-filled, each value tagged "Example" with its source.
+Click **Open guided example (D2)**. The header shows **Example mode** with **Leave example mode**: design D2 of Doc 13 §4 with the Doc 3 §3.7 limits and the scenarios D2S and D2H (load levels on the as-built D2) already in the Project (Doc 12 X9, D-92). Every screen now carries a banner "Example mode: …" and a disclosure **What this step shows** with its source; the analysis forms are pre-filled, each value tagged "Example" with its source.
 
 Two ways on:
 - **Short (the run took under 2 s on the Real Engine on 2026-11-05):** in the Model area click **Run the whole example**. It runs PS → M1 → M2 → M3c → M4a → M4b in turn, lists M3a, M3b and M3d as "skipped: not set in the example", and opens the Report (FR-104, D-98). Then go to step 7.

@@ -139,7 +139,8 @@
           "M4a",
           "M4b",
           "CB",
-          "BA"
+          "BA",
+          "RS"
         ],
         "title": "AnalysisType",
         "type": "string"
@@ -645,7 +646,8 @@
               "INVERTER",
               "CONDUCTOR",
               "BREAKER",
-              "BATTERY_MODULE"
+              "BATTERY_MODULE",
+              "REACTOR"
             ],
             "title": "Kind",
             "type": "string"
@@ -658,6 +660,17 @@
               "model": null,
               "revision": null
             }
+          },
+          "reactor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReactorValues"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           },
           "sources": {
             "additionalProperties": {
@@ -2039,7 +2052,8 @@
           "CABLE_TABLES_INCOMPLETE",
           "CABLE_TABLES_UNCHECKED",
           "CABLE_SETTINGS_INVALID",
-          "BATTERY_BANK_INVALID"
+          "BATTERY_BANK_INVALID",
+          "REACTOR_SIZING_INVALID"
         ],
         "title": "IssueCode",
         "type": "string"
@@ -2365,6 +2379,22 @@
             ],
             "default": null,
             "title": "Id"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "CABLE",
+                  "REACTOR"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Kind"
           },
           "length_km": {
             "anyOf": [
@@ -3594,6 +3624,79 @@
           "rank"
         ],
         "title": "Ranking",
+        "type": "object"
+      },
+      "ReactorValues": {
+        "additionalProperties": false,
+        "description": "X11 Catalogue kind REACTOR (ADR-017): a three-phase series (coupling) reactor. The line\nvalues are derived from these: X = 2*pi*f*L at the Project's nominal frequency, R as given.",
+        "properties": {
+          "impedance_percent": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Impedance Percent"
+          },
+          "inductance_mh": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Inductance Mh"
+          },
+          "rated_current_a": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Rated Current A"
+          },
+          "rated_voltage_v": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Rated Voltage V"
+          },
+          "resistance_mohm": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Resistance Mohm"
+          }
+        },
+        "title": "ReactorValues",
         "type": "object"
       },
       "ReproductionReport": {
@@ -4961,6 +5064,37 @@
           }
         },
         "summary": "Run analysis PS",
+        "tags": [
+          "analyses"
+        ]
+      }
+    },
+    "/api/analyses/RS": {
+      "post": {
+        "operationId": "analyse_RS",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisRequestBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Run analysis RS",
         "tags": [
           "analyses"
         ]

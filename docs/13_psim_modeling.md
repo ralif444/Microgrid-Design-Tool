@@ -55,6 +55,7 @@ Using three-phase totals in PSIM avoids the per-phase conversion ($m_p^{phase} =
 | $\tau_{P,i}$, $\tau_{Q,i}$ (s) | Two separate first-order low-pass filters | Not a PLL, not second order. |
 | $P_i^*$, $Q_i^*$ | Droop block inputs | 0 in all cases except reference steps. |
 | Line $r$, $x$ (Ω/km), length (km) | $R = r\,\ell$, $L = x\,\ell/\omega^*$ per phase | Prototype designs give R and X in Ω directly. |
+| Reactor line (`kind` REACTOR): L (mH), R (mΩ) per phase, stored as $x = 2\pi f^* L$ and $r = R$ per km at 1 m | Series R and L per phase, the datasheet values directly (no length) | ADR-017. BLOCK LR3 40-4/100: 0.30 mH, 1.43 mΩ; /70: 0.42 mH, 5.39 mΩ. |
 | Load $P_k$, $Q_k$ (kW, kvar, three-phase) | Constant-PQ element or controlled current source | Declared in metadata `load_model`. |
 | Rating $S_{r,i}$ (kVA) | Informative in layer 1 (no limiter); limiter base in layer 2 | Layer 1 must not saturate; check before running. |
 | $\tau_{in}$ (s), optional M4a input | Derived from layer-2 inner-loop gains (§7) | Feeds indicator $r_{in}$ (manuscript 4.2.7). |
@@ -73,12 +74,27 @@ The designs are built from base-catalogue products (user decision 2026-11-19, Do
 |---|---|---|---|---|---|
 | D1 | INV1@B1 — B2 | INV1 TRUMPF ×2, 50 kVA; $k_P$ 0.007958 Hz/kW (0.80 %); $k_Q$ 0.000866 kV/kvar (9.84 %) | B1–B2: N2XY 4×16, 30.47 m | 20 kW, 8 kvar (43 % of rating) | Baseline, single inverter |
 | D2 | INV1@B1 — B2 — INV2@B3 | INV1 TRUMPF ×3, 75 kVA, $k_P$ 0.006667 Hz/kW, $k_Q$ 0.000587 kV/kvar; INV2 TRUMPF ×2, 50 kVA, $k_P$ 0.01 Hz/kW, $k_Q$ 0.00088 kV/kvar (both 1 % and 10 %) | B1–B2: N2XY 4×16, 30.47 m. B2–B3: N2XY 4×16, 35.07 m | 27.17 kW, 10.87 kvar (29.27 kVA, 23.4 % of 125 kVA) | Two inverters, sharing in proportion to rating |
-| D2S | as D2 | as D2 | as D2 | 2.4 × D2 (65.22 kW, 26.09 kvar; 56.2 %) | Stressed but physical |
-| D2H | as D2 | as D2 | as D2 | 4.0 × D2 (108.7 kW, 43.48 kvar; 93.7 % of rating) | Near the engineering limit |
+| D2-LR | D2 with a terminal bus per inverter: INV1@INV1T — LR1 — B1, INV2@INV2T — LR2 — B3 | as D2 | as D2, plus LR1 BLOCK LR3 40-4/100 (0.30 mH, 1.43 mΩ, 100 A) and LR2 BLOCK LR3 40-4/70 (0.42 mH, 5.39 mΩ, 70 A) | as D2 | Stable reference with coupling reactors (D-119) |
+| D2S | as D2-LR | as D2 | as D2-LR | 2.4 × D2 (65.22 kW, 26.09 kvar; 56.2 %) | Stressed but physical |
+| D2H | as D2-LR | as D2 | as D2-LR | 4.0 × D2 (108.7 kW, 43.48 kvar; 93.7 % of rating) | Near the engineering limit |
+| D2-LF | D2 with the site's feeder lengths | as D2 | N2XY 4×16 at site lengths | as D2 | Waits for the user's site lengths (spec Q7) |
 
 **Small-signal stability of the catalogue designs (2026-11-19, Doc 9 D-118).** M4a on the Real Engine: D1 STABLE; D2, D2S and D2H UNSTABLE, one oscillatory pair at about +25 ± j71 s⁻¹ (ζ_min −0.34, 11.3 Hz on D2; −0.33 on D2S and D2H), participation mainly δ of INV2 and the P filters. The prototype D2 was stable (ζ +0.09). The cause is the strongly resistive, electrically short coupling between the two inverters: at the D2 line |Z|, ζ turns positive only at R/X ≤ 1.0; every catalogue cable (NYY and N2XY, 16 – 95 mm², R/X 2.3 – 19.6) is unstable at the D2 lengths; halving the droop gains does not help. Longer lines decouple the inverters: N2XY 4 × 16 becomes stable between 152 m and 305 m per line (at 305 m: ζ +0.30, lowest bus voltage 0.955 p.u.); 4 × 50 between 305 m and 609 m; 4 × 95 between 609 m and 1219 m. **User decision 2026-11-19: keep the cable and validate the instability** (§5). Whether PSIM shows the same mode is part of what the comparison measures (the engine network is quasi-static, A1).
 
-Operating points under the guided-example limits (0.95 – 1.05 p.u., 49.75 – 50.25 Hz): D1 and D2 FEASIBLE; D2S (49.736 Hz) and D2H (49.558 Hz) INFEASIBLE on frequency, D2H also at 94.6 % / 95.9 % loading and B2 0.9505 p.u. SS-03 and SS-04 are numeric comparisons only, not "within limits" cases. The D2S and D2H loads are the file values (65.22 kW + 26.09 kvar; 108.7 kW + 43.48 kvar), not the rounded 2.4 × and 4.0 × products (65.208, 108.68); the steps of §5 use their kW values (SM-02 1.607 kW, DR-02 2.143 kW).
+**Coupling reactors (2026-11-19, Doc 9 D-119, ADR-017).** D2 above stays the as-built design (D2-AB, UNSTABLE). D2-LR adds one catalogue reactor per inverter, the parts the reactor sizing advice RS picks on D2 (its bisection gives 1.39 % of each inverter's base impedance; the picked parts are 3.65 % and 3.41 %). D2S and D2H are re-based on D2-LR (user decision Q6), so the stressed dynamic cases are stable. Real Engine results:
+
+| Design | M1 f (Hz) | Lowest bus (p.u.) | M4a | ζ_min |
+|---|---|---|---|---|
+| D2-AB (`d2`) | 49.89088 | 0.9878 | UNSTABLE | −0.336 |
+| D2-LR (`d2-lr`) | 49.89085 | 0.9842 (B2) | STABLE | 0.218 (mode 6.15 Hz) |
+| D2S (`d2s`, on D2-LR) | 49.73629 | 0.9609 | STABLE | 0.223 |
+| D2H (`d2h`, on D2-LR) | 49.55684 | 0.9321 | STABLE | 0.229 |
+
+**Inverter model in PSIM.** The TRUMPF manual names an integrated virtual impedance without a value (spec §6a, Q8). The engine models the inverter without it; the PSIM inverter must also be modelled without it, or the comparison mixes two models. The real unit adds damping of unknown size, so the as-built result is conservative for this product (thesis limitation).
+
+**Hand case R-1 (one reactor line, D2-LR, M1 Real Engine).** LR1 carries $P = 16.3723$ kW, $Q = 6.47077$ kvar from INV1T at 0.436204 kV. $I = S/(\sqrt3\,V) = 17.6046/(\sqrt3 \cdot 0.436204) = 23.301$ A (engine 23.3011 A). $X = 2\pi \cdot 50 \cdot 0.30	imes10^{-3} = 0.0942478$ Ω. Losses $3I^2R = 3 \cdot 23.301^2 \cdot 0.00143 = 2.329$ W (engine 2.3292 W); reactive absorption $3I^2X = 153.5$ var (engine 6.47077 − 6.31726 = 0.15351 kvar). Voltage INV1T → B1: 0.436204 → 0.434766 kV (1.44 V, 0.33 %).
+
+Operating points under the guided-example limits (0.95 – 1.05 p.u., 49.75 – 50.25 Hz): D1 and D2 FEASIBLE; D2S (49.736 Hz) and D2H (49.558 Hz) INFEASIBLE on frequency, D2H also at 94.6 % / 95.9 % loading and B2 0.9505 p.u. SS-03 and SS-04 are numeric comparisons only, not "within limits" cases. On the re-based D2S and D2H (D2-LR, above) the frequencies are 49.736 and 49.557 Hz and D2H's lowest bus 0.932 p.u., so the same holds. The D2S and D2H loads are the file values (65.22 kW + 26.09 kvar; 108.7 kW + 43.48 kvar), not the rounded 2.4 × and 4.0 × products (65.208, 108.68); the steps of §5 use their kW values (SM-02 1.607 kW, DR-02 2.143 kW).
 
 All designs: 440 V LL, 50 Hz, $\tau_P = \tau_Q = 0.05$ s, $P^* = Q^* = 0$. Work package 1.6.1 confirms them; the final values are frozen in the input sheets. The example Projects `frontend/public/examples/d1`, `d2`, `d2s`, `d2h` hold these values with each catalogue reference; the D2 disturbances of §5 are presets on the Transient screen of the guided example.
 
@@ -99,6 +115,8 @@ All designs: 440 V LL, 50 Hz, $\tau_P = \tau_Q = 0.05$ s, $P^* = Q^* = 0$. Work 
 | TS-03 | Transient | D2 | Large $P^*$ step on INV1, +21.43 % of rating (+16.071 kW) | 5 s; 0.002 s | as TS-01 | Categorical |
 
 **D2 dynamic cases on an unstable design (user decision 2026-11-19, D-118).** Because D2 is small-signal unstable in the engine, SM-01 and SM-02 compare the *unstable* dominant mode: growth rate σ (> 0) and damped frequency, fitted by matrix pencil on the window from the disturbance until the first saturation, network loss or 10 % deviation, against the M4a eigenvalue (+25.3 ± j71.0 s⁻¹). The decay-rate tolerance of §6 applies to σ. DR-01, DR-02 and TS-01 – TS-03 become categorical: the class (diverges or settles) must match; NRMSE and settling are reported only for a case that settles in both tools. If PSIM settles where the engine diverges, that is a finding about assumption A1 (quasi-static network), recorded under §9, not a tolerance miss. Engine note: M4b on D2 currently stops at the disturbance instant with "network solution lost", even for a 0.0001 kW step (open point 7), so the engine side of these cases is the M4a eigenvalue until that is resolved.
+
+**D2-LR cases (D-119).** SM-01, SM-02, DR-01, DR-02 and TS-01 – TS-03 are also run on D2-LR, with the same disturbances (D2-LR has the D2 load and ratings, so the step values are unchanged), as full numeric comparisons per §6: SM against the M4a mode of D2-LR (ζ_min 0.218, 6.15 Hz), DR with NRMSE and settling, TS categorical. SS-02 on D2-LR adds the two reactor lines to the compared line quantities. The D2-AB runs above stay as the instability case.
 
 Load steps are a % of the D2 load and $P^*$ steps a % of the INV1 rating, the same % as the prototype cases (D-116). The 3 % small-signal step is chosen because at 1 % the voltage deviation falls below the resolution floor (manuscript 4.5.3).
 
@@ -131,7 +149,7 @@ with $K$ samples and $p_{pre}$ the pre-disturbance PSIM value. Dominant modes co
 | RoCoF | Maximum | Descriptive | Descriptive | No verdict |
 | Recovery; transient class | Categorical | Must match | Must match | Convention |
 
-Layer-1 steady thresholds are at least five times the expected model difference (from the frequency-dependent line reactance, recomputed 2026-11-19 on the catalogue designs by re-solving M1 with $x$ scaled by $f/f^*$: at most $3.5\times10^{-6}$ relative in voltage, $2.5\times10^{-5}$ relative in Q, $7\times10^{-6}$ relative in losses and $5\times10^{-8}$ Hz, all on D2H; the prototype designs gave $7\times10^{-5}$, $4.3\times10^{-4}$ and $10^{-5}$ Hz) plus the PSIM measurement resolution floor. Dynamic and modal thresholds are the author's engineering conventions, not literature values. Thresholds change only through a new policy version, never after results are seen. The prototype file `tolerance_policy_v1.json` with its `.lock.json` hash is the machine-readable form; work package 1.6.2 confirms it against Tabel 4.14 and locks it.
+Layer-1 steady thresholds are at least five times the expected model difference (from the frequency-dependent line reactance, recomputed 2026-11-19 on the catalogue designs by re-solving M1 with $x$ scaled by $f/f^*$: at most $3.5\times10^{-6}$ relative in voltage, $2.5\times10^{-5}$ relative in Q, $7\times10^{-6}$ relative in losses and $5\times10^{-8}$ Hz, all on D2H; on the reactor designs, where the reactors carry most of the line reactance, at most $1.8	imes10^{-4}$ relative in voltage, $9.1	imes10^{-4}$ in Q, $3.6	imes10^{-4}$ in losses and $3	imes10^{-6}$ Hz, again on D2H, so the layer-1 thresholds keep a margin of at least eleven; the prototype designs gave $7\times10^{-5}$, $4.3\times10^{-4}$ and $10^{-5}$ Hz) plus the PSIM measurement resolution floor. Dynamic and modal thresholds are the author's engineering conventions, not literature values. Thresholds change only through a new policy version, never after results are seen. The prototype file `tolerance_policy_v1.json` with its `.lock.json` hash is the machine-readable form; work package 1.6.2 confirms it against Tabel 4.14 and locks it.
 
 ## 7. Layer-2 parameters (decided: cited design procedure, frozen before running)
 
@@ -195,10 +213,13 @@ Sources found for these points (2026-11-19, layer-2 filter and loop procedures, 
 | 8 | Settling criteria (band, duration) for M4b classes; the guided example leaves them empty (D-92 K231), so TS classes are None. | DECISION NEEDED |
 | 9 | Output alignment: engine grid $\tau/20$ = 2.5 ms (row at the disturbance duplicated), PSIM export 2 ms; resampling rule. M4b reports no line current, no per-inverter frequency and no angle, so I(t) and angle comparisons need PSIM-only data or an engine change. | DECISION NEEDED |
 | 10 | Angle reference bus for angle errors (engine: B1 = 0°). | Work package 1.6.2 |
+| 11 | D2-LF feeder lengths from the case site. | Needs the user's site data (spec Q7) |
+| 12 | Supervisor approval of the reactor as a design element (Doc 14 D20). | Asked |
 
 ## Log
 
 | Date | Change |
 |---|---|
+| 2026-11-19 | Coupling reactors (D-119, ADR-017): §3 reactor row; §4 D2-LR, D2-LF, D2S and D2H re-based on D2-LR, results table, PSIM inverter without virtual impedance, hand case R-1; §5 D2-LR numeric cases; §6 budget on the reactor designs; open points 11, 12. |
 | 2026-11-19 | §4 rebuilt on base-catalogue products (D-116, Doc 14 D19); droop unit conversion in §3; D2 small-signal instability, user decision to validate it, §5 case rules (D-118); §6 model-difference budget recomputed; open points 7 – 10. |
 | 2026-11-01 | Created from the post-seminar design session (decisions Q22–Q25, Q38, Q39) and the manuscript; design and case values cross-checked against the prototype validation package. |

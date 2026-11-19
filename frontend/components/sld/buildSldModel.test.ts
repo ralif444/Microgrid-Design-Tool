@@ -4,7 +4,7 @@ import type { LimitingConstraint, M1Payload, M2Payload, ProjectSnapshot } from "
 import { num } from "../format";
 import { buildSldModel, type SldElement } from "./buildSldModel";
 
-// Doc 12 X8 (FR-94, FR-95): the SLD model copies values verbatim and computes nothing.
+// Doc 12 X8 (FR-94, FR-95); X11 FR-122 reactor lines below: the SLD model copies values verbatim and computes nothing.
 const file = JSON.parse(readFileSync(new URL("../../public/examples/d2.mgproj.json", import.meta.url), "utf-8"));
 const D2: ProjectSnapshot = {
   nominal_voltage_kv: file.project.nominal_voltage_kv,
@@ -155,5 +155,16 @@ describe("SLD model (FR-94, FR-95)", () => {
     expect(el.issues).toEqual(["Bus is not connected."]);
     expect(section(el, "Issues").rows).toEqual([{ label: "Issue", value: "Bus is not connected." }]);
     expect(m.buses.filter((e) => e.issues.length)).toHaveLength(1);
+  });
+});
+
+describe("X11 reactor line (FR-127, ADR-017)", () => {
+  it("marks a REACTOR line, labels it Reactor and shows L in mH", () => {
+    const f = JSON.parse(readFileSync(new URL("../../public/examples/d2-lr.mgproj.json", import.meta.url), "utf-8"));
+    const snap = { ...D2, buses: f.buses, lines: f.lines, inverters: f.inverters };
+    const lr = buildSldModel({ design: snap }).lines.find((e) => e.reactor)!;
+    expect(lr.label.startsWith("Reactor ")).toBe(true);
+    const l = value(lr, "Design data", "Inductance")!;
+    expect(["0.3", "0.42"]).toContain(l.value);
   });
 });

@@ -109,6 +109,7 @@ def compute(snapshot: ProjectSnapshot, p: dict[str, Any], m2: RunRecordRef) -> A
             r_line_ohm_per_km=ln.r_ohm_per_km,
         )
         for ln in snapshot.lines
+        if ln.kind != "REACTOR"  # a coupling reactor is not a cable (ADR-017)
     ] + [
         SizingElement(
             element_id=inv.id,

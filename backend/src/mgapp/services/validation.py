@@ -27,6 +27,7 @@ from mgapp.services.canonical import (
     safe_sha256_hex,
     sha256_hex,
 )
+from mgapp.services.reactor_sizing.service import parameter_issues as reactor_parameter_issues
 
 ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,32}$")
 
@@ -65,6 +66,7 @@ MESSAGES: dict[IssueCode, str] = {
     IssueCode.CABLE_TABLES_UNCHECKED: "The cable table file is not double-entry checked.",
     IssueCode.CABLE_SETTINGS_INVALID: "Check the cable sizing settings.",
     IssueCode.BATTERY_BANK_INVALID: "Check the battery bank.",
+    IssueCode.REACTOR_SIZING_INVALID: "Check the reactor sizing settings.",
 }
 
 DISTURBANCE_KINDS = frozenset({"LOAD_STEP", "LOAD_SCALING", "REFERENCE_STEP", "INVERTER_OUTAGE"})
@@ -344,6 +346,8 @@ def _parameters(
         c.issues += cable_parameter_issues(p)
     elif t is AnalysisType.BA:
         c.issues += battery_parameter_issues(p, s)
+    elif t is AnalysisType.RS:
+        c.issues += reactor_parameter_issues(p, s)
     elif t is AnalysisType.M2:
         mi, ml, h = p.get("inverter_margin_ratio"), p.get("line_margin_ratio"), p.get("autonomy_h")
         if not (_is_num(mi) and mi >= 0 and _is_num(ml) and ml >= 0):
@@ -420,7 +424,7 @@ def _parameters(
 
 
 def _needs_tau(t: AnalysisType, p: dict[str, Any]) -> bool:
-    if t in (AnalysisType.M4A, AnalysisType.M4B):
+    if t in (AnalysisType.M4A, AnalysisType.M4B, AnalysisType.RS):
         return True
     if t in (AnalysisType.M3B, AnalysisType.M3D):
         return bool(M4_POINT_METRICS & set(p.get("point_metrics") or []))

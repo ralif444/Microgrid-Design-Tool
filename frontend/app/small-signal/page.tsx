@@ -18,6 +18,7 @@ import { KpiStrip } from "../../components/KpiStrip";
 import { M1BlockedNote, M1FreshnessBadge } from "../../components/M1Freshness";
 import { eigenRows, M4aCharts, type EigRow } from "../../components/M4aCharts";
 import { NumberField } from "../../components/NumberField";
+import { needsReactorAdvice, ReactorAdvice } from "../../components/ReactorAdvice";
 import { RequireProject } from "../../components/RequireProject";
 import { ResultSheet } from "../../components/ResultSheet";
 import { StatusBanner } from "../../components/StatusBanner";
@@ -132,6 +133,9 @@ function SmallSignal() {
         </>
       )}
         </ResultSheet>
+      )}
+      {p && !stale && needsReactorAdvice(p) && (
+        <ReactorAdvice threshold={(resp?.run_record.parameters as { damping_threshold_ratio?: number } | undefined)?.damping_threshold_ratio ?? null} />
       )}
       {!resp && <EmptyState title={t("Not run yet.")}>{t("Run the small-signal analysis to see the eigenvalues, damping and the stability class.")}</EmptyState>}
       </div>

@@ -276,7 +276,7 @@
     "scenarios": {
       "fields": {},
       "guidance": {
-        "text": "Scenario comparison (M3c) runs every scenario and compares each one with the reference scenario. The example holds D2 base as the reference and the stressed designs D2S and D2H as load overrides. \"Generate N−1 scenarios\" adds one scenario per inverter with that inverter removed.",
+        "text": "Scenario comparison (M3c) runs every scenario and compares each one with the reference scenario. The example holds D2 base as the reference and the load levels of D2S and D2H as load overrides on D2 itself (the D2S and D2H example files also carry the coupling reactors). \"Generate N−1 scenarios\" adds one scenario per inverter with that inverter removed.",
         "source": "manuscript 4.2.5; Doc 13 §4; FR-80"
       }
     },
