@@ -338,7 +338,7 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | FR-86 – FR-93 | Client + E2E | scale_ticks_domain_nearest_nulls; kpi_selectors_empty_and_null; latest_matching_run; figure_show_data_row_count; crosshair_arrow_keys; inspector_focus_and_stale; fake_caption_every_chart; glossary_entries_have_source; toggletip_enter_escape; svg_download_caption; report_charts_within_718px |
 | FR-99 – FR-104 | Client + E2E; API (REAL) at EX-7 | example_settings_guard; initial_value_precedence; every_example_entry_has_source; guidance_no_result_numbers; guided_snapshot_hash_equals_hand_entry; example_click_through; leave_example_mode; normal_project_forms_empty; m4b_example_presets; run_whole_example |
 | FR-105 – FR-115 | Unit + Contract (API, Fake M2) + E2E | lookup_next_more_severe_value; blank_cell_is_gap_not_zero; cb1_cb2_both_reported; mcb_to_mccb_switch_above_63a; no_device_fits; no_size_fits; r_correction_cu_al; table_hash_changes_on_edit; flag_off_returns_not_applicable; depends_on_m2_missing_or_stale; unchecked_tables_input_invalid; engine_fields_null; per_element_outcome_does_not_change_status; screen_hidden_when_flag_off; run_shows_caveat; sld_shows_breaker_symbols_after_run; hand cases H1–H6 (guideline §7) |
-| FR-122 – FR-127 | Unit + Contract (stub engine) + API (REAL) + Catalogue file + Project file + Client | see the FR rows; e2e for the RS panel pending |
+| FR-122 – FR-127 | Unit + Contract (stub engine) + API (REAL) + Catalogue file + Project file + Client | see the FR rows; e2e for the RS panel added (D-120) |
 
 ## 8. Core alignment items moved out of this document
 
@@ -372,7 +372,7 @@ Catalogue export is a client-side download, like Project export. No other endpoi
 | 19 | X9: guided example D2 only, no guided D1 (EX-D1). | DECIDED (user 2026-11-05, D-92 K227) |
 | 20 | X9: "Run the whole example" is built, last, only if time allows (EX-D2). | DECIDED (user 2026-11-05, D-92 K228) |
 | 21 | X9: guidance text in English, the UI language (EX-D5); glossary toggletips stay Indonesian (FR-91). | DECIDED (user 2026-11-05, D-92 K229) |
-| 22 | X9: values with no source yet stay empty until the user gives one with a reason: M3a `step_relative`, M3b `step_count`, M3d `axis_y` and both step counts. M4a damping threshold stays empty; M4b settling criteria stay empty and are revisited after one REAL run (EX-D4). | OPEN (owner, D-92 K231) |
+| 22 | X9: values with no source yet stay empty until the user gives one with a reason: M3a `step_relative`, M3b `step_count`, M3d `axis_y` and both step counts. M4a damping threshold stays empty; M4b settling criteria were empty until one REAL run (EX-D4, D-99); the guided examples now carry the author's declared bands (D-121, Doc 13 §6). | OPEN (owner, D-92 K231) |
 | 23 | X9: the M3c reference is the first scenario (Doc 3 §6.6 default; S-11 has no reference field), so "D2 base" is stored first in the guided Project. | DECIDED (from Doc 3, D-92 K234) |
 | 24 | X10: protection is out of the manuscript scope; X10 enters the thesis only with supervisor approval and stays behind the feature flag until then. | KONFLIK, RESOLVED 2026-11-19: supervisor approved (Doc 9 K-07, D-117; D-100 K258, Doc 9 K-07) |
 | 25 | X10: technical baseline PUIL 2011 (the edition the user holds) while Permen ESDM 7/2021 lists PUIL 2020 as mandatory; migrate when PUIL 2020 is obtained. | KONFLIK (open, D-100 K259, Doc 9 K-08) |

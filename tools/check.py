@@ -9,13 +9,15 @@ import sys
 
 from _common import BACKEND, ENGINE, FRONTEND, ROOT, node_bin, node_env, run, uv
 
+PY_EXTRA = ["../tests", "../tools", "../validation"]  # outside backend/, backend config
+
 
 def main() -> int:
     steps = [
-        ([uv(), "run", "ruff", "format", "--check", ".", "../tests", "../tools"], BACKEND, None),
+        ([uv(), "run", "ruff", "format", "--check", ".", *PY_EXTRA], BACKEND, None),
         ([uv(), "run", "ruff", "check", "."], BACKEND, None),
         (
-            [uv(), "run", "ruff", "check", "--config", "pyproject.toml", "../tests", "../tools"],
+            [uv(), "run", "ruff", "check", "--config", "pyproject.toml", *PY_EXTRA],
             BACKEND,
             None,
         ),
