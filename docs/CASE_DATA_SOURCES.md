@@ -71,7 +71,9 @@ No open source prints an hourly table. Shape anchors (DOIs VERIFIED):
   Table 1: average 16.73 kW, peak 50.36 kW, load factor 0.33 (appliance estimate, not measured).
 
 Options for a real profile: ask the Lombok authors for the Fig. 3 data; digitise Fig. 3 and
-label it digitised; search PLN/ESDM statistics for a *kurva beban harian* table. A curve built
+label it digitised; search PLN/ESDM statistics for a *kurva beban harian* table. Full text
+read 2026-11-21: still no table (Fig. 3 only; village node peak ≈ 330 kW at 18–19:00); Table 1
+gives the DER-CAM battery assumptions η 0.9 and SoC_min 30 % (planning inputs, not measured). A curve built
 from the anchors above is a construction and must be labelled so.
 
 ### 1.4 DoD and efficiency
@@ -89,12 +91,12 @@ null. The manual publishes no filter values and no switching frequency (whole te
 
 | Source | Use | Label |
 |---|---|---|
-| Liserre, Blaabjerg, Hansen, IEEE TIA 41(5) 1281–1291, 2005, doi:10.1109/TIA.2005.853373 | LCL design procedure in p.u. (Z_b = V_LL²/S_n) | VERIFIED, text not read |
-| Reznik et al., IEEE TIA 50(2) 1225–1232, 2014, doi:10.1109/TIA.2013.2274612 | worked LCL design | VERIFIED, text not read |
-| Pogaku, Prodanovic, Green, IEEE TPEL 22(2) 613–625, 2007, doi:10.1109/TPEL.2006.890003 | droop inverter parameter table (LC + coupling L, PI gains) | VERIFIED, table not read (closed access) |
+| Liserre, Blaabjerg, Hansen, IEEE TIA 41(5) 1281–1291, 2005, doi:10.1109/TIA.2005.853373 | LCL design procedure in p.u. (Z_b = V_LL²/S_n); Table I (4.1 kW, 380 V: L 3 + 2 mH, C 2.2 µF, R_d 10 Ω); delay 1.5 samples p. 1286 | READ 2026-11-21 |
+| Reznik et al., IEEE TIA 50(2) 1225–1232, 2014, doi:10.1109/TIA.2013.2274612 | worked LCL design (5 kW: L1 2.23 mH, Cf 15 µF wye, L2 0.045 mH, Rf 0.55 Ω); Cf ≤ 5 % C_b, R_f = 1/(3 ω_res C_f) | READ 2026-11-21 (tables are images; values from the text) |
+| Pogaku, Prodanovic, Green, IEEE TPEL 22(2) 613–625, 2007, doi:10.1109/TPEL.2006.890003 | droop inverter parameter table, p. 621 Table I (10 kVA, 220 V, 8 kHz, Lf 1.35 mH, Cf 50 µF, rf 0.1 Ω, Lc 0.35 mH, rLc 0.03 Ω, Kpv 0.05, Kiv 390, Kpc 10.5, Kic 16e3, F 0.75); bandwidths 400 Hz / 1.6 kHz | READ 2026-11-21; used for layer 2 (Doc 13 §7) |
 | He, Desai, Huang, Dörfler, IEEE TPEL 40 3980–4007, 2025, doi:10.1109/TPEL.2024.3500885 | open p.u. values: Lf 0.012, Rf 0.025, Cf 0.044 p.u.; fsw 32 kHz, control 8 kHz (1 kVA lab unit) | VERIFIED; READ in arXiv 2404.13376 Table III(b) |
 | Rocabert et al., IEEE TPEL 27(11) 4734–4749, 2012, doi:10.1109/TPEL.2012.2199334 | general citation for cascaded loops and droop | VERIFIED |
-| Holmes, Lipo, McGrath, Kong, IEEE TPEL 24(11) 2417–2426, 2009, doi:10.1109/TPEL.2009.2029548 | delay model (1.5 sampling periods) | VERIFIED 2026-11-19 (Crossref); text not read |
+| Holmes, Lipo, McGrath, Kong, IEEE TPEL 24(11) 2417–2426, 2009, doi:10.1109/TPEL.2009.2029548 | delay $T_d$ = 0.75 carrier periods with double-update sampling (p. 2420, Fig. 4); optimal PI gains Eq. 18–24 | READ 2026-11-21 |
 
 Both LCL papers are for grid-following converters; a grid-forming unit controls the capacitor
 voltage. Scaling: convert L, C, R to p.u. on the source base and apply to S_n, V_LL of the case;
@@ -106,10 +108,13 @@ recompute PI gains from bandwidth targets, do not copy them.
   300 % (0.5 s island operation); voltage regulation limited to 125 A absolute for 0.5 s
   (33 A nominal per module at 440 V); Icw 125 A / 500 ms. Limiter type: NOT FOUND.
 - Baeckeland et al., IEEE TPEL 39(11) 14493–14517, 2024, doi:10.1109/TPEL.2024.3430316: review
-  of GFM current limiting (VERIFIED, not read).
+  of GFM current limiting (READ 2026-11-21, Sec. VIII: reference saturation is fast and accurate
+  but winds up outer loops without anti-windup; VI limiting avoids windup but is slower).
 - He et al. 2025: I_lim = 1.1 p.u. in their simulation (READ).
 - Paquette & Divan, IEEE TIA 51(2) 1630–1638, 2015, doi:10.1109/TIA.2014.2345877: virtual
-  impedance limiting (VERIFIED, not read).
+  impedance limiting (READ 2026-11-21, Table I p. 1636: I_max 2 p.u., I_thresh 1 p.u., ΔX/R 5;
+  plain saturation unstable beside a generator, Fig. 6, 14).
+- Layer-2 choice (D-122): circular reference saturation at 1.5 p.u. with anti-windup (Doc 13 §7).
 
 ### 2.3 PSIM features (PSIM User's Guide 9.0 R3, May 2010, READ)
 
@@ -138,7 +143,9 @@ recompute PI gains from bandwidth targets, do not copy them.
 ### 2.5 Droop gains 1 % P-f and 10 % Q-V
 
 Inside the TRUMPF settable range (DroopkP 0.1–4 %, DroopkQ 0.1–10 %, manual Tab. 33, as cited in
-the catalogue). Grid-code range (IEEE 1547-2018): UNVERIFIED.
+the catalogue). Grid-code range (IEEE 1547-2018): UNVERIFIED. The file supplied 2026-11-21 is
+IEEE 1547a-2020, an amendment that only changes the Category III voltage-trip Table 13; it does
+not hold the frequency-droop ranges, so the base standard IEEE 1547-2018 is still needed.
 
 ## 3. Cable and breaker sizing (method IEC60364_OVERLOAD_PUIL2011)
 
@@ -206,8 +213,9 @@ Feeder lengths for D2-LF (D-120): none in the manuscript or the project referenc
 
 1. Battery: a second fitting product and an Indonesian distributor; vendor continuous kW.
 2. Load profile: a numeric 24-h table (see §1.3 options).
-3. PSIM: Pogaku and Liserre tables (closed access, user's IEEE access); limiter type; fsw;
-   check 9.1.4.400 for a constant-power load; test PsimCmd.exe and its licence. Settling
+3. PSIM: layer-2 values and limiter closed (D-122, Doc 13 §7); check 9.1.4.400 for a
+   constant-power load; test PsimCmd.exe and its licence; IEEE 1547-2018 base text for the
+   droop range (1547a-2020 does not cover it). Settling
    bands: closed as a declared convention (D-121).
 4. Breakers: closed (LVPED217032EN p. B-7); breaker ambient derating not modelled.
 5. PUIL: two blurred cells.

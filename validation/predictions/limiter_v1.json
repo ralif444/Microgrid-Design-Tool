@@ -1,0 +1,400 @@
+{
+ "source": "Doc 13 \u00a75, \u00a77; m5.layer2 (Pogaku 2007 scaled, limit 1.5 p.u.)",
+ "engine_version": "0.5.0",
+ "m1_start": {
+  "d1": {
+   "INV1": {
+    "start_a": 27.068765387963715,
+    "limit_a": 98.41197770277712
+   }
+  },
+  "d2": {
+   "INV1": {
+    "start_a": 25.696477126766627,
+    "limit_a": 147.6179665541657
+   },
+   "INV2": {
+    "start_a": 16.820944986576396,
+    "limit_a": 98.41197770277712
+   }
+  },
+  "d2-lr": {
+   "INV1": {
+    "start_a": 25.55056144515915,
+    "limit_a": 147.6179665541657
+   },
+   "INV2": {
+    "start_a": 16.798848885674676,
+    "limit_a": 98.41197770277712
+   }
+  },
+  "d2-lf": {
+   "INV1": {
+    "start_a": 28.108373715296903,
+    "limit_a": 147.6179665541657
+   },
+   "INV2": {
+    "start_a": 15.540030592122404,
+    "limit_a": 98.41197770277712
+   }
+  },
+  "d2s": {
+   "INV1": {
+    "start_a": 52.96243715770099,
+    "limit_a": 147.6179665541657
+   },
+   "INV2": {
+    "start_a": 35.380765627358855,
+    "limit_a": 98.41197770277712
+   }
+  },
+  "d2h": {
+   "INV1": {
+    "start_a": 91.97124742008812,
+    "limit_a": 147.6179665541657
+   },
+   "INV2": {
+    "start_a": 61.88742652028762,
+    "limit_a": 98.41197770277712
+   }
+  }
+ },
+ "cases": [
+  {
+   "design": "d2",
+   "case": "SM-01",
+   "transient_class": "UNSTABLE",
+   "end_s": 1.595,
+   "inverters": [
+    {
+     "inverter_id": "INV1",
+     "start_a": 25.69647712676872,
+     "peak_a": 4777.126130219504,
+     "limit_a": 147.6179665541657,
+     "engages": true,
+     "first_over_s": 1.3375
+    },
+    {
+     "inverter_id": "INV2",
+     "start_a": 16.820944986577906,
+     "peak_a": 4830.445545812115,
+     "limit_a": 98.41197770277712,
+     "engages": true,
+     "first_over_s": 1.33
+    }
+   ]
+  },
+  {
+   "design": "d2",
+   "case": "SM-02",
+   "transient_class": "UNSTABLE",
+   "end_s": 1.3925,
+   "inverters": [
+    {
+     "inverter_id": "INV1",
+     "start_a": 25.69647712676872,
+     "peak_a": 4767.145826010961,
+     "limit_a": 147.6179665541657,
+     "engages": true,
+     "first_over_s": 1.165
+    },
+    {
+     "inverter_id": "INV2",
+     "start_a": 16.820944986577906,
+     "peak_a": 4814.830051743784,
+     "limit_a": 98.41197770277712,
+     "engages": true,
+     "first_over_s": 1.15
+    }
+   ]
+  },
+  {
+   "design": "d2",
+   "case": "DR-01",
+   "transient_class": "UNSTABLE",
+   "end_s": 1.4775,
+   "inverters": [
+    {
+     "inverter_id": "INV1",
+     "start_a": 25.69647712676872,
+     "peak_a": 4554.487000460581,
+     "limit_a": 147.6179665541657,
+     "engages": true,
+     "first_over_s": 1.2875
+    },
+    {
+     "inverter_id": "INV2",
+     "start_a": 16.820944986577906,
+     "peak_a": 4530.185113958814,
+     "limit_a": 98.41197770277712,
+     "engages": true,
+     "first_over_s": 1.2525
+    }
+   ]
+  },
+  {
+   "design": "d2",
+   "case": "DR-02",
+   "transient_class": "UNSTABLE",
+   "end_s": 1.4025,
+   "inverters": [
+    {
+     "inverter_id": "INV1",
+     "start_a": 25.69647712676872,
+     "peak_a": 4781.775044727308,
+     "limit_a": 147.6179665541657,
+     "engages": true,
+     "first_over_s": 1.1575
+    },
+    {
+     "inverter_id": "INV2",
+     "start_a": 16.820944986577906,
+     "peak_a": 4832.043509688233,
+     "limit_a": 98.41197770277712,
+     "engages": true,
+     "first_over_s": 1.1475
+    }
+   ]
+  },
+  {
+   "design": "d2",
+   "case": "TS-01",
+   "transient_class": "UNSTABLE",
+   "end_s": 1.4275,
+   "inverters": [
+    {
+     "inverter_id": "INV1",
+     "start_a": 25.69647712676872,
+     "peak_a": 4550.449262649757,
+     "limit_a": 147.6179665541657,
+     "engages": true,
+     "first_over_s": 1.1175
+    },
+    {
+     "inverter_id": "INV2",
+     "start_a": 16.820944986577906,
+     "peak_a": 4743.702346922735,
+     "limit_a": 98.41197770277712,
+     "engages": true,
+     "first_over_s": 1.1525
+    }
+   ]
+  },
+  {
+   "design": "d2",
+   "case": "TS-02",
+   "transient_class": "RECOVERED_STABLE",
+   "end_s": 5.0,
+   "inverters": [
+    {
+     "inverter_id": "INV1",
+     "start_a": 25.69647712676872,
+     "peak_a": 37.17012839400657,
+     "limit_a": 147.6179665541657,
+     "engages": false,
+     "first_over_s": null
+    },
+    {
+     "inverter_id": "INV2",
+     "start_a": 16.820944986577906,
+     "peak_a": 16.822409797090955,
+     "limit_a": 98.41197770277712,
+     "engages": false,
+     "first_over_s": null
+    }
+   ]
+  },
+  {
+   "design": "d2",
+   "case": "TS-03",
+   "transient_class": "UNSTABLE",
+   "end_s": 1.3075,
+   "inverters": [
+    {
+     "inverter_id": "INV1",
+     "start_a": 25.69647712676872,
+     "peak_a": 4769.179069397765,
+     "limit_a": 147.6179665541657,
+     "engages": true,
+     "first_over_s": 1.075
+    },
+    {
+     "inverter_id": "INV2",
+     "start_a": 16.820944986577906,
+     "peak_a": 4816.791897102152,
+     "limit_a": 98.41197770277712,
+     "engages": true,
+     "first_over_s": 1.0625
+    }
+   ]
+  },
+  {
+   "design": "d2-lr",
+   "case": "SM-01",
+   "transient_class": "RECOVERED_STABLE",
+   "end_s": 3.0,
+   "inverters": [
+    {
+     "inverter_id": "INV1",
+     "start_a": 25.55056144508799,
+     "peak_a": 25.97703638569612,
+     "limit_a": 147.6179665541657,
+     "engages": false,
+     "first_over_s": null
+    },
+    {
+     "inverter_id": "INV2",
+     "start_a": 16.79884888562173,
+     "peak_a": 17.090545670711723,
+     "limit_a": 98.41197770277712,
+     "engages": false,
+     "first_over_s": null
+    }
+   ]
+  },
+  {
+   "design": "d2-lr",
+   "case": "SM-02",
+   "transient_class": "RECOVERED_STABLE",
+   "end_s": 3.0,
+   "inverters": [
+    {
+     "inverter_id": "INV1",
+     "start_a": 25.55056144508799,
+     "peak_a": 27.383711400279207,
+     "limit_a": 147.6179665541657,
+     "engages": false,
+     "first_over_s": null
+    },
+    {
+     "inverter_id": "INV2",
+     "start_a": 16.79884888562173,
+     "peak_a": 16.798848885625954,
+     "limit_a": 98.41197770277712,
+     "engages": false,
+     "first_over_s": null
+    }
+   ]
+  },
+  {
+   "design": "d2-lr",
+   "case": "DR-01",
+   "transient_class": "RECOVERED_STABLE",
+   "end_s": 4.0,
+   "inverters": [
+    {
+     "inverter_id": "INV1",
+     "start_a": 25.55056144508799,
+     "peak_a": 27.020443864594966,
+     "limit_a": 147.6179665541657,
+     "engages": false,
+     "first_over_s": null
+    },
+    {
+     "inverter_id": "INV2",
+     "start_a": 16.79884888562173,
+     "peak_a": 17.806379723525893,
+     "limit_a": 98.41197770277712,
+     "engages": false,
+     "first_over_s": null
+    }
+   ]
+  },
+  {
+   "design": "d2-lr",
+   "case": "DR-02",
+   "transient_class": "RECOVERED_STABLE",
+   "end_s": 4.0,
+   "inverters": [
+    {
+     "inverter_id": "INV1",
+     "start_a": 25.55056144508799,
+     "peak_a": 27.99910981977299,
+     "limit_a": 147.6179665541657,
+     "engages": false,
+     "first_over_s": null
+    },
+    {
+     "inverter_id": "INV2",
+     "start_a": 16.79884888562173,
+     "peak_a": 16.798848885625954,
+     "limit_a": 98.41197770277712,
+     "engages": false,
+     "first_over_s": null
+    }
+   ]
+  },
+  {
+   "design": "d2-lr",
+   "case": "TS-01",
+   "transient_class": "CRITERIA_VIOLATED",
+   "end_s": 5.0,
+   "inverters": [
+    {
+     "inverter_id": "INV1",
+     "start_a": 25.55056144508799,
+     "peak_a": 92.0798602472913,
+     "limit_a": 147.6179665541657,
+     "engages": false,
+     "first_over_s": null
+    },
+    {
+     "inverter_id": "INV2",
+     "start_a": 16.79884888562173,
+     "peak_a": 62.09785798761035,
+     "limit_a": 98.41197770277712,
+     "engages": false,
+     "first_over_s": null
+    }
+   ]
+  },
+  {
+   "design": "d2-lr",
+   "case": "TS-02",
+   "transient_class": "RECOVERED_STABLE",
+   "end_s": 5.0,
+   "inverters": [
+    {
+     "inverter_id": "INV1",
+     "start_a": 25.55056144508799,
+     "peak_a": 37.08521902296063,
+     "limit_a": 147.6179665541657,
+     "engages": false,
+     "first_over_s": null
+    },
+    {
+     "inverter_id": "INV2",
+     "start_a": 16.79884888562173,
+     "peak_a": 16.798848885625954,
+     "limit_a": 98.41197770277712,
+     "engages": false,
+     "first_over_s": null
+    }
+   ]
+  },
+  {
+   "design": "d2-lr",
+   "case": "TS-03",
+   "transient_class": "RECOVERED_STABLE",
+   "end_s": 5.0,
+   "inverters": [
+    {
+     "inverter_id": "INV1",
+     "start_a": 25.55056144508799,
+     "peak_a": 44.393321745513894,
+     "limit_a": 147.6179665541657,
+     "engages": false,
+     "first_over_s": null
+    },
+    {
+     "inverter_id": "INV2",
+     "start_a": 16.79884888562173,
+     "peak_a": 16.798848885625954,
+     "limit_a": 98.41197770277712,
+     "engages": false,
+     "first_over_s": null
+    }
+   ]
+  }
+ ]
+}

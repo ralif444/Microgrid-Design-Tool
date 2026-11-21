@@ -115,6 +115,7 @@ D2-AB is unstable because the short, strongly resistive cables couple the two in
 | TS-01 | Transient | D2-AB, D2-LR | Load +300 % (+81.51 kW, +32.61 kvar) | 5 s | Envelope, recovery, final state | Categorical (class must match) |
 | TS-02 | Transient | D2-AB, D2-LR | INV2 trip (breaker opens, permanent; line stays connected) | 5 s | as TS-01 | Categorical |
 | TS-03 | Transient | D2-AB, D2-LR | Large $P^*$ step on INV1, +21.43 % of rating (+16.071 kW) | 5 s | as TS-01 | Categorical |
+| SM-01-NLC | Diagnostic, layer 2 only | D2-AB | as SM-01, with $L_c$ removed (voltage loop at the terminal) | 3 s | Dominant mode | Reported beside SM-01, no verdict: measures the $L_c$ effect (§7 decision 1) |
 
 Load steps are a % of the D2 load and $P^*$ steps a % of the INV1 rating (D-116); D2-LR has the same load and ratings, so the step values are the same. The 3 % small-signal step is chosen because at 1 % the voltage deviation falls below the resolution floor (manuscript 4.5.3).
 
@@ -127,7 +128,7 @@ Load steps are a % of the D2 load and $P^*$ steps a % of the INV1 rating (D-116)
 
 On D2-AB the TS-02 trip leaves INV1 alone, which has no inverter-to-inverter mode, so it recovers. On D2-LR the +300 % load step settles, but the frequency falls below the study limit of the guided example (49.75 Hz; the step brings the load to the D2H level, 49.557 Hz in M1), so the class is CRITERIA_VIOLATED. The design limits come from the Project (Doc 3 §3.7), the bands only decide whether the response settled.
 
-**D2-AB rules (instability case, D-118).** SM-01 and SM-02 compare the *unstable* dominant mode: growth rate σ (> 0) and damped frequency, fitted by matrix pencil on the window from the disturbance until the first saturation, network loss or 10 % deviation, against the M4a eigenvalue and the engine's M4b ring-up. Since engine 0.5.0 (D-121) M4b integrates past the disturbance and reports the growing oscillation until the network solution is lost (SM-01: at 1.5975 s); before that fix it stopped at the disturbance instant. The decay-rate tolerance of §6 applies to σ. DR and TS on D2-AB are categorical: the class must match; NRMSE and settling are reported only for a case that settles in both tools. If PSIM settles where the engine diverges, that is a finding about assumption A1 (quasi-static network), recorded under §9, not a tolerance miss.
+**D2-AB rules (instability case, D-118).** SM-01 and SM-02 compare the *unstable* dominant mode: growth rate σ (> 0) and damped frequency, fitted by matrix pencil on the window from the disturbance until the first saturation (predicted in `validation/predictions/limiter_v1.json`, §7), network loss or 10 % deviation, against the M4a eigenvalue and the engine's M4b ring-up. Since engine 0.5.0 (D-121) M4b integrates past the disturbance and reports the growing oscillation until the network solution is lost (SM-01: at 1.5975 s); before that fix it stopped at the disturbance instant. The decay-rate tolerance of §6 applies to σ. DR and TS on D2-AB are categorical: the class must match; NRMSE and settling are reported only for a case that settles in both tools. If PSIM settles where the engine diverges, that is a finding about assumption A1 (quasi-static network), recorded under §9, not a tolerance miss.
 
 **D2-LR rules (D-119).** Full numeric comparisons per §6: SM against the M4a mode (ζ_min 0.218, 6.15 Hz) and the M4b ring-down, DR with NRMSE and settling, TS categorical.
 
@@ -170,14 +171,27 @@ Layer-1 steady thresholds are at least five times the expected model difference:
 
 ## 7. Layer-2 parameters (cited design procedure, frozen before running)
 
-| Element | Rule |
-|---|---|
-| Control structure | Cascaded voltage and current PI loops in the dq frame with the droop loop of Eq. 13.1–13.3 outside, following the inverter model of Pogaku et al. [26] (already cited in the manuscript). |
-| LCL filter, PI gains, switching frequency, sampling delay | From a cited design procedure or a published parameter table, scaled to the design rating: convert L, C, R to p.u. on the source base and apply to $S_n$, $V_{LL}$ of the case; recompute PI gains from bandwidth targets, do not copy them. Source, page and table recorded in the input sheet for every value. Status of the sources: CASE_DATA_SOURCES §2.1 (open p.u. LCL values READ from He et al. 2025; Pogaku 2007 table closed access, to be read through university IEEE Xplore access). **[VERIFY: copy values from the source PDF; never from memory.]** |
-| Current limiter | Active (decided Q39). Limit value and type (reference saturation) declared in the sheet; every case records whether the limiter engaged. TRUMPF limits READ (CASE_DATA_SOURCES §2.2); limiter type not published. |
-| DC side | Ideal DC voltage source (A2 kept on the DC side). |
-| $\tau_{in}$ for indicator $r_{in}$ | $\tau_{in} \approx 1/(2\pi f_{bw,v})$, with $f_{bw,v}$ the closed voltage-loop bandwidth of the chosen gains; recorded in the sheet and passed as the optional M4a input. |
-| Freeze | All layer-2-only values are written into the input sheet and hashed with the tolerance policy before the first layer-2 run. |
+Sources read 2026-11-21 from the PDFs (user's IEEE access); values are computed by `validation/m5/layer2.py`, never typed by hand.
+
+| Element | Rule and value | Source |
+|---|---|---|
+| Control structure | Cascaded voltage and current PI loops in dq, current feed-forward F, droop loop of Eq. 13.1–13.3 outside; LC filter plus coupling inductor $L_c$ (an LCL as seen from the bridge); P, Q measured after $L_c$. | Pogaku et al. 2007 [26], Fig. 4–7 |
+| Source unit | 10 kVA, 220 V phase (380 V LL), 50 Hz: $f_s$ 8 kHz, $L_f$ 1.35 mH, $C_f$ 50 µF, $r_f$ 0.1 Ω, $L_c$ 0.35 mH, $r_{Lc}$ 0.03 Ω, $K_{pv}$ 0.05, $K_{iv}$ 390, $K_{pc}$ 10.5, $K_{ic}$ 16 000, F 0.75; voltage-loop bandwidth 400 Hz, current loop 1.6 kHz (continuous-domain gains). | Pogaku 2007 p. 621, Table I and text |
+| Scaling | L, C, R keep their p.u. value on $Z_b = V_{LL}^2/S_n$ (Liserre 2005 Eq. 5–6). Same bandwidths on a plant identical in p.u.: voltage-loop gains × $Z_{b,src}/Z_b$, current-loop gains × $Z_b/Z_{b,src}$ (recomputed, not copied). The LC resonance stays at 613 Hz. | Liserre 2005 p. 1284 |
+| 50 kVA, 440 V (D1, D2 INV2) | $L_f$ 0.362 mH, $C_f$ 186.5 µF, $r_f$ 26.8 mΩ, $L_c$ 0.0939 mH, $r_{Lc}$ 8.04 mΩ, $K_{pv}$ 0.1865, $K_{iv}$ 1454, $K_{pc}$ 2.816, $K_{ic}$ 4290 | DERIVED |
+| 75 kVA, 440 V (D2 INV1) | $L_f$ 0.241 mH, $C_f$ 279.7 µF, $r_f$ 17.9 mΩ, $L_c$ 0.0626 mH, $r_{Lc}$ 5.36 mΩ, $K_{pv}$ 0.2797, $K_{iv}$ 2182, $K_{pc}$ 1.877, $K_{ic}$ 2860 | DERIVED |
+| Delay | Asymmetric regular sampled PWM (sampling at twice the carrier): $T_d = 0.75/f_s$ = 93.75 µs. Current-loop phase margin 37.7° (Holmes Eq. 18 with crossover $K_{pc}/L_f$), below Holmes' 40° target but positive. With single-update sampling ($T_d$ = 1.5 sample periods, Liserre p. 1286) the margin is negative: the PSIM controller must sample twice per carrier. | Holmes et al. 2009 p. 2420, Fig. 4, Eq. 18–21 |
+| Current limiter | Circular saturation of the current reference $\lvert i_{dq}^*
+vert$ at 1.5 p.u. (98.4 A at 50 kVA, 147.6 A at 75 kVA), anti-windup on the voltage-loop integrators. 1.5 p.u. is the TRUMPF 1-min overload (covers the 5 s TS runs). Plain saturation can destabilise a GFM unit after the reference saturates (Paquette 2015 Fig. 6, 14); a virtual-impedance limiter is the documented alternative, not used here because the engine has none. Every case records whether the limiter engaged. | Q39; TRUMPF manual pp. 17–18; Baeckeland 2024 Sec. VIII; Paquette & Divan 2015 |
+| DC side | Ideal DC voltage source (A2 kept on the DC side). | §2 |
+| $	au_{in}$ for $r_{in}$ | $1/(2\pi \cdot 400\ 	ext{Hz})$ = 0.398 ms, passed as the optional M4a input. | §7 rule, Pogaku text |
+| Freeze | The sheet carries the layer-2 block and its SHA-256 (`layer2_hash`); the policy file is hash-locked (`m5/policy_v1.sha256`). | WP 1.6.2 |
+
+**Decisions (user 2026-11-21, D-122), frozen before the first layer-2 run.** Rule: layer 2 differs from the engine only in elements of the ideal-inverter assumption A2, each declared and predicted before PSIM runs.
+
+1. **$L_c$ kept, inside the inverter.** The engine's inverter bus (INV1T, INV2T, or B1/B3 without reactors) is the unit's output terminal; $L_c$ sits before it, so it belongs to A2 and P, Q are measured after $L_c$ (Pogaku; §3 map unchanged). It is 0.0076 p.u. (0.094 mH at 50 kVA; LR3 40-4/100 is 0.30 mH) and adds coupling impedance, so layer 2 may damp D2-AB more than the engine: cause (4) in §9, consistent with the conservative-result limitation in §4. Diagnostic case SM-01-NLC (§5) measures it.
+2. **$C_f$ checked before each run.** $C_f$ is 0.227 p.u.; the limiter acts on the inverter-side current. The input sheet computes that current at the M1 point (terminal current back through $L_c$ plus the $C_f$ current) and refuses a layer-2 case that starts at or above the limit, as layer 1 must not saturate (§3). For lagging loads $C_f$ lowers that current. At M1: D1 27.1 A; D2-AB/D2-LR INV1 25.6–25.7 A, INV2 16.8 A; D2-LF 28.1/15.5 A; D2S 53.0/35.4 A; D2H 92.0/61.9 A, against 147.6 A (75 kVA) and 98.4 A (50 kVA).
+3. **Limiter engagement predicted from the engine.** `tools/make_validation_fixtures.py` runs every SM, DR and TS preset of the guided examples and writes `validation/predictions/limiter_v1.json` (engine 0.5.0): on D2-LR no case reaches the limit (largest TS-01: INV1 92.1 A, INV2 62.1 A, 0.62–0.63 p.u.); on D2-AB the limit is crossed only by the growing oscillation (first crossing 0.06–0.34 s after the step; SM-01 at 1.330 s), and TS-02 stays below it (INV1 37.2 A). In layer 2, an engagement in a predicted case is attributed to cause (4); an engagement or class mismatch in a case predicted not to engage is an anomaly. On D2-AB the SM fit window ends at the first predicted crossing (§5). Layer 1 has no limiter, so its TS comparison stays clean.
 
 ## 8. Procedure (manuscript Gambar C.7a–C.7b)
 
@@ -217,11 +231,12 @@ Numbers are kept so that references elsewhere stay valid.
 | # | Item | Status |
 |---|---|---|
 | 1 | Layer-1 numerical aids for the constant-PQ load. | DECIDED (D-121): §10 rule |
-| 2 | Layer-2 parameter values (LCL, PI gains, switching frequency). | [NEEDS SOURCE]: Pogaku 2007 table via the user's IEEE access; open p.u. values from He et al. 2025 available (§7) |
-| 3 | Current-limit type in layer 2. | [NEEDS SOURCE]: TRUMPF values READ, type not published |
+| 2 | Layer-2 parameter values (LCL, PI gains, switching frequency). | DONE (D-122): Pogaku 2007 Table I scaled in p.u., delay per Holmes 2009 (§7); §7 decisions frozen (user 2026-11-21) |
+| 3 | Current-limit type in layer 2. | DONE (D-122): circular reference saturation at 1.5 p.u. with anti-windup (§7) |
 | 4 | Native constant-power load element in PSIM 9.1.4.400. | VERIFY in PSIM (user) |
 | 5 | `PsimCmd` in the installed licence. | VERIFY in PSIM (user) |
-| 6 | Resolution floor $p_{floor}$ per quantity, measured from PSIM output. | Work package 1.6.2 |
+| 6 | Resolution floor $p_{floor}$ per quantity, measured from PSIM output. | Work package 1.6.2 (policy v1 locked without it; add in v2 after the first PSIM runs) |
+| 13 | Offline script (sheet, import, compare, matrix pencil, policy lock). | DONE (D-122): `validation/m5`, 9 self-checks on REAL D2-LR records |
 | 7 | M4b on D2-AB stopped at the disturbance instant. | DONE (D-121): engine 0.5.0 integrates per output sample; D2-AB grows until the network is lost |
 | 8 | Settling criteria for the M4b classes. | DECIDED (D-121): §6 |
 | 9 | Output alignment; I(t), per-inverter f and angles missing from M4b. | DONE (D-121): outputs added (§3), resampling rule (§5) |
@@ -233,6 +248,7 @@ Numbers are kept so that references elsewhere stay valid.
 
 | Date | Change |
 |---|---|
+| 2026-11-21 | §7 filled from Pogaku 2007, Liserre 2005, Holmes 2009, Paquette 2015 and Baeckeland 2024 (D-122); offline script `validation/m5`; open points 2, 3 closed, 13 added. Decisions on $L_c$, $C_f$ and the limiter frozen with the M1 current check, the engine limiter prediction and case SM-01-NLC (§5, §7). |
 | 2026-11-19 | Streamlined (D-121): prototype history removed; designs D2-AB, D2-LR, D2-LF named in the case table; engine 0.5.0 M4b fix and outputs; engine class table; output alignment rule; settling convention; layer-1 aids rule; §11 (second comparator) dropped; open points 1, 7–10 closed. |
 | 2026-11-19 | D2-LF on CIGRE LV benchmark lengths (D-120); coupling reactors, D2-LR, D2S and D2H re-based, hand case R-1 (D-119, ADR-017); catalogue designs, D2 instability and the decision to validate it (D-116, D-118). |
 | 2026-11-01 | Created from the post-seminar design session (decisions Q22–Q25, Q38, Q39) and the manuscript. |

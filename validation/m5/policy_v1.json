@@ -1,0 +1,22 @@
+{
+  "policy_version": 1,
+  "source": "Doc 13 §6 (tolerance policy v1, settling convention D-121); manuscript Tabel 4.14",
+  "steady": {
+    "V": {"layer1": [0.0, 0.002], "layer2": [0.0, 0.006], "unit": "V"},
+    "f": {"layer1": [0.005, 0.0], "layer2": [0.015, 0.0], "unit": "Hz"},
+    "P": {"layer1": [10.0, 0.005], "layer2": [30.0, 0.015], "unit": "W"},
+    "Q": {"layer1": [20.0, 0.01], "layer2": [60.0, 0.03], "unit": "VAR"},
+    "I": {"layer1": [0.05, 0.005], "layer2": [0.15, 0.015], "unit": "A"},
+    "A": {"layer1": null, "layer2": null, "unit": "deg", "note": "reported, absolute only"}
+  },
+  "nrmse": {"layer1": 0.05, "layer2": 0.15},
+  "settling_time": {"layer1": [0.05, 0.25], "layer2": [0.15, 0.75]},
+  "mode": {
+    "decay_rate": {"layer1": [0.5, 0.10], "layer2": [1.5, 0.30]},
+    "damped_frequency": {"layer1": [0.2, 0.03], "layer2": [0.6, 0.09]},
+    "damping_ratio": {"layer1": 0.03, "layer2": 0.09},
+    "trust": {"r2_min": 0.99, "snr_min": 10.0}
+  },
+  "settling": {"frequency_band_hz": 0.05, "voltage_band_v": 8.8, "window_s": 0.5},
+  "steady_window_s": 0.5
+}
