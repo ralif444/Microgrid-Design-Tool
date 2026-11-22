@@ -104,7 +104,7 @@ The manuscript cells are short; the lists below are how each cell is checked. It
 | 1.5.4 | Real Engine adapter for M3a–M3c and M4a–M4b | Contract passes on two adapters | 1.3.5, 1.5.2, 1.5.3 |
 | 1.5.5 | Feasibility envelope (M3d, Could) | M3d; may be Fake-only | 1.5.2 |
 | 1.6.1 | Reference designs and test families | Reference designs; case list | — |
-| 1.6.2 | Frozen tolerance policy | Version 1 locked by hash | 1.6.1 |
+| 1.6.2 | Frozen tolerance policy | Version 2 locked by hash (D-123; v1 kept as history) | 1.6.1 |
 | 1.6.3 | Two-layer PSIM models and input sheets | Input sheets; two models | 1.6.1 |
 | 1.6.4 | Steady-state validation M1 and M2 | Error tables; cause log | 1.4.1, 1.6.2, 1.6.3 |
 | 1.6.5 | Dynamic validation M4 | Error tables; cause log | 1.5.4, 1.6.4 |
@@ -144,7 +144,7 @@ G3–G6 are the author's earlier rules (Doc 10, 2026-10-21); the user confirmed 
 |---|---|---|
 | 1.1–1.2 | Architecture implemented, Engine Port, Fake-first development, requirement↔test traceability, Must pipeline on Fake | Bab 4 (implementation, application verification) |
 | 1.3–1.4 | Engine package, two-adapter contract suite, measured time budget | Bab 4 (engine verification levels 1–2, integration) |
-| 1.6 | M5 error tables and cause log under frozen policy v1 | Bab 4 (validation) |
+| 1.6 | M5 error tables and cause log under frozen policy v2 (D-123) | Bab 4 (validation) |
 | 1.5 | Sensitivity, sweep, scenario, stability features; parametric study | Bab 4 (case study, discussion) |
 | 1.7 | Regression logs, demo, evidence package, limitations | Bab 4–5 |
 
