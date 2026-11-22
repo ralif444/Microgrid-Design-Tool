@@ -175,33 +175,42 @@ def psim_params(sheet: dict[str, Any]) -> str:
     for b, v in ini["bus"].items():
         out.append(f"V0_{b} = {v['v_ll_v']:.10g}")
     out += [f"I0_{k} = {v:.10g}" for k, v in ini["line_current_a"].items()]
-    out += _disturbance(sheet.get("parameters") or {})
+    out += [f"{k} = {v:.10g}" for k, v in _disturbance(sheet).items()]
     return "\n".join(out) + "\n"
 
 
-def _disturbance(params: dict[str, Any]) -> list[str]:
-    """M4b disturbance in SI units, as the engine applies it (mgapp studies._magnitude)."""
+SS_END_S = 5.0  # Doc 13 §5: steady cases run 5 s
+
+
+def _disturbance(sheet: dict[str, Any]) -> dict[str, float]:
+    """Every disturbance name the schematic refers to, zero unless this case uses it, so one
+    schematic per topology runs every case (PSIM refuses an undefined parameter). Values in SI,
+    as the engine applies them (mgapp studies._magnitude). A steady case gets t_dist after t_end,
+    so no step fires."""
+    out: dict[str, float] = {"t_dist": SS_END_S + 1.0, "t_end": SS_END_S}
+    for ld in sheet["loads"]:
+        out |= {f"dp_{ld['id']}": 0.0, f"dq_{ld['id']}": 0.0}
+    for inv in sheet["inverters"]:
+        out |= {f"dp_star_{inv['id']}": 0.0, f"dq_star_{inv['id']}": 0.0, f"trip_{inv['id']}": 0.0}
+    params = sheet.get("parameters") or {}
     d = params.get("disturbance")
     if not d:
-        return []
-    out = [f"t_dist = {d['start_time_s']:.10g}", f"t_end = {params['simulation_end_s']:.10g}"]
+        return out
+    out |= {"t_dist": d["start_time_s"], "t_end": params["simulation_end_s"]}
     if d.get("duration_s") is not None and d["kind"] != "INVERTER_OUTAGE":
-        out.append(f"t_dist_end = {d['start_time_s'] + d['duration_s']:.10g}")
+        out["t_dist_end"] = d["start_time_s"] + d["duration_s"]
     eid, x = d["element_id"], float(d.get("magnitude") or 0.0)
     if d["kind"] == "LOAD_STEP":
-        out += [
-            f"dp_{eid} = {x * 1e3:.10g}",
-            f"dq_{eid} = {float(d.get('magnitude_kvar') or 0) * 1e3:.10g}",
-        ]
+        out |= {f"dp_{eid}": x * 1e3, f"dq_{eid}": float(d.get("magnitude_kvar") or 0) * 1e3}
     elif d["kind"] == "LOAD_SCALING":
-        out.append(f"scale_{eid} = {x:.10g}")
+        out[f"scale_{eid}"] = x
     elif d["kind"] == "INVERTER_OUTAGE":
-        out.append(f"trip_{eid} = 1")
+        out[f"trip_{eid}"] = 1.0
     else:  # REFERENCE_STEP
         ref = d["reference"]
         si = {"P_SETPOINT": 1e3, "Q_SETPOINT": 1e3, "V_SETPOINT": 1e3 / math.sqrt(3),
               "F_SETPOINT": 2 * math.pi}[ref]  # fmt: skip
         name = {"P_SETPOINT": "dp_star", "Q_SETPOINT": "dq_star", "V_SETPOINT": "dv_star_phase",
                 "F_SETPOINT": "dw_star"}[ref]  # fmt: skip
-        out.append(f"{name}_{eid} = {x * si:.10g}")
+        out[f"{name}_{eid}"] = x * si
     return out

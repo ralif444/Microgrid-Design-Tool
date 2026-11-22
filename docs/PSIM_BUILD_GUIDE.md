@@ -96,6 +96,8 @@ The folder gets `sheet.json` (every value with its source and the record hashes)
 
 ## 4. Step 3: build the layer-1 model (once, then per topology)
 
+Block-by-block instructions with every formula and block: `docs/PSIM_STEP3_MODEL_BUILD.md`. Every `params.txt` defines every disturbance name (zero when the case does not use it; a steady case has `t_dist` after `t_end`), so one schematic per topology runs every case.
+
 Three topologies cover all designs: D1 (INV1@B1 — LN1 — B2), D2 family without reactors (D2-AB, D2-LF: INV1@B1 — LN1 — B2 — LN2 — B3@INV2) and with reactors (D2-LR, D2S, D2H: INV1@INV1T — LR1 — B1 — LN1 — B2 — LN2 — B3 — LR2 — INV2T@INV2). Build each once with parameter names only; a new case is a new parameter file, not a new schematic.
 
 ### 4.1 Inverter (one subcircuit, reused per inverter)

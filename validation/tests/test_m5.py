@@ -171,6 +171,11 @@ def test_params_file_carries_initial_state_and_disturbance() -> None:
     assert float(vals["P0_INV1"]) == pytest.approx(16372.31, abs=0.01)
     assert float(vals["f0"]) == pytest.approx(49.89085, abs=1e-5)
     assert "V0_B1" in vals and "I0_LR1" in vals
+    assert float(vals["trip_INV2"]) == 0 and float(vals["dp_star_INV1"]) == 0  # unused: zero
+    ss = dict(
+        ln.split(" = ") for ln in sheet.psim_params(sheet.input_sheet(rec("m1"))).splitlines()[1:]
+    )
+    assert float(ss["t_end"]) == 5.0 and float(ss["t_dist"]) > 5.0 and float(ss["dp_L1"]) == 0
 
 
 def test_tripped_inverter_frequency_is_nan_not_a_crash() -> None:
