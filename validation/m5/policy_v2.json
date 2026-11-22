@@ -1,0 +1,30 @@
+{
+  "policy_version": 2,
+  "source": "Doc 13 §6 (tolerance policy v2, every row of the §6 table; settling convention D-121); manuscript Tabel 4.14. v2 replaces v1 before any PSIM run (user 2026-11-21, D-123): v1 lacked S, losses, loading, P sharing and nadir/peak.",
+  "steady": {
+    "V": {"layer1": [0.0, 0.002], "layer2": [0.0, 0.006], "unit": "V"},
+    "f": {"layer1": [0.005, 0.0], "layer2": [0.015, 0.0], "unit": "Hz"},
+    "P": {"layer1": [10.0, 0.005], "layer2": [30.0, 0.015], "unit": "W"},
+    "S": {"layer1": [10.0, 0.005], "layer2": [30.0, 0.015], "unit": "VA"},
+    "Q": {"layer1": [20.0, 0.01], "layer2": [60.0, 0.03], "unit": "VAR"},
+    "I": {"layer1": [0.05, 0.005], "layer2": [0.15, 0.015], "unit": "A"},
+    "loss": {"layer1": [5.0, 0.02], "layer2": [15.0, 0.06], "unit": "W"},
+    "loading": {"layer1": [0.005, 0.0], "layer2": [0.015, 0.0], "unit": "ratio"},
+    "share": {"layer1": [0.3, 0.0], "layer2": [0.9, 0.0], "unit": "% of total P"},
+    "A": {"layer1": null, "layer2": null, "unit": "deg", "note": "reported, absolute only"}
+  },
+  "nrmse": {"layer1": 0.05, "layer2": 0.15},
+  "settling_time": {"layer1": [0.05, 0.25], "layer2": [0.15, 0.75]},
+  "extreme": {
+    "f": {"layer1": 0.01, "layer2": 0.03, "unit": "Hz"},
+    "V": {"layer1": 0.002, "layer2": 0.006, "unit": "p.u. of the nominal V LL"}
+  },
+  "mode": {
+    "decay_rate": {"layer1": [0.5, 0.10], "layer2": [1.5, 0.30]},
+    "damped_frequency": {"layer1": [0.2, 0.03], "layer2": [0.6, 0.09]},
+    "damping_ratio": {"layer1": 0.03, "layer2": 0.09},
+    "trust": {"r2_min": 0.99, "snr_min": 10.0}
+  },
+  "settling": {"frequency_band_hz": 0.05, "voltage_band_v": 8.8, "window_s": 0.5},
+  "steady_window_s": 0.5
+}

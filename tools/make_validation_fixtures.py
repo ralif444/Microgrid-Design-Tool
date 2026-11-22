@@ -7,7 +7,11 @@ here, through the app's own HTTP surface:
   every reference design and its peak in every SM/DR/TS case of the guided examples, against
   the 1.5 p.u. limit, written before any PSIM run (Doc 13 §5).
 
-Usage: uv run --project backend python tools/make_validation_fixtures.py
+- with `--records DIR`: every REAL RunRecord of the case matrix (M1 and M4a per design, M4b per
+  guided preset) as `<design>_<case>.mgrun.json`, the same records the app's Runs page exports
+  (docs/PSIM_BUILD_GUIDE.md step 1).
+
+Usage: uv run --project backend python tools/make_validation_fixtures.py [--records DIR]
 """
 
 from __future__ import annotations
@@ -51,14 +55,17 @@ def main() -> None:
         assert rec["engine_kind"] == "REAL", rec["result"]
         return rec
 
+    records = Path(sys.argv[sys.argv.index("--records") + 1]) if "--records" in sys.argv else None
     start: dict[str, Any] = {}
     cases: list[dict[str, Any]] = []
     fixtures: dict[str, dict[str, Any]] = {}
+    every: dict[str, dict[str, Any]] = {}
     for name, guided in DESIGNS.items():
         snap = snapshot(guided or name)
         m1 = post("M1", snap)
         assert m1["result"]["status_code"] == "OK", m1["result"]
         pay = m1["result"]["payload"]
+        every[f"{name}_M1"] = m1
         start[name] = {}
         for inv in snap["inverters"]:
             op = next(i for i in pay["inverter_results"] if i["inverter_id"] == inv["id"])
@@ -68,15 +75,18 @@ def main() -> None:
                 op["p_kw"] * 1e3, op["q_kvar"] * 1e3, vb["voltage_kv"] * 1e3, l2, 50.0
             )
             start[name][inv["id"]] = {"start_a": i0, "limit_a": l2["i_limit_a_rms"]}
-        if guided is None:
-            continue
         ref = {k: m1[k] for k in ("record_id", "snapshot_hash", "result_hash")}
         ref |= {"analysis_type": "M1", "status": m1["result"]["status"], "result_payload": pay}
+        if records is not None:
+            every[f"{name}_M4a"] = post("M4a", snap, depends_on=ref)
+        if guided is None:
+            continue
         ex = json.loads((EXAMPLES / f"{guided}.example.json").read_text("utf-8"))
         for preset in ex["screens"]["transient"]["presets"]:
             params = preset["fields"] | {"settling": SETTLING}
             rec = post("M4b", snap, depends_on=ref, parameters=params)
             p = rec["result"]["payload"]
+            every[f"{name}_{preset['id']}"] = rec
             cases.append(
                 {"design": name, "case": preset["id"], "transient_class": p["transient_class"],
                  "end_s": p["time_s"][-1], "inverters": layer2.limiter_prediction(rec)}
@@ -87,6 +97,11 @@ def main() -> None:
             fixtures["d2-lr_m1"] = m1
             fixtures["d2-lr_m4a"] = post("M4a", snap, depends_on=ref)
 
+    if records is not None:
+        records.mkdir(parents=True, exist_ok=True)
+        for fname, rec in every.items():
+            (records / f"{fname}.mgrun.json").write_text(json.dumps(rec), "utf-8")
+        return  # case records only; fixtures and predictions stay as committed
     OUT.mkdir(parents=True, exist_ok=True)
     for fname, rec in fixtures.items():
         (OUT / f"{fname}.runrecord.json").write_text(json.dumps(rec), "utf-8")

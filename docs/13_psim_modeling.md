@@ -61,7 +61,7 @@ Three-phase totals avoid the per-phase conversion ($m_p^{phase} = 3\,m_p$); if a
 | $\tau_{in}$ (s), optional M4a input | Derived from layer-2 inner-loop gains (§7) | Feeds indicator $r_{in}$ (manuscript 4.2.7). |
 | Initial state | Equilibrium from the engine M1 (angles, $P_f$, $Q_f$, f, bus voltages, line currents) | Verified flat before the disturbance. |
 
-**Engine outputs available for comparison** (M4b, engine 0.5.0, Doc 3 §6.9, D-121): system frequency, frequency per inverter, bus voltage (LL RMS) and angle per bus, P and Q per inverter, phase RMS current per line, max RoCoF and the transient class. Angles are referred to the first bus (B1, or INV1T on the reactor designs), as in M1; PSIM angles are referred to the same bus before comparing. M1 gives the same quantities at the operating point plus losses and loading.
+**Engine outputs available for comparison** (M4b, engine 0.5.0, Doc 3 §6.9, D-121): system frequency, frequency per inverter, bus voltage (LL RMS) and angle per bus, P and Q per inverter, phase RMS current per line, max RoCoF and the transient class. Angles are referred to the first bus of the Project (D-49 K29), which is B1 on every reference design, the reactor designs included (INV1T is not the reference: it sits at +0.463° on D2-LR), as in M1; PSIM angles are referred to the same bus before comparing. M1 gives the same quantities at the operating point plus losses and loading.
 
 ## 4. Reference designs
 
@@ -89,7 +89,7 @@ All designs: 440 V LL, 50 Hz, $\tau_P = \tau_Q = 0.05$ s, $P^* = Q^* = 0$. The e
 
 | Design | M1 f (Hz) | Lowest bus (p.u.) | M4a | ζ_min (mode) |
 |---|---|---|---|---|
-| D1 | — | — | STABLE | — |
+| D1 | 49.83996 | 0.9794 | STABLE | — (two real eigenvalues ≈ −20 s⁻¹, no oscillatory mode) |
 | D2-AB | 49.89088 | 0.9878 | UNSTABLE | −0.336 (+25.3 ± j71.0 s⁻¹, 11.3 Hz) |
 | D2-LR | 49.89085 | 0.9842 (B2) | STABLE | 0.218 (6.15 Hz) |
 | D2S | 49.73629 | 0.9609 | STABLE | 0.223 |
@@ -105,7 +105,7 @@ D2-AB is unstable because the short, strongly resistive cables couple the two in
 | Case | Family | Designs | Disturbance (at $t = 1$ s unless steady) | Run end | Compared quantities | Metric |
 |---|---|---|---|---|---|---|
 | SS-01 | Steady | D1 | — | 5 s | V, f, P, Q, S, I, losses | Eq. 13.5 |
-| SS-02 | Steady, P sharing | D2-AB, D2-LR, D2-LF | — | 5 s | as SS-01, plus P sharing; on D2-LR also the two reactor lines | Eq. 13.5 |
+| SS-02 | Steady, P sharing | D2-LR, D2-LF (numeric); D2-AB (reported, D-123) | — | 5 s | as SS-01, plus P sharing; on D2-LR also the two reactor lines | Eq. 13.5 |
 | SS-03 | Steady, stressed | D2S | — | 5 s | as SS-01 | Eq. 13.5 |
 | SS-04 | Steady, near limit | D2H | — | 5 s | as SS-01 | Eq. 13.5 |
 | SM-01 | Small signal | D2-AB, D2-LR | Load step +3 % at B2 (+0.815 kW, +0.326 kvar) | 3 s | Dominant mode | Matrix pencil: decay or growth rate, damped frequency |
@@ -128,7 +128,7 @@ Load steps are a % of the D2 load and $P^*$ steps a % of the INV1 rating (D-116)
 
 On D2-AB the TS-02 trip leaves INV1 alone, which has no inverter-to-inverter mode, so it recovers. On D2-LR the +300 % load step settles, but the frequency falls below the study limit of the guided example (49.75 Hz; the step brings the load to the D2H level, 49.557 Hz in M1), so the class is CRITERIA_VIOLATED. The design limits come from the Project (Doc 3 §3.7), the bands only decide whether the response settled.
 
-**D2-AB rules (instability case, D-118).** SM-01 and SM-02 compare the *unstable* dominant mode: growth rate σ (> 0) and damped frequency, fitted by matrix pencil on the window from the disturbance until the first saturation (predicted in `validation/predictions/limiter_v1.json`, §7), network loss or 10 % deviation, against the M4a eigenvalue and the engine's M4b ring-up. Since engine 0.5.0 (D-121) M4b integrates past the disturbance and reports the growing oscillation until the network solution is lost (SM-01: at 1.5975 s); before that fix it stopped at the disturbance instant. The decay-rate tolerance of §6 applies to σ. DR and TS on D2-AB are categorical: the class must match; NRMSE and settling are reported only for a case that settles in both tools. If PSIM settles where the engine diverges, that is a finding about assumption A1 (quasi-static network), recorded under §9, not a tolerance miss.
+**D2-AB rules (instability case, D-118; revised D-123).** The unstable mode grows by $e^{25.3} \approx 10^{11}$ per second, so in PSIM any start-up error (initial line currents, time-step error, PWM ripple in layer 2) grows into the oscillation before the 1 s disturbance: the PSIM run cannot hold the M1 point and the disturbance instant does not define the start of the growth. **User decision 2026-11-21 (D-123): growth and verdict.** SM-01 and SM-02 compare the *unstable* dominant mode wherever its growth starts: growth rate σ (> 0), damped frequency and damping ratio, fitted by matrix pencil (`python -m m5 eig`) on the PSIM growth window, from where the oscillation stands clear of the start-up transient (the §6 trust rule must hold) until the first saturation (layer 2), network collapse or 10 % deviation of any exported V or f from its M1 value, against the M4a eigenvalue (+25.3 ± j71.0 s⁻¹, 11.3 Hz). The engine's M4b ring-up is reported beside it. SS-02 is numeric on D2-LR only; on D2-AB the steady run is reported as "equilibrium not held" (time to 10 % deviation), no tolerance verdict. D2-LF grows slowly (σ ≈ +1.0 s⁻¹, about 2.8 × per second), so its SS-02 run is compared numerically and a FAIL there is first checked against its growth (cause (6) or a finding under §9) before it is read as an engine error. Since engine 0.5.0 (D-121) M4b integrates past the disturbance and reports the growing oscillation until the network solution is lost (SM-01: last sample 1.595 s in `validation/predictions/limiter_v1.json`, engine 0.5.0, 2026-11-21); before that fix it stopped at the disturbance instant. The decay-rate tolerance of §6 applies to σ. DR and TS on D2-AB are categorical: the class must match; NRMSE and settling are reported only for a case that settles in both tools. If PSIM settles where the engine diverges, that is a finding about assumption A1 (quasi-static network), recorded under §9, not a tolerance miss.
 
 **D2-LR rules (D-119).** Full numeric comparisons per §6: SM against the M4a mode (ζ_min 0.218, 6.15 Hz) and the M4b ring-down, DR with NRMSE and settling, TS categorical.
 
@@ -167,7 +167,7 @@ Layer-1 steady thresholds are at least five times the expected model difference:
 
 **Settling convention (user decision 2026-11-19, D-121).** Settling is judged by the engine (Doc 3 §6.9) and the same rule is applied to the PSIM series: frequency band ±0.05 Hz and voltage band ±0.0088 kV LL (0.02 p.u. of 0.44 kV) around the final value, held over a final window of 0.5 s. This is a declared "2 % style" convention of the author: no standard value for inverter-based islanded microgrids was found (ISO 8528-5 performance classes are for generating sets and paywalled; CASE_DATA_SOURCES §2.4). The bands are frozen with the policy.
 
-**Freeze.** Thresholds and the settling convention change only through a new policy version, never after results are seen. Work package 1.6.2 confirms them against Tabel 4.14 and locks them with a hash.
+**Freeze.** Thresholds and the settling convention change only through a new policy version, never after results are seen. Work package 1.6.2 confirms them against Tabel 4.14 and locks them with a hash. **Policy v2 (user decision 2026-11-21, D-123)**, before any PSIM run: `validation/m5/policy_v2.json` carries every row of the table above (v1 lacked S, losses, loading, P sharing and nadir/peak) and is the policy in force; v1 stays locked as history. S, loading, P sharing and line losses are derived by the script from the exported P, Q and I with the snapshot's ratings and line R ($3I^2R$), so PSIM exports nothing extra; load P and Q are not compared, because the constant-PQ load is driven to the sheet values by construction.
 
 ## 7. Layer-2 parameters (cited design procedure, frozen before running)
 
@@ -181,10 +181,9 @@ Sources read 2026-11-21 from the PDFs (user's IEEE access); values are computed 
 | 50 kVA, 440 V (D1, D2 INV2) | $L_f$ 0.362 mH, $C_f$ 186.5 µF, $r_f$ 26.8 mΩ, $L_c$ 0.0939 mH, $r_{Lc}$ 8.04 mΩ, $K_{pv}$ 0.1865, $K_{iv}$ 1454, $K_{pc}$ 2.816, $K_{ic}$ 4290 | DERIVED |
 | 75 kVA, 440 V (D2 INV1) | $L_f$ 0.241 mH, $C_f$ 279.7 µF, $r_f$ 17.9 mΩ, $L_c$ 0.0626 mH, $r_{Lc}$ 5.36 mΩ, $K_{pv}$ 0.2797, $K_{iv}$ 2182, $K_{pc}$ 1.877, $K_{ic}$ 2860 | DERIVED |
 | Delay | Asymmetric regular sampled PWM (sampling at twice the carrier): $T_d = 0.75/f_s$ = 93.75 µs. Current-loop phase margin 37.7° (Holmes Eq. 18 with crossover $K_{pc}/L_f$), below Holmes' 40° target but positive. With single-update sampling ($T_d$ = 1.5 sample periods, Liserre p. 1286) the margin is negative: the PSIM controller must sample twice per carrier. | Holmes et al. 2009 p. 2420, Fig. 4, Eq. 18–21 |
-| Current limiter | Circular saturation of the current reference $\lvert i_{dq}^*
-vert$ at 1.5 p.u. (98.4 A at 50 kVA, 147.6 A at 75 kVA), anti-windup on the voltage-loop integrators. 1.5 p.u. is the TRUMPF 1-min overload (covers the 5 s TS runs). Plain saturation can destabilise a GFM unit after the reference saturates (Paquette 2015 Fig. 6, 14); a virtual-impedance limiter is the documented alternative, not used here because the engine has none. Every case records whether the limiter engaged. | Q39; TRUMPF manual pp. 17–18; Baeckeland 2024 Sec. VIII; Paquette & Divan 2015 |
+| Current limiter | Circular saturation of the current reference $\lvert i_{dq}^*\rvert$ at 1.5 p.u. (98.4 A at 50 kVA, 147.6 A at 75 kVA), anti-windup on the voltage-loop integrators. 1.5 p.u. is the TRUMPF 1-min overload (covers the 5 s TS runs). Plain saturation can destabilise a GFM unit after the reference saturates (Paquette 2015 Fig. 6, 14); a virtual-impedance limiter is the documented alternative, not used here because the engine has none. Every case records whether the limiter engaged. | Q39; TRUMPF manual pp. 17–18; Baeckeland 2024 Sec. VIII; Paquette & Divan 2015 |
 | DC side | Ideal DC voltage source (A2 kept on the DC side). | §2 |
-| $	au_{in}$ for $r_{in}$ | $1/(2\pi \cdot 400\ 	ext{Hz})$ = 0.398 ms, passed as the optional M4a input. | §7 rule, Pogaku text |
+| $\tau_{in}$ for $r_{in}$ | $1/(2\pi \cdot 400\ \text{Hz})$ = 0.398 ms, passed as the optional M4a input. | §7 rule, Pogaku text |
 | Freeze | The sheet carries the layer-2 block and its SHA-256 (`layer2_hash`); the policy file is hash-locked (`m5/policy_v1.sha256`). | WP 1.6.2 |
 
 **Decisions (user 2026-11-21, D-122), frozen before the first layer-2 run.** Rule: layer 2 differs from the engine only in elements of the ideal-inverter assumption A2, each declared and predicted before PSIM runs.
@@ -201,7 +200,7 @@ vert$ at 1.5 p.u. (98.4 A at 50 kVA, 147.6 A at 75 kVA), anti-windup on the volt
 4. Build each case in the app and export a RunRecord with engine kind REAL (FAKE records are refused).
 5. Run the engine and the PSIM model from the same input: the input sheet is generated from the RunRecord snapshot, never hand-copied.
 6. Extract the comparable PSIM quantities and resample them onto the engine grid (§5).
-7. Compare under the frozen policy.
+7. Compare under the frozen policy: `python -m m5 steady | series | class | mode | eig` (`validation/README.md`; step by step in `docs/PSIM_BUILD_GUIDE.md`).
 8. Attribute each error to a cause recorded before testing (§9). If a cause needs correction, fix it and re-run the affected cases; report improvement as $\rho_{k,c} = e'_{k,c}/e_{k,c}$ (manuscript Eq. 4.26).
 9. Record results with RunRecord hash and engine version. If the engine version changes, return to step 4.
 
@@ -220,7 +219,7 @@ Causes recorded before testing (manuscript 3.8): (1) reactance not updated with 
 | Constant-PQ load | PSIM 9.0 has no constant-power load element (build it from a controlled current source, guide §4.8.1); check 9.1.4.400. A controlled current source into an inductive node may need numerical aids: a small shunt C at the load bus, a low-pass on the load's dq voltages, a ramped load step. |
 | Numerical aids (user decision 2026-11-19, D-121) | A case stays layer 1 only if each aid's steady effect is measured below the layer-1 tolerance (§6) and declared in `unmodelled_elements`; otherwise the case is reported under layer 2. |
 | Inverter trip (TS-02) | Opening a switch carrying current produces a voltage spike in an ideal simulator; use a current-zero breaker or a declared snubber. Run TS-02 last. |
-| Signals exported | Commanded frequency per inverter (not a PLL), P and Q per inverter, LL RMS bus voltages and angles, line RMS currents, load power; any averaging window declared (a one-cycle mean lags fast steps by about half a cycle). |
+| Signals exported | Commanded frequency per inverter (not a PLL) and `f_sys`, the mean commanded frequency of the inverters in service (the engine's system frequency, used for the class; after TS-02 it is INV1 alone), P and Q per inverter, LL RMS bus voltages and angles, line RMS currents; names in `validation/README.md`; any averaging window declared (a one-cycle mean lags fast steps by about half a cycle). |
 | Never | Tune shared parameters, hand-edit a CSV, or reuse a run id for different content. |
 | Order | SS-01 → SS-04, then SM, DR, TS-01, TS-03, TS-02 last. |
 
@@ -236,7 +235,9 @@ Numbers are kept so that references elsewhere stay valid.
 | 4 | Native constant-power load element in PSIM 9.1.4.400. | VERIFY in PSIM (user) |
 | 5 | `PsimCmd` in the installed licence. | VERIFY in PSIM (user) |
 | 6 | Resolution floor $p_{floor}$ per quantity, measured from PSIM output. | Work package 1.6.2 (policy v1 locked without it; add in v2 after the first PSIM runs) |
-| 13 | Offline script (sheet, import, compare, matrix pencil, policy lock). | DONE (D-122): `validation/m5`, 9 self-checks on REAL D2-LR records |
+| 13 | Offline script (sheet, import, compare, matrix pencil, policy lock). | DONE (D-122): `validation/m5`, 9 self-checks on REAL D2-LR records; D-123: initial state and disturbance in the parameter file, TS-02 records, class, mode and eig commands, policy v2, 17 self-checks |
+| 14 | D2-AB cannot hold its equilibrium in PSIM. | DECIDED (D-123): growth and verdict (§5) |
+| 15 | Policy v1 lacked rows of the §6 table. | DECIDED (D-123): policy v2 (§6) |
 | 7 | M4b on D2-AB stopped at the disturbance instant. | DONE (D-121): engine 0.5.0 integrates per output sample; D2-AB grows until the network is lost |
 | 8 | Settling criteria for the M4b classes. | DECIDED (D-121): §6 |
 | 9 | Output alignment; I(t), per-inverter f and angles missing from M4b. | DONE (D-121): outputs added (§3), resampling rule (§5) |
@@ -248,6 +249,7 @@ Numbers are kept so that references elsewhere stay valid.
 
 | Date | Change |
 |---|---|
+| 2026-11-21 | Build-readiness audit (D-123): angle reference is B1 on every design (§3); D1 row filled; SM-01 network loss 1.595 s; §7 formulas repaired; D2-AB rules revised and SS-02 split (§5); policy v2 (§6); `f_sys` export (§10); step-by-step build guide `docs/PSIM_BUILD_GUIDE.md`; open points 14, 15. |
 | 2026-11-21 | §7 filled from Pogaku 2007, Liserre 2005, Holmes 2009, Paquette 2015 and Baeckeland 2024 (D-122); offline script `validation/m5`; open points 2, 3 closed, 13 added. Decisions on $L_c$, $C_f$ and the limiter frozen with the M1 current check, the engine limiter prediction and case SM-01-NLC (§5, §7). |
 | 2026-11-19 | Streamlined (D-121): prototype history removed; designs D2-AB, D2-LR, D2-LF named in the case table; engine 0.5.0 M4b fix and outputs; engine class table; output alignment rule; settling convention; layer-1 aids rule; §11 (second comparator) dropped; open points 1, 7–10 closed. |
 | 2026-11-19 | D2-LF on CIGRE LV benchmark lengths (D-120); coupling reactors, D2-LR, D2S and D2H re-based, hand case R-1 (D-119, ADR-017); catalogue designs, D2 instability and the decision to validate it (D-116, D-118). |

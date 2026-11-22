@@ -73,7 +73,9 @@ def test_layer2_scaling_keeps_pu_and_needs_double_update() -> None:
 
 def test_policy_is_hash_locked() -> None:
     p = compare.load_policy()
-    assert p["policy_version"] == 1 and len(p["sha256"]) == 64
+    assert p["policy_version"] == 2 and len(p["sha256"]) == 64
+    assert compare.load_policy(1)["policy_version"] == 1  # v1 kept locked as history
+    assert {"S", "loss", "loading", "share"} <= set(p["steady"]) and "extreme" in p
 
 
 def test_steady_chain_passes_on_identical_data(tmp_path: Path) -> None:
@@ -83,12 +85,13 @@ def test_steady_chain_passes_on_identical_data(tmp_path: Path) -> None:
     write_csv(tmp_path / "ss.csv", first)
     rows = compare.steady(
         psim.m1_values(rec("m1")["result"]["payload"]),
-        psim.read_psim(tmp_path / "ss.csv"),
+        psim.add_derived(psim.read_psim(tmp_path / "ss.csv"), rec("m1")["snapshot"]),
         policy,
         layer=1,
     )
-    assert {r["verdict"] for r in rows} <= {"PASS", "REPORTED"}
-    assert len(rows) == 2 * 3 + 5 * 2 + 4  # f, P, Q per inverter; V, A per bus; I per line
+    assert {r["verdict"] for r in rows} <= {"PASS", "REPORTED"}, rows
+    # f_sys; f, P, Q, S, loading, share per inverter; V, A per bus; I, loss per line; total loss
+    assert len(rows) == 1 + 2 * 6 + 5 * 2 + 4 * 2 + 1
 
 
 def test_series_chain_and_resampling(tmp_path: Path) -> None:
@@ -105,6 +108,15 @@ def test_series_chain_and_resampling(tmp_path: Path) -> None:
     assert all(r["nrmse"] < 1e-6 and r["nrmse_pass"] for r in rows)
     f = next(r for r in rows if r["quantity"] == "f_INV1")
     assert f["settling_pass"] and f["settling_engine_s"] == f["settling_psim_s"]
+    assert f["extreme_pass"] and f["extreme_engine"] < 49.89  # the nadir after the load step
+
+
+def test_psim_mode_against_m4a_eigenvalue() -> None:
+    """The `eig` route used for D2-AB growth (D-123), here on the D2-LR ring-down."""
+    eng = psim.engine_series(rec("sm01_m4b")["result"]["payload"])
+    y = eng["f_INV1"][eng["time"] >= 1.0]
+    m = compare.eig(y, 2.5e-3, rec("m4a")["result"]["payload"], compare.load_policy(), 1)
+    assert m["verdict"] == "PASS" and m["m4a"]["freq_hz"] == pytest.approx(6.1467, abs=1e-4)
 
 
 def test_matrix_pencil_on_a_known_mode() -> None:
@@ -147,6 +159,49 @@ def test_layer2_sheet_refuses_a_case_that_starts_in_limit() -> None:
     pay["inverter_results"][0]["p_kw"] = 120.0  # FIXTURE ONLY: 1.6 p.u. of 75 kVA
     with pytest.raises(sheet.RefusedRecordError):
         sheet.input_sheet(r | {"result": r["result"] | {"payload": pay}}, with_layer2=True)
+
+
+def test_params_file_carries_initial_state_and_disturbance() -> None:
+    """Everything the PSIM model needs comes from the file, nothing typed by hand (§8 step 5)."""
+    txt = sheet.psim_params(sheet.input_sheet(rec("sm01_m4b")))
+    vals = dict(ln.split(" = ") for ln in txt.splitlines()[1:])
+    assert float(vals["dp_L1"]) == pytest.approx(815.0) and float(vals["dq_L1"]) == 326.0
+    assert float(vals["t_dist"]) == 1.0 and float(vals["t_end"]) == 3.0
+    assert float(vals["theta0_INV1"]) == pytest.approx(math.radians(0.46339462), rel=1e-6)
+    assert float(vals["P0_INV1"]) == pytest.approx(16372.31, abs=0.01)
+    assert float(vals["f0"]) == pytest.approx(49.89085, abs=1e-5)
+    assert "V0_B1" in vals and "I0_LR1" in vals
+
+
+def test_tripped_inverter_frequency_is_nan_not_a_crash() -> None:
+    pay = json.loads(json.dumps(rec("sm01_m4b")["result"]["payload"]))
+    f2 = pay["inverter_frequency_hz"][1]["values"]
+    pay["inverter_frequency_hz"][1]["values"] = f2[:500] + [None] * (len(f2) - 500)  # as TS-02
+    eng = psim.engine_series(pay)
+    assert np.isnan(eng["f_INV2"][-1])
+    full = psim.engine_series(rec("sm01_m4b")["result"]["payload"])
+    rows = compare.series(eng, full, 1.0, compare.load_policy(), layer=1)
+    assert next(r for r in rows if r["quantity"] == "f_INV2")["nrmse"] < 1e-12
+
+
+def test_class_rule_reproduces_the_engine_class() -> None:
+    r = rec("sm01_m4b")
+    eng = psim.engine_series(r["result"]["payload"])
+    policy = compare.load_policy()
+    cons = r["snapshot"]["design_constraints"]
+    cls = compare.transient_class(eng, 1.0, policy["settling"], cons, 440.0)
+    assert cls == r["result"]["payload"]["transient_class"] == "RECOVERED_STABLE"
+    low = cons | {"frequency_min_hz": 49.9}  # SM-01 dips below 49.9 Hz: limit violated
+    assert compare.transient_class(eng, 1.0, policy["settling"], low, 440.0) == "CRITERIA_VIOLATED"
+    grow = eng | {"f_sys": eng["f_sys"] + 0.2 * (eng["time"] > 2.6)}  # moves in the final window
+    assert compare.transient_class(grow, 1.0, policy["settling"], cons, 440.0) == "UNSTABLE"
+
+
+def test_mode_on_identical_data_passes() -> None:
+    eng = psim.engine_series(rec("sm01_m4b")["result"]["payload"])
+    w = eng["time"] >= 1.0
+    m = compare.mode(eng["f_INV1"][w], eng["f_INV1"][w], 2.5e-3, compare.load_policy(), 1)
+    assert m["verdict"] == "PASS"
 
 
 def test_limiter_prediction_on_d2_lr_sm01() -> None:

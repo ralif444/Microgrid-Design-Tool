@@ -18,3 +18,7 @@ frontend/app/carbon.css
 # X10 cable sizing: user-transcribed PUIL/IEC tables are copyrighted; never commit them.
 data/private/*
 !data/private/README.md
+
+# M5 generated case records and input sheets (docs/PSIM_BUILD_GUIDE.md)
+validation/records/
+validation/out/

@@ -44,6 +44,7 @@ def engine_series(payload: dict[str, Any]) -> dict[str, np.ndarray]:
     """M4b payload in the PSIM signal names and SI units of `sheet.SIGNALS`, on `engine_grid`."""
     keep = engine_grid(payload["time_s"])
     out = {"time": np.asarray(payload["time_s"])[keep]}
+    out["f_sys"] = np.asarray(payload["system_frequency_hz"])[keep]
     groups = (
         ("inverter_frequency_hz", "f", "inverter_id", 1.0),
         ("inverter_p_kw", "P", "inverter_id", 1e3),
@@ -54,13 +55,15 @@ def engine_series(payload: dict[str, Any]) -> dict[str, np.ndarray]:
     )
     for key, prefix, idk, scale in groups:
         for s in payload.get(key) or []:
-            out[f"{prefix}_{s[idk]}"] = np.asarray(s["values"])[keep] * scale
+            # None (a tripped inverter's frequency, TS-02) becomes NaN
+            out[f"{prefix}_{s[idk]}"] = np.asarray(s["values"], dtype=float)[keep] * scale
     return out
 
 
 def m1_values(payload: dict[str, Any]) -> dict[str, float]:
     """M1 operating point in the same names and units."""
-    out = {
+    out = {"f_sys": payload["system_frequency_hz"]}
+    out |= {
         f"f_{i['inverter_id']}": payload["system_frequency_hz"] for i in payload["inverter_results"]
     }
     for i in payload["inverter_results"]:
@@ -71,4 +74,36 @@ def m1_values(payload: dict[str, Any]) -> dict[str, float]:
         out[f"A_{b['bus_id']}"] = b["angle_deg"]
     for ln in payload["line_results"]:
         out[f"I_{ln['line_id']}"] = ln["current_a"]
+    # policy v2 rows (Doc 13 §6): S, loading and P sharing per inverter, losses per line and total
+    p_tot = sum(i["p_kw"] for i in payload["inverter_results"])
+    for i in payload["inverter_results"]:
+        out[f"S_{i['inverter_id']}"] = i["s_kva"] * 1e3
+        out[f"loading_{i['inverter_id']}"] = i["loading_ratio"]
+        out[f"share_{i['inverter_id']}"] = 100 * i["p_kw"] / p_tot
+    for ln in payload["line_results"]:
+        out[f"loss_{ln['line_id']}"] = ln["losses_kw"] * 1e3
+    out["loss_total"] = payload["total_losses_kw"] * 1e3
+    return out
+
+
+def add_derived(cols: dict[str, np.ndarray], snap: dict[str, Any]) -> dict[str, np.ndarray]:
+    """S, loading, P sharing and losses from the exported P, Q and I, with the ratings and line
+    resistances of the snapshot (the same R as the PSIM model), so PSIM exports nothing extra."""
+    out = dict(cols)
+    invs = [i for i in snap["inverters"] if f"P_{i['id']}" in cols and f"Q_{i['id']}" in cols]
+    p_tot = sum(cols[f"P_{i['id']}"] for i in invs)
+    for i in invs:
+        p, q = cols[f"P_{i['id']}"], cols[f"Q_{i['id']}"]
+        out[f"S_{i['id']}"] = np.hypot(p, q)
+        out[f"loading_{i['id']}"] = out[f"S_{i['id']}"] / (i["rated_kva"] * 1e3)
+        if len(invs) == len(snap["inverters"]):
+            out[f"share_{i['id']}"] = 100 * p / p_tot
+    losses = []
+    for ln in snap["lines"]:
+        if f"I_{ln['id']}" in cols:
+            r = ln["r_ohm_per_km"] * ln["length_km"]
+            out[f"loss_{ln['id']}"] = 3 * cols[f"I_{ln['id']}"] ** 2 * r
+            losses.append(out[f"loss_{ln['id']}"])
+    if losses and len(losses) == len(snap["lines"]):
+        out["loss_total"] = sum(losses)
     return out

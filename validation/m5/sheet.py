@@ -137,6 +137,7 @@ def input_sheet(record: dict[str, Any], with_layer2: bool = False) -> dict[str, 
 
 # Export convention for the PSIM CSV (Doc 13 §10): column prefix, id, SI unit.
 SIGNALS = {
+    "f_sys": "Hz, mean commanded frequency of the inverters in service (engine M4b, K68)",
     "f_<inverter>": "Hz, commanded frequency (not a PLL)",
     "P_<inverter>": "W, three-phase total (Eq. 13.4)",
     "Q_<inverter>": "VAR, three-phase total (Eq. 13.4)",
@@ -161,4 +162,46 @@ def psim_params(sheet: dict[str, Any]) -> str:
         out += [f"r_{ln['id']} = {ln['r_ohm']:.10g}", f"l_{ln['id']} = {ln['l_h']:.10g}"]
     for ld in sheet["loads"]:
         out += [f"p_{ld['id']} = {ld['p_w']:.10g}", f"q_{ld['id']} = {ld['q_var']:.10g}"]
+    # Initial state (Doc 13 §3): the M1 equilibrium, the run starts flat; P_f(0) = P0, Q_f(0) = Q0
+    ini = sheet["initial_state"]
+    out.append(f"f0 = {ini['f_hz']:.10g}")
+    for inv in sheet["inverters"]:
+        i0, bus = ini["inverter"][inv["id"]], ini["bus"][inv["bus_id"]]
+        out += [
+            f"P0_{inv['id']} = {i0['p_w']:.10g}",
+            f"Q0_{inv['id']} = {i0['q_var']:.10g}",
+            f"theta0_{inv['id']} = {math.radians(bus['angle_deg']):.10g}",  # rad, first bus = 0
+        ]
+    for b, v in ini["bus"].items():
+        out.append(f"V0_{b} = {v['v_ll_v']:.10g}")
+    out += [f"I0_{k} = {v:.10g}" for k, v in ini["line_current_a"].items()]
+    out += _disturbance(sheet.get("parameters") or {})
     return "\n".join(out) + "\n"
+
+
+def _disturbance(params: dict[str, Any]) -> list[str]:
+    """M4b disturbance in SI units, as the engine applies it (mgapp studies._magnitude)."""
+    d = params.get("disturbance")
+    if not d:
+        return []
+    out = [f"t_dist = {d['start_time_s']:.10g}", f"t_end = {params['simulation_end_s']:.10g}"]
+    if d.get("duration_s") is not None and d["kind"] != "INVERTER_OUTAGE":
+        out.append(f"t_dist_end = {d['start_time_s'] + d['duration_s']:.10g}")
+    eid, x = d["element_id"], float(d.get("magnitude") or 0.0)
+    if d["kind"] == "LOAD_STEP":
+        out += [
+            f"dp_{eid} = {x * 1e3:.10g}",
+            f"dq_{eid} = {float(d.get('magnitude_kvar') or 0) * 1e3:.10g}",
+        ]
+    elif d["kind"] == "LOAD_SCALING":
+        out.append(f"scale_{eid} = {x:.10g}")
+    elif d["kind"] == "INVERTER_OUTAGE":
+        out.append(f"trip_{eid} = 1")
+    else:  # REFERENCE_STEP
+        ref = d["reference"]
+        si = {"P_SETPOINT": 1e3, "Q_SETPOINT": 1e3, "V_SETPOINT": 1e3 / math.sqrt(3),
+              "F_SETPOINT": 2 * math.pi}[ref]  # fmt: skip
+        name = {"P_SETPOINT": "dp_star", "Q_SETPOINT": "dq_star", "V_SETPOINT": "dv_star_phase",
+                "F_SETPOINT": "dw_star"}[ref]  # fmt: skip
+        out.append(f"{name}_{eid} = {x * si:.10g}")
+    return out
