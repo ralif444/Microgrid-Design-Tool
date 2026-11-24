@@ -1,4 +1,4 @@
-.report { max-width: 64rem; }
+.report { max-width: 78rem; } /* wide enough that the sheet tables (line flows 53rem) fit beside the 19rem sheet data */
 .controls {
   display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);
   padding: var(--space-2) var(--space-3); background: var(--cds-layer-01);

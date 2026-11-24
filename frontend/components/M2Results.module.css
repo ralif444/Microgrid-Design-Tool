@@ -22,4 +22,4 @@
 /* the shared problems banner, with the attention edge and icon: limits missing, not a design error */
 .notEvaluated:global(.problems) { border-left-color: var(--role-attention-edge); }
 .notEvaluated:global(.problems) > svg { fill: var(--role-attention-icon); }
-@media print { .track { display: none; } .unit { min-width: 0; } } /* A4 width (FR-60); the numbers stay */
+@media print { .track { display: none; } .unit { min-width: 0; padding-left: 2px; } } /* "p.u." is wider than "pu": 2 px keeps the table on A4 */ /* A4 width (FR-60); the numbers stay */

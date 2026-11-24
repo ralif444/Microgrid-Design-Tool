@@ -33,7 +33,7 @@ type Metric = keyof KeyMetrics;
 // [field, name, unit]; the optional ones appear only when a point carries them (point_metrics)
 const KEY_METRICS: [Metric, string, string][] = [
   ["system_frequency_hz", "System frequency", "Hz"],
-  ["min_voltage_pu", "Lowest bus voltage", "pu"],
+  ["min_voltage_pu", "Lowest bus voltage", "p.u."],
   ["max_loading_ratio", "Highest inverter loading", "ratio"],
   ["total_losses_kw", "Total line losses", "kW"],
   ["epsilon_x_ratio", "ε_X validity indicator", "ratio"],

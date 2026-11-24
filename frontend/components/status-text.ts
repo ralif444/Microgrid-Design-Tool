@@ -48,6 +48,13 @@ export function bannerText(type: AnalysisType, r: AnalysisResult): BannerText {
       if (type === "RS")
         return { role: "success", headline: T("Reactor sizing completed (advice only)."), hint: T("Check the outcome; apply the reactors only when it says they were found and confirmed.") };
       if (type === "PS") return { role: "success", headline: T("Advice produced."), hint: T("Accept or skip.") }; // Edit deferred (Doc 9 D-45 K5)
+      if (type === "M4a" || type === "M4b") {
+        // the run succeeded, but an unstable or marginal class is a design finding, not a success (audit 2026-11-24)
+        const p = r.payload as { stability_class?: string; transient_class?: string } | null;
+        const cls = p?.stability_class ?? p?.transient_class;
+        const role = cls === "UNSTABLE" ? "warning" : cls === "MARGINAL" || cls === "CRITERIA_VIOLATED" ? "caution" : "success";
+        return { role, headline: T("Analysis completed."), hint: T("Explore further analyses or open the report.") };
+      }
       return { role: "success", headline: T("Analysis completed."), hint: T("Explore further analyses or open the report.") };
     case "INFEASIBLE":
       return {

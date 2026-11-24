@@ -17,6 +17,9 @@ export const TOKEN_ROLE: Record<BannerText["role"], string> = {
 export function statusIcon(r: Pick<AnalysisResult, "status" | "status_code">): IconName {
   if (r.status === "UNAVAILABLE")
     return ({ TIMEOUT: "clock", DEPENDENCY_NOT_MET: "link", ENGINE_ERROR: "wrench" } as Record<string, IconName>)[r.status_code] ?? "info";
+  const p = (r as { payload?: { stability_class?: string; transient_class?: string } | null }).payload;
+  const cls = p?.stability_class ?? p?.transient_class; // M4a / M4b class, as the KPI shows it
+  if (r.status === "FEASIBLE" && cls && cls !== "STABLE" && cls !== "RECOVERED_STABLE") return cls === "UNSTABLE" ? "misuse" : "warn";
   return ({ FEASIBLE: "feasible", INFEASIBLE: "misuse", SOLVER_FAILED: "alert", PHYSICALLY_INADMISSIBLE: "hex", INPUT_INVALID: "list" } as Record<string, IconName>)[r.status];
 }
 

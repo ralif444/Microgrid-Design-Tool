@@ -7,7 +7,7 @@
 .pick h2 { margin: 0; width: 100%; font-size: var(--text-sm); font-weight: var(--weight-semibold); }
 .pick p, .pick table, .pick ul { width: 100%; margin: 0; }
 
-.section { display: grid; gap: var(--space-2); margin-top: var(--space-5); padding-top: var(--space-4); border-top: var(--border-width) solid var(--color-border); --field-label: 9rem; }
+.section { display: grid; grid-template-columns: minmax(0, 1fr); /* a long Catalogue option must not widen the inspector */ gap: var(--space-2); margin-top: var(--space-5); padding-top: var(--space-4); border-top: var(--border-width) solid var(--color-border); --field-label: 9rem; }
 .section h3 { margin: 0; font-size: var(--text-md); }
 .section > p { margin: 0; }
 .section [role="status"] { font-size: var(--text-sm); }

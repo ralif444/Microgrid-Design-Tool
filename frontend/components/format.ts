@@ -40,3 +40,12 @@ const fixedEn = (v: number, unit: string) => {
 };
 /** `fixed` for a value that may be missing. */
 export const fixedOr = (v: number | null | undefined, unit: string, missing = "—") => (v === null || v === undefined ? missing : fixed(v, unit));
+
+/** YYYY-MM-DD in the viewer's time zone (a UTC slice shows yesterday before 07:00 in Jakarta) */
+export const localDate = (d: Date | string) => {
+  const x = new Date(d);
+  return new Date(x.getTime() - x.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+};
+
+/** a unit as the UI writes it: the engine's "pu" is shown as "p.u." everywhere */
+export const unitText = (u: string) => (u === "pu" ? "p.u." : u);

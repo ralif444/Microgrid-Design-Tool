@@ -59,7 +59,7 @@ export const LineChart = memo(function LineChart({
   const readout = useId();
   const report = useContext(ReportCharts);
   const g = useMemo(() => {
-    const xd = niceDomain(x, 0);
+    const xd = niceDomain(x, line ? 0 : undefined); // a scatter keeps its edge points off the axes
     const yd = niceDomain(series.flatMap((s) => s.values));
     return {
       sx: linearScale(xd, [M.l, W - M.r]),
@@ -67,7 +67,7 @@ export const LineChart = memo(function LineChart({
       xt: niceTicks(xd),
       yt: niceTicks(yd),
     };
-  }, [x, series]);
+  }, [x, series, line]);
   const cross = crosshair && x.length > 0 && !report; // static in the report (guideline §5)
   const move = (e: KeyboardEvent<SVGSVGElement>) => {
     const last = x.length - 1;

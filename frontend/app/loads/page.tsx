@@ -76,7 +76,7 @@ function ProfileEditor({ issues, confirm }: { issues: ValidationIssue[]; confirm
 function Loads() {
   const { t } = useLanguage();
   const { dialog, confirm } = useConfirmDelete();
-  const { design } = useProject();
+  const { design, example } = useProject();
   const dispatch = useProjectDispatch();
   const issues = useValidation(design, "PS")?.issues ?? [];
   const loads = design.loads ?? [];
@@ -218,10 +218,12 @@ function Loads() {
           </ul>
         </div>
       )}
-      <p className={styles.next}>
-        <Link href="/sizing/">{t("Go to sizing advice")}</Link>
-        {loads.length === 0 && ` ${t("Needs at least one load.")}`}
-      </p>
+      {!example && ( // example mode shows "Next: Sizing advice" instead
+        <p className={styles.next}>
+          <Link href="/sizing/">{t("Go to sizing advice")}</Link>
+          {loads.length === 0 && ` ${t("Needs at least one load.")}`}
+        </p>
+      )}
       <ExampleNext screen="loads" ready={true} />
       {dialog}
     </>

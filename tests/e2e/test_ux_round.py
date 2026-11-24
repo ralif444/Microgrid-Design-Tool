@@ -48,7 +48,7 @@ def test_fr_86_show_data_lists_the_payload_rows(server: Callable[[str], str], pa
     _run_m1(page)
     step(page, "Report")
     title = "Bus voltage magnitude from the latest power flow (M1)"
-    expect(page.get_by_role("img", name="Bus voltage (p.u.) bar chart, 2 bars")).to_be_visible()
+    expect(page.get_by_role("img", name="Bus voltage (p.u.) dot chart, 2 points")).to_be_visible()
     # scoped to this figure: the report now has more charts, each with the FAKE caption (D-88, user)
     figure = page.get_by_role("figure", name=title)
     expect(figure.get_by_text("FAKE engine: placeholder, not an engine result")).to_be_visible()

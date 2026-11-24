@@ -17,8 +17,8 @@ const columns = (t: (s: string) => string): DataColumn<Row>[] => [
 ];
 const terms = (t: (s: string) => string): DataColumn<GlossaryEntry>[] => [
   { key: "t", header: t("Term"), cell: (e) => <strong>{e.term}</strong> },
-  { key: "d", header: "Definisi", cell: (e) => <span lang="id">{e.short}</span> },
-  { key: "s", header: "Sumber", cell: (e) => e.source },
+  { key: "d", header: t("Definition (in Indonesian, as in the manuscript)"), cell: (e) => <span lang="id">{e.short}</span> },
+  { key: "s", header: t("Source"), cell: (e) => e.source },
 ];
 
 export default function AboutPage() {
@@ -74,7 +74,7 @@ export default function AboutPage() {
           />
         </>
       )}
-      <h2>{t("Glosarium")}</h2>
+      <h2>{t("Glossary")}</h2>
       <p>{t("Definitions are taken from the manuscript (Seminar, 28-10-2026) or the project glossary; each names its source. The same texts open from the info button beside a term.")}</p>
       <DataTable label={t("Glossary")} caption={t("Glossary")} columns={terms(t)} rows={Object.values(GLOSSARY)} rowKey={(r) => r.term} rowName={(r) => r.term} />
     </>

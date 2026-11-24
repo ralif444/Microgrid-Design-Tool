@@ -17,7 +17,7 @@ import { Icon } from "../../components/Icon";
 import { useLanguage } from "../../components/Language";
 import { IndicatorPanel, indicatorText, useIndicatorRows } from "../../components/IndicatorPanel";
 import { M1Results } from "../../components/M1Results";
-import { fixed } from "../../components/format";
+import { fixed, localDate } from "../../components/format";
 import { ConstraintTable, KIND_WORDS, M2Results } from "../../components/M2Results";
 import { RequireProject } from "../../components/RequireProject";
 import { SldFigure } from "../../components/sld/SldFigure";
@@ -31,6 +31,13 @@ import { M4aCharts } from "../../components/M4aCharts";
 import { GUIDANCE, needsReactorAdvice } from "../../components/ReactorAdvice";
 import { useProject } from "../../store";
 import styles from "./report.module.css";
+
+/** the reported run's own voltage limits as reference lines; 1.0 p.u. when none is set */
+const vLimits = (r: RunRecord | null) => {
+  const c = (r?.snapshot as ProjectSnapshot | null)?.design_constraints;
+  const out = [c?.voltage_min_pu, c?.voltage_max_pu].filter((v): v is number => typeof v === "number").map((v) => ({ value: v, label: `${v} p.u.` }));
+  return out.length ? out : [{ value: 1, label: "1.0 p.u." }];
+};
 
 // Manuscript Tabel 1.1 (Bab 1 §1.5), quoted as extracted (Doc 9 D-47 K19); handling per Doc 12 FR-63.
 const MODEL_ASSUMPTIONS: [string, string, string][] = [
@@ -115,7 +122,7 @@ function Report() {
       <h1 className={styles.title}>{t("Report: {name}", { name: project?.name ?? "" })}</h1>
       <p className={styles.meta}>
         <span>
-          {t("Date")} <strong>{new Date().toISOString().slice(0, 10)}</strong>
+          {t("Date")} <strong>{localDate(new Date())}</strong>
         </span>
         <span>
           {t("Engine")} <strong>{meta ? `${meta.engine.engine_kind} ${meta.engine.engine_version}` : "…"}</strong>
@@ -207,8 +214,9 @@ function Report() {
               categoryTitle={t("Bus")}
               categories={m1p.bus_results.map((b) => b.bus_id)}
               series={[{ name: t("Voltage"), values: m1p.bus_results.map((b) => b.voltage_pu) }]}
-              refs={[{ value: 1, label: "1.0 p.u." }]}
+              refs={vLimits(m1)}
               record={m1}
+              dots // p.u. values sit near 1: dots on a fitted axis show the spread and the limits
             />
           </div>
           {/* limits as the reported run saw them, so the reference lines match that run */}

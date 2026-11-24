@@ -96,7 +96,7 @@ def test_fr_60_report_print_layout(server: Callable[[str], str], page: Page) -> 
     enter_design(page, server("m2-infeasible"), gui_snapshot())
     _m1_m2(page)
     step(page, "Report")
-    expect(page.get_by_role("img", name="Bus voltage (p.u.) bar chart")).to_be_visible()
+    expect(page.get_by_role("img", name="Bus voltage (p.u.) dot chart")).to_be_visible()
     page.set_viewport_size({"width": A4_PRINTABLE_PX, "height": 1000})
     page.emulate_media(media="print")
     expect(page.locator("header")).to_be_hidden()

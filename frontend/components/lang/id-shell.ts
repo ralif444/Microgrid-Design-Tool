@@ -141,6 +141,7 @@ export const ID_SHELL: Record<string, string> = {
   "Term": "Istilah",
   "Glosarium": "Glosarium",
   "Glossary": "Glosarium",
+  "Definition (in Indonesian, as in the manuscript)": "Definisi",
   "Definitions are taken from the manuscript (Seminar, 28-10-2026) or the project glossary; each names its source. The same texts open from the info button beside a term.":
     "Definisi diambil dari manuskrip (Seminar, 28-10-2026) atau glosarium project; masing-masing menyebut sumbernya. Teks yang sama terbuka dari tombol info di samping istilah.",
   "App version": "Versi aplikasi",

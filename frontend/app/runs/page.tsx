@@ -214,7 +214,7 @@ function Runs() {
   return (
     <>
       <h1>{t("Run history")}</h1>
-      <p>
+      <p className={styles.tools}>
         <label>
           <input type="checkbox" checked={hideInvalid} onChange={(e) => setHideInvalid(e.target.checked)} /> {t("Hide runs refused for invalid input")}
         </label>

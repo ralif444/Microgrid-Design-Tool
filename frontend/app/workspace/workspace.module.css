@@ -25,6 +25,7 @@
 .flag[data-mark="violated"] > svg { fill: var(--role-negative-icon); }
 .add { margin: var(--space-1) var(--space-4) var(--space-2); font-size: var(--text-sm); }
 form.add { display: grid; justify-items: start; gap: var(--space-1); }
+form.add input { max-width: 100%; box-sizing: border-box; } /* the 12rem list at 1024 px is narrower than the field */
 /* "Add bus" is a list action like "+ Add inverter": tertiary, not the filled submit look of globals.css */
 .list form.add button[type="submit"]:not(:disabled):not(:hover) { background: transparent; border-color: var(--cds-button-primary); color: var(--cds-button-primary); }
 

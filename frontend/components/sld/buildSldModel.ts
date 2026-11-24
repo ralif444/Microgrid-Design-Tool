@@ -3,7 +3,7 @@
 // the rows that tooltip, inspector and "View as table" all read. No layout, no store, and no physics:
 // values are copied from the Project or a payload and only rounded for display (`num`, R1, R2).
 import type { BatteryBank, LimitingConstraint, M1Payload, M2Payload, ProjectSnapshot, ValidationIssue } from "../../api-types";
-import { fixed, numText } from "../format";
+import { fixed, numText, unitText } from "../format";
 import { KIND_WORDS, nearLimit } from "../M2Results";
 
 export type SldKind = "system" | "bus" | "inverter" | "load" | "line";
@@ -78,12 +78,15 @@ const count = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 function checks(id: string, m2: SldInput["m2"], marginWarn: number | null, extra: SldRow[] = []): { section: SldSection; mark: SldMark | null } {
   if (!m2) return { section: { title: "Checks", rows: [], empty: NO_M2 }, mark: null };
   const own = m2.payload.constraint_margins.filter((c) => c.element_id === id);
-  const rows: SldRow[] = own.map((c) => ({
-    label: KIND_WORDS[c.kind] ?? c.kind,
-    value: fixed(c.value, c.unit),
-    unit: c.unit,
-    note: `${c.margin < 0 ? "violated" : nearLimit(c, marginWarn) ? "near limit" : "satisfied"}; limit ${fixed(c.limit, c.unit)} ${c.unit}, margin ${fixed(c.margin, c.unit)} ${c.unit}`,
-  }));
+  const rows: SldRow[] = own.map((c) => {
+    const u = unitText(c.unit);
+    return {
+      label: KIND_WORDS[c.kind] ?? c.kind,
+      value: fixed(c.value, c.unit),
+      unit: u,
+      note: `${c.margin < 0 ? "violated" : nearLimit(c, marginWarn) ? "near limit" : "satisfied"}; limit ${fixed(c.limit, c.unit)} ${u}, margin ${fixed(c.margin, c.unit)} ${u}`,
+    };
+  });
   for (const n of m2.payload.not_evaluated.filter((x) => x.element_id === id))
     rows.push({ label: KIND_WORDS[n.kind] ?? n.kind, value: "—", note: "not evaluated: no limit set" });
   const mark: SldMark | null = own.some((c) => c.margin < 0)

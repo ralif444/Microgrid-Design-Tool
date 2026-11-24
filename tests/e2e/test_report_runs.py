@@ -35,7 +35,7 @@ def test_fr_58_fr_59_report_shows_verdict_constraints_hash_table_chart(
     step(page, "Report")
     expect(page.get_by_test_id("verdict")).to_contain_text("Limits violated")
     expect(page.get_by_role("table", name="Limiting constraints")).to_contain_text("Violated by")
-    expect(page.get_by_role("img", name="Bus voltage (p.u.) bar chart")).to_be_visible()
+    expect(page.get_by_role("img", name="Bus voltage (p.u.) dot chart")).to_be_visible()
     expect(page.get_by_role("table", name="Bus voltages")).to_be_visible()
     trace = page.get_by_role("table", name="Traceability")
     expect(trace).to_contain_text("M2")

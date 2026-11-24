@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import type { AnalysisType, ProjectSnapshot, RunRecord } from "../api-types";
 import { useProject } from "../store";
 import { CONSTRAINT_FIELDS, M2_FIELDS } from "./elementFields";
-import { fixed } from "./format";
+import { fixed, localDate } from "./format";
 import { useLanguage } from "./Language";
 import { displayLang, translate } from "./i18n";
 import { statusWord } from "./status-text";
@@ -28,7 +28,7 @@ export const SHEET_NAME: Record<string, string> = {
 };
 
 const short = (id: string) => id.slice(0, 8);
-const date = (iso: string) => iso.slice(0, 10);
+const date = (iso: string) => localDate(iso);
 const LABEL: Record<string, [string, string]> = Object.fromEntries([
   ...M2_FIELDS.map(([k, l, u]) => [k, [l.replace(/, optional$/, ""), u]]),
   ["tau_in_s", ["Inner-loop time constant τ_in", "s"]],

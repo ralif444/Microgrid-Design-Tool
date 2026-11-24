@@ -8,7 +8,7 @@ import type { LimitingConstraint, M2Payload, RunRecord } from "../api-types";
 import { AdvisoryPanel } from "./AdvisoryPanel";
 import { LoadabilityAxis } from "./charts/LoadabilityAxis";
 import { DataTable, type DataColumn } from "./DataTable";
-import { fixed, fixedOr } from "./format";
+import { fixed, fixedOr, unitText } from "./format";
 import { Icon, type IconName } from "./Icon";
 import { useLanguage } from "./Language";
 import type { ElementRef } from "./elementFields";
@@ -71,7 +71,7 @@ const fmt = (v: number | null | undefined) => fixedOr(v, "ratio", translate(disp
 const withUnit = (text: string, unit: string) => (
   <>
     {text}
-    <span className={styles.unit}>{unit}</span>
+    <span className={styles.unit}>{unitText(unit)}</span>
   </>
 );
 

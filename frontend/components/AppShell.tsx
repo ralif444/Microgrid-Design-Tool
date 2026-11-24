@@ -59,20 +59,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <ProjectFileMenu />
         <ThemeSwitch className={styles.seg} />
         <LanguageSwitch className={styles.seg} />
-        {example && (
-          <span className={styles.example} data-testid="example-mode">
-            <Tag type="blue" size="md">
-              {t("Example mode")}
-            </Tag>
-            <Toggletip label={t("About example mode")} className={styles.tip}>
-              {t("Analysis forms are pre-filled from the guided example, each value with its source. Save writes a normal Project file: the example settings are not saved, so reopening the file opens a normal Project.")}
-            </Toggletip>
-            <button type="button" onClick={() => dispatch({ type: "exampleLeft" })}>
-              {t("Leave example mode")}
-            </button>
-          </span>
-        )}
-        <EngineBadge />
+        {!project && <EngineBadge />}
       </Header>
       {project && (
         <div className={`no-print ${styles.below}`}>
@@ -80,6 +67,22 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Suspense fallback={null}>
               <AreaScreens />
             </Suspense>
+            {/* status of the open project, on the sub-tab row so the header stays one row (audit 2026-11-24) */}
+            <span className={styles.spacer} />
+            {example && (
+              <span className={styles.example} data-testid="example-mode">
+                <Tag type="blue" size="md">
+                  {t("Example mode")}
+                </Tag>
+                <Toggletip label={t("About example mode")} className={styles.tip}>
+                  {t("Analysis forms are pre-filled from the guided example, each value with its source. Save writes a normal Project file: the example settings are not saved, so reopening the file opens a normal Project.")}
+                </Toggletip>
+                <button type="button" onClick={() => dispatch({ type: "exampleLeft" })}>
+                  {t("Leave example mode")}
+                </button>
+              </span>
+            )}
+            <EngineBadge />
           </div>
         </div>
       )}

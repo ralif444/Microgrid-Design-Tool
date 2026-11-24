@@ -37,11 +37,21 @@
 /* S-11 scenario boxes and the compare row */
 .scenario h2 { margin: 0; font-size: var(--text-lg); }
 .scenario ul { margin: 0; }
+/* in the narrow study column a scenario box stacks its labels and wraps long Remove buttons (audit 2026-11-24) */
+.study .scenario { --field-cols: 1fr; }
+.scenario p > :is(input, select) { max-width: 100%; box-sizing: border-box; }
+.scenario li button { white-space: normal; text-align: left; height: auto; }
 .actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 /* Phase 5 study layout: the given inputs left, the result right on desktop widths */
 .study { display: grid; gap: var(--space-4); align-items: start; }
 .study > .form { margin: 0; --field-label: 11rem; }
 .result { min-width: 0; }
+/* the study column is narrow: nothing in its forms may grow past it (long options, ID labels; audit 2026-11-24) */
+.study > * { min-width: 0; }
+.study .form { grid-template-columns: minmax(0, 1fr); }
+.study .form > *, .study fieldset { max-width: 100%; min-width: 0; box-sizing: border-box; }
+.study .form p:has(> select) { grid-template-columns: var(--field-cols, var(--field-label) minmax(0, 1fr)); }
+.study select { max-width: 100%; }
 @media (min-width: 1056px) { .study { grid-template-columns: minmax(20rem, 26rem) minmax(0, 1fr); } }
 .run { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); margin: var(--space-2) 0 0; }
 .run span { font-size: var(--text-sm); color: var(--color-fg-muted); }

@@ -17,6 +17,7 @@ const W = 560;
 const BAR = 20;
 const GAP = 12;
 const M = { l: 72, r: 64, t: 22, b: 44 };
+const CHAR = 6.6; // width of one 12 px digit in viewBox units
 
 export type BarSeries = { name: string; values: (number | null)[] };
 export type RefLine = { value: number; label: string };
@@ -60,12 +61,14 @@ export const BarChart = memo(function BarChart({
     const fin = vals.filter((v): v is number => v !== null);
     const raw: [number, number] = dots ? niceDomain(vals) : [Math.min(0, ...fin), Math.max(0, ...fin)];
     const d: [number, number] = raw[0] === raw[1] ? [raw[0], raw[0] + 1] : raw;
-    const ticks = niceTicks(d);
-    const dom: [number, number] = [Math.min(d[0], ticks[0]), Math.max(d[1], ticks[ticks.length - 1])];
     // room left of the plot for the value labels of negative bars, so they never meet a category name
-    const pad = !dots && fin.some((v) => v < 0) ? 36 : 0;
+    const neg = dots ? [] : fin.filter((v) => v < 0).map((v) => fixed(v, unit).length);
+    const pad = neg.length ? Math.max(...neg) * CHAR + 8 : 0;
+    // one tick per ~60 units of plot width, so long tick labels (-0.0012) never overlap
+    const ticks = niceTicks(d, Math.min(5, Math.max(2, Math.floor((W - M.r - labelWidth - pad) / 60))));
+    const dom: [number, number] = [Math.min(d[0], ticks[0]), Math.max(d[1], ticks[ticks.length - 1])];
     return { sx: linearScale(dom, [labelWidth + pad, W - M.r]), ticks, zero: dots ? null : 0, lo: dom[0] };
-  }, [series, refs, limits, dots, labelWidth]);
+  }, [series, refs, limits, dots, labelWidth, unit]);
   const multi = series.length > 1;
   return (
     <ChartFrame

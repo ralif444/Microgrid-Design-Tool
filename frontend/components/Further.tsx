@@ -15,8 +15,8 @@ import { m1Freshness, useValidation } from "./useValidation";
 // Doc 3 §6.4 metrics with the contract unit of the Real adapter (D-55 K93).
 export const METRICS: [OutputMetric, string, string][] = [
   ["SYSTEM_FREQUENCY", "System frequency", "Hz"],
-  ["MIN_BUS_VOLTAGE", "Lowest bus voltage", "pu"],
-  ["MAX_BUS_VOLTAGE", "Highest bus voltage", "pu"],
+  ["MIN_BUS_VOLTAGE", "Lowest bus voltage", "p.u."],
+  ["MAX_BUS_VOLTAGE", "Highest bus voltage", "p.u."],
   ["MAX_INVERTER_LOADING", "Highest inverter loading", "ratio"],
   ["MAX_LINE_CURRENT", "Highest line current", "A"],
   ["TOTAL_LOSSES", "Total line losses", "kW"],

@@ -6,7 +6,7 @@
 .main { min-width: 0; padding: var(--space-3) var(--space-4) var(--space-4); }
 .main > :first-child { margin-top: 0; }
 .side { display: grid; align-content: start; border-top: var(--border-width) solid var(--color-border); font-size: var(--text-xs); }
-@container (min-width: 56rem) {
+@container (min-width: 64rem) { /* below this the tables beside it wrap words (audit 2026-11-24) */
   .body { grid-template-columns: minmax(0, 1fr) 19rem; }
   .main { border-right: var(--border-width) solid var(--color-border); }
   .side { border-top: 0; }
